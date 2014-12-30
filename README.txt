@@ -1,3 +1,7 @@
+* Project Home *
+
+http://recc.robertelder.org/
+
 * Contributions *
 
 Do not create pull requests for this project.  Contributing to this project is not currently permitted.
@@ -34,6 +38,10 @@ In order to test the compiler on real C code, the following steps take place:
 To set up the testing API, set up a web server and point it to the root directory of this project.  The API uses php as a scripting language, so you'll need to make sure this is set up to work with your web server.  You may need to adjust permissions on the 'test' directory since php will need to write files that contain test results here.
 
 Additionally, you'll find that when you do test directly from the makefile using chrome, chrome does not automatically close when the tests are complete.  To solve this problem, a chrome plugin has been created that automatically closes the chrome window when javascript detects that all the test have finished running.  This plugin is located in 'chrome/chrome-plugin'.  Note that when chrome is run from the make file that a data dir is specified that resides in the project folder so that you'll be running a separate chrome profile from the one you use for personal use.  This is necessary so that the chrome session doesn't interfere with any casual browsing you're doing while you're developing, and avoids stacking your testing chrome session as a new tab in your already open windows.  Make sure you install the chrome plugin in the chrome instance that runs from the makefile.
+
+Additionally, you will likely find that you need to set more open file premissions to allow php to write to test results to the 'test' directory:
+
+chmod o+rwx test
 
 * The Compiler *
 
