@@ -1,0 +1,58 @@
+/*
+	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+
+	This software is not currently available under any license, and unauthorized use
+	or copying is not permitted.
+
+	This software will likely be available under a common open source license in the
+	near future.  Licensing is currently pending feedback from a lawyer.  If you have
+	an opinion on this subject you can send it to recc [at] robertelder.org.
+
+	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
+	Software Inc. be liable for incidental or consequential damages in connection with
+	use of this software.
+*/
+
+#include "GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map.h"
+
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_create(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map, int (*f)(GENERIC_TYPE0_LITERAL, GENERIC_TYPE0_LITERAL)){
+	binary_exponential_buffer_create(&map->key_value_pairs, sizeof(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair));
+	map->compare = f;
+}
+
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_destroy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map){
+	binary_exponential_buffer_destroy(&map->key_value_pairs);
+}
+
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_put(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map, GENERIC_TYPE0_LITERAL key, GENERIC_TYPE1_LITERAL value){
+	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair kvp;
+	kvp.key = key;
+	kvp.value = value;
+	binary_exponential_buffer_increment(&map->key_value_pairs, 1);
+	((struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs))[binary_exponential_buffer_size(&map->key_value_pairs) -1] = kvp;
+}
+
+GENERIC_TYPE1_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_get(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map, GENERIC_TYPE0_LITERAL key){
+	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
+	unsigned int i;
+	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair * data = binary_exponential_buffer_data(&map->key_value_pairs);
+	for(i = 0; i < size; i++){
+		if(!map->compare(key, data[i].key)){
+			return data[i].value;
+		}
+	}
+	return 0;
+}
+
+
+struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_keys(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map){
+	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list rtn;
+	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
+	unsigned int i;
+	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair * data = binary_exponential_buffer_data(&map->key_value_pairs);
+	GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_create(&rtn);
+	for(i = 0; i < size; i++){
+		GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_add(&rtn, data[i].key);
+	}
+	return rtn;
+}

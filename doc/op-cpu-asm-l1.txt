@@ -1,0 +1,99 @@
+#  Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+#
+#  This specification is not currently available under any license, and
+#  unauthorized use or copying is not permitted.
+#
+#  This specification will likely be available under a common open source
+#  license in the near future.  Licensing is currently pending feedback from
+#  a lawyer.  If you have an opinion on this subject you can send it to
+#  recc [at] robertelder.org.
+#
+#  This specification comes with ABSOLUTELY NO WARRANTY.  In no event shall
+#  Robert Elder Software Inc. be liable for incidental or consequential damages
+#  in connection with use of this specification.
+
+            One-Page CPU L1 Assembly Language Syntax Specification
+
+A conforming file contains only standard ASCII characters. All characters and
+tokens stated below must match in case exactly.
+
+1.  A "decimal digit" is defined as one of the following: "0", "1", "2", "3",
+"4", "5", "6", "7", "8", "9".
+
+2.  A "hexidecimal digit" is defined as a decimal digit, or one of the
+following: "A", "B", "C", "D", "E", "F".
+
+3.  A "decimal constant" is defined as zero or one of the character "-"
+followed by one to five decimal digits.
+
+4.  A "hexidecimal constant" is defined as the string "0x" followed by one to
+eight hexidecimal digits.
+
+5.  A "special register" is defined as one of the following tokens: "PC",
+"SP", "FP", "FR", "ZR", or "WR".
+
+6.  A "general register" is defined as the character "r" followed by one or
+two decimal digits.
+
+7.  A "aggregate register" is defined as either special register or a general
+register.
+
+8.  A "space" is defined as exactly one of ASCII character 32.
+
+9.  A "newline" is defined as one of the following:
+
+  9.1.  ASCII character 13.
+  9.2.  ASCII character 10.
+  9.3.  ASCII character 10 followed by ASCII character 13.
+  9.4.  ASCII character 13 followed by ASCII character 10.
+
+This definition should be applied greedily, meaning that in the event of an
+ambiguity due to neighbouring characters, as many characters as possible
+should be consumed from left to right as long as this definition is satisfied.
+
+10.  There are 15 "instruction identifiers".  They are defined as "add", "sub",
+"mul", "div", "beq", "blt", "loa", "sto", "ll", "and", "or", "not", "shr",
+"shl" and "dw".
+
+11.  Each of the 15 instruction identifiers corresponds to a characteristic
+form for an instruction.  An "instruction statement" is defined as one of the
+following:
+
+  11.1.  "add", "space", "aggregate register", "space", "aggregate register",
+"space", "aggregate register"
+  11.2.  "sub", "space", "aggregate register", "space", "aggregate register",
+"space", "aggregate register"
+  11.3.  "mul", "space", "aggregate register", "space", "aggregate register",
+"space", "aggregate register"
+  11.4.  "div", "space", "aggregate register", "space", "aggregate register",
+"space", "aggregate register", "space", "aggregate register"
+  11.5.  "beq", "space", "aggregate register", "space", "aggregate register",
+"space", "decimal constant"
+  11.6.  "blt", "space", "aggregate register", "space", "aggregate register",
+"space", "decimal constant"
+  11.7.  "loa", "space", "aggregate register", "space", "aggregate register"
+  11.8.  "sto", "space", "aggregate register", "space", "aggregate register"
+  11.9.  "and", "space", "aggregate register", "space", "aggregate register",
+"space", "aggregate register"
+  11.10.  "not", "space", "aggregate register", "space", "aggregate register"
+  11.11.  "shr", "space", "aggregate register", "space", "aggregate register"
+  11.12.  "shl", "space", "aggregate register", "space", "aggregate register"
+  11.13.  "or", "space", "aggregate register", "space", "aggregate register",
+"space", "aggregate register"
+  11.14.  "ll", "space", "aggregate register", "space", "hexadecimal constant"
+  11.15.  "dw", "space", "hexadecimal constant"
+
+There are no spaces at the start or end of an instruction statement.
+
+12.  An "offset declaration" is defined as the word "OFFSET" followed by a
+space, followed by a hexidecimal constant.
+
+13.  A "conforming One-Page CPU L1 file" is defined as a file containing an
+offset declaration, followed by zero or more of the following:
+
+  13.1.  A newline followed by an instruction statement.
+
+and finally, an optional additional newline can be the last character in the
+file.
+
+The sha1sum of the lines above is 9a2849d085158843f425d2b517c388078320de84

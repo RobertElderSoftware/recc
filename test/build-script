@@ -1,0 +1,75 @@
+PREPROCESS test/basic-operations.c TO test/basic-operations.i
+CODE GENERATE test/basic-operations.i TO test/basic-operations.l2
+LINK test/basic-operations.l2, stdlib/putchar.l2 TO test/basic-operations.l1
+
+PREPROCESS test/basic-putchar-aa.c TO test/basic-putchar-aa.i
+CODE GENERATE test/basic-putchar-aa.i TO test/basic-putchar-aa.l2
+LINK test/basic-putchar-aa.l2, stdlib/putchar.l2 TO test/basic-putchar-aa.l1
+
+PREPROCESS test/basic-putchar-a.c TO test/basic-putchar-a.i
+CODE GENERATE test/basic-putchar-a.i TO test/basic-putchar-a.l2
+LINK test/basic-putchar-a.l2, stdlib/putchar.l2 TO test/basic-putchar-a.l1
+
+PREPROCESS test/basic-putchar-b.c TO test/basic-putchar-b.i
+CODE GENERATE test/basic-putchar-b.i TO test/basic-putchar-b.l2
+LINK test/basic-putchar-b.l2, stdlib/putchar.l2 TO test/basic-putchar-b.l1
+
+PREPROCESS test/empty-main-return-zero.c TO test/empty-main-return-zero.i
+CODE GENERATE test/empty-main-return-zero.i TO test/empty-main-return-zero.l2
+LINK test/empty-main-return-zero.l2, stdlib/putchar.l2 TO test/empty-main-return-zero.l1
+
+PREPROCESS test/for-loop.c TO test/for-loop.i
+CODE GENERATE test/for-loop.i TO test/for-loop.l2
+LINK test/for-loop.l2, stdlib/putchar.l2 TO test/for-loop.l1
+
+PREPROCESS test/ignore-local.c TO test/ignore-local.i
+CODE GENERATE test/ignore-local.i TO test/ignore-local.l2
+LINK test/ignore-local.l2, stdlib/putchar.l2 TO test/ignore-local.l1
+
+PREPROCESS test/many-types.c TO test/many-types.i
+CODE GENERATE test/many-types.i TO test/many-types.l2
+LINK test/many-types.l2, stdlib/putchar.l2 TO test/many-types.l1
+
+PREPROCESS test/nested-putchar-a.c TO test/nested-putchar-a.i
+CODE GENERATE test/nested-putchar-a.i TO test/nested-putchar-a.l2
+LINK test/nested-putchar-a.l2, stdlib/putchar.l2 TO test/nested-putchar-a.l1
+
+PREPROCESS test/nested-putchar-a-param-ignored.c TO test/nested-putchar-a-param-ignored.i
+CODE GENERATE test/nested-putchar-a-param-ignored.i TO test/nested-putchar-a-param-ignored.l2
+LINK test/nested-putchar-a-param-ignored.l2, stdlib/putchar.l2 TO test/nested-putchar-a-param-ignored.l1
+
+PREPROCESS test/nested-putchar-a-param-used.c TO test/nested-putchar-a-param-used.i
+CODE GENERATE test/nested-putchar-a-param-used.i TO test/nested-putchar-a-param-used.l2
+LINK test/nested-putchar-a-param-used.l2, stdlib/putchar.l2 TO test/nested-putchar-a-param-used.l1
+
+PREPROCESS test/print.c TO test/print.i
+CODE GENERATE test/print.i TO test/print.l2
+LINK builtin/extern_test.l2, test/print.l2, stdlib/putchar.l2, builtin/random.l2, builtin/print_bits.l2, builtin/print_decimal.l2, builtin/signed_division.l2, builtin/signed_modulo.l2, builtin/signed_less_than.l2, builtin/signed_less_than_or_equal_to.l2, builtin/signed_greater_than.l2, builtin/signed_greater_than_or_equal_to.l2, stdlib/printf.l2 TO test/print.l1
+
+PREPROCESS test/putchar-return.c TO test/putchar-return.i
+CODE GENERATE test/putchar-return.i TO test/putchar-return.l2
+LINK test/putchar-return.l2, stdlib/putchar.l2 TO test/putchar-return.l1
+
+PREPROCESS test/string-literal.c TO test/string-literal.i
+CODE GENERATE test/string-literal.i TO test/string-literal.l2
+LINK test/string-literal.l2, stdlib/putchar.l2 TO test/string-literal.l1
+
+PREPROCESS test/use-array.c TO test/use-array.i
+CODE GENERATE test/use-array.i TO test/use-array.l2
+LINK test/use-array.l2, stdlib/putchar.l2 TO test/use-array.l1
+
+PREPROCESS test/use-local.c TO test/use-local.i
+CODE GENERATE test/use-local.i TO test/use-local.l2
+LINK test/use-local.l2, stdlib/putchar.l2 TO test/use-local.l1
+
+PREPROCESS test/use-reference.c TO test/use-reference.i
+CODE GENERATE test/use-reference.i TO test/use-reference.l2
+LINK test/use-reference.l2, stdlib/putchar.l2 TO test/use-reference.l1
+
+PREPROCESS test/va_list_call.c TO test/va_list_call.i
+CODE GENERATE test/va_list_call.i TO test/va_list_call.l2
+LINK test/va_list_call.l2, stdlib/putchar.l2 TO test/va_list_call.l1
+
+PREPROCESS test/while-loop.c TO test/while-loop.i
+CODE GENERATE test/while-loop.i TO test/while-loop.l2
+LINK test/while-loop.l2, stdlib/putchar.l2, builtin/signed_less_than.l2 TO test/while-loop.l1

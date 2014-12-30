@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+
+  "name": "Close chrome",
+  "description": "This extension is used to close the current tab.",
+  "version": "1.4",
+  "permissions": ["tabs", "http://*/*"],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*"],
+      "js": ["close-chrome-tab.js"]
+    }
+  ]
+}

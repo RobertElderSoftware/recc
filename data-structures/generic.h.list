@@ -1,0 +1,38 @@
+/*
+	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+
+	This software is not currently available under any license, and unauthorized use
+	or copying is not permitted.
+
+	This software will likely be available under a common open source license in the
+	near future.  Licensing is currently pending feedback from a lawyer.  If you have
+	an opinion on this subject you can send it to recc [at] robertelder.org.
+
+	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
+	Software Inc. be liable for incidental or consequential damages in connection with
+	use of this software.
+*/
+#ifndef __GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list__H__DEFINED__
+#define __GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list__H__DEFINED__
+
+#include <assert.h>
+#include <stdlib.h>
+#include "binary_exponential_buffer.h"
+#include "../core_data_types.h"
+
+struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list{
+	struct binary_exponential_buffer buffer;
+};
+
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_add(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *, GENERIC_TYPE0_LITERAL);
+GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_pop(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_remove_all(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *, GENERIC_TYPE0_LITERAL);
+unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_occurrences(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *, GENERIC_TYPE0_LITERAL);
+unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_size(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
+GENERIC_TYPE0_LITERAL * GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_data(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
+GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_get(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *, unsigned int);
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_destroy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_create(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
+struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_copy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
+
+#endif

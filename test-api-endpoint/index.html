@@ -1,0 +1,242 @@
+<html>
+  <head>
+    <script type="text/javascript" src="../emulator/op-cpu.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+    <script>
+      /*  Append a random number to the url so the browser won't cache the script */
+      $.getScript('testing.js?cache_bust=' + Math.random() , function() { });
+    </script>
+    <style type="text/css">
+      body{
+        width: 1200px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 10px;
+	color: #002b56;
+	background-color: #e2f5fc;
+      }
+      .debug-explanation{
+        color: #ee4136;
+      }
+      .next-instruction{
+        font-size: 24px;
+      }
+      .op-name{
+        color: #ee4136;
+      }
+      .pc-loc{
+        font-weight: bold;
+        color: #ee4136;
+      }
+      .register-container{
+        width: 150px;
+      }
+      .location-container{
+        width: 80px;
+      }
+      .instruction-container{
+        width: 210px;
+      }
+      .binary-container{
+        width: 410px;
+      }
+      .stack-value-container{
+        width: 150px;
+      }
+      .stack-address-container{
+        width: 150px;
+      }
+      .fr-bits td{
+        padding: 5px;
+        border: 1px solid #73c243;
+        width: 100px;
+        color: #f5b9ce;
+        text-align: center;
+      }
+      .fr-bits td.active{
+        background-color: #ee4136;
+      }
+      th{
+        text-align: left;
+      }
+      .debug-view-area{
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <button class="step">Step</button>
+      <button class="resume">Resume</button>
+      <button class="stop">Stop</button>
+      <button style="display:none;" class="skip-to-watch-change">Skip to Watch Change</button>
+      <input class="debug-mode" type="checkbox"><span class="debug-explanation">Full Debug View (10000x slower)</span>
+    </div>
+    <div>
+      <button class="skip-to-breakpoint">Skip to Breakpoint</button>
+      <input class="breakpointvalue" type="text" value="0x0">
+      <select class="symbol-breakpoints">
+        <option value="0x00000000">0x00000000 __g_entry</option>
+        <option value="0x00000020">0x00000020 exitmain</option>
+        <option value="0x000000F0">0x000000F0 assert</option>
+        <option value="0x00000820">0x00000820 putchar_nobusy</option>
+        <option value="0x0000085C">0x0000085C getchar_nobusy</option>
+        <option value="0x0000098C">0x0000098C putchar</option>
+        <option value="0x00000CFC">0x00000CFC putchar_init</option>
+        <option value="0x00014650">0x00014650 user_proc_1</option>
+        <option value="0x00014CAC">0x00014CAC user_proc_2</option>
+        <option value="0x0001504C">0x0001504C clock_tick_notifier</option>
+        <option value="0x000158C4">0x000158C4 clock_server</option>
+        <option value="0x00016040">0x00016040 uart1_out_ready_notifier</option>
+        <option value="0x000168B0">0x000168B0 uart1_out_server</option>
+        <option value="0x00018BC0">0x00018BC0 uart1_in_ready_notifier</option>
+        <option value="0x00019430">0x00019430 uart1_in_server</option>
+        <option value="0x0001A5F4">0x0001A5F4 command_server</option>
+        <option value="0x0001B830">0x0001B830 reply_message</option>
+        <option value="0x0001B838">0x0001B838 receive_message</option>
+        <option value="0x0001B840">0x0001B840 send_message</option>
+        <option value="0x0001B848">0x0001B848 block_on_event</option>
+        <option value="0x0001B850">0x0001B850 task_exit</option>
+        <option value="0x0001B858">0x0001B858 kernel_init</option>
+        <option value="0x0001B860">0x0001B860 release_processor</option>
+        <option value="0x0001B868">0x0001B868 delay</option>
+        <option value="0x0001B870">0x0001B870 do_kernel_method</option>
+        <option value="0x0001B934">0x0001B934 exit_kernel_method</option>
+        <option value="0x0001B988">0x0001B988 init_task_stack</option>
+        <option value="0x0001B9D4">0x0001B9D4 set_irq_handler</option>
+        <option value="0x0001B9FC">0x0001B9FC timer_interrupt_enable</option>
+        <option value="0x0001BA2C">0x0001BA2C uart1_out_interrupt_enable</option>
+        <option value="0x0001BA48">0x0001BA48 uart1_in_interrupt_enable</option>
+        <option value="0x0001BA64">0x0001BA64 irq_handler</option>
+        <option value="0x0001BB04">0x0001BB04 irq_interrupt_chosen</option>
+        <option value="0x0001BB70">0x0001BB70 irq_exit</option>
+        <option value="0x0001BBC4">0x0001BBC4 main</option>
+        <option value="0x0001C108">0x0001C108 task_queue_init</option>
+        <option value="0x0001C434">0x0001C434 task_queue_push_end</option>
+        <option value="0x0001CAA8">0x0001CAA8 task_queue_pop_start</option>
+        <option value="0x0001D164">0x0001D164 task_queue_current_count</option>
+        <option value="0x0001D240">0x0001D240 message_queue_init</option>
+        <option value="0x0001D56C">0x0001D56C message_queue_push_end</option>
+        <option value="0x0001DCD8">0x0001DCD8 message_queue_pop_start</option>
+        <option value="0x0001E64C">0x0001E64C message_queue_current_count</option>
+        <option value="0x0001E728">0x0001E728 signed_greater_than_or_equal_to</option>
+        <option value="0x0001EFF0">0x0001EFF0 signed_less_than_or_equal_to</option>
+        <option value="0x0001F8C0">0x0001F8C0 print_decimal</option>
+        <option value="0x0002053C">0x0002053C print_hexadecimal</option>
+        <option value="0x00022028">0x00022028 printf</option>
+        <option value="0x00023C28">0x00023C28 schedule_next_task</option>
+        <option value="0x000245AC">0x000245AC unblock_tasks_for_event</option>
+        <option value="0x000253A8">0x000253A8 add_task_to_ready_queue</option>
+        <option value="0x000258E8">0x000258E8 save_current_task_as_ready</option>
+        <option value="0x00025B80">0x00025B80 save_current_task</option>
+        <option value="0x00025F88">0x00025F88 scheduler</option>
+        <option value="0x00026104">0x00026104 k_task_exit</option>
+        <option value="0x0002629C">0x0002629C k_release_processor</option>
+        <option value="0x00026390">0x00026390 k_delay</option>
+        <option value="0x00026668">0x00026668 k_block_on_event</option>
+        <option value="0x00026D54">0x00026D54 k_irq_handler</option>
+        <option value="0x00027094">0x00027094 k_send_message</option>
+        <option value="0x00027D5C">0x00027D5C k_receive_message</option>
+        <option value="0x000289B8">0x000289B8 k_reply_message</option>
+        <option value="0x00028E64">0x00028E64 k_kernel_init</option>
+      </select>
+    </div>
+    <div class="debug-view-area">
+      <table class="fr-bits">
+        <tr>
+          <td>
+            UART1_IN Ready
+          </td>
+          <td>
+            UART1_OUT Ready
+          </td>
+          <td>
+            UART1_IN Asserted
+          </td>
+          <td>
+            UART1_IN Enabled
+          </td>
+          <td>
+            UART1_OUT Asserted
+          </td>
+          <td>
+            UART1_OUT Enabled
+          </td>
+          <td>
+            TIMER1 Asserted
+          </td>
+          <td>
+            TIMER1 Enabled
+          </td>
+          <td>
+            RTE Bit
+          </td>
+          <td>
+            Global Interrupt Enable
+          </td>
+          <td>
+            Processor Halted
+          </td>
+        </tr>
+      </table>
+      <table>
+        <tr>
+          <th>
+            Registers
+          </th>
+          <th>
+            Location
+          </th>
+          <th>
+            Instruction
+          </th>
+          <th>
+            Binary Instruction Decomposition
+          </th>
+          <th>
+            Value
+          </th>
+          <th>
+            SP Address
+          </th>
+          <th>
+            Value
+          </th>
+        </tr>
+        <tr>
+          <td style="padding-right: 10px; border-right: 2px solid #000000;">
+            <div class="register-container">
+            </div>
+          </td>
+          <td style="padding-left: 10px;">
+            <div class="location-container">
+            </div>
+          </td>
+          <td>
+            <div class="instruction-container">
+            </div>
+          </td>
+          <td>
+            <div class="binary-container">
+            </div>
+          </td>
+          <td style="padding-right: 10px; border-right: 2px solid #000000;">
+            <div class="value-container">
+            </div>
+          </td>
+          <td style="padding-left: 10px;">
+            <div class="stack-address-container">
+            </div>
+          </td>
+          <td>
+            <div class="stack-value-container">
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="test-status">
+    </div>
+    <div class="uart1-out">
+    </div>
+  </body>
+</html>

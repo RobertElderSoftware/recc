@@ -1,0 +1,2 @@
+PREPROCESS stdlib/printf.c TO stdlib/printf.i
+CODE GENERATE stdlib/printf.i TO stdlib/printf.l2

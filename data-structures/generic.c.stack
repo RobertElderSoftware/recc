@@ -1,0 +1,48 @@
+/*
+	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+
+	This software is not currently available under any license, and unauthorized use
+	or copying is not permitted.
+
+	This software will likely be available under a common open source license in the
+	near future.  Licensing is currently pending feedback from a lawyer.  If you have
+	an opinion on this subject you can send it to recc [at] robertelder.org.
+
+	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
+	Software Inc. be liable for incidental or consequential damages in connection with
+	use of this software.
+*/
+
+#include "GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack.h"
+
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_push(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack, GENERIC_TYPE0_LITERAL item){
+	binary_exponential_buffer_increment(&stack->buffer, 1);
+	((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_data(&stack->buffer))[binary_exponential_buffer_size(&stack->buffer) -1] = item;
+}
+
+GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_pop(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
+	unsigned int stack_size = binary_exponential_buffer_size(&stack->buffer);
+	GENERIC_TYPE0_LITERAL rtn;
+	assert(stack_size && "Attempting to pop an empty stack.");
+	rtn = ((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_data(&stack->buffer))[stack_size -1];
+	binary_exponential_buffer_decrement(&stack->buffer, 1);
+	return rtn;
+}
+
+unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_size(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
+	return binary_exponential_buffer_size(&stack->buffer);
+}
+
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_destroy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
+	binary_exponential_buffer_destroy(&stack->buffer);
+}
+
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_create(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
+	binary_exponential_buffer_create(&stack->buffer, sizeof(GENERIC_TYPE0_LITERAL));
+}
+
+struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_copy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
+	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack copy;
+	copy.buffer = binary_exponential_buffer_copy(&stack->buffer);
+	return copy;
+}
