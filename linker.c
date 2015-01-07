@@ -16,12 +16,41 @@
 
 void buffered_token_output(struct unsigned_char_list *, struct asm_lexer_token *);
 void free_symbol_map(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *);
+unsigned int set_post_linking_offsets(struct linker_object * linker_object);
+unsigned int get_instruction_size(struct asm_instruction *);
 
-void set_symbol_offset(struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int offset){
+
+unsigned int get_instruction_size(struct asm_instruction * instruction){
+	enum asm_token_type type = instruction->op_token->type;
+
+	if ((type == A_BLT || type == A_BEQ) && instruction->identifier_token){
+		return 4;
+	}
+
+	if (type == A_LL && instruction->identifier_token){
+		return 9;
+	}
+
+	return 1; /* 1 word */
+}
+
+unsigned int set_post_linking_offsets(struct linker_object * linker_object){
+	unsigned int i;
+	unsigned int num_instructions = struct_asm_instruction_ptr_list_size(&linker_object->instructions);
+	unsigned int current_offset = 0;
+	for(i = 0; i < num_instructions; i++){
+		struct asm_instruction * instruction = struct_asm_instruction_ptr_list_get(&linker_object->instructions, i);
+		instruction->post_linking_offset = current_offset;
+		current_offset += get_instruction_size(instruction);
+	}
+	return current_offset;
+}
+
+void set_symbol_instruction_index(struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int index){
 	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
 	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_object->symbols, identifier_str);
 	if(existing_symbol){
-		existing_symbol->offset = offset;
+		existing_symbol->instruction_index = index;
 	}else{
 		printf("Undeclared dentifier %s on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
 		assert(0 && "Trying to set offset of unknown symbol.");
@@ -369,7 +398,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 			struct asm_lexer_token * identifier = tokens[i];
 			i++;
 			if(tokens[i]->type == A_COLON_CHAR){
-				set_symbol_offset(linker_object, identifier, struct_asm_instruction_ptr_list_size(&linker_object->instructions));
+				set_symbol_instruction_index(linker_object, identifier, struct_asm_instruction_ptr_list_size(&linker_object->instructions));
 				i++;
 			}else{ printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename); assert(0 && "Expected colon."); }
 		}else{
@@ -391,16 +420,14 @@ void buffered_token_output(struct unsigned_char_list * buffer, struct asm_lexer_
 unsigned int get_absolute_symbol_offset(unsigned char * identifier, struct linker_object * current_linker_object, struct struct_linker_object_ptr_list * all_linker_objects){
 	struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&current_linker_object->symbols, identifier);
 	if(symbol && symbol->is_implemented){
-		/*printf("Symbol %s was found with address %X.\n", identifier, (symbol->offset + current_linker_object->location_offset) * 4);*/
-		return symbol->offset + current_linker_object->location_offset;
+		return struct_asm_instruction_ptr_list_get(&current_linker_object->instructions, symbol->instruction_index)->post_linking_offset + current_linker_object->linker_object_post_linking_offset;
 	}else{
 		unsigned int i;
 		for(i = 0; i < struct_linker_object_ptr_list_size(all_linker_objects); i++){
 			struct linker_object * obj = struct_linker_object_ptr_list_get(all_linker_objects, i);
 			struct linker_symbol * external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&obj->symbols, identifier);
 			if(external_symbol && external_symbol->is_external && external_symbol->is_implemented){
-				/*printf("Symbol %s was found with address %X.\n", identifier, (external_symbol->offset + obj->location_offset) * 4);*/
-				return external_symbol->offset + obj->location_offset;
+				return struct_asm_instruction_ptr_list_get(&obj->instructions, external_symbol->instruction_index)->post_linking_offset + obj->linker_object_post_linking_offset;
 			}
 		}
 		printf("Symbol %s was not found in any linker object.  Symbol referenced in file %s.\n", identifier, current_linker_object->asm_lexer_state->c.filename);
@@ -422,9 +449,9 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 	for(i = 0; i < size; i++){
 		struct asm_instruction * instruction = data[i];
 		enum asm_token_type type = instruction->op_token->type;
-		buffered_token_output(file_output, instruction->op_token);
 
 		if (type == A_ADD || type == A_SUB || type == A_MUL || type == A_AND || type == A_OR){
+			buffered_token_output(file_output, instruction->op_token);
 			buffered_printf(file_output, " ");
 			buffered_token_output(file_output, instruction->rx_token);
 			buffered_printf(file_output, " ");
@@ -433,12 +460,14 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 			buffered_token_output(file_output, instruction->rz_token);
 			buffered_printf(file_output, "\n");
 		}else if(type == A_LOA || type == A_STO || type == A_NOT || type == A_SHR || type == A_SHL){
+			buffered_token_output(file_output, instruction->op_token);
 			buffered_printf(file_output, " ");
 			buffered_token_output(file_output, instruction->rx_token);
 			buffered_printf(file_output, " ");
 			buffered_token_output(file_output, instruction->ry_token);
 			buffered_printf(file_output, "\n");
 		}else if (type == A_DIV){
+			buffered_token_output(file_output, instruction->op_token);
 			buffered_printf(file_output, " ");
 			buffered_token_output(file_output, instruction->rx_token);
 			buffered_printf(file_output, " ");
@@ -449,40 +478,63 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 			buffered_token_output(file_output, instruction->rw_token);
 			buffered_printf(file_output, "\n");
 		}else if(type == A_LL){
-			buffered_printf(file_output, " ");
-			buffered_token_output(file_output, instruction->rx_token);
-			buffered_printf(file_output, " ");
 			if(instruction->identifier_token){
+				/*  ll instruction cannot load all 32 bit addresses directoy, so re-writing identifier based ll statements to handle this case  */
+				unsigned int possibly_uses_r2 = instruction->rx_token->first_byte[1] == '2';
 				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
 				unsigned int absolute_offset = get_absolute_symbol_offset(ident, linker_object, all_linker_objects);
-				assert(absolute_offset * 4 <= 4194303 && "Outputting ll instruction with out of range literal");
-				buffered_printf(file_output, "0x%X", absolute_offset * 4);
+				unsigned char * target_register = copy_string(instruction->rx_token->first_byte, instruction->rx_token->last_byte);
+				unsigned char * temp_register = possibly_uses_r2 ? (unsigned char *)"r1" : (unsigned char *)"r2";
 				free(ident);
+				buffered_printf(file_output, "sub SP SP WR\n");
+				buffered_printf(file_output, "sto SP %s\n", temp_register);
+				buffered_printf(file_output, "ll %s 0x%X\n", target_register, (0xFFFF0000 & (absolute_offset * 4)) >> 16);
+				buffered_printf(file_output, "ll %s 0x10\n", temp_register);
+				buffered_printf(file_output, "shl %s %s\n", target_register, temp_register);
+				buffered_printf(file_output, "ll %s 0x%X\n", temp_register, 0xFFFF & (absolute_offset * 4));
+				buffered_printf(file_output, "or %s %s %s\n", target_register, target_register, temp_register);
+				buffered_printf(file_output, "loa %s SP\n", temp_register);
+				buffered_printf(file_output, "add SP SP WR\n");
+				free(target_register);
 			}else{
+				buffered_token_output(file_output, instruction->op_token);
+				buffered_printf(file_output, " ");
+				buffered_token_output(file_output, instruction->rx_token);
+				buffered_printf(file_output, " ");
 				buffered_token_output(file_output, instruction->number_token);
+				buffered_printf(file_output, "\n");
 			}
-			buffered_printf(file_output, "\n");
 		}else if(type == A_BEQ || type == A_BLT){
-			buffered_printf(file_output, " ");
-			buffered_token_output(file_output, instruction->rx_token);
-			buffered_printf(file_output, " ");
-			buffered_token_output(file_output, instruction->ry_token);
-			buffered_printf(file_output, " ");
 			if(instruction->identifier_token){
 				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
 				unsigned int absolute_offset = get_absolute_symbol_offset(ident, linker_object, all_linker_objects);
-				int output_offset = ((int)absolute_offset - (int)(i + linker_object->location_offset)) -1;
-				assert((output_offset >= -32768 && output_offset <= 32767) && "Outputting beq/blt instruction with out of range literal");
-				buffered_printf(file_output, "%d", output_offset);
 				free(ident);
+				buffered_token_output(file_output, instruction->op_token);
+				buffered_printf(file_output, " ");
+				buffered_token_output(file_output, instruction->rx_token);
+				buffered_printf(file_output, " ");
+				buffered_token_output(file_output, instruction->ry_token);
+				buffered_printf(file_output, " ");
+				buffered_printf(file_output, "1");
+				buffered_printf(file_output, "\n");
+				buffered_printf(file_output, "beq ZR ZR 2\n"); /* If we're not going to branch, skip the 2 far jump instructions */
+				buffered_printf(file_output, "loa PC PC\n");
+				buffered_printf(file_output, "dw 0x%X\n", absolute_offset * 4);
 			}else{
+				buffered_token_output(file_output, instruction->op_token);
+				buffered_printf(file_output, " ");
+				buffered_token_output(file_output, instruction->rx_token);
+				buffered_printf(file_output, " ");
+				buffered_token_output(file_output, instruction->ry_token);
+				buffered_printf(file_output, " ");
 				if(instruction->number_token_is_negative){
 					buffered_printf(file_output, "-");
 				}
 				buffered_token_output(file_output, instruction->number_token);
+				buffered_printf(file_output, "\n");
 			}
-			buffered_printf(file_output, "\n");
 		}else if(type == A_DW){
+			buffered_token_output(file_output, instruction->op_token);
 			buffered_printf(file_output, " ");
 			if(instruction->identifier_token){
 				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
@@ -535,7 +587,7 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 	struct unsigned_char_list symbol_output;
 	struct unsigned_char_list asm_lexer_output;
 	unsigned int i;
-	unsigned int next_location_offset = 0;
+	unsigned int next_linker_object_post_linking_offset = 0;
 
 	g_format_buffer_use();
 
@@ -559,8 +611,8 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 
 		lex_asm(asm_lexer_state, unsigned_char_ptr_list_get(in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
 		linker_object = process_assembly(asm_lexer_state);
-		linker_object->location_offset = next_location_offset;
-		next_location_offset += struct_asm_instruction_ptr_list_size(&linker_object->instructions); 
+		linker_object->linker_object_post_linking_offset = next_linker_object_post_linking_offset;
+		next_linker_object_post_linking_offset += set_post_linking_offsets(linker_object); 
 
 		struct_unsigned_char_list_ptr_list_add(&input_file_buffers, file_input);
 		struct_linker_object_ptr_list_add(&linker_objects, linker_object);

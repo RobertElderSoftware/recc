@@ -21,6 +21,9 @@ IMPLEMENTS, REQUIRES INTERNAL do_kernel_method;
 IMPLEMENTS, REQUIRES INTERNAL exit_kernel_method;
 IMPLEMENTS, REQUIRES INTERNAL irq_exit;
 IMPLEMENTS, REQUIRES INTERNAL irq_interrupt_chosen;
+IMPLEMENTS, REQUIRES INTERNAL method_exit_premption_enabled;
+IMPLEMENTS, REQUIRES INTERNAL after_kernel_method_return;
+IMPLEMENTS, REQUIRES INTERNAL after_kernel_irq_return;
 IMPLEMENTS EXTERNAL set_irq_handler;
 IMPLEMENTS EXTERNAL timer_interrupt_enable;
 IMPLEMENTS EXTERNAL uart1_out_interrupt_enable;
@@ -62,11 +65,9 @@ and FR FR r1;    Apply the mask.
 ;--------------- We can no longer be prempted after this point
 sub r6 FP SP;    Get bytes of arguments
 add r7 r6 ZR;    Make copy for copy counter later
-add r1 PC ZR;    Save the current program counter.
-ll r2 0xE8;      We want to restore the PC right after interrupts are enabled in this method
-add r1 r1 r2;    Need to add this fixed amount to PC
+ll r2 method_exit_premption_enabled; We want to restore the PC right after interrupts are enabled in this method
 sub SP SP WR;    Increment stack pointer.
-sto SP r1;       Save PC value on stack.
+sto SP r2;       Save PC value on stack.
 sub SP SP WR;    Increment stack pointer.
 sto SP FP;       Save Frame pointer of the task on stack
 sub SP SP WR;    Push stack
@@ -79,8 +80,7 @@ ll r1 globalvar_g_kernel_sp;  Need to switch to kernel sp now
 add r1 r1 WR;
 loa SP r1;       Load kernel stack pointer
 sub SP SP WR;    Inc another 4 bytes for the return address.
-ll r3 0x4C;      Constant offset from current PC value to return point from kernel call
-add r3 r3 PC;
+ll r3 after_kernel_method_return;  Get PC value to return point from kernel call
 sto SP r3;       Store the return address.
 sub SP SP WR;    Push another 4 bytes for the frame pointer.
 sto SP ZR;       Save zero for kernel frame pointer
@@ -100,6 +100,7 @@ beq ZR ZR -11;    Go back and copy the next word
 add FP SP ZR;    Copy the stack pointer into the frame pointer.
 add FP FP r7;    Adjust the FP to account for the arguments we just loaded
 add PC ZR r5;    Branch to our kernel method.
+after_kernel_method_return:
 ll r1 globalvar_g_current_sp;  Load the current task's stack pointer location
 add r1 r1 WR;
 loa SP r1;       Load current task's stack pointer
@@ -126,6 +127,7 @@ loa FP SP;       Pop Frame pointer
 add SP SP WR;    Pop stack
 add FR FR WR;    Add 4 to set bit 2 and return from interrupt
 ;--------------- We can now be prempted again
+method_exit_premption_enabled:
 add SP FP ZR;    Set stack pointer to frame pointer to get over arguments (save because we just set the FP)
 loa FP FP;       Load the previous frame pointer
 add SP SP WR;    Jump over the frame pointer to get to the return address
@@ -169,7 +171,7 @@ add PC ZR r1;    Jump back to the place where the function was called
 
 timer_interrupt_enable:
 ll r1 0x300030;  Address of TIMER_PERIOD
-ll r2 0xA000;      Timer period
+ll r2 0xA0000;      Timer period
 sto r1 r2;       Set timer period
 ll r1 0x1;       The bit
 ll r2 0x3;       Shift number
@@ -252,8 +254,7 @@ ll r1 globalvar_g_kernel_sp;  Need to switch to kernel sp now
 add r1 r1 WR;
 loa SP r1;       Load kernel stack pointer
 sub SP SP WR;    Inc another 4 bytes for the return address.
-ll r3 0x2C;      Constant offset from current PC value to return point from kernel call
-add r3 r3 PC;
+ll r3 after_kernel_irq_return;  PC value to return point after irq handler
 sto SP r3;       Store the return address.
 sub SP SP WR;    Push another 4 bytes for the frame pointer.
 sto SP ZR;       Save zero for kernel frame pointer
@@ -265,6 +266,7 @@ add FP SP ZR;    Copy the stack pointer into the frame pointer.
 add FP FP WR;    Adjust the FP to account for the arguments we just loaded
 add FP FP WR;    Adjust the FP to account for the arguments we just loaded
 beq ZR ZR k_irq_handler;    Branch to our kernel method.
+after_kernel_irq_return:
 ll r1 globalvar_g_current_sp;  Load the current task's stack pointer location
 add r1 r1 WR;
 loa SP r1;       Load current task's stack pointer

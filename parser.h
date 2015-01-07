@@ -395,6 +395,7 @@ struct type_description * copy_type_description(struct type_description *);
 int type_description_cmp(struct type_description *, struct type_description *);
 struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *);
 struct parser_node * convert_abstract_declarator_to_function_type(struct parser_node *);
+void convert_to_untypedefed_type_description(struct type_description *);
 struct type_description * create_address_type_description_from_type_description(struct type_description *);
 struct type_description * create_dereferenced_pointer_type_description_from_type_description(struct type_description *);
 struct type_description * create_dereferenced_array_type_description_from_type_description(struct type_description *);
@@ -409,6 +410,7 @@ void print_node_context(struct c_lexer_state *, struct parser_node *);
 struct parser_node * get_struct_or_union_or_enum_specifier(struct struct_normalized_specifier_ptr_list *);
 int is_struct(struct parser_node *);
 int is_union(struct parser_node *);
+unsigned int contains_struct_or_union_or_enum_definition(struct namespace_object *);
 int is_enum(struct parser_node *);
 unsigned int get_enum_value(struct normalized_declaration_element *);
 unsigned int convert_decimal_constant(unsigned char *);
@@ -434,5 +436,6 @@ struct normalized_declaration_set * create_normalized_declaration_set_from_parse
 struct struct_normalized_declaration_element_ptr_list * create_normalized_declaration_element_list(struct normalized_declaration_set *);
 void destroy_normalized_declaration_element_list(struct struct_normalized_declaration_element_ptr_list*);
 struct parser_node * get_enumerator_list(struct parser_node *);
+struct namespace_object * get_namespace_object_from_closest_namespace(unsigned char *, enum scope_type, struct scope_level *, unsigned int);
 
 #endif

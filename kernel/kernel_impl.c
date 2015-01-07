@@ -257,8 +257,8 @@ void k_kernel_init(void){
 	pcbs[0].priority = 5;
 	pcbs[1].priority = 5;
 	pcbs[2].priority = 5;
-	pcbs[3].priority = 0;
-	pcbs[4].priority = 1;
+	pcbs[3].priority = 2;
+	pcbs[4].priority = 3;
 	pcbs[5].priority = 0;
 	pcbs[6].priority = 1;
 	pcbs[7].priority = 0;

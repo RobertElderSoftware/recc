@@ -24,13 +24,13 @@
 | blt rX rY i     |  0101  | XXXXXXYYYYYYiiiiiiiiiiiiiiii | PC = PC + i * 4 if rX < rY (i is 16-bit signed)  |
 | loa rX rY       |  0110  | XXXXXXYYYYYY---------------- | Load contents of memory location rY into rX      |
 | sto rX rY       |  0111  | XXXXXXYYYYYY---------------- | Store contents of rY at memory location in rX    |
-| ll rX           |  1000  | XXXXXXNNNNNNNNNNNNNNNNNNNNNN | load literal (22 bit) value into rX              |
+| ll rX 0xN       |  1000  | XXXXXXNNNNNNNNNNNNNNNNNNNNNN | load literal (22 bit) value into rX              |
 | and rX rY rZ    |  1001  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY & rZ (bitwise logical and)               |
 | or rX rY rZ     |  1010  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY | rZ (bitwise logical or)                |
 | not rX rY       |  1011  | XXXXXXYYYYYYZZZZZZ---------- | rX = ~rY (bitwise logical not)                   |
 | shr rX rY       |  1100  | XXXXXXYYYYYY---------------- | rX = (rX logical shift rY bits to the right)     |
 | shl rX rY       |  1101  | XXXXXXYYYYYY---------------- | rX = (rX logical shift rY bits to the left)      |
-| dw 0xN          |  ----  | NNNNNNNNNNNNNNNNNNNNNNNNNNNN | define 4 bytes                                   |
+| dw 0xN          |  NNNN  | NNNNNNNNNNNNNNNNNNNNNNNNNNNN | define 4 bytes                                   |
 +-----------------+--------+------------------------------+--------------------------------------------------+
 
 At CPU startup, WR = 0x4, FR = 0x200.  All other registers are initialized to 0.
@@ -56,21 +56,21 @@ Bit 9:     UART1_OUT ready.  Indicates whether UART1_OUT is ready.  CPU sets to 
 Bit 10:    UART1_IN ready.  Indicates whether UART1_IN contains input data.  CPU sets to 1.  User must set 0.
 Bit 11-31  Unused.
 
-Bit 0 of FR is set on out of memory or non 4 byte aligned access.  Memory contents at startup are undefined.
+Out of memory, or non 4 byte aligned access asserts bit 0 of FR.  Initial memory contents are undefined.
 
 Memory Mapped (4 byte) Registers:
 
-0x300000 UART1_OUT      After bytes written here are read outside the CPU, the CPU sets bit 9 of FR to 1.
-0x300010 UART1_IN       When input is stored at this address, the CPU sets bit 10 of FR to 1.
+0x300000 UART1_OUT      After bytes located here are read by peripheral, the CPU sets bit 9 of FR to 1.
+0x300010 UART1_IN       Input from peripheral is stored at this address, the CPU sets bit 10 of FR to 1.
 0x300020 IRQ_HANDLER    The 4 byte address of the global interrupt handler function.
 0x300030 TIMER1_PERIOD  Assert TIMER1 interrupt when (# instructions executed) mod TIMER1_PERIOD == 0
 
 An interrupt is initiated (branches to IRQ_HANDLER) only when all 3 of the following are true:
 1) Bit 1 of FR is set.
-2) The respective interrupt enable bit (Bit 3, 5, or 7 of FR) is set.
-3) The respective interrupt asserted bit (Bit 4, 6, or 8 of FR) is set.
+2) The respective interrupt enable bit (bit 3, 5, or 7 of FR) is set.
+3) The respective interrupt asserted bit (bit 4, 6, or 8 of FR) is set.
 
 A CPU initiated interrupt atomically sets bit 1 of FR to 0, SP to SP - WR and [SP] to PC, then PC to
 IRQ_HANDLER.  At least one cycle occurs between a branch due to bit 2 being set, and a branch to IRQ_Handler.
 
-The sha1sum of the lines above is 33c4c185fdd0c13b81eb2b8993709a146c73e94b
+The sha1sum of the lines above is 241c366c44f9eb8f380d41339339e49d16a6a20e

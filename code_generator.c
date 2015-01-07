@@ -129,12 +129,8 @@ int check_six_children(struct parser_node *, enum node_type, enum node_type, enu
 int check_seven_children(struct parser_node *, enum node_type, enum node_type, enum node_type, enum node_type, enum node_type, enum node_type, enum node_type);
 int is_terminal_c_token_type(struct parser_node *, enum c_token_type);
 
-void unfinished_code_gen(const char*, ...);
 void function_call(struct parser_node *, struct parser_node *, struct code_gen_state *, struct parser_node *);
-unsigned int get_return_value_type_size(struct type_description *);
 unsigned int get_word_size(void);
-unsigned int get_word_aligned_size(unsigned int);
-unsigned int get_ptr_and_word_aligned_size(unsigned int);
 void go_down_scope(struct code_gen_state *);
 void go_up_scope(struct code_gen_state *);
 void create_default_return_value(struct code_gen_state *, struct parser_node *, struct parser_node *);
@@ -155,7 +151,6 @@ unsigned int get_normalized_declaration_element_size(struct code_gen_state *, st
 void consume_scalar_type(struct code_gen_state *, struct parser_node *);
 struct type_description * usual_arithmetic_conversion(struct code_gen_state *, struct parser_node *);
 struct type_description * perform_pointer_conversion(struct code_gen_state *, struct parser_node *);
-struct namespace_object * get_namespace_object_from_closest_namespace(struct code_gen_state *, unsigned char *, enum scope_type, struct scope_level *, unsigned int);
 
 void require_external_symbol(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *, unsigned char * );
 void implement_external_symbol(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *, unsigned char * );
@@ -170,7 +165,6 @@ struct scope_level * get_current_scope_level(struct code_gen_state *);
 void clear_locals_from_scope(struct code_gen_state *, struct scope_level *);
 void find_child_case_labels(struct code_gen_state *, struct parser_node *, struct switch_frame *);
 void find_child_case_labels_h(struct code_gen_state *, struct parser_node *, struct switch_frame *);
-unsigned int contains_struct_or_union_or_enum_definition(struct namespace_object *);
 void do_dot_operator(struct code_gen_state *, unsigned char *, struct parser_node *);
 void do_ptr_operator(struct code_gen_state *, unsigned char *, struct parser_node *);
 unsigned int calculate_type_stack_size(struct code_gen_state *);
@@ -196,7 +190,7 @@ unsigned int evaluate_constant_expression_h2(struct code_gen_state * code_gen_st
 		unsigned char * identifier = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte);
 		struct namespace_object * obj;
 		struct normalized_declaration_element * element;
-		obj = get_namespace_object_from_closest_namespace(code_gen_state, identifier, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
+		obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
 		assert(obj);
 		element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
 		if(element->normalized_declarator && element->normalized_declarator->type == NORMALIZED_ENUMERATOR){
@@ -354,93 +348,11 @@ void backtrack_type_stack(struct code_gen_state * code_gen_state, unsigned int t
 	}
 }
 
-unsigned int contains_struct_or_union_or_enum_definition(struct namespace_object * obj){
-	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
-	unsigned int i;
-	for(i = 0; i < num_elements; i++){
-		struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, i);
-		struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(element->normalized_specifiers);
-		if(struct_or_union_or_enum_specifier){
-			int its_a_struct = is_struct(struct_or_union_or_enum_specifier);
-			int its_a_union = is_union(struct_or_union_or_enum_specifier);
-			int its_a_enum = is_enum(struct_or_union_or_enum_specifier);
-			if(its_a_enum){
-				if(get_enumerator_list(struct_or_union_or_enum_specifier)){
-					return 1;
-				}
-			}
 
-			if(its_a_struct || its_a_union){
-				if(get_struct_declaration_list(struct_or_union_or_enum_specifier)){
-					return 1;
-				}
-			}
-		}
-	}
-	return 0;
-}
-
-struct namespace_object * get_namespace_object_from_closest_namespace(struct code_gen_state * code_gen_state, unsigned char * ident, enum scope_type scope_type, struct scope_level * start_scope, unsigned int require_definition){
-	struct scope_level * current_scope = start_scope;
-	(void)code_gen_state;
-	while(current_scope){
-		struct namespace_object * current_obj;
-		struct struct_namespace_object_ptr_list * scope_namespace;
-		switch (scope_type){
-			case IDENTIFIER_NAMESPACE:{
-				scope_namespace = &current_scope->identifier_namespace;
-				break;
-			}case TAG_NAMESPACE:{
-				scope_namespace = &current_scope->tag_namespace;
-				break;
-			}default:{
-				assert(0 && "Not covered.");
-			}
-		}
-		current_obj = get_namespace_object_from_scope_namespace_using_string(scope_type, scope_namespace, ident);
-		/* Sometimes we need to make sure that we get definition, not just a declaration  */
-		if(current_obj && (!require_definition || contains_struct_or_union_or_enum_definition(current_obj))){
-			return current_obj;
-		}
-		current_scope = current_scope->parent_scope;
-	}
-	return 0;
-}
-
-unsigned int get_return_value_type_size(struct type_description * n){
-	/* Returns the minimum number of bytes required to represent the 
-	*  return value without considering padding or word alignment.  */
-	/* TODO:  This should actually determine the size of the return value */
-	(void)n;
-	return 4;
-}
 
 unsigned int get_word_size(void){
 	/* Right now we're using 32 bit */
 	return 4;
-}
-
-unsigned int get_word_aligned_size(unsigned int i){
-	/*  Some datatypes will not be evenly divisible by the word size, so we need
-	*   add padding in order to make them word aligned */
-	unsigned int w_sz = get_word_size();
-	unsigned int quotient = i / w_sz;
-	unsigned int remainder = i - (quotient * w_sz);
-	return w_sz * quotient + (remainder ? 1 : 0);
-}
-
-unsigned int get_ptr_and_word_aligned_size(unsigned int i){
-	/*  unsigned int i: The size of the raw data type without padding or alignment
-	*  
-	*   Returns total size for this data item including the pointer and word
-	*   aligned data */
-	return get_word_size() + get_word_aligned_size(i);
-}
-
-void unfinished_code_gen(const char* format, ...){
-	va_list arglist;
-	va_start( arglist, format );
-	va_end( arglist );
 }
 
 struct parser_node * first_child(struct parser_node * p){
@@ -616,7 +528,7 @@ unsigned int struct_type_size(struct code_gen_state * code_gen_state, struct typ
 	unsigned int i;
 	unsigned int total_size = 0;
 
-	obj = get_namespace_object_from_closest_namespace(code_gen_state, tag_identifier, TAG_NAMESPACE, source_scope_level, 1);
+	obj = get_namespace_object_from_closest_namespace(tag_identifier, TAG_NAMESPACE, source_scope_level, 1);
 	if(!obj){
 		printf("Unknown structure: %s in file %s.\n", tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier.");
@@ -775,7 +687,7 @@ void traverse_type(struct code_gen_state * code_gen_state, struct type_descripti
 		struct namespace_object * obj;
 		struct normalized_declaration_element * element;
 		unsigned int i;
-		obj = get_namespace_object_from_closest_namespace(code_gen_state, tag_identifier, TAG_NAMESPACE, source_scope_level, 1);
+		obj = get_namespace_object_from_closest_namespace(tag_identifier, TAG_NAMESPACE, source_scope_level, 1);
 		if(!obj){
 			printf("Unknown structure: %s in file %s.\n", tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
 			assert(obj && "Unknown identifier.");
@@ -900,6 +812,8 @@ unsigned int type_size(struct code_gen_state * code_gen_state, struct type_descr
 unsigned int get_normalized_declaration_element_size(struct code_gen_state * code_gen_state, struct normalized_declaration_element * element, unsigned int force_arity_1, struct scope_level * source_scope_level){
 	unsigned int rtn;
 	struct type_description * type_description = create_type_description_from_normalized_declaration_element(element);
+	type_description->source_scope_level = source_scope_level;
+	convert_to_untypedefed_type_description(type_description);
 	rtn = type_size(code_gen_state, type_description, DATA_AND_PTR_BYTES, force_arity_1, source_scope_level);
 	destroy_type_description(type_description);
 	return rtn;
@@ -1017,7 +931,7 @@ void load_identifier(struct code_gen_state * code_gen_state, unsigned char * ide
 	struct type_description * type_description;
 	unsigned int num_elements;
 	struct normalized_declaration_element * element;
-	obj = get_namespace_object_from_closest_namespace(code_gen_state, identifier, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
+	obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
 	if(!obj){
 		printf("Unknown identifier: %s in file %s.\n", identifier, parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier.");
@@ -1029,6 +943,7 @@ void load_identifier(struct code_gen_state * code_gen_state, unsigned char * ide
 
 	type_description = create_type_description_from_normalized_declaration_element(element);
 	type_description->source_scope_level = obj->scope_level;
+	convert_to_untypedefed_type_description(type_description);
 
 	abstract_declarator = create_abstract_declarator_from_normalized_declarator(element->normalized_declarator);
 	switch(obj->object_location){
@@ -1338,7 +1253,7 @@ void do_ptr_operator(struct code_gen_state * code_gen_state, unsigned char * tar
 	struct_tag_token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
 	struct_tag_identifier = copy_string(struct_tag_token->first_byte, struct_tag_token->last_byte);
 
-	obj = get_namespace_object_from_closest_namespace(code_gen_state, struct_tag_identifier, TAG_NAMESPACE, dereferenced_type->source_scope_level, 1);
+	obj = get_namespace_object_from_closest_namespace(struct_tag_identifier, TAG_NAMESPACE, dereferenced_type->source_scope_level, 1);
 	if(!obj){
 		printf("Unknown structure: %s in file %s.\n", struct_tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier.");
@@ -1441,7 +1356,7 @@ void do_dot_operator(struct code_gen_state * code_gen_state, unsigned char * tar
 	}
 	struct_tag_identifier = copy_string(struct_tag_token->first_byte, struct_tag_token->last_byte);
 
-	obj = get_namespace_object_from_closest_namespace(code_gen_state, struct_tag_identifier, TAG_NAMESPACE, t->source_scope_level, 1);
+	obj = get_namespace_object_from_closest_namespace(struct_tag_identifier, TAG_NAMESPACE, t->source_scope_level, 1);
 	if(!obj){
 		printf("Unknown structure: %s in file %s.\n", struct_tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier.");
@@ -2325,11 +2240,42 @@ void g_conditional_expression(struct parser_node * p, struct code_gen_state * co
 			is_terminal_c_token_type(second_child(p), QUESTION_MARK_CHAR) &&
 			is_terminal_c_token_type(fourth_child(p), COLON_CHAR)
 		){
+			unsigned int cond_index = code_gen_state->condition_index;
+			unsigned char * false_condition_str;
+			unsigned char * after_condition_str;
+			struct type_description * t1;
+			struct type_description * t2;
+			code_gen_state->condition_index = code_gen_state->condition_index + 1;
+			sprintf_hook("falsecondition%d", cond_index);
+			false_condition_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
+			sprintf_hook("aftercondition%d", cond_index);
+			after_condition_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 			g_logical_or_expression(first_child(p), code_gen_state);
-			buffered_printf(code_gen_state->buffered_output,"If logical or is true use:.\n");
+			/*  Pop the item that was loaded in the conditional */
+			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;\n"); /* Pop addr  */
+			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;\n");
+			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;\n"); /* Pop value */
+			consume_scalar_type(code_gen_state, first_child(p));
+			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s;\n", false_condition_str);
 			g_expression(third_child(p), code_gen_state);
-			buffered_printf(code_gen_state->buffered_output,"Otherwise use:.\n");
+			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;\n", after_condition_str);
+			buffered_printf(code_gen_state->buffered_output,"%s:\n", false_condition_str);
 			g_conditional_expression(fifth_child(p), code_gen_state);
+			buffered_printf(code_gen_state->buffered_output,"%s:\n", after_condition_str);
+			require_internal_symbol(&code_gen_state->symbols, false_condition_str);
+			implement_internal_symbol(&code_gen_state->symbols, false_condition_str);
+			require_internal_symbol(&code_gen_state->symbols, after_condition_str);
+			implement_internal_symbol(&code_gen_state->symbols, after_condition_str);
+			free(after_condition_str);
+			free(false_condition_str);
+			t1 = pop_type_without_type_check(code_gen_state, p);
+			t2 = pop_type_without_type_check(code_gen_state, p);
+			if(!type_description_cmp(t1, t2)){
+				push_type(code_gen_state, t1, p);
+        			destroy_type_description(t2);
+			}else{
+				assert(0 && "Type missmatch in conditional expression.");
+			}
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unsupported conditional expression.\n");
 		}
@@ -2824,9 +2770,7 @@ void g_enum_specifier(struct parser_node * p, struct code_gen_state * code_gen_s
 void g_struct_or_union(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(is_first_child_type(p, TERMINAL)){
 		if(is_terminal_c_token_type(first_child(p),STRUCT)){
-			unfinished_code_gen("Something for struct.\n");
 		}else if(is_terminal_c_token_type(first_child(p),UNION)){
-			unfinished_code_gen("Something for union.\n");
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unsupported storage_class_specifier.\n");
 		}
@@ -2949,7 +2893,6 @@ void g_identifier_list_rest(struct parser_node * p, struct code_gen_state * code
 			is_terminal_c_token_type(first_child(p),COMMA_CHAR) &&
 			is_terminal_c_token_type(second_child(p),IDENTIFIER)
 		){
-			unfinished_code_gen("Something for identifier in identifier list.\n");
 			g_identifier_list_rest(third_child(p), code_gen_state);
 		}else{
 			assert(0 &&"Expected COMMA_CHAR.\n");
@@ -2964,7 +2907,6 @@ void g_identifier_list_rest(struct parser_node * p, struct code_gen_state * code
 void g_identifier_list(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_two_children(p, TERMINAL, IDENTIFIER_LIST_REST)){
 		if(is_terminal_c_token_type(first_child(p),IDENTIFIER)){
-			unfinished_code_gen("Something for identifier in identifier list.\n");
 			g_identifier_list_rest(second_child(p), code_gen_state);
 		}else{
 			assert(0 &&"Expected COMMA_CHAR.\n");
@@ -3087,7 +3029,6 @@ void g_direct_declarator(struct parser_node * p, struct code_gen_state * code_ge
 			is_terminal_c_token_type(first_child(p),OPEN_PAREN_CHAR) &&
 			is_terminal_c_token_type(third_child(p),CLOSE_PAREN_CHAR)
 		){
-			unfinished_code_gen("Something direct_declarator's ().\n");
 			g_declarator(second_child(p), code_gen_state);
 			g_direct_declarator_rest(fourth_child(p), code_gen_state);
 		}
@@ -3234,10 +3175,12 @@ void g_init_declarator(struct parser_node * p, struct code_gen_state * code_gen_
 	unsigned int is_global;
 	unsigned int is_extern;
 	struct parser_node * abstract_declarator;
-	obj = get_namespace_object_from_closest_namespace(code_gen_state, identifier_str, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
+	obj = get_namespace_object_from_closest_namespace(identifier_str, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
 	num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
 	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements - 1);
 	type_description = create_type_description_from_normalized_declaration_element(element);
+	type_description->source_scope_level = obj->scope_level;
+	convert_to_untypedefed_type_description(type_description);
 	is_global = obj->scope_level == code_gen_state->parser_state->top_scope;
 
 	abstract_declarator = create_abstract_declarator_from_normalized_declarator(element->normalized_declarator);
@@ -3468,7 +3411,6 @@ void g_parameter_type_list(struct parser_node * p, struct code_gen_state * code_
 			is_terminal_c_token_type(third_child(p),ELLIPSIS)
 		){
 			g_parameter_list(first_child(p), code_gen_state);
-			unfinished_code_gen("Something for ELLIPSIS.\n");
 		}else{
 			assert(0 &&"Expected ,....\n");
 		}
@@ -4225,7 +4167,7 @@ struct linker_symbol * make_linker_symbol(unsigned int is_impl, unsigned int is_
 	new_symbol->is_implemented = is_impl;
 	new_symbol->is_required = is_req;
 	new_symbol->is_external = is_ext;
-	new_symbol->offset = offset;
+	new_symbol->instruction_index = offset;
 	return new_symbol;
 }
 

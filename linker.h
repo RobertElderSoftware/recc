@@ -38,7 +38,7 @@ struct linker_symbol{
 	unsigned int is_implemented;
 	unsigned int is_required;
 	unsigned int is_external;
-	unsigned int offset;
+	unsigned int instruction_index; /* The index of the instruction in its parent linker object. */
 };
 
 struct asm_instruction{
@@ -50,21 +50,22 @@ struct asm_instruction{
 	struct asm_lexer_token * identifier_token;
 	struct asm_lexer_token * number_token;
 	unsigned int number_token_is_negative;
+	unsigned int post_linking_offset; /* The offset (in # of 4 byte words) of this instruction after we've considered instructions that need to be re-written by the linker */
 	unsigned int pad;
 };
 
-struct linker_object{
+struct linker_object{ /*  Represents everything that comes from one translation unit (or assembly file) */
 	struct asm_lexer_state * asm_lexer_state;
 	struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map symbols;
 	struct struct_asm_instruction_ptr_list instructions;
 	unsigned int is_relocatable;
 	unsigned int current_line;
-	unsigned int location_offset;
+	unsigned int linker_object_post_linking_offset; /* The offset to the instruction of this symbol after considering instructions re-written by the linker */
 	unsigned int pad;
 };
 
 struct linker_object * process_assembly(struct asm_lexer_state *);
-void set_symbol_offset(struct linker_object *, struct asm_lexer_token *, unsigned int);
+void set_symbol_instruction_index(struct linker_object *, struct asm_lexer_token *, unsigned int);
 void add_linker_symbol(struct linker_object *, struct asm_lexer_token *, unsigned int, unsigned int, unsigned int);
 void output_artifacts(struct unsigned_char_list *, struct linker_object *, struct struct_linker_object_ptr_list *, struct unsigned_char_list *);
 unsigned int get_absolute_symbol_offset(unsigned char *, struct linker_object *, struct struct_linker_object_ptr_list *);

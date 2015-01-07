@@ -36,6 +36,9 @@ int output(void){
 		putchar('b');
 	}
 
+	putchar(0 ? 'a' : 'b');
+	putchar(1 ? 'a' : 'b');
+
 	if(one & 1)
 		putchar('b');
 

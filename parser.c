@@ -141,7 +141,6 @@ struct parser_node * initializer(struct parser_state *);
 struct parser_node * struct_or_union_specifier(struct parser_state *);
 struct parser_node * type_name(struct parser_state *);
 struct parser_node * abstract_declarator(struct parser_state *);
-struct parser_node * declaration_list(struct parser_state *);
 struct parser_node * init_declarator(struct parser_state *);
 struct parser_node * parameter_type_list(struct parser_state *);
 struct parser_node * labeled_statement(struct parser_state *);
@@ -201,8 +200,8 @@ struct parser_node * declaration_specifiers(struct parser_state *);
 struct parser_node * init_declarator_list_rest(struct parser_state *);
 struct parser_node * init_declarator_list(struct parser_state *);
 struct parser_node * declaration(struct parser_state *);
-struct parser_node * declaration_list_rest(struct parser_state *);
-struct parser_node * declaration_list(struct parser_state *);
+struct parser_node * declaration_list_rest(struct parser_state *, struct namespace_object *, struct first_and_last_namespace_object *);
+struct parser_node * declaration_list(struct parser_state *, struct namespace_object *);
 struct parser_node * identifier_list_rest(struct parser_state *);
 struct parser_node * identifier_list(struct parser_state *);
 struct parser_node * direct_declarator_rest(struct parser_state *);
@@ -284,7 +283,6 @@ void print_normalized_specifier(struct unsigned_char_list *, struct struct_norma
 struct namespace_modification * create_namespace_modification(struct scope_level *, struct struct_namespace_object_ptr_list *, struct normalized_declaration_element *, enum object_location, struct namespace_object *);
 struct namespace_object * do_namespace_modification(struct namespace_modification *);
 void undo_namespace_modification(struct namespace_modification *);
-struct first_and_last_namespace_object declare_declaration_list(struct parser_state *, struct parser_node *, enum object_location, struct namespace_object *);
 unsigned int convert_hexadecimal_constant(unsigned char *);
 unsigned int get_hex_digit_value(unsigned char);
 void set_next_namespace_object(struct namespace_object_change *);
@@ -541,6 +539,45 @@ struct type_description * create_dereferenced_pointer_type_description_from_type
 	free(normalized_declarator);
 	rtn->source_scope_level = a->source_scope_level;
 	return rtn;
+}
+
+void convert_to_untypedefed_type_description(struct type_description * t){
+	/*  Will resolve any typedefed types int the top level specifiers (but not in deeper places like function parameters.) */
+	unsigned int num_specifiers = struct_normalized_specifier_ptr_list_size(t->specifiers);
+	unsigned int i;
+	for(i = 0; i < num_specifiers; i++){
+		struct normalized_specifier * normalized_specifier = struct_normalized_specifier_ptr_list_get(t->specifiers, i);
+		if(normalized_specifier->type == NORMALIZED_TYPE_SPECIFIER && normalized_specifier->specifier->first_child->type == TERMINAL){
+			struct parser_node * child = normalized_specifier->specifier->first_child;
+			if(child->c_lexer_token->type == IDENTIFIER){
+				unsigned char * ident = copy_string(child->c_lexer_token->first_byte, child->c_lexer_token->last_byte);
+				struct namespace_object * obj = get_namespace_object_from_closest_namespace(ident, IDENTIFIER_NAMESPACE, t->source_scope_level, 0);
+				struct normalized_declaration_element * element;
+				struct type_description * typedefed_type;
+				element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
+				typedefed_type = create_type_description_from_normalized_declaration_element(element);
+				if(obj && count_specifiers(typedefed_type, TYPEDEF)){
+					unsigned int num_original_specifiers;
+					unsigned int j;
+					remove_specifier(t, 0, IDENTIFIER);
+					remove_specifier(typedefed_type, 0, TYPEDEF);
+					num_original_specifiers = struct_normalized_specifier_ptr_list_size(typedefed_type->specifiers);
+					for(j = 0; j < num_original_specifiers; j++){
+						struct normalized_specifier * src_normalized_specifier = struct_normalized_specifier_ptr_list_get(typedefed_type->specifiers, j);
+						struct normalized_specifier * dst_normalized_specifier = malloc(sizeof(struct normalized_specifier));
+						struct parser_node * specifiers_copy = copy_parser_node_children_only(src_normalized_specifier->specifier);
+						dst_normalized_specifier->specifier = specifiers_copy;
+						dst_normalized_specifier->type = src_normalized_specifier->type;
+						struct_normalized_specifier_ptr_list_add(t->specifiers, dst_normalized_specifier);
+					}
+					destroy_type_description(typedefed_type);
+				}else{
+					assert(0 && "Unable to resolve typedef.");
+				}
+				free(ident);
+			}
+		}/* else, no typedefs to resolve */
+	}
 }
 
 struct type_description * create_address_type_description_from_type_description(struct type_description * a){
@@ -1775,6 +1812,32 @@ int is_union(struct parser_node * n){
 	return n->first_child->first_child && n->first_child->first_child->c_lexer_token->type == UNION;
 }
 
+unsigned int contains_struct_or_union_or_enum_definition(struct namespace_object * obj){
+	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
+	unsigned int i;
+	for(i = 0; i < num_elements; i++){
+		struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, i);
+		struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(element->normalized_specifiers);
+		if(struct_or_union_or_enum_specifier){
+			int its_a_struct = is_struct(struct_or_union_or_enum_specifier);
+			int its_a_union = is_union(struct_or_union_or_enum_specifier);
+			int its_a_enum = is_enum(struct_or_union_or_enum_specifier);
+			if(its_a_enum){
+				if(get_enumerator_list(struct_or_union_or_enum_specifier)){
+					return 1;
+				}
+			}
+
+			if(its_a_struct || its_a_union){
+				if(get_struct_declaration_list(struct_or_union_or_enum_specifier)){
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 int is_enum(struct parser_node * n){
 	assert(n->type == STRUCT_OR_UNION_SPECIFIER || n->type == ENUM_SPECIFIER);
 	return n->first_child->type == TERMINAL && n->first_child->c_lexer_token->type;
@@ -2545,6 +2608,32 @@ struct namespace_object * get_namespace_object_from_scope_namespace_using_string
 			return namespace_object;
 		}
 		free(compare_string);
+	}
+	return 0;
+}
+
+struct namespace_object * get_namespace_object_from_closest_namespace(unsigned char * ident, enum scope_type scope_type, struct scope_level * start_scope, unsigned int require_definition){
+	struct scope_level * current_scope = start_scope;
+	while(current_scope){
+		struct namespace_object * current_obj;
+		struct struct_namespace_object_ptr_list * scope_namespace;
+		switch (scope_type){
+			case IDENTIFIER_NAMESPACE:{
+				scope_namespace = &current_scope->identifier_namespace;
+				break;
+			}case TAG_NAMESPACE:{
+				scope_namespace = &current_scope->tag_namespace;
+				break;
+			}default:{
+				assert(0 && "Not covered.");
+			}
+		}
+		current_obj = get_namespace_object_from_scope_namespace_using_string(scope_type, scope_namespace, ident);
+		/* Sometimes we need to make sure that we get definition, not just a declaration  */
+		if(current_obj && (!require_definition || contains_struct_or_union_or_enum_definition(current_obj))){
+			return current_obj;
+		}
+		current_scope = current_scope->parent_scope;
 	}
 	return 0;
 }
@@ -3915,68 +4004,6 @@ struct parser_node * statement_list(struct parser_state * parser_state){
 	}
 }
 
-struct first_and_last_namespace_object declare_declaration_list(struct parser_state * parser_state, struct parser_node * dcl, enum object_location object_location, struct namespace_object * previous_object){
-	switch(dcl->type){
-		case DECLARATION_LIST:{
-			struct first_and_last_namespace_object fl_current;
-			struct first_and_last_namespace_object fl_rest;
-			fl_current = manage_generic_declaration(parser_state, dcl->first_child, 0, 0, object_location, previous_object, 0);
-			fl_rest = declare_declaration_list(parser_state, dcl->first_child->next, object_location, fl_current.last);
-			if(fl_current.last){
-				/* The point of this exercise it to be able to point to the next one */
-				struct namespace_object_change * c = malloc(sizeof(struct namespace_object_change));
-				c->target = fl_current.last;
-				c->old_obj = fl_current.last->next;
-				c->new_obj = fl_rest.first;
-				push_operation(parser_state, SET_NEXT_NAMESPACE_OBJECT, c);
-				fl_current.last = fl_rest.last; 
-			}else{ 
-				/*  The current one did not declare anything */
-				fl_current.first = fl_rest.first;
-				fl_current.last = fl_rest.last;
-			}
-			return fl_current; /*  Return the first and last of all declarations */
-		}case DECLARATION_LIST_REST:{
-			if(dcl->first_child->type == EPSILON){
-				struct first_and_last_namespace_object fl;
-				fl.first = 0;
-				fl.last = 0;
-				return fl;
-			}else if(dcl->first_child->type == DECLARATION || dcl->first_child->type == STRUCT_DECLARATION){
-				struct first_and_last_namespace_object fl_current;
-				struct first_and_last_namespace_object fl_rest;
-				fl_current = manage_generic_declaration(parser_state, dcl->first_child, 0, 0, object_location, previous_object, 0);
-				fl_rest = declare_declaration_list(parser_state, dcl->first_child->next, object_location, fl_current.last);
-				if(fl_current.last){
-					struct namespace_object_change * c = malloc(sizeof(struct namespace_object_change));
-					c->target = fl_current.last;
-					c->old_obj = fl_current.last->next;
-					c->new_obj = fl_rest.first;
-					push_operation(parser_state, SET_NEXT_NAMESPACE_OBJECT, c);
-					fl_current.last = fl_rest.last; 
-				}else{ 
-					/*  The current one did not declare anything */
-					fl_current.first = fl_rest.first;
-					fl_current.last = fl_rest.last;
-				}
-				return fl_current; /*  Return the first and last of all declarations */
-			}else{
-				struct first_and_last_namespace_object fl;
-				assert(0 && "not expected type.");
-				fl.first = 0;
-				fl.last = 0;
-				return fl;
-			}
-		}default:{
-			struct first_and_last_namespace_object fl;
-			assert(0 && "Unknown dcl type.");
-			fl.first = 0;
-			fl.last = 0;
-			return fl;
-		}
-	}
-}
-
 struct parser_node * compound_statement(struct parser_state * parser_state, struct parser_node * possible_declarator){
 	struct parser_node * n1;
 	parser_progress("Attempting to build compound_statement\n");
@@ -3985,7 +4012,6 @@ struct parser_node * compound_statement(struct parser_state * parser_state, stru
 		if(possible_declarator){
 			if(possible_declarator->type == DECLARATION_LIST){
 				/*  For K&R C style function */
-				declare_declaration_list(parser_state, possible_declarator, PARAMETER, 0);
 			}else if(possible_declarator->type == DECLARATOR){
 				/* If possible_declarator is set, it will be a declarator or declaration_list from a function.  Declare the params in this scope. */
 				struct parser_node * copy = copy_parser_node_children_only(possible_declarator);
@@ -4019,13 +4045,7 @@ struct parser_node * compound_statement(struct parser_state * parser_state, stru
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_BRACE_CHAR.\n");
 				return 0;
 			}
-		}else if((n1->next = declaration_list(parser_state))){
-			struct first_and_last_namespace_object fl;
-			struct scope_level * scope;
-			scope = parser_state->top_scope;
-			descend_scope(&scope, parser_state->current_scope_depth);
-			fl = declare_declaration_list(parser_state, n1->next, LOCAL, 0);
-			scope->first_local_object = fl.first;
+		}else if((n1->next = declaration_list(parser_state, 0))){
 			if((n1->next->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
 				push_operation(parser_state, DECREMENT_SCOPE_DEPTH, 0);
 				return create_parser_node(parser_state, 0, n1, 0, COMPOUND_STATEMENT);
@@ -4228,11 +4248,33 @@ struct parser_node * type_specifier(struct parser_state * parser_state){
 	}else if((n1 = enum_specifier(parser_state))){
 		return create_parser_node(parser_state, 0, n1, 0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(IDENTIFIER, parser_state))){
-		backtrack(parser_state, checkpoint);
-		parser_progress("TODO:  Handle type specifier correctly, putting back token for now.\n");
-		return 0;
-		/* return create_parser_node(parser_state, 0, n1, 0, TYPE_SPECIFIER); */
-	}else {
+		/*  This identifier can only be treated as a type if it has been declared with a typedef.  */
+		unsigned char * ident = copy_string(n1->c_lexer_token->first_byte, n1->c_lexer_token->last_byte);
+		struct namespace_object * obj;
+		struct scope_level * scope;
+		struct normalized_declaration_element * element;
+		struct type_description * type_description = 0;
+		scope = parser_state->top_scope;
+		descend_scope(&scope, parser_state->current_scope_depth);
+		obj = get_namespace_object_from_closest_namespace(ident, IDENTIFIER_NAMESPACE, scope, 0);
+		if(obj){
+			element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
+			type_description = create_type_description_from_normalized_declaration_element(element);
+		}
+		if(obj && count_specifiers(type_description, TYPEDEF)){
+			destroy_type_description(type_description);
+			free(ident);
+			return create_parser_node(parser_state, 0, n1, 0, TYPE_SPECIFIER);
+		}else{
+			if(type_description){
+				destroy_type_description(type_description);
+			}
+			backtrack(parser_state, checkpoint);
+			free(ident);
+			parser_progress("Identifier not typedefed type.  Putting back tokens.\n");
+			return 0;
+		}
+	}else{
 		parser_progress("Expected a type_specifier.\n");
 		return 0;
 	}
@@ -4333,12 +4375,27 @@ struct parser_node * declaration(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * declaration_list_rest(struct parser_state * parser_state){
+struct parser_node * declaration_list_rest(struct parser_state * parser_state, struct namespace_object * previous_object, struct first_and_last_namespace_object * fl_all){
 	struct parser_node * n1;
 	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
 	parser_progress("Attempting to build declaration_list_rest\n");
 	if((n1 = declaration(parser_state))){
-		if((n1->next = declaration_list_rest(parser_state))){
+		struct first_and_last_namespace_object fl_rest; /*  First and last object of all later declarations */
+		struct first_and_last_namespace_object fl_current = manage_generic_declaration(parser_state, n1, 0, 0, LOCAL, previous_object, 0); /*  First and last object of current declaration */
+		fl_rest.first = 0;
+		fl_rest.last = 0;
+		if((n1->next = declaration_list_rest(parser_state, fl_current.last, &fl_rest))){
+			if(fl_current.last && fl_rest.last){
+				/* The point of this exercise it to be able to point to the next one */
+				struct namespace_object_change * c = malloc(sizeof(struct namespace_object_change));
+				c->target = fl_current.last;
+				c->old_obj = fl_current.last->next;
+				c->new_obj = fl_rest.first;
+				push_operation(parser_state, SET_NEXT_NAMESPACE_OBJECT, c);
+				fl_current.last = fl_rest.last; 
+			}
+			fl_all->first = fl_current.first ? fl_current.first : fl_rest.first;
+			fl_all->last = fl_rest.last ? fl_rest.last : fl_current.last;
 			return create_parser_node(parser_state, 0, n1, 0, DECLARATION_LIST_REST);
 		}else{
 			parser_progress("Expected a declaration_list_rest.\n");
@@ -4351,12 +4408,29 @@ struct parser_node * declaration_list_rest(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * declaration_list(struct parser_state * parser_state){
+struct parser_node * declaration_list(struct parser_state * parser_state, struct namespace_object * previous_object){
 	struct parser_node * n1;
 	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
 	parser_progress("Attempting to build declaration_list\n");
 	if((n1 = declaration(parser_state))){
-		if((n1->next = declaration_list_rest(parser_state))){
+		struct scope_level * scope;
+		struct first_and_last_namespace_object fl_rest; /*  First and last object of all later declarations */
+		struct first_and_last_namespace_object fl_current = manage_generic_declaration(parser_state, n1, 0, 0, LOCAL, previous_object, 0); /*  First and last object of current declaration */
+		fl_rest.first = 0;
+		fl_rest.last = 0;
+		scope = parser_state->top_scope;
+		descend_scope(&scope, parser_state->current_scope_depth);
+		if((n1->next = declaration_list_rest(parser_state, fl_current.last, &fl_rest))){
+			scope->first_local_object = fl_current.first ? fl_current.first : fl_rest.first; /*  This block scope will need to keep track of the first local it has */
+			if(fl_current.last && fl_rest.last){
+				/* The point of this exercise it to be able to point to the next one */
+				struct namespace_object_change * c = malloc(sizeof(struct namespace_object_change));
+				c->target = fl_current.last;
+				c->old_obj = fl_current.last->next;
+				c->new_obj = fl_rest.first;
+				push_operation(parser_state, SET_NEXT_NAMESPACE_OBJECT, c);
+				fl_current.last = fl_rest.last; 
+			}
 			return create_parser_node(parser_state, 0, n1, 0, DECLARATION_LIST);
 		}else{
 			parser_progress("Expected a declaration_list_rest.\n");
@@ -5386,7 +5460,7 @@ struct parser_node * function_definition(struct parser_state * parser_state){
 	parser_progress("Attempting to build function_definition\n");
 	if((n1 = declaration_specifiers(parser_state))){
 		if((n1->next = declarator(parser_state))){
-			if((n1->next->next = declaration_list(parser_state))){
+			if((n1->next->next = declaration_list(parser_state, 0))){
 				if((n1->next->next->next = compound_statement(parser_state, n1->next->next))){
 					return create_parser_node(parser_state, 0, n1, 0, FUNCTION_DEFINITION);
 				}else{
@@ -5407,7 +5481,7 @@ struct parser_node * function_definition(struct parser_state * parser_state){
 			return 0;
 		}
 	}else if((n1 = declarator(parser_state))){
-		if((n1->next = declaration_list(parser_state))){
+		if((n1->next = declaration_list(parser_state, 0))){
 			if((n1->next->next = compound_statement(parser_state, n1->next))){
 				return create_parser_node(parser_state, 0, n1, 0, FUNCTION_DEFINITION);
 			}else{
@@ -5768,7 +5842,7 @@ void remove_specifier(struct type_description * description, unsigned int n, enu
 	validate_specifier_token_type(t);
 	for(k = 0; k < struct_normalized_specifier_ptr_list_size(description->specifiers); k++){
 		struct normalized_specifier * normalized_specifier = struct_normalized_specifier_ptr_list_get(description->specifiers, k);
-		if(normalized_specifier->specifier->type == TYPE_SPECIFIER && normalized_specifier->specifier->first_child->type == TERMINAL && normalized_specifier->specifier->first_child->c_lexer_token->type == t){
+		if(normalized_specifier->specifier->first_child->type == TERMINAL && normalized_specifier->specifier->first_child->c_lexer_token->type == t){
 			if(count == n){
 				normalized_specifier->specifier->next = 0;
 				destroy_parser_node_tree_and_c_lexer_tokens(normalized_specifier->specifier);
@@ -5798,7 +5872,7 @@ void remove_enum(struct type_description * description){
 }
 
 void validate_specifier_token_type(enum c_token_type t){
-	assert(t == VOID || t == CHAR || t == SHORT || t == INT || t == LONG || t == FLOAT || t == DOUBLE || t == SIGNED || t == UNSIGNED);
+	assert(t == TYPEDEF || t == VOID || t == CHAR || t == SHORT || t == INT || t == LONG || t == FLOAT || t == DOUBLE || t == SIGNED || t == UNSIGNED || t == IDENTIFIER);
 }
 
 unsigned int count_specifiers(struct type_description * description, enum c_token_type t){

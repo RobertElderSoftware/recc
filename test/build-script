@@ -73,3 +73,7 @@ LINK test/va_list_call.l2, stdlib/putchar.l2 TO test/va_list_call.l1
 PREPROCESS test/while-loop.c TO test/while-loop.i
 CODE GENERATE test/while-loop.i TO test/while-loop.l2
 LINK test/while-loop.l2, stdlib/putchar.l2, builtin/signed_less_than.l2 TO test/while-loop.l1
+
+PREPROCESS test/typedef.c TO test/typedef.i
+CODE GENERATE test/typedef.i TO test/typedef.l2
+LINK test/typedef.l2, stdlib/putchar.l2, TO test/typedef.l1
