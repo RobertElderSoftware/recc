@@ -66,6 +66,8 @@ int many_math(void){
 
 enum foo {type1, type2};
 
+const char * constant_strings[3] = {"asdf", "fdsa", "lol"};
+
 int main(void){
 	unsigned int i;
 	unsigned int j;
@@ -144,6 +146,12 @@ int main(void){
 	(void)j;
 	(void)array1;
 	(void)array2;
+
+	printf("%s", "testing");
+
+	for(k = 0; k < 3; k++){
+		printf("%s", constant_strings[k]);
+	}
 
 	for(k = 0; k < 5; k++){
 		b = 0;

@@ -65,17 +65,18 @@ The following things are supported:
 -  Global variables
 -  Global variables linked from external symbols.
 -  The simplest cases of a few preprocessor directives (#define ONE 1, #include "inc.h", #ifndef, #endif)
+-  typedef
+-  Some constant initializers for globals like (arr[3] = {1,2,3})
+-  anonymous structure instances
+-  Complex declarators like int (*(*foo[6])(int))(void);
 
 The following things are current not implemented/supported:
 
 -  K&R C style function definitions
 -  goto
--  typedef
--  anonymous structure instances
 -  unions
 -  long and long long types
 -  float types (float, double, long double)
--  Complex initializers like int (arr[] = {1,2,3})
 -  The standard library.  Only a small subset of printf is currently implemented. 
 -  The compiler is not yet self-hosting.  This is mainly due to the unimplemented parts of the c standard library.  It may also be necessary to introduce some optimizations in order to reduce the size of the generated code.
 

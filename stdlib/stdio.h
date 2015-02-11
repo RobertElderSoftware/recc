@@ -16,4 +16,6 @@
 #define __STDIO_H_DEFINED__
 int printf(const char *, ...);
 int putchar(int);
+
+typedef int FILE;  /* TODO:  Need actual file descriptors */
 #endif

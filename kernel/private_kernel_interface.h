@@ -33,6 +33,7 @@ unsigned int init_task_stack(unsigned int *, void (*)(void));
 unsigned int scheduler(void);
 unsigned int k_release_processor(void);
 void k_task_exit(void);
+void k_kernel_exit(void);
 void k_kernel_init(void);
 void irq_handler(void);
 void k_irq_handler(unsigned int);

@@ -30,6 +30,7 @@
 #include "data-structures/struct_namespace_object_ptr_list.h"
 #include "data-structures/unsigned_char_list.h"
 #include "data-structures/unsigned_char_ptr_list.h"
+#include "data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -241,7 +242,7 @@ struct normalized_declaration_set{
 	    declares three different symbols.
 	*/
 	struct parser_node * set; /* a declaration, struct_declaration, parameter_declaration etc. */
-	struct normalized_declaration_set * parent_normalized_declaration_set; /* Used to point to the main enum, struct or union declaration */
+	struct normalized_declaration_set * parent_normalized_declaration_set; /* Used to point to the main enum, struct or union declaration from an inner declaration. */
 	struct struct_normalized_specifier_ptr_list * normalized_specifiers; /*  This entire list of specifiers gets applied to */
 	struct struct_normalized_declarator_ptr_list * normalized_declarators; /*  each of these declarators */
 	enum normalized_declaration_type type;
@@ -334,13 +335,16 @@ struct scope_level{
 };
 
 struct constant_description{
+	enum c_token_type type;
+	struct type_description * type_description;
 	unsigned char * str;
 	unsigned int * native_data; /* Byte array of the data used in the program */
 	unsigned int size_in_bytes;
-	unsigned int pad;
+	unsigned int num_references;
 };
 
 struct type_description{
+	struct normalized_declaration_element * source_element; /* Needed for anonymous struct/union/enum */
 	struct normalized_declarator * declarator;
 	struct struct_normalized_specifier_ptr_list * specifiers;
 	struct parser_node * context;
@@ -353,17 +357,13 @@ struct parser_state{
 	unsigned char * buff;
 	struct scope_level * top_scope;
 	struct parser_node * top_node;
-	struct constant_description ** constants;
 	struct type_description * unsigned_int_description;
-	struct type_description * const_char_ptr_description;
-	struct type_description * const_char_description;
 	struct unsigned_char_list * buffered_output;
 	unsigned int line_number;
 	unsigned int current_scope_depth;
 	struct struct_parser_operation_stack operation_stack;
 	unsigned int tokens_position;
-	unsigned int num_constants;
-	struct char_ptr_list string_literals;
+	struct unsigned_char_ptr_to_struct_constant_description_ptr_map constant_map;
 };
 
 void * push_operation(struct parser_state *, enum parser_operation_type, void *);
@@ -404,7 +404,7 @@ int is_type_description_a_function_pointer(struct type_description *);
 struct type_description * get_current_function_return_type_description(struct type_description *);
 struct c_lexer_token * get_identifier_token_from_normalized_declarator(struct normalized_declarator *);
 
-struct type_description * create_type_description_from_type_name(struct parser_node *);
+struct type_description * create_type_description_from_type_name(struct parser_state *, struct parser_node *);
 unsigned int is_signed(struct type_description * t);
 void print_node_context(struct c_lexer_state *, struct parser_node *);
 struct parser_node * get_struct_or_union_or_enum_specifier(struct struct_normalized_specifier_ptr_list *);
@@ -437,5 +437,6 @@ struct struct_normalized_declaration_element_ptr_list * create_normalized_declar
 void destroy_normalized_declaration_element_list(struct struct_normalized_declaration_element_ptr_list*);
 struct parser_node * get_enumerator_list(struct parser_node *);
 struct namespace_object * get_namespace_object_from_closest_namespace(unsigned char *, enum scope_type, struct scope_level *, unsigned int);
+unsigned char * make_up_identifier(struct normalized_declaration_element *);
 
 #endif

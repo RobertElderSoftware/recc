@@ -414,8 +414,10 @@ int main(void){
 	add_string_literal_to_buffer((unsigned char *)"data-structures/libgenerated-data-structures.a: ", &library_dependency, 0);
 	add_string_literal_to_buffer((unsigned char *)"\n\t@ar -rcs data-structures/libgenerated-data-structures.a ", &library_buildcommand, 0);
 
+	/*  To create additional datatypes, you can simply add a line below and the build process should take care of the rest */
 	create_map_type("unsigned char *", "struct linker_symbol *");
 	create_map_type("unsigned char *", "unsigned char *");
+	create_map_type("unsigned char *", "struct constant_description *");
 	create_list_type("char");
 	create_list_type("char *");
 	create_list_type("unsigned char *");
@@ -436,7 +438,10 @@ int main(void){
 	create_list_type("struct asm_instruction *");
 	create_list_type("struct asm_lexer_state *");
 	create_list_type("struct linker_object *");
+	create_list_type("struct linker_symbol *");
 	create_list_type("struct type_description *");
+	create_list_type("struct constant_description *");
+	create_list_type("struct constant_initializer_level *");
 	create_stack_type("unsigned int");
 	create_stack_type("struct parser_operation");
 

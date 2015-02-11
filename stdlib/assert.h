@@ -12,14 +12,7 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#include "public_kernel_interface.h"
-#include "kernel_state.h"
-
-int putchar(int);
-
-int main(void){
-	/*  Need to set the kernel stack pointer before we can make any kernel calls */
-	g_kernel_sp = (unsigned int)&kernel_stack_start;
-	kernel_init(); /*  This method will block until the kernel exits */
-	return 0;
-}
+#ifndef __ASSERT_H_DEFINED__
+#define __ASSERT_H_DEFINED__
+void assert (int);
+#endif

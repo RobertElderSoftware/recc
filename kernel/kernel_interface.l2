@@ -4,6 +4,7 @@ REQUIRES EXTERNAL globalvar_g_kernel_sp;
 IMPLEMENTS EXTERNAL task_exit;
 IMPLEMENTS EXTERNAL irq_handler;
 IMPLEMENTS EXTERNAL kernel_init;
+IMPLEMENTS EXTERNAL kernel_exit;
 IMPLEMENTS EXTERNAL release_processor;
 IMPLEMENTS EXTERNAL block_on_event;
 IMPLEMENTS EXTERNAL send_message;
@@ -12,6 +13,7 @@ IMPLEMENTS EXTERNAL reply_message;
 REQUIRES EXTERNAL k_task_exit;
 REQUIRES EXTERNAL k_irq_handler;
 REQUIRES EXTERNAL k_kernel_init;
+REQUIRES EXTERNAL k_kernel_exit;
 REQUIRES EXTERNAL k_release_processor;
 REQUIRES EXTERNAL k_block_on_event;
 REQUIRES EXTERNAL k_send_message;
@@ -52,6 +54,10 @@ beq ZR ZR do_kernel_method;
 
 kernel_init:
 ll r5 k_kernel_init;
+beq ZR ZR do_kernel_method;
+
+kernel_exit:
+ll r5 k_kernel_exit;
 beq ZR ZR do_kernel_method;
 
 release_processor:
@@ -271,29 +277,29 @@ ll r1 globalvar_g_current_sp;  Load the current task's stack pointer location
 add r1 r1 WR;
 loa SP r1;       Load current task's stack pointer
 loa r1 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 beq r1 WR irq_exit;     If we're scheduling a task that came from an interrupt
 beq ZR ZR exit_kernel_method;  Happens when scheduling a task that came from kernel call
 
 irq_exit:
 loa FP SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r9 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r8 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r7 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r6 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r5 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r4 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r3 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r2 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 loa r1 SP;
-add SP SP WR;    Push
+add SP SP WR;    Pop
 add FR FR WR;    Add 4 to set bit 2 and return from interrupt

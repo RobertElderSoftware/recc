@@ -22,6 +22,8 @@ void print_hexadecimal(unsigned int);
 
 void print_decimal(int);
 
+void print_string(const char *);
+
 void print_hexadecimal(unsigned int d){
 	unsigned int leading_zero = 1;
 	unsigned int base = 0x10000000;
@@ -66,6 +68,13 @@ void print_hexadecimal(unsigned int d){
 	}
 }
 
+void print_string(const char * c){
+	while(*c){
+		putchar(*c);
+		c = c + 1;
+	}
+}
+
 int printf(const char * fmt, ...){
 	va_list v;
 	unsigned int i = 0;
@@ -76,6 +85,9 @@ int printf(const char * fmt, ...){
 		if(fmt[i] == '%'){
 			if(fmt[i+1] == 'c'){
 				putchar(va_arg(v, int));
+				i++;
+			}else if(fmt[i+1] == 's'){
+				print_string(va_arg(v, const char *));
 				i++;
 			}else if((fmt[i+1] == 'd') || (fmt[i+1] == 'i')){
 				print_decimal(va_arg(v, int));

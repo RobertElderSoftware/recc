@@ -188,7 +188,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 					verify_symbol_declaration(linker_object, tokens[i]);
 					struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
 					i++;
-				}else{ assert(0 && "Expected identifier or hexidecimal constant."); }
+				}else{ printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename);  assert(0 && "Expected identifier or hexidecimal constant."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_DIV){
 			struct asm_instruction * new_instruction = malloc(sizeof(struct asm_instruction));

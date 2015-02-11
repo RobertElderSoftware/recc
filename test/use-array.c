@@ -101,9 +101,19 @@ struct food get_food(struct food in){
 }
 
 
+void inc_array(int [4]);
+
+void inc_array(int arr1[4]){
+	arr1[0] = arr1[0] + 1;
+	arr1[1] = arr1[1] + 1;
+	arr1[2] = arr1[2] + 1;
+	arr1[3] = arr1[3] + 1;
+}
+
 int main(void){
 	struct food f;
 	struct food g;
+	int arr1[4];
 	f.a = 'a';
 	f.b = 'b';
 	f.c = 'c';
@@ -121,5 +131,14 @@ int main(void){
 	putchar((int)g.d);
 	putchar((int)g.e);
 	output();
+	arr1[0] = 'a';
+	arr1[1] = 'b';
+	arr1[2] = 'c';
+	arr1[3] = 'd';
+	inc_array(arr1);
+	putchar(arr1[0]);
+	putchar(arr1[1]);
+	putchar(arr1[2]);
+	putchar(arr1[3]);
 	return 0;
 }

@@ -16,6 +16,9 @@
 #include "preprocessor.h"
 
 const char * g_stdio_h = "stdio.h";
+const char * g_string_h = "string.h";
+const char * g_stdlib_h = "stdlib.h";
+const char * g_assert_h = "assert.h";
 
 int tokcmp(const char * s1, const char * s2, unsigned int compare_length){
 	unsigned int i = 0;
@@ -144,10 +147,13 @@ int preprocess_tokens(struct memory_pooler_collection * memory_pooler_collection
 				if(does_token_match(c_lexer_state, COMMA_CHAR, current_token)){ current_token++; } else {abort = 1;}
 				skip_whitespace(c_lexer_state, &current_token);
 				while(
+					does_token_match(c_lexer_state, MULTIPLY_CHAR, current_token) ||
 					does_token_match(c_lexer_state, SPACE, current_token) ||
 					does_token_match(c_lexer_state, NEWLINE, current_token) ||
 					does_token_match(c_lexer_state, IDENTIFIER, current_token) ||
 					does_token_match(c_lexer_state, UNSIGNED, current_token) ||
+					does_token_match(c_lexer_state, CONST, current_token) ||
+					does_token_match(c_lexer_state, CHAR, current_token) ||
 					does_token_match(c_lexer_state, INT, current_token) ||
 					does_token_match(c_lexer_state, LONG, current_token) ||
 					does_token_match(c_lexer_state, FLOAT, current_token) ||
@@ -253,15 +259,19 @@ int preprocess_tokens(struct memory_pooler_collection * memory_pooler_collection
 					}
 					current_token++;
 					unsigned_char_list_add(&standard_include, 0); /* Null terminator */
-					/* Only standard library that is even partially supported */
-					if(!unsigned_strcmp(unsigned_char_list_data(&standard_include), (unsigned char *)g_stdio_h)){
+					/* Not much support for standard library */
+					if(
+						!unsigned_strcmp(unsigned_char_list_data(&standard_include), (unsigned char *)g_stdio_h) ||
+						!unsigned_strcmp(unsigned_char_list_data(&standard_include), (unsigned char *)g_stdlib_h) ||
+						!unsigned_strcmp(unsigned_char_list_data(&standard_include), (unsigned char *)g_assert_h) ||
+						!unsigned_strcmp(unsigned_char_list_data(&standard_include), (unsigned char *)g_string_h)
+					){
 						struct unsigned_char_list file_to_include;
 						struct unsigned_char_list preprocessed_output;
 						unsigned char * c;
 						unsigned int num_chars;
 						unsigned int g;
-						/* TODO:  Make this generic. */
-						const char * stdlib_directory = "/home/robert/git-projects/os/stdlib/";
+						const char * stdlib_directory = "stdlib/";
 						unsigned_char_list_create(&file_to_include);
 						unsigned_char_list_create(&preprocessed_output);
 						c = (unsigned char *)stdlib_directory;
@@ -287,7 +297,7 @@ int preprocess_tokens(struct memory_pooler_collection * memory_pooler_collection
 						unsigned_char_list_destroy(&file_to_include);
 						unsigned_char_list_destroy(&preprocessed_output);
 					}else{
-						unsigned char * c;
+						unsigned char * c = unsigned_char_list_data(&standard_include);
 						unsigned_char_list_add(output_list, '/');
 						unsigned_char_list_add(output_list, '*');
 						unsigned_char_list_add(output_list, 'T');
@@ -295,8 +305,9 @@ int preprocess_tokens(struct memory_pooler_collection * memory_pooler_collection
 						unsigned_char_list_add(output_list, 'D');
 						unsigned_char_list_add(output_list, 'O');
 						unsigned_char_list_add(output_list, ' ');
-						for(c = tokens[current_token]->first_byte + 1; c < tokens[current_token]->last_byte; c++){
+						while(*c){
 							unsigned_char_list_add(output_list, *c);
+							c++;
 						}
 						unsigned_char_list_add(output_list, '*');
 						unsigned_char_list_add(output_list, '/');

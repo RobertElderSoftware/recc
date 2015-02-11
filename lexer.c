@@ -16,7 +16,7 @@
 
 #define SHOW_LEXER_TOKENS 0
 
-const char * c_token_type_names[] = {
+const char * c_token_type_names[90] = {
 	"SPACE",
 	"NEWLINE",
 	"COMMENT",
@@ -109,7 +109,7 @@ const char * c_token_type_names[] = {
 	"NUMBER_SIGN_CHAR"
 };
 
-const char * build_script_token_type_names[] = {
+const char * build_script_token_type_names[10] = {
 	"B_SPACE",
 	"B_NEWLINE",
 	"B_CODE_GENERATE",
@@ -123,7 +123,7 @@ const char * build_script_token_type_names[] = {
 };
 
 
-const char * asm_token_type_names[] = {
+const char * asm_token_type_names[31] = {
 	"A_SPACE",
 	"A_NEWLINE",
 	"A_ASM_COMMENT",
@@ -285,11 +285,18 @@ unsigned int t_asm_comment(struct common_lexer_state * common_lexer_state, unsig
 	if(accept(';', common_lexer_state, tentative_position + count)){
 		count++;
 		while(1){
+			unsigned int count_before = count;
 			if(accept_range(32, 126, common_lexer_state, tentative_position + count)){
+				count++;
+			}
+			if(accept('\t', common_lexer_state, tentative_position + count)){
 				count++;
 			}
 			if(accept('\n', common_lexer_state, tentative_position + count)){
 				break;
+			}
+			if(count_before == count){
+				assert(0 && "Bad character in asm comment.");
 			}
 		}
 	}
@@ -596,18 +603,19 @@ unsigned int t_space(struct common_lexer_state * common_lexer_state, unsigned in
 }
 
 void show_lexer_token(struct unsigned_char_list * out_buffer, const char * name, unsigned char * first_byte, unsigned char * last_byte, unsigned int enabled){
+	(void)out_buffer;
 	if(enabled){
 		unsigned int k;
-		buffered_printf(out_buffer, ";%s '", name);
+		printf(";%s '", name);
 		for(k = 0; k < ((last_byte - first_byte) + 1); k++){
 			if(first_byte[k] == '\n'){
-				buffered_printf(out_buffer, "\\n");
+				printf("\\n");
 			}else{
-				buffered_printf(out_buffer, "%c", first_byte[k]);
+				printf("%c", first_byte[k]);
 			}
 		}
-		buffered_printf(out_buffer, "'");
-		buffered_printf(out_buffer, "\n");
+		printf("'");
+		printf("\n");
 	}
 }
 

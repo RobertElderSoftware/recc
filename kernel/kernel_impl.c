@@ -227,6 +227,12 @@ void k_reply_message(struct kernel_message * message, unsigned int destination_p
 	schedule_next_task();
 }
 
+void k_kernel_exit(void){
+	/*  Don't need to save any state because we're exiting kernel */
+	struct process_control_block * next_task = pcb_ptrs[0]; /* Main entry SP is stored in PCB 0 */
+	g_current_sp = next_task->stack_pointer;
+}
+
 void k_kernel_init(void){
 	unsigned int i;
 	/*  Set up some globals for putchar function */
@@ -251,6 +257,7 @@ void k_kernel_init(void){
 	task_queue_init(blocked_on_uart1_in_ready_queue_ptr, MAX_NUM_PROCESSES);
 
 	pcbs[0].state = ACTIVE; /*  Task 0 is not really a task, is the 'int main' that we might want to return to later for graceful exit. */
+
 	for(i = 0; i < MAX_NUM_PROCESSES; i++)
 		pcbs[i].pid = i;
 
@@ -265,6 +272,7 @@ void k_kernel_init(void){
 	pcbs[8].priority = 1;
 	pcbs[9].priority = 3;
 
+	pcbs[0].stack_pointer = g_current_sp; /*  Save SP from entering this method so we can exit kernel gracefully */
 	pcbs[1].stack_pointer = (unsigned int)&user_proc_1_stack_start;
 	pcbs[2].stack_pointer = (unsigned int)&user_proc_2_stack_start;
 	pcbs[3].stack_pointer = (unsigned int)&user_proc_3_stack_start;
@@ -304,4 +312,5 @@ void k_kernel_init(void){
 	timer_interrupt_enable();
 	uart1_out_interrupt_enable();
 	uart1_in_interrupt_enable();
+	schedule_next_task();
 }

@@ -14,7 +14,29 @@
 */
 int putchar(int);
 
+void fun(void);
+
+void fun(void){
+	return;
+}
+
+int arr[3][3] = {
+	{98,99,100},
+	{101,102,103},
+	{104,105,106}
+};
+
 int main(void){
 	putchar('b');
+	putchar(arr[0][0]);
+	putchar(arr[0][1]);
+	putchar(arr[0][2]);
+	putchar(arr[1][0]);
+	putchar(arr[1][1]);
+	putchar(arr[1][2]);
+	putchar(arr[2][0]);
+	putchar(arr[2][1]);
+	putchar(arr[2][2]);
+	fun();
 	return 0;
 }

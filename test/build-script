@@ -77,3 +77,11 @@ LINK test/while-loop.l2, stdlib/putchar.l2, builtin/signed_less_than.l2 TO test/
 PREPROCESS test/typedef.c TO test/typedef.i
 CODE GENERATE test/typedef.i TO test/typedef.l2
 LINK test/typedef.l2, stdlib/putchar.l2, TO test/typedef.l1
+
+PREPROCESS test/exotic-declarators.c TO test/exotic-declarators.i
+CODE GENERATE test/exotic-declarators.i TO test/exotic-declarators.l2
+LINK test/exotic-declarators.l2, stdlib/putchar.l2, TO test/exotic-declarators.l1
+
+PREPROCESS test/constants.c TO test/constants.i
+CODE GENERATE test/constants.i TO test/constants.l2
+LINK builtin/signed_division.l2, builtin/signed_modulo.l2, builtin/signed_less_than.l2, builtin/signed_less_than_or_equal_to.l2, builtin/signed_greater_than.l2, builtin/signed_greater_than_or_equal_to.l2, builtin/print_decimal.l2,stdlib/printf.l2,test/constants.l2, stdlib/putchar.l2, TO test/constants.l1

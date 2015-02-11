@@ -25,6 +25,7 @@ void user_proc_1(void){
 		printf("t -  Prints the number of simulated clock ticks since kernel start.\n");
 		printf("s -  Prints the stack pointer values of each task.\n");
 		printf("p -  Prints the priority of each task.\n");
+		printf("q -  Quit.\n");
 		task_exit();
 	}
 }
@@ -231,6 +232,9 @@ void command_server(void){
 						for(i = 0; i < 9; i++){
 							printf("Task %d Priority: %d\n", i, pcb_ptrs[i]->priority);
 						}
+						break;
+					}case 113:{/* letter 'q' */
+						kernel_exit();
 						break;
 					}default:{
 						printf("\n");

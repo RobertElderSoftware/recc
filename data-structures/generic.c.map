@@ -56,3 +56,33 @@ struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list GENERIC_TYPE0_IDENTIFIER_FRIENDLY_
 	}
 	return rtn;
 }
+
+struct GENERIC_TYPE1_IDENTIFIER_FRIENDLY_list GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_values(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map){
+	struct GENERIC_TYPE1_IDENTIFIER_FRIENDLY_list rtn;
+	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
+	unsigned int i;
+	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair * data = binary_exponential_buffer_data(&map->key_value_pairs);
+	GENERIC_TYPE1_IDENTIFIER_FRIENDLY_list_create(&rtn);
+	for(i = 0; i < size; i++){
+		GENERIC_TYPE1_IDENTIFIER_FRIENDLY_list_add(&rtn, data[i].value);
+	}
+	return rtn;
+}
+
+void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_remove(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map, GENERIC_TYPE0_LITERAL key){
+	/* Remove key value pair with key item from map */
+	unsigned int i = 0;
+	unsigned int old_i = 0;
+	unsigned int new_i = 0;
+	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair * data = binary_exponential_buffer_data(&map->key_value_pairs);
+
+	for(i = 0; i < binary_exponential_buffer_size(&map->key_value_pairs); i++){
+		if(map->compare(key, data[i].key)){
+			data[new_i] = data[old_i];
+			new_i++;
+		}
+		old_i++;
+	}
+
+	binary_exponential_buffer_decrement(&map->key_value_pairs, old_i - new_i);
+}

@@ -15,6 +15,8 @@
 #ifndef __GENERATE_CODE__ 
 #define __GENERATE_CODE__ 
 
+#include <stdlib.h>
+#include <string.h>
 #include "parser.h"
 #include "data-structures/unsigned_int_list.h"
 #include "data-structures/unsigned_int_stack.h"
@@ -24,11 +26,11 @@
 #include "data-structures/struct_switch_frame_ptr_list.h"
 #include "data-structures/unsigned_int_stack.h"
 #include "data-structures/struct_type_description_ptr_list.h"
+#include "data-structures/struct_constant_initializer_level_ptr_list.h"
 #include "data-structures/char_ptr_list.h"
 #include "linker.h"
 #include "lexer.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <stdarg.h>
 
@@ -37,13 +39,23 @@ enum traversal_type{
 	ASSIGN_COPY,
 	REF_COPY,
 	NEW_COPY,
-	CONVERT_TO_VALUE
+	MAKE_PARAMETER_VALUE
 };
 
 struct switch_frame{
 	unsigned int condition_index;
 	unsigned int has_default;
 	struct unsigned_int_list values;
+};
+
+struct compile_time_constant{
+	struct constant_description * constant_description; /* For everything else */
+	struct normalized_declaration_element * element;    /*  For enum types */
+};
+
+struct constant_initializer_level{
+	struct compile_time_constant * constant; /*  Will be set only if this is not an initializer list */
+	struct struct_constant_initializer_level_ptr_list children;
 };
 
 struct code_gen_state{
@@ -64,13 +76,13 @@ struct code_gen_state{
 int generate_code(struct parser_state *, struct code_gen_state *);
 int do_code_generation(struct memory_pooler_collection *, unsigned char *, unsigned char *);
 int destroy_code_gen_state(struct code_gen_state *);
-unsigned int evaluate_constant_expression_h2(struct code_gen_state *, struct parser_node *, unsigned int *);
-unsigned int evaluate_constant_expression_h1(struct code_gen_state *, struct parser_node *, unsigned int *);
-unsigned int evaluate_constant_expression(struct code_gen_state *, struct parser_node *);
-void perform_integer_promotion(struct type_description *);
+struct compile_time_constant * evaluate_constant_expression_h2(struct code_gen_state *, struct parser_node *);
+struct compile_time_constant * evaluate_constant_expression_h1(struct code_gen_state *, struct parser_node *);
+struct compile_time_constant * evaluate_constant_constant_expression(struct code_gen_state *, struct parser_node *);
+void perform_integral_promotion(struct type_description **);
 unsigned int type_size(struct code_gen_state *, struct type_description *, enum type_size_class, unsigned int, struct scope_level *);
 unsigned int struct_type_size(struct code_gen_state *, struct type_description *, enum type_size_class, struct scope_level *);
 
-#define LITERAL22BITMASK ((unsigned int)0x003FFFFF)
+#define LITERAL22BITMASK 0x003FFFFF
 
 #endif

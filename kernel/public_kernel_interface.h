@@ -21,6 +21,7 @@
 unsigned int release_processor(void);
 void task_exit(void);
 void kernel_init(void);
+void kernel_exit(void);
 void block_on_event(enum kernel_event);
 void send_message(struct kernel_message *, unsigned int, struct kernel_message *);
 void receive_message(struct kernel_message *);

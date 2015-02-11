@@ -34,6 +34,8 @@ struct asm_lexer_state;
 struct namespace_object;
 struct scope_level;
 struct switch_frame;
+struct constant_description;
+struct constant_initializer_level;
 
 enum parser_operation_type{
 	INCREMENT_NEWLINE_COUNT,

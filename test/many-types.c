@@ -96,7 +96,7 @@ enum eninit {num9 = 1, num99, num999};
 int one;
 int two = 2;
 
-int three = 3, c(void), ****const* four = (int ****const*)4;
+/*int three = 3, c(void), ****const* four = (int ****const*)4;*/
 
 void elip(int a, ...);
 

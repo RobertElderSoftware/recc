@@ -1,0 +1,28 @@
+An aide to help visualize how are items are layed out on the stack in the RECC compiler.
+
+
+Structure Member layout on Stack
+
++  ...   +   ...   +   ....    +
+|        |         |           |
++--------+---------+-----------+
+|0x100000|  Value  |           |       struct mystruct {
+|0x0FFFFC| Pointer |  Member_3 |           unsigned int Member_1;
++--------+---------+-----------+           unsigned int Member_2;
+|0x0FFFF8|  Value  |           |           unsigned int arr1[3];
+|0x0FFFF4| Pointer |  arr2[2]  |           unsigned int Member_3;
++--------+---------+-----------+       };
+|0x0FFFF0|  Value  |           |
+|0x0FFFEC| Pointer |  arr2[1]  |
++--------+---------+-----------+
+|0x0FFFE8|  Value  |           |
+|0x0FFFE4| Pointer |  arr1[0]  |
++--------+---------+-----------+
+|0x0FFFE0|  Value  |           |
+|0x0FFFDC| Pointer |  Member_2 |
++--------+---------+-----------+
+|0x0FFFD8|  Value  |           |
+|0x0FFFD4| Pointer |  Member_1 |<-- Top of stack
++--------+---------+-----------+
+
+-  Stacks grow down in memory.
