@@ -555,7 +555,7 @@ function virtual_machine() {
               if(a[j].value < 0 || literal22bitmask < a[j].value){
                 alert("ll value " + a[j].value + " out of range (must be 0 to " + literal22bitmask + " inclusive).");
               }
-              machine_instructions[instruction_index] += (literal22bitmask & a[j].value);
+              machine_instructions[instruction_index] += a[j].value;
             }else if(operation.type == "dw"){
               machine_instructions[instruction_index] += a[j].value;
             }else{

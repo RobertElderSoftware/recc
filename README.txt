@@ -73,6 +73,7 @@ The following things are supported:
 The following things are current not implemented/supported:
 
 -  K&R C style function definitions
+-  bitfields
 -  goto
 -  unions
 -  long and long long types
@@ -115,4 +116,18 @@ LINK library.l2, main.l2 TO test/basic-operations.l1 SYMBOLS TO main.symbols
 *.l2 files are the recc equivalent of object files, but look like assembly files.  They contain all the assembly code for the final program, but many address and values may be stated in terms of abstract symbols.  A further linkage step is necessary to produce l1 files.
 
 *.l1 files do no contain any symbol information.  They are the equivalent of a compiled binary, but they still look like assembly code and the syntax is much less forgiving that the l2 file format. 
+
+* Emulators *
+
+There are currently emulators for the op-cpu in 2 different languages.  C89 and javascript.  The javascript emulator runs as part of the unit tests, and a useful example of the C emulator on Linux can be built on linux with 
+
+make emulators/linux-emulator-example
+
+This emulator can 'run' .l1 files directly from the command line:
+
+./linux-emulator-example file.l1
+
+You can even run the full RECC microkernel from the command line:
+
+make build-kernel && make ./emulators/linux-emulator-example && ./emulators/linux-emulator-example ./kernel/kernel.l1
 

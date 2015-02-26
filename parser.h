@@ -335,12 +335,13 @@ struct scope_level{
 };
 
 struct constant_description{
-	enum c_token_type type;
 	struct type_description * type_description;
 	unsigned char * str;
 	unsigned int * native_data; /* Byte array of the data used in the program */
 	unsigned int size_in_bytes;
 	unsigned int num_references;
+	enum c_token_type type;
+	unsigned int pad;
 };
 
 struct type_description{
@@ -354,16 +355,17 @@ struct type_description{
 struct parser_state{
 	struct memory_pooler_collection * memory_pooler_collection;
 	struct c_lexer_state * c_lexer_state;
-	unsigned char * buff;
 	struct scope_level * top_scope;
 	struct parser_node * top_node;
 	struct type_description * unsigned_int_description;
 	struct unsigned_char_list * buffered_output;
+	struct struct_parser_operation_stack operation_stack;
+	struct unsigned_char_ptr_to_struct_constant_description_ptr_map constant_map;
+	unsigned char * buff;
+	unsigned int tokens_position;
 	unsigned int line_number;
 	unsigned int current_scope_depth;
-	struct struct_parser_operation_stack operation_stack;
-	unsigned int tokens_position;
-	struct unsigned_char_ptr_to_struct_constant_description_ptr_map constant_map;
+	unsigned int pad;
 };
 
 void * push_operation(struct parser_state *, enum parser_operation_type, void *);

@@ -51,7 +51,6 @@ struct asm_instruction{
 	struct asm_lexer_token * number_token;
 	unsigned int number_token_is_negative;
 	unsigned int post_linking_offset; /* The offset (in # of 4 byte words) of this instruction after we've considered instructions that need to be re-written by the linker */
-	unsigned int pad;
 };
 
 struct linker_object{ /*  Represents everything that comes from one translation unit (or assembly file) */

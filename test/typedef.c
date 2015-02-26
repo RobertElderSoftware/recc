@@ -25,6 +25,7 @@ typedef struct node {
 	struct node * next;
 	struct node *prev;
 	int i;
+	unsigned int pad;
 } node;
 
 typedef int an_integer;

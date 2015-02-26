@@ -43,7 +43,7 @@ io.o: io.c io.h
 preprocessor.o: preprocessor.c bootstrap-datatypes
 	@$(HOSTCC) -c preprocessor.c $(CUSTOM_FLAGS)
 
-clean: clean-data-structures clean-tests clean-builtins clean-stdlib clean-kernel
+clean: clean-data-structures clean-tests clean-builtins clean-stdlib clean-kernel clean-emulators
 	@rm -f recc *.o
 
 include kernel/Makefile
@@ -51,3 +51,4 @@ include data-structures/Makefile
 include test/Makefile
 include builtin/Makefile
 include stdlib/Makefile
+include emulators/Makefile

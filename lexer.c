@@ -607,7 +607,7 @@ void show_lexer_token(struct unsigned_char_list * out_buffer, const char * name,
 	if(enabled){
 		unsigned int k;
 		printf(";%s '", name);
-		for(k = 0; k < ((last_byte - first_byte) + 1); k++){
+		for(k = 0; k < (unsigned int)((last_byte - first_byte) + 1); k++){
 			if(first_byte[k] == '\n'){
 				printf("\\n");
 			}else{

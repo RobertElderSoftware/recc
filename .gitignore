@@ -22,6 +22,7 @@ kernel/queue.i
 kernel/kernel.sym
 linker
 recc
+emulators/linux-emulator-example
 chrome/data-dir/*
 *.o
 builtin/*.i

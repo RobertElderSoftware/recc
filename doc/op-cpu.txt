@@ -58,7 +58,7 @@ Bit 11-31  Unused.
 
 Out of memory, or non 4 byte aligned access asserts bit 0 of FR.  Initial memory contents are undefined.
 
-Memory Mapped (4 byte) Registers:
+Memory Mapped (4 byte) Registers.  Initialized to 0 at startup:
 
 0x300000 UART1_OUT      After bytes located here are read by peripheral, the CPU sets bit 9 of FR to 1.
 0x300010 UART1_IN       Input from peripheral is stored at this address, the CPU sets bit 10 of FR to 1.
@@ -73,4 +73,4 @@ An interrupt is initiated (branches to IRQ_HANDLER) only when all 3 of the follo
 A CPU initiated interrupt atomically sets bit 1 of FR to 0, SP to SP - WR and [SP] to PC, then PC to
 IRQ_HANDLER.  At least one cycle occurs between a branch due to bit 2 being set, and a branch to IRQ_Handler.
 
-The sha1sum of the lines above is 241c366c44f9eb8f380d41339339e49d16a6a20e
+The sha1sum of the lines above is 96874052f606580bf71b6835e50fe0d29600233f

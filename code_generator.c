@@ -1106,7 +1106,7 @@ void load_identifier(struct code_gen_state * code_gen_state, unsigned char * ide
 
 				buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Now pointing to value\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r1 %s;  Load the global var addr %s\n", name, name); 
-				buffered_printf(code_gen_state->buffered_output,"ll r2 0x%x;  Offset to last word value.\n", g_size -4); 
+				buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Offset to last word value.\n", g_size -4); 
 				buffered_printf(code_gen_state->buffered_output,"add r1 r1 r2;  addr of last word value.\n"); 
 
 				traverse_type(code_gen_state, type_description, "r1", "SP", "r2", type_description->source_scope_level, REF_COPY, 1, (struct constant_initializer_level *)0);
