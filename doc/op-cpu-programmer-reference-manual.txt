@@ -1,0 +1,479 @@
+#  Copyright 2015 Robert Elder Software Inc.  All rights reserved.
+#
+#  This specification is not currently available under any license, and
+#  unauthorized use or copying is not permitted.
+#
+#  This specification will likely be available under a common open source
+#  license in the near future.  Licensing is currently pending feedback from
+#  a lawyer.  If you have an opinion on this subject you can send it to
+#  recc [at] robertelder.org.
+#
+#  This specification comes with ABSOLUTELY NO WARRANTY.  In no event shall
+#  Robert Elder Software Inc. be liable for incidental or consequential damages
+#  in connection with use of this specification.
+
+1.  INTRODUCTION
+
+  1.1  This document is a guide to assembly language programming for the 'One
+  Page CPU'.  The One Page CPU is a specification for a very simple CPU that
+  was designed with the primary goal of being easy to emulate in software,
+  while still providing a practical environment for programs runing on it.  The
+  CPU supports context switching, timer interrupts, I/O interrupts and 14
+  different machine instructions.  Performance regarding execution speed or
+  memory consumption has not been a primary consideration for this project. The
+  justification behind this is based on the observation that is typically more
+  difficult to go from a high performance complicated design to any kind of
+  simple design than it is to go from an inefficient simple design to a
+  complicated and efficient one.  Make it work, make it right, make it fast.
+
+  1.2  In order to explain assembly language programming for the One Page CPU,
+  it is helpful to describe the process of compiling .c files and executing
+  them as it works in standard compilers.  In a typical compiler (like gcc or
+  clang), code in a .c file will first be preprocessed into 'pure C' code
+  (typically with a .i file extension).  This process resolves #include
+  directives and replaces them with whatever was to be included.  Macros like
+  #define are also evaluated and their definitions are substituted directly
+  throughout the code.  After preprocessing, the pure c files can be used to
+  generate object files (.o files).  One or more object files can be linked
+  together to produce an executable program or a library.
+
+  1.3  In order to cross compile C programs to run on the One Page CPU, a new
+  cross compiler (the RECC compiler) was created.  In the RECC compiler .c
+  files are still preprocessed to .i files, but instead of generating object
+  code, files with the extension '.l2' are generated.  These files are a lot
+  like object files, but they contain human readable assembly and relative
+  symbol offsets.  Linking information, symbol information, comments, and
+  relaxed whitespace constraints are allowed in l2 files.  The 'l2'
+  corresponds to the 'One Page CPU L2 language' specification.  After multiple
+  .l2 files have been generated, they can be linked together to produce a
+  single .l1 file.  The 'l1' corresponds to the 'One Page CPU L1 language'.
+  The L1 language is a proper subset of the L2 language.  In the L1 language,
+  all symbols are resolved to fixed addresses, comments are not allowed, and
+  strict whitespace constraints are enforced.  An .l1 file can be thought of
+  as a very portable executable file whos format is a human readable assembly
+  language.
+
+  1.4  Since one of our primary goals is to be able to run C programs inside
+  emulators written in other programming languages, we need a way to put the
+  l1 files in a format that can be easily run elsewhere.  The process of
+  parsing and assembling l1 files can be abstracted away between languages
+  by an additional step that creates programming language specific L0 files.
+  This step is done by 'preloading' an l1 file for a specific target
+  programming language.  This process produces a file with an extension of
+  .l0.<target language file extension>.  The format of this file will conform
+  to the syntax of the target language, and the L0 file will contain a numeric
+  representation of machine instructions, offsets and memory layout that can be
+  processed and emulated in a few hundred lines in the target language.
+
+  1.5  Summary:
+
+                     main.c  code.c  foo.c              C code
+                       |       |       |
+                       v       v       v 
+                     main.i  code.i  foo.i              Preprocessed
+                       |       |       |
+                       v       v       v 
+                     main.l2 code.l2 foo.l2             'Object Files'
+                          \    |    /
+                           v   v   v 
+    'Portable Executable'  program.l1--+---------------+---------------+
+                                       |               |               |
+                                       |               |               |
+                                       v               v               v
+    'Native Executable'          program.l0.js    program.l0.c    program.l0.py
+
+
+
+2.  REGISTERS
+
+  2.1  Register Names
+
+  The One Page CPU instruction set uses 64 registers.  Six of these registers
+  have 'special' names (PC, SP, FP, ZR, FR, WR), and the other 58 registers
+  are named r1, r2, ... r58.  Each register is referred to by only one name.
+  There are no restrictions on what registers can be used used with a given
+  instruction.
+
+  2.2  Special Registers
+
+  2.2.1  The PC register is the familiar program counter.  The value of the PC
+  register holds the value of the next instruction to be fetched.  If the PC
+  register is used as an argument to an instruction, it will be evaluated to
+  the value of the address of the instruction being executed plus 4.  This is
+  because after fetching an instruction the PC is incremented in anticipation
+  of fetching the next instruction to execute.  In the encoding of machine
+  instructions the special registers are given the following numeric values:
+  PC = 0, SP = 1, FP = 2, ZR = 3, FR = 4, and WR = 5.  The registers r1 to r58
+  are given a numeric representation of 6 to 63.
+
+  2.2.2  The SP register is the stack pointer, which is of particular
+  importance to any compiler targeting the One Page CPU architecture.  The
+  stack pointer is also used automatically during an interrupt, or a return
+  from an interrupt to store or retrieve the value of the program counter.
+
+  2.2.3  The FP register is the frame pointer register.  It is of importance
+  only to the compiler, as it is a convience that makes function calls easier.
+  The convention is that the frame pointer always points to the value of the
+  previous frame pointer.  If there is no previous frame pointer it contains
+  the value 0.
+
+  2.2.4  The ZR register is the zero register.  It stores the value 0.
+  Changing the value in the zero register is not recommended.
+
+  2.2.5  The FR register is the flags register.  It stores various flags that
+  affect execution of the CPU:
+
+    Bit 0:     Writing one to this bit halts the processor.  No further
+               instructions or interrupts execute.
+
+    Bit 1:     Global Interrupt Enable.  All interrupts enabled when 1.  All
+               interrupts disabled otherwise.
+
+    Bit 2:     When set to 1, atomically sets bit 1 of FR to 1, bit 2 of FR to
+               0, PC to [SP], and SP to SP + WR.
+
+    Bit 3:     TIMER1 interrupt enable.  See TIMER1_PERIOD.
+
+    Bit 4:     TIMER1 interrupt asserted.  CPU sets to 1.  User must set to 0.
+
+    Bit 5:     UART1_OUT interrupt enable.  Used for detecting when bit 9 of FR
+               has been set by CPU.
+
+    Bit 6:     UART1_OUT interrupt asserted.  CPU sets to 1.  User must set to
+               0.
+
+    Bit 7:     UART1_IN interrupt enable.  Used for detecting when bit 10 of FR
+               has been set by CPU.
+
+    Bit 8:     UART1_IN interrupt asserted.  CPU sets to 1.  User must set to
+               0.
+
+    Bit 9:     UART1_OUT ready.  Indicates whether UART1_OUT is ready.  CPU
+               sets to 1.  User must set 0.
+
+    Bit 10:    UART1_IN ready.  Indicates whether UART1_IN contains input data.
+               CPU sets to 1.  User must set 0.
+
+    Bit 11-31  Reserved for future use.
+
+  2.2.6  The WR register is the word register.  It stores the size in bytes of
+  a word for the One Page CPU, which happens to be 4.
+
+  2.2.7  At CPU startup, WR = 0x4, FR = 0x200.  All other registers are
+  initialized to 0.
+
+3.  INSTRUCTIONS
+
+  2.1  There are 14 machine instructions supported by the One Page CPU. Space
+  for 2 additional instructions was left intentionally to provide room for
+  future enhancement.  All machine instructions are 32 bits in width.
+  Particular emphasis has been placed on making the instructions themselves as
+  simple as possible.  In modern instruction sets it is not uncommon to
+  encounter 10 different variations for an addition instruction, depending on
+  word sizes, and various optional immediate values, or register classes.
+  For each of the 14 instructions supported by the One Page CPU there is only
+  one valid syntax, where the only variability is the registers or the
+  immediate values which are always part of the instruction.
+
+  2.2  READING THIS SECTION
+
+                      31..28   27..22   21..16   15..10   9......0
+  +----------------------------------------------------------------+
+  | foo rA rB rC    |  1111  | AAAAAA | BBBBBB | CCCCCC | Reserved |
+  +----------------------------------------------------------------+
+
+  Diagrams like the one above are used in this section to describe the layout
+  of the machine instructions used in the One Page CPU.  The above contrived
+  example describes a ficticious instruction 'foo'.  When assembled to a 32
+  bit word, this machine instruction would have bits 31 to 28 set to the value
+  '1111'.  Bits 27 to 22 would describe the number used to identify whatever
+  register the user specified for the register 'rA'.  The register rA could be
+  any of PC, SP, FP, ZR, FR, WR or r1 to r58.  The same goes for registers rB
+  and rC.  If register rA was 'PC' bits 27 to 22 would have the value '000000'.
+  If register rC was 'r1' bits 15 to 10 would have the value '000110'.
+
+
+  2.2  ADD
+                      31..28   27..22   21..16   15..10   9......0
+  +----------------------------------------------------------------+
+  | add rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
+  +----------------------------------------------------------------+
+
+  Performs a 32-bit unsigned addition bewteen the contents of register rY and
+  rZ with the result stored in register rX.
+
+  Examples:
+  add r1 r2 r3;  Simple addition
+  add SP SP WR;  Pop the stack pointer (without retrieving value)
+  add PC r1 ZR;  Branch to value in r1
+
+  2.3  SUB
+                      31..28   27..22   21..16   15..10   9......0
+  +----------------------------------------------------------------+
+  | sub rX rY rZ    |  0001  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
+  +----------------------------------------------------------------+
+
+  Performs a 32-bit unsigned subtraction of rY - rZ with the result stored in
+  register rX.
+
+  Examples:
+  sub r1 r2 r3;  Simple subtraction
+  sub SP SP WR;  Push stack pointer (without storing anything)
+
+  2.4  MUL
+                      31..28   27..22   21..16   15..10   9......0
+  +----------------------------------------------------------------+
+  | mul rX rY rZ    |  0010  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
+  +----------------------------------------------------------------+
+
+  Performs a 32-bit unsigned multiplication of rY and rZ with the result
+  stored in register rX.  Overflow is discarded.
+
+  Examples:
+  mul r1 r1 r3;
+
+  2.5  DIV
+                        31..28   27..22   21..16   15..10   9...4    3......0
+  +---------------------------------------------------------------------------+
+  | div rX rY rZ rW   |  0011  | XXXXXX | YYYYYY | ZZZZZZ | WWWWWW | Reserved |
+  +---------------------------------------------------------------------------+
+
+  Performs a 32-bit unsigned division of rZ and rW with the result stored in
+  register rX.  Any remainder is stored in rY.
+
+  Examples:
+  div r1 r2 r3 r4;
+
+  2.6  BEQ
+                   31..28   27..22   21..16   15.............0
+  +------------------------------------------------------------+
+  | beq rX rY i  |  0100  | XXXXXX | YYYYYY | iiiiiiiiiiiiiiii |
+  +------------------------------------------------------------+
+
+  Performs a relative branch if the contents of register rX are equal to the
+  contents of register rY.  The branch distance is expressed as an immediate
+  positive or negative decimal number that dictates the number of words
+  instructions to jump forward or backward.  A distance of 0 would effectively
+  be a no op since it would just execute the next instruction as normal. The
+  immediate value is represented in the machine code as a 16 bit twos
+  complement integer in bits 0 to 15.
+
+  Examples:
+  beq ZR ZR 0;   No-op; advance to next instruction
+  beq ZR ZR -1;  Loop forever on this instruction
+  beq r1 r2 39;  Conditional jump over the next 39 instructions
+  beq ZR ZR -2;  Re-execute the previous instruction
+
+
+  2.7  BLT
+                   31..28   27..22   21..16   15.............0
+  +------------------------------------------------------------+
+  | blt rX rY i  |  0101  | XXXXXX | YYYYYY | iiiiiiiiiiiiiiii |
+  +------------------------------------------------------------+
+
+  Behaves exactly like the beq instruction, except the branch only occurs if
+  rX is less than rY when rX and rY are treated as unsigned integers.
+
+  Examples:
+  blt r1 r2 39;  Conditional jump over the next 39 instructions
+
+  2.8  LOA
+                 31..28   27..22   21..16   15.............0
+  +----------------------------------------------------------+
+  | loa rX rY  |  0110  | XXXXXX | YYYYYY | ----Reserved---- |
+  +----------------------------------------------------------+
+
+  Load the contents of the memory location given in rY into register rX.
+
+  Examples:
+  dw 0x41;        The value 'A'
+  ll r2 0x1234;   The address of the value of 'A'
+  loa r1 r2;      Load 'A' into r1;
+  loa PC PC;      Branch to the address in the next word
+  dw 0x0DDFC;     The address of something interesting
+
+  2.9  STO
+                 31..28   27..22   21..16   15.............0
+  +----------------------------------------------------------+
+  | sto rX rY  |  0111  | XXXXXX | YYYYYY | ----Reserved---- |
+  +----------------------------------------------------------+
+
+  Store the value in rY in the memory location given in rX.
+
+  Examples:
+  ll r1 0x41;    Load 'A' into r1
+  sto SP r1;     Store on stack
+  sub SP SP WR;  Push stack pointer
+  ll r1 0x42;    Load 'B' into r1
+  sto SP r1;     Store again on stack
+
+  2.10  LL
+                 31..28   27..22   21...................0
+  +-------------------------------------------------------+
+  | ll rX 0xN  |  1000  | XXXXXX | NNNNNNNNNNNNNNNNNNNNNN |
+  +-------------------------------------------------------+
+
+  Load the immediate hexidecimal value 0xN into register rX.  The value 0xN
+  can be a maximum of 22 bits in size.
+
+  Examples:
+  ll r1 0x41;    Load 'A' into r1
+
+  2.11  AND
+                      31..28   27..22   21..16   15..10   9......0
+  +----------------------------------------------------------------+
+  | and rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
+  +----------------------------------------------------------------+
+
+  A bitwise logical 'and' of the contents of rY and the contents of rZ stored
+  in rX.
+
+  Examples:
+  and r1 r2 r3;
+
+  2.12  OR
+                     31..28   27..22   21..16   15..10   9......0
+  +----------------------------------------------------------------+
+  | or rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
+  +----------------------------------------------------------------+
+
+  A bitwise logical 'or' of the contents of rY and the contents of rZ stored
+  in rX.
+
+  Examples:
+  or r1 r2 r3;
+
+  2.13  NOT
+                   31..28   27..22   21..16   15.....0
+  +----------------------------------------------------+
+  | not rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
+  +----------------------------------------------------+
+
+  A bitwise logical 'not' of the contents of rY stored in rX.
+
+  Examples:
+  not r1 r2;
+
+  2.14  SHR
+                   31..28   27..22   21..16   15.....0
+  +----------------------------------------------------+
+  | shr rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
+  +----------------------------------------------------+
+
+  An bitwise logical shift applied to the contents of rX shifted rY bits to the
+  right.  Bits are shifted into the left side as 0s.
+
+  Examples:
+  shr r1 r2
+
+  2.15  SHL
+                   31..28   27..22   21..16   15.....0
+  +----------------------------------------------------+
+  | shl rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
+  +----------------------------------------------------+
+
+  An bitwise logical shift applied to the contents of rX shifted rY bits to the
+  left.  Bits are shifted into the right side as 0s.
+
+  Examples:
+  shl r1 r2
+
+3.  LINKER AND LOADER DIRECTIVES
+
+  3.1  SW
+
+  The sw directive (skip words) is used during the process of loading machine
+  code to indicate that the loader program should 'skip words'.  For example,
+  if we wished to define a large region of blank space we could use the sw
+  directive instead of defining a large number of zeros with the dw directive:
+
+  ...
+  0x0001 0000 add PC r1 r2;  Machine instructions take up 4 bytes...
+  0x0001 0004 sw 0x100;      Skip 0x100 words = 0x400 bytes
+  0x0001 0404 sub SP SP WR;  0x400 bytes of unused space above this instruction
+  ...
+
+  3.2  DW
+
+  The dw directive (define word) tells the linker to explicitly define 32 bits
+  to be some explicit value.  This allows defining of arbitrary data:
+
+  add PC PC PC;   This instruction assembles to a 32 bit word of all 0s.
+  dw 0x0;         This assembles to be the same thing as 'add PC PC PC'.
+  dw 0x41;        The letter 'A'
+
+  3.3  OFFSET
+
+  An offset declaration is used in L1 and L2 files to describe whether the code
+  in that file should be relocatable or not.  If the code is not relocatable
+  it describes the offset where the code must be loaded to.  The OFFSET
+  directive should be the first statement in a file.  An offset declaration
+  has one of two syntaxes:
+
+    3.3.1  'OFFSET RELOCATABLE'  The code in this file can be relocated
+           anywhere.  Any addresses in this file must be stated abstractly
+           with identifiers that will be replaced in a further linking step.
+
+    3.3.2  'OFFSET 0xNNNNNNNN'   The code in this file must be linked in such a
+           way that the resulting executable will be loaded to address
+           0xNNNNNNNN.  If an attempt is made to link multiple non relocatable
+           L2 files to overlapping memory locations an error will occur.
+         
+  3.4  IMPLEMENTS, REQUIRES, EXTERNAL INTERNAL
+
+  Linkage declarations are used to specify information about relative symbols
+  in L2 files.  A symbol declared as INTERNAL will not be visible outside the
+  current file.  A symbol declared as EXTERNAL either refers to a symbol that
+  is implemented outside the current file, or is implemented in the current
+  file, and will be visible in other files.  In addition to specifying
+  visibility of a symbol you must also declare whether a symbol is implemented,
+  required or both.
+
+  Examples:
+
+  IMPLEMENTS INTERNAL foo;  The symbol 'foo' is not visible outside this file.
+  An internal symbol that is implemented, but not required could be safely 
+  removed since it never gets used.
+
+  IMPLEMENTS, REQUIRES EXTERNAL boo; The symbol 'boo' is used in this file, and
+  visible externally as well.
+
+  3.5  Labels
+
+  Labels can be used in L2 files only.  They are used to abstractly represent
+  addresses that will change after the linking step.  They consist of a line
+  beginning with a valid C identifier and ending with a colon:
+
+  Example:
+
+  ...
+  add r1 r2 r3;
+  label1:
+  anotherlabel:
+  sub r1 r2 r3;
+  label2:
+  sub r1 r2 r3;
+  ...
+
+  In the above example, 'label1' and 'anotherlabel' both describe the same
+  address.
+
+  In the L2 language only, labels can be used as arguments to instructions.
+  The labels will be replaced with literal values after the code has been
+  linked to a fixed address.
+
+  The following examples illustrate instructions that can use labels as their
+  arguments:
+  
+  beq ZR ZR do_again;  
+  blt ZR ZR do_again;
+  dw global_var;
+  ll foo;
+
+  Since labels can represent addresses anywhere in the 32 bit address space,
+  the beq, blt, and ll instructions will be re-written and expanded by the
+  linker to equivalent instruction sequences that accomplish the same thing.
+  This is important because it relies on the assumption that the stack pointer
+  is always pointing to the top of the stack.
+
+The sha1sum of the lines above is e58da80340887b6670e30890c21413bac7a53bfc

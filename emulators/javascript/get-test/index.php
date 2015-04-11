@@ -1,5 +1,6 @@
+<?php 
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -12,26 +13,26 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-<?php 
 
 $response_object = Array();
 
-if(isset($_REQUEST['test_name']) && isset($_REQUEST['test_result'])){
+if(isset($_REQUEST['test_name'])){
 
 	$test_name = $_REQUEST['test_name'];
 
         //  TODO:  this should be safer if the endpoint is ever on a server
-	$result = file_put_contents("/home/robert/git-projects/os/test/{$test_name}.jsoutput",$_REQUEST['test_result']);
+	$test_code = file_get_contents(realpath(dirname(__FILE__))."/../../../test/$test_name.l0.js");
 
-        if($result === false){
-		$response_object['error'] = "Failed to submit test case $test_name.  Are the permissions set on the 'test' directory?";
+	if($test_code === false){
+		$response_object['error'] = "Test with name $test_name was not found.  Did you assemble the test case?  This can be caused by a permission issue sometimes.";
+                echo "jsonpCallback(".json_encode($response_object).");";
 	}else{
-		$response_object['success'] = "Success";
+		echo $test_code;
 	}
 }else{
-	$response_object['error'] = "test_name or test_result was not set.";
+	$response_object['error'] = "Test name was not set.";
+        echo "jsonpCallback(".json_encode($response_object).");";
 }
 
-echo json_encode($response_object);
 
 ?>

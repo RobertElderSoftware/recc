@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -12,20 +12,24 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __OP_CPU_H__
-#define __OP_CPU_H__
+#ifndef __PRELOADER_H__
+#define __PRELOADER_H__
 
+#include "io.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
-struct virtual_machine;
+struct preloader_state;
 
-unsigned int is_halted(struct virtual_machine *);
-unsigned int vm_putc(struct virtual_machine *, unsigned int);
-unsigned int vm_getc(struct virtual_machine *, unsigned int *);
-void step(struct virtual_machine *);
-struct virtual_machine * vm_create(char *);
-void vm_destroy(struct virtual_machine *);
+enum language_type {
+	C_LANGUAGE_TYPE,
+	JSONP_LANGUAGE_TYPE,
+	PYTHON_LANGUAGE_TYPE,
+	JAVA_LANGUAGE_TYPE
+};
+
+struct preloader_state * preloader_state_create(char *, char *, char *, enum language_type);
+void preloader_state_destroy(struct preloader_state *);
 
 #endif

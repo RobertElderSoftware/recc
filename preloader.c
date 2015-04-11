@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -12,40 +12,18 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#include "op-cpu.h"
+#include "preloader.h"
 
 /*
 
-C89 implemention of op-cpu emulator.
+A 'Preloader' for producing programming language specific instructions for loading emulators with bytecode
 
 */
 
-static unsigned int literal22bitmask = 0x003FFFFF;
-static unsigned int UART1_OUT = 0x300000;
-static unsigned int UART1_IN = 0x300010;
-static unsigned int IRQ_HANDLER = 0x300020;
-static unsigned int TIMER_PERIOD = 0x300030;
 
-static unsigned int PC_index = 0;
-static unsigned int SP_index = 1;
-static unsigned int FP_index = 2;
-static unsigned int ZR_index = 3;
-static unsigned int FR_index = 4;
-static unsigned int WR_index = 5;
 
-static unsigned int HALTED_BIT = 1 << 0;
-static unsigned int GLOBAL_INTERRUPT_ENABLE_BIT = 1 << 1;
-static unsigned int RTE_BIT = 1 << 2;
-static unsigned int TIMER1_ENABLE_BIT = 1 << 3;
-static unsigned int TIMER1_ASSERTED_BIT = 1 << 4;
-static unsigned int UART1_OUT_ENABLE_BIT = 1 << 5;
-static unsigned int UART1_OUT_ASSERTED_BIT = 1 << 6;
-static unsigned int UART1_IN_ENABLE_BIT = 1 << 7;
-static unsigned int UART1_IN_ASSERTED_BIT = 1 << 8;
-static unsigned int UART1_OUT_READY_BIT = 1 << 9;
-static unsigned int UART1_IN_READY_BIT = 1 << 10;
-
-static unsigned int num_instruction_types = 15;
+static unsigned int java_max_items_per_method = 1000;
+static unsigned int num_instruction_types = 16;
 
 enum instruction_type {
 	ADD_INSTRUCTION,
@@ -62,7 +40,8 @@ enum instruction_type {
 	NOT_INSTRUCTION,
 	SHR_INSTRUCTION,
 	SHL_INSTRUCTION,
-	DW_INSTRUCTION
+	DW_INSTRUCTION,
+	SW_INSTRUCTION
 };
 
 struct instruction_register{
@@ -90,12 +69,7 @@ struct parser_state{
 	unsigned int buffer_position;
 };
 
-struct virtual_machine {
-	unsigned int cycles_executed;
-	unsigned int num_memory_words;
-	unsigned int num_registers;
-	unsigned int * memoryuint32;
-	unsigned int * registeruint32;
+struct preloader_state {
 	struct l1_file * l1_f;
 	struct parser_state * state;
 };
@@ -107,7 +81,7 @@ enum instruction_part_type{
 	NOTHING
 };
 
-static unsigned int instruction_templates [15][5] = {
+static unsigned int instruction_templates [16][5] = {
 	{ADD_INSTRUCTION, REGISTER, REGISTER, REGISTER, NOTHING},
 	{SUB_INSTRUCTION, REGISTER, REGISTER, REGISTER, NOTHING},
 	{MUL_INSTRUCTION, REGISTER, REGISTER, REGISTER, NOTHING},
@@ -122,10 +96,11 @@ static unsigned int instruction_templates [15][5] = {
 	{NOT_INSTRUCTION, REGISTER, REGISTER, NOTHING, NOTHING},
 	{SHR_INSTRUCTION, REGISTER, REGISTER, NOTHING, NOTHING},
 	{SHL_INSTRUCTION, REGISTER, REGISTER, NOTHING, NOTHING},
-	{DW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING, NOTHING}
+	{DW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING, NOTHING},
+	{SW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING, NOTHING}
 };
 
-static unsigned int instruction_op_codes [15][2] = {
+static unsigned int instruction_op_codes [14][2] = {
 	{ADD_INSTRUCTION, 0x00000000 },
 	{SUB_INSTRUCTION, 0x10000000 },
 	{MUL_INSTRUCTION, 0x20000000 },
@@ -159,15 +134,12 @@ static unsigned int accept_newline(struct parser_state *);
 static struct first_and_last_byte * accept_decimal_constant(struct parser_state *);
 static struct first_and_last_byte * accept_hexidecimal_constant(struct parser_state *);
 static struct instruction_register * accept_register(struct parser_state *);
-static enum instruction_type lookup_instruction_op_code(unsigned int);
 static unsigned int get_instruction_op_code(enum instruction_type);
 static unsigned int * get_instruction_template(enum instruction_type);
 static struct instruction * accept_instruction(struct parser_state *);
 static struct l1_file * l1_file(struct parser_state *);
 static unsigned int do_exponent(unsigned int, unsigned int);
-static void do_interrupt(struct virtual_machine *);
-static void fetch_decode_execute(struct virtual_machine *);
-static void setup_virtual_machine(struct virtual_machine *);
+static void setup_preloader_state(struct preloader_state *, char *, char *, enum language_type);
 
 static int load_file(struct parser_state * state, char * in_file){
 	FILE *f = NULL;
@@ -363,16 +335,6 @@ static struct instruction_register * accept_register(struct parser_state * state
 	return instruction_register;
 }
 
-static enum instruction_type lookup_instruction_op_code(unsigned int op_code){
-	unsigned int i;
-	for(i = 0; i < num_instruction_types -1; i++){
-		if(instruction_op_codes[i][1] == op_code){
-			return instruction_op_codes[i][0];
-		}
-	}
-	assert(0 && "Not possible.");
-}
-
 static unsigned int get_instruction_op_code(enum instruction_type type){
 	unsigned int i;
 	for(i = 0; i < num_instruction_types -1; i++){
@@ -434,6 +396,8 @@ static struct instruction * accept_instruction(struct parser_state * state){
 		instruction->type = LL_INSTRUCTION;
 	}else if((flb = accept_word("dw", state))){
 		instruction->type = DW_INSTRUCTION;
+	}else if((flb = accept_word("sw", state))){
+		instruction->type = SW_INSTRUCTION;
 	}else{
 		free(instruction->r);
 		free(instruction);
@@ -517,210 +481,197 @@ static unsigned int do_exponent(unsigned int base, unsigned int power){
 	}
 }
 
-static void do_interrupt(struct virtual_machine * vm){
-	/*  Disable global interrupts */
-	vm->registeruint32[FR_index] = vm->registeruint32[FR_index] & ~GLOBAL_INTERRUPT_ENABLE_BIT;
-	/*  Branch to irq handler */
-	vm->registeruint32[SP_index] = vm->registeruint32[SP_index] - vm->registeruint32[WR_index]; /* SP = SP -4 */
-	vm->memoryuint32[vm->registeruint32[SP_index] / sizeof(unsigned int)] = vm->registeruint32[PC_index]; /* [SP] = PC */
-	vm->registeruint32[PC_index] = vm->memoryuint32[IRQ_HANDLER / sizeof(unsigned int)];
-}
+void output_start_end(unsigned int, unsigned int, char *, FILE *, enum language_type);
 
-static void fetch_decode_execute(struct virtual_machine * vm){
-	unsigned int current_inst = vm->memoryuint32[vm->registeruint32[PC_index] / sizeof(unsigned int)];
-	int branch_dist = current_inst & 0x7FFF;
-	unsigned int literal22bit = literal22bitmask & current_inst;
-	unsigned int ra = (0x0FC00000 & current_inst) / 0x400000;
-	unsigned int rb = (0x003F0000 & current_inst) / 0x10000;
-	unsigned int rc = (0x0000FC00 & current_inst) / 0x400;
-	unsigned int rd = (0x000003F0 & current_inst) / 0x10;
-	enum instruction_type op_type = lookup_instruction_op_code(current_inst & 0xF0000000);
-	branch_dist = current_inst & 0x8000 ? -branch_dist : branch_dist;
-	vm->registeruint32[PC_index] += sizeof(unsigned int);
-	assert(vm->registeruint32[PC_index] / sizeof(unsigned int) < vm->num_memory_words);
-
-	switch(op_type){
-		case ADD_INSTRUCTION:{
-			vm->registeruint32[ra] = vm->registeruint32[rb] + vm->registeruint32[rc];
+void output_start_end(unsigned int start, unsigned int end, char * variable_name, FILE * out, enum language_type language){
+	switch(language){
+		case C_LANGUAGE_TYPE:{
+			unsigned char s1 = (start & 0xFF000000) >> 24;
+			unsigned char s2 = (start & 0xFF0000) >> 16;
+			unsigned char s3 = (start & 0xFF00) >> 8;
+			unsigned char s4 = start & 0xFF;
+			unsigned char e1 = (end & 0xFF000000) >> 24;
+			unsigned char e2 = (end & 0xFF0000) >> 16;
+			unsigned char e3 = (end & 0xFF00) >> 8;
+			unsigned char e4 = end & 0xFF;
+			fprintf(out, "unsigned char %s_start[4] = {0x%02X, 0x%02X, 0x%02X, 0x%02X};\n", variable_name, s1, s2, s3, s4);
+			fprintf(out, "unsigned char %s_end[4] = {0x%02X, 0x%02X, 0x%02X, 0x%02X};\n", variable_name, e1, e2, e3, e4);
 			break;
-		}case SUB_INSTRUCTION:{
-			vm->registeruint32[ra] = vm->registeruint32[rb] - vm->registeruint32[rc];
+		}case JSONP_LANGUAGE_TYPE:{
+			fprintf(out, "%s({\"data_start\" : 0x%08X, \"data_end\" : 0x%08X,\n", variable_name, start, end);
 			break;
-		}case MUL_INSTRUCTION:{
-			vm->registeruint32[ra] = vm->registeruint32[rb] * vm->registeruint32[rc];
+		}case PYTHON_LANGUAGE_TYPE:{
+			fprintf(out, "class %s(object):\n    def __init__(self):\n        self.data_start = 0x%08X\n        self.data_end = 0x%08X\n", variable_name, start, end);
 			break;
-		}case DIV_INSTRUCTION:{
-			unsigned int c = vm->registeruint32[rc];
-			unsigned int d = vm->registeruint32[rd];
-			vm->registeruint32[ra] = c / d;
-			vm->registeruint32[rb] = c % d;
-			break;
-		}case BEQ_INSTRUCTION:{
-			if(vm->registeruint32[ra] == vm->registeruint32[rb]){
-				vm->registeruint32[PC_index] += sizeof(unsigned int) * branch_dist;
-			}
-			break;
-		}case BLT_INSTRUCTION:{
-			if(vm->registeruint32[ra] < vm->registeruint32[rb]){
-				vm->registeruint32[PC_index] += sizeof(unsigned int) * branch_dist;
-			}
-			break;
-		}case LOA_INSTRUCTION:{
-			assert(vm->registeruint32[rb] / sizeof(unsigned int) < vm->num_memory_words);
-			vm->registeruint32[ra] = vm->memoryuint32[vm->registeruint32[rb]/sizeof(unsigned int)];
-			break;
-		}case STO_INSTRUCTION:{
-			assert(vm->registeruint32[ra] / sizeof(unsigned int) < vm->num_memory_words);
-			vm->memoryuint32[vm->registeruint32[ra]/sizeof(unsigned int)] = vm->registeruint32[rb];
-			break;
-		}case LL_INSTRUCTION:{
-			vm->registeruint32[ra] = literal22bit;
-			break;
-		}case AND_INSTRUCTION:{
-			vm->registeruint32[ra] = vm->registeruint32[rb] & vm->registeruint32[rc];
-			break;
-		}case OR_INSTRUCTION:{
-			vm->registeruint32[ra] = vm->registeruint32[rb] | vm->registeruint32[rc];
-			break;
-		}case NOT_INSTRUCTION:{
-			vm->registeruint32[ra] = ~vm->registeruint32[rb];
-			break;
-		}case SHR_INSTRUCTION:{
-			vm->registeruint32[ra] = vm->registeruint32[ra] >> vm->registeruint32[rb];
-			break;
-		}case SHL_INSTRUCTION:{
-			vm->registeruint32[ra] = vm->registeruint32[ra] << vm->registeruint32[rb];
+		}case JAVA_LANGUAGE_TYPE:{
+			fprintf(out, "package OpCPU;\n\nclass %s implements OpCPUDataInterface {\n    private static final long dataStart = 0x%08XL;\n    private static final long dataEnd = 0x%08XL;\n", variable_name, start, end);
 			break;
 		}default:{
-			assert(0 && "Illegial op code: ");
+			assert(0 && "Should not happen.");
 		}
 	}
 }
 
-unsigned int is_halted(struct virtual_machine * vm){
-	return vm->registeruint32[FR_index] & HALTED_BIT;
-}
+void output_data_open(unsigned int size, char * variable_name, FILE * out, enum language_type language);
 
-unsigned int vm_putc(struct virtual_machine * vm, unsigned int c){
-	if(vm->registeruint32[FR_index] & UART1_IN_READY_BIT){
-		return 1; /* Item was NOT input */
-	}
-	/*  Set the flag bit to indicate there is data */
-	vm->registeruint32[FR_index] = vm->registeruint32[FR_index] | UART1_IN_READY_BIT;
-	/*  Assert the interrupt */
-	vm->registeruint32[FR_index] = vm->registeruint32[FR_index] | UART1_IN_ASSERTED_BIT;
-	vm->memoryuint32[UART1_IN / sizeof(unsigned int)] = c;
-	return 0; /* Item was input */
-}
-
-unsigned int vm_getc(struct virtual_machine * vm, unsigned int * rtn){
-	if(!(vm->registeruint32[FR_index] & UART1_OUT_READY_BIT)){
-		/*  Set the flag bit back to ready. */
-		vm->registeruint32[FR_index] = vm->registeruint32[FR_index] | UART1_OUT_READY_BIT;
-		/*  Assert the interrupt */
-		vm->registeruint32[FR_index] = vm->registeruint32[FR_index] | UART1_OUT_ASSERTED_BIT;
-		*rtn = vm->memoryuint32[UART1_OUT / sizeof(unsigned int)];
-		return 1;
-	}else{
-		return 0;
-	}
-}
-
-void step(struct virtual_machine * vm){
-	if(vm->registeruint32[FR_index] & HALTED_BIT){
-		/*Processor has been halted */
-		return; 
-	}
-
-	fetch_decode_execute(vm);
-	vm->cycles_executed = vm->cycles_executed + 1;
-
-	if(vm->registeruint32[FR_index] & HALTED_BIT){
-		/*Processor has been halted */
-		return; 
-	}
-
-	if(vm->registeruint32[FR_index] & RTE_BIT){
-		vm->registeruint32[FR_index] = vm->registeruint32[FR_index] & ~RTE_BIT; /* Unset RET bit. */
-		vm->registeruint32[FR_index] = vm->registeruint32[FR_index] | GLOBAL_INTERRUPT_ENABLE_BIT; /* Set global interrupt enable. */
-		vm->registeruint32[PC_index] = vm->memoryuint32[vm->registeruint32[SP_index] / sizeof(unsigned int)]; /* Set PC to [SP] */
-		vm->registeruint32[SP_index] = vm->registeruint32[SP_index] + vm->registeruint32[WR_index];/* Set SP to SP + WR */
-		return; 
-	}
-
-	/*Check for timer interrupt condition */
-	if(vm->memoryuint32[TIMER_PERIOD / sizeof(unsigned int)] && vm->cycles_executed % vm->memoryuint32[TIMER_PERIOD / sizeof(unsigned int)] == 0){
-		/*Assert our timer interrupt */
-		vm->registeruint32[FR_index] = vm->registeruint32[FR_index] | TIMER1_ASSERTED_BIT;
-		vm->cycles_executed = 0; /* Avoid eventual overflow */
-		return; 
-	}
-
-	if(vm->registeruint32[FR_index] & GLOBAL_INTERRUPT_ENABLE_BIT){
-		if(vm->registeruint32[FR_index] & TIMER1_ENABLE_BIT && (vm->registeruint32[FR_index] & TIMER1_ASSERTED_BIT)){
-			do_interrupt(vm);
-			return; 
-		}else if(vm->registeruint32[FR_index] & UART1_OUT_ENABLE_BIT && (vm->registeruint32[FR_index] & UART1_OUT_ASSERTED_BIT)){
-			do_interrupt(vm);
-			return; 
-		}else if(vm->registeruint32[FR_index] & UART1_IN_ENABLE_BIT && (vm->registeruint32[FR_index] & UART1_IN_ASSERTED_BIT)){
-			do_interrupt(vm);
-			return; 
+void output_data_open(unsigned int size, char * variable_name, FILE * out, enum language_type language){
+	switch(language){
+		case C_LANGUAGE_TYPE:{
+			fprintf(out, "unsigned char %s[%d][5] = {\n", variable_name, size);
+			break;
+		}case JSONP_LANGUAGE_TYPE:{
+			fprintf(out, "\"data\":  [\n");
+			break;
+		}case PYTHON_LANGUAGE_TYPE:{
+			fprintf(out, "        self.data = [\n");
+			break;
+		}case JAVA_LANGUAGE_TYPE:{
+			fprintf(out, "    private static final long itemsPerMethod = %uL;\n\n", java_max_items_per_method);
+			break;
+		}default:{
+			assert(0 && "Should not happen.");
 		}
 	}
 }
 
-static void setup_virtual_machine(struct virtual_machine * vm){
+
+void output_java_method_start(FILE *, unsigned int index);
+
+void output_java_method_start(FILE * out, unsigned int index){
+	fprintf(out, "    public long [][] getData%u(){\n", index);
+	fprintf(out, "        final long data [][] = {\n");
+}
+
+void output_java_method_end(FILE *);
+
+void output_java_method_end(FILE * out){
+	fprintf(out, "\n");
+	fprintf(out, "        };\n");
+	fprintf(out, "        return data;\n");
+	fprintf(out, "    }\n");
+}
+
+void output_data_item(unsigned int, unsigned int, FILE *, enum language_type, unsigned int, unsigned int);
+
+void output_data_item(unsigned int type, unsigned int v, FILE * out, enum language_type language, unsigned int index, unsigned int total_items){
+	switch(language){
+		case C_LANGUAGE_TYPE:{
+			unsigned char v1 = (v & 0xFF000000) >> 24;
+			unsigned char v2 = (v & 0xFF0000) >> 16;
+			unsigned char v3 = (v & 0xFF00) >> 8;
+			unsigned char v4 = v & 0xFF;
+			fprintf(out, "{0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X}", type, v1, v2, v3, v4);
+			break;
+		}case JSONP_LANGUAGE_TYPE:{
+			fprintf(out, "[0x%02X, 0x%08X]", type, v);
+			break;
+		}case PYTHON_LANGUAGE_TYPE:{
+			fprintf(out, "            [0x%02X, 0x%08X]", type, v);
+			break;
+		}case JAVA_LANGUAGE_TYPE:{
+			if(index % java_max_items_per_method == 0){
+				output_java_method_start(out, index / java_max_items_per_method);
+			}
+			fprintf(out, "            {0x%XL, 0x%08XL}", type, v);
+			if((index % java_max_items_per_method) == (java_max_items_per_method - 1) || index == total_items -1){
+				output_java_method_end(out);
+			}else{
+				fprintf(out, ",\n");
+			}
+			break;
+		}default:{
+			assert(0 && "Should not happen.");
+		}
+	}
+}
+
+void java_generic_data(FILE *);
+
+void java_generic_data(FILE * out){
+	fprintf(out, "\n");
+	fprintf(out, "    public Long getDataStart(){\n");
+	fprintf(out, "        return dataStart;\n");
+	fprintf(out, "    }\n");
+	fprintf(out, "\n");
+	fprintf(out, "    public Long getDataEnd(){\n");
+	fprintf(out, "        return dataEnd;\n");
+	fprintf(out, "    }\n");
+	fprintf(out, "\n");
+	fprintf(out, "    public long [] getData(Long index){\n");
+	fprintf(out, "        try{\n");
+	fprintf(out, "            Long methodIndex = index / itemsPerMethod;\n");
+	fprintf(out, "            return ((long [][])this.getClass().getMethod(\"getData\" + methodIndex).invoke(this))[(int)(index - (methodIndex * itemsPerMethod))];\n");
+	fprintf(out, "        }catch(Exception e){\n");
+	fprintf(out, "            System.out.println(\"Exception getting CPU data.\");\n");
+	fprintf(out, "            return new long [] {0,0};\n");
+	fprintf(out, "        }\n");
+	fprintf(out, "    }\n");
+}
+
+void output_data_close(FILE * out, enum language_type language);
+
+void output_data_close(FILE * out, enum language_type language){
+	switch(language){
+		case C_LANGUAGE_TYPE:{
+			fprintf(out, "};\n");
+			break;
+		}case JSONP_LANGUAGE_TYPE:{
+			fprintf(out, "]});\n");
+			break;
+		}case PYTHON_LANGUAGE_TYPE:{
+			fprintf(out, "        ]\n");
+			break;
+		}case JAVA_LANGUAGE_TYPE:{
+			java_generic_data(out);
+			fprintf(out, "}");
+			break;
+		}default:{
+			assert(0 && "Should not happen.");
+		}
+	}
+}
+
+static void setup_preloader_state(struct preloader_state * preloader_state, char * variable_name, char * out_file, enum language_type language){
 	/*  TODO: currently assuming that sizeof(unsigned int) == 4 */
-	unsigned int min_memory = ((0x300030 + 4) / 4);
 	unsigned int i;
 	unsigned int * current_template;
-	/*  Allocate enough memory to hold all the instructions */
-	vm->num_memory_words = vm->l1_f->num_instructions > min_memory ? vm->l1_f->num_instructions : min_memory;
-	vm->num_registers = 64;
-	vm->memoryuint32 = malloc(vm->num_memory_words * sizeof(unsigned int));
-	vm->registeruint32 = malloc(vm->num_registers * sizeof(unsigned int));
+	unsigned int num_skip_words_directives = 0;
+	unsigned int skipped_words = 0;
+	unsigned int start = preloader_state->l1_f->offset;
+	unsigned int end;
+	unsigned int num_memory_words;
+	FILE * out = fopen(out_file, "w");
 
-	vm->registeruint32[PC_index] = 0x0; /* PC */
-	vm->registeruint32[SP_index] = 0x0; /* SP */
-	vm->registeruint32[FP_index] = 0x0; /* FP */
-	vm->registeruint32[ZR_index] = 0x0; /* ZR */
-	vm->registeruint32[FR_index] = 0x200; /* FR */
-	vm->registeruint32[WR_index] = 0x4; /* WR*/
-	vm->registeruint32[6] = 0x0;
-	vm->registeruint32[7] = 0x0;
-	vm->registeruint32[8] = 0x0;
-	vm->registeruint32[9] = 0x0;
-	vm->registeruint32[10] = 0x0;
-	vm->registeruint32[11] = 0x0;
-	vm->registeruint32[12] = 0x0;
-	vm->registeruint32[13] = 0x0;
-	vm->registeruint32[14] = 0x0;
-	vm->registeruint32[15] = 0x0;
-	vm->registeruint32[16] = 0x0;
+	for(i = 0; i < preloader_state->l1_f->num_instructions; i++){
+		if(preloader_state->l1_f->instructions[i]->type == SW_INSTRUCTION){
+			num_skip_words_directives += 1;
+			skipped_words += preloader_state->l1_f->instructions[i]->constant;
+		}
+	}
+	num_memory_words = (preloader_state->l1_f->num_instructions - num_skip_words_directives) + skipped_words;
+	end = start + (4 * num_memory_words);
 
-	vm->memoryuint32[UART1_OUT / sizeof(unsigned int)] = 0;
-	vm->memoryuint32[UART1_IN / sizeof(unsigned int)] = 0;
-	vm->memoryuint32[IRQ_HANDLER / sizeof(unsigned int)] = 0;
-	vm->memoryuint32[TIMER_PERIOD / sizeof(unsigned int)] = 0;
-
+	output_start_end(start, end, variable_name, out, language);
 	/*  Assemble all the instructions */
-	for(i = 0; i < vm->l1_f->num_instructions; i++){
-		unsigned memory_index = ((vm->l1_f->offset) / 4) + i;
+	output_data_open(preloader_state->l1_f->num_instructions, variable_name, out, language);
+	for(i = 0; i < preloader_state->l1_f->num_instructions; i++){
 		unsigned int ins = 0;
-		if(vm->l1_f->instructions[i]->type == DW_INSTRUCTION){
-			ins += vm->l1_f->instructions[i]->constant;
+		if(preloader_state->l1_f->instructions[i]->type == DW_INSTRUCTION){
+			ins += preloader_state->l1_f->instructions[i]->constant;
+		}else if(preloader_state->l1_f->instructions[i]->type == SW_INSTRUCTION){
 		}else{
 			unsigned int k;
-			ins += get_instruction_op_code(vm->l1_f->instructions[i]->type);
-			current_template = get_instruction_template(vm->l1_f->instructions[i]->type);
+			ins += get_instruction_op_code(preloader_state->l1_f->instructions[i]->type);
+			current_template = get_instruction_template(preloader_state->l1_f->instructions[i]->type);
 			for(k = 1; k < 5; k++){
 				if(current_template[k] == REGISTER){
-					ins += (0x400000 / do_exponent(0x40, k -1)) * vm->l1_f->instructions[i]->r[k-1]->register_number;
+					ins += (0x400000 / do_exponent(0x40, k -1)) * preloader_state->l1_f->instructions[i]->r[k-1]->register_number;
 				}else if(current_template[k] == DECIMAL_CONSTANT || current_template[k] == HEXIDECIMAL_CONSTANT){
-					ins += vm->l1_f->instructions[i]->constant;
-					if(vm->l1_f->instructions[i]->constant_is_negative){
-						ins += (0x1 << 15);
+					/* It was a dw, an ll, a beq or a blt */
+					if(preloader_state->l1_f->instructions[i]->constant_is_negative){
+						ins += ((0xFFFF - preloader_state->l1_f->instructions[i]->constant) + 1);
+					}else{
+						ins += preloader_state->l1_f->instructions[i]->constant;
 					}
 				}else if(current_template[k] == NOTHING){
 					/* Do nothing */
@@ -729,44 +680,78 @@ static void setup_virtual_machine(struct virtual_machine * vm){
 				}
 			}
 		}
-		vm->memoryuint32[memory_index] = ins;
+		if(preloader_state->l1_f->instructions[i]->type != SW_INSTRUCTION){
+			output_data_item(0, ins, out, language, i, preloader_state->l1_f->num_instructions);
+		}else{
+			unsigned int c = preloader_state->l1_f->instructions[i]->constant;
+			output_data_item(1, c, out, language, i, preloader_state->l1_f->num_instructions);
+		}
+		if(language != JAVA_LANGUAGE_TYPE){
+			if(i != preloader_state->l1_f->num_instructions -1){
+				fprintf(out, ",");
+			}
+			fprintf(out, "\n");
+		}
 	}
-
-
+	output_data_close(out, language);
 }
 
-struct virtual_machine * vm_create(char * in_file){
-	struct virtual_machine * vm = malloc(sizeof(struct virtual_machine));
-	vm->state = malloc(sizeof(struct parser_state));
-	vm->state->in_bytes = malloc(1);
-	vm->state->input_size = 0;
-	vm->state->size_buffer = 1;
-	vm->state->buffer_position = 0;
-	load_file(vm->state, in_file);
-	vm->state->in_bytes[vm->state->input_size] = 0;
-	if((vm->l1_f = l1_file(vm->state))){
-		setup_virtual_machine(vm);
+struct preloader_state * preloader_state_create(char * variable_name, char * in_file, char * out_file, enum language_type language){
+	struct preloader_state * preloader_state = malloc(sizeof(struct preloader_state));
+	preloader_state->state = malloc(sizeof(struct parser_state));
+	preloader_state->state->in_bytes = malloc(1);
+	preloader_state->state->input_size = 0;
+	preloader_state->state->size_buffer = 1;
+	preloader_state->state->buffer_position = 0;
+	load_file(preloader_state->state, in_file);
+	preloader_state->state->in_bytes[preloader_state->state->input_size] = 0;
+	if((preloader_state->l1_f = l1_file(preloader_state->state))){
+		setup_preloader_state(preloader_state, variable_name, out_file, language);
 	}else{
 		assert(0 && "Unable to parser instructions.");
 	}
-	return vm;
+	return preloader_state;
 }
 
-void vm_destroy(struct virtual_machine * vm){
+void preloader_state_destroy(struct preloader_state * preloader_state){
 	unsigned int i;
-	free(vm->memoryuint32);
-	free(vm->registeruint32);
-	free(vm->state->in_bytes);
-	free(vm->state);
-	for(i = 0; i < vm->l1_f->num_instructions; i++){
-		free(vm->l1_f->instructions[i]->r[0]);
-		free(vm->l1_f->instructions[i]->r[1]);
-		free(vm->l1_f->instructions[i]->r[2]);
-		free(vm->l1_f->instructions[i]->r[3]);
-		free(vm->l1_f->instructions[i]->r);
-		free(vm->l1_f->instructions[i]);
+	free(preloader_state->state->in_bytes);
+	free(preloader_state->state);
+	for(i = 0; i < preloader_state->l1_f->num_instructions; i++){
+		free(preloader_state->l1_f->instructions[i]->r[0]);
+		free(preloader_state->l1_f->instructions[i]->r[1]);
+		free(preloader_state->l1_f->instructions[i]->r[2]);
+		free(preloader_state->l1_f->instructions[i]->r[3]);
+		free(preloader_state->l1_f->instructions[i]->r);
+		free(preloader_state->l1_f->instructions[i]);
 	}
-	free(vm->l1_f->instructions);
-	free(vm->l1_f);
-	free(vm);
+	free(preloader_state->l1_f->instructions);
+	free(preloader_state->l1_f);
+	free(preloader_state);
+}
+
+enum language_type get_language_type(char *);
+enum language_type get_language_type(char * l){
+	if(!strcmp("jsonp", l)){
+		return JSONP_LANGUAGE_TYPE;
+	}else if(!strcmp("c", l)){
+		return C_LANGUAGE_TYPE;
+	}else if(!strcmp("python", l)){
+		return PYTHON_LANGUAGE_TYPE;
+	}else if(!strcmp("java", l)){
+		return JAVA_LANGUAGE_TYPE;
+	}else{
+		assert(0 && "Unknown language");
+		return C_LANGUAGE_TYPE;
+	}
+}
+
+int main(int argc, char ** argv){
+	struct preloader_state * preloader_state;
+
+	assert(argc == 5 && "Preloader was invoked with the wrong number of arguments.");
+	preloader_state = preloader_state_create(argv[1], argv[2], argv[3], get_language_type(argv[4]));
+
+	preloader_state_destroy(preloader_state);
+	return 0;
 }

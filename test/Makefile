@@ -12,6 +12,7 @@ CLEAN_ASSEMBLY= $(SOURCES:.c=.l1)
 GCC_EXECUTABLES= $(SOURCES:.c=.gcc)
 GCC_OUTPUT= $(GCC_EXECUTABLES:.gcc=.gccoutput)
 JS_OUTPUT= $(CLEAN_ASSEMBLY:.l1=.jsoutput)
+JS_PRELOADER= $(CLEAN_ASSEMBLY:.l1=.l0.js)
 OUTPUT_DIFFS= $(JS_OUTPUT:.jsoutput=.diff)
 
 # Main target
@@ -27,6 +28,9 @@ run-build-script: $(SOURCES) $(CUSTOM_CC) build-builtins build-stdlib
 
 $(CLEAN_ASSEMBLY): run-build-script
 
+%.l0.js: %.l1 preloader
+	@$(CUSTOM_PRELOADER) jsonpCallback $< $@ jsonp
+
 # To obtain gcc objects of executables
 %.o: %.c
 	@$(HOSTCC) -c $< -o $@ $(CUSTOM_FLAGS)
@@ -41,9 +45,9 @@ $(GCC_EXECUTABLES): $(BUILTIN_OBJECTS)
 	@./$< > $@
 
 # To obtain js vm output
-js-output: $(CLEAN_ASSEMBLY)
+js-output: $(CLEAN_ASSEMBLY) $(JS_PRELOADER)
 #  The use of this data dir will make the browser tests blocking if there is already a chrome window open.
-	@google-chrome "http://localhost/test-api-endpoint/" --user-data-dir="chrome/data-dir" > /dev/null 2>&1
+	@google-chrome "http://localhost/emulators/javascript/" --user-data-dir="chrome/data-dir" > /dev/null 2>&1
 
 $(JS_OUTPUT): js-output
 
@@ -53,4 +57,4 @@ $(JS_OUTPUT): js-output
 
 # To remove generated files
 clean-tests:
-	@rm -f test/*.o $(PREPROCESSED) $(ASSEMBLY) $(CLEAN_ASSEMBLY) $(GCC_EXECUTABLES) $(GCC_OUTPUT) $(JS_OUTPUT) $(OUTPUT_DIFFS)
+	@rm -f test/*.o $(PREPROCESSED) $(ASSEMBLY) $(CLEAN_ASSEMBLY) $(GCC_EXECUTABLES) $(GCC_OUTPUT) $(JS_PRELOADER) $(JS_OUTPUT) $(OUTPUT_DIFFS)

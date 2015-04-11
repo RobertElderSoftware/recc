@@ -1,2 +1,5 @@
 PREPROCESS stdlib/printf.c TO stdlib/printf.i
 CODE GENERATE stdlib/printf.i TO stdlib/printf.l2
+
+PREPROCESS stdlib/malloc.c TO stdlib/malloc.i
+CODE GENERATE stdlib/malloc.i TO stdlib/malloc.l2

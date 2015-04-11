@@ -1,5 +1,6 @@
+<?php  
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -12,24 +13,19 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-<?php 
-
+ 
 $response_object = Array();
 
-if(isset($_REQUEST['test_name'])){
+$files = scandir(realpath(dirname(__FILE__))."/../../../test/");
 
-	$test_name = $_REQUEST['test_name'];
-
-        //  TODO:  this should be safer if the endpoint is ever on a server
-	$test_code = file_get_contents("/home/robert/git-projects/os/test/$test_name.l1");
-
-	if($test_code === false){
-		$response_object['error'] = "Test with name $test_name was not found.  Did you assemble the test case?  This can be caused by a permission issue sometimes.";
-	}else{
-		$response_object['test_code'] = $test_code;
-	}
+if($files === false){
+	$response_object['error'] = "Unable to find test cases.";
 }else{
-	$response_object['error'] = "Test name was not set.";
+	$files = array_filter($files, function($a) { return ($a != "." && $a != ".." && preg_match('/\.c$/', $a));});
+
+	$files = array_map(function($a) { $s = explode(".",$a); return $s[0]; }, $files);
+
+	$response_object['available_tests'] = array_values($files);
 }
 
 echo json_encode($response_object);

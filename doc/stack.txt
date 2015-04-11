@@ -26,3 +26,5 @@ Structure Member layout on Stack
 +--------+---------+-----------+
 
 -  Stacks grow down in memory.
+
+The sha1sum of the lines above is 0e7c06b6f98335349d0e2579242f53b4d4d81437

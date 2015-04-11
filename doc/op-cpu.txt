@@ -1,4 +1,4 @@
-#  Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+#  Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 #
 #  This specification is not currently available under any license, and unauthorized use or copying is not
 #  permitted.
@@ -27,10 +27,9 @@
 | ll rX 0xN       |  1000  | XXXXXXNNNNNNNNNNNNNNNNNNNNNN | load literal (22 bit) value into rX              |
 | and rX rY rZ    |  1001  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY & rZ (bitwise logical and)               |
 | or rX rY rZ     |  1010  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY | rZ (bitwise logical or)                |
-| not rX rY       |  1011  | XXXXXXYYYYYYZZZZZZ---------- | rX = ~rY (bitwise logical not)                   |
+| not rX rY       |  1011  | XXXXXXYYYYYY---------------- | rX = ~rY (bitwise logical not)                   |
 | shr rX rY       |  1100  | XXXXXXYYYYYY---------------- | rX = (rX logical shift rY bits to the right)     |
 | shl rX rY       |  1101  | XXXXXXYYYYYY---------------- | rX = (rX logical shift rY bits to the left)      |
-| dw 0xN          |  NNNN  | NNNNNNNNNNNNNNNNNNNNNNNNNNNN | define 4 bytes                                   |
 +-----------------+--------+------------------------------+--------------------------------------------------+
 
 At CPU startup, WR = 0x4, FR = 0x200.  All other registers are initialized to 0.
@@ -39,7 +38,7 @@ At CPU startup, WR = 0x4, FR = 0x200.  All other registers are initialized to 0.
 #1)  SP (Stack Pointer)    Points to the top item on the stack.  #4)  FR (Flags Register)  Special CPU flags.
 #2)  FP (Frame Pointer)    Points to previous frame pointer.     #5)  WR (Word Register)   Initialized to 4.
 
-Special registers #0 to #5 are named PC, SP, FP, ZR, FR, WR.  General registers #6 to #63 are named r1 to r57.
+Special registers #0 to #5 are named PC, SP, FP, ZR, FR, WR.  General registers #6 to #63 are named r1 to r58.
 
 Flags Register (FR) Description
 
@@ -73,4 +72,4 @@ An interrupt is initiated (branches to IRQ_HANDLER) only when all 3 of the follo
 A CPU initiated interrupt atomically sets bit 1 of FR to 0, SP to SP - WR and [SP] to PC, then PC to
 IRQ_HANDLER.  At least one cycle occurs between a branch due to bit 2 being set, and a branch to IRQ_Handler.
 
-The sha1sum of the lines above is 96874052f606580bf71b6835e50fe0d29600233f
+The sha1sum of the lines above is 9bbc40186e7cec2dd6308ffee3beea3606b5fd3d

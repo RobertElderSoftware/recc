@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.

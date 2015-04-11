@@ -22,7 +22,19 @@ kernel/queue.i
 kernel/kernel.sym
 linker
 recc
-emulators/linux-emulator-example
+preloader
+emulators/java/OpCPU/LinuxEmulatorExample.class
+emulators/java/OpCPU/OpCPU.class
+emulators/java/OpCPU/OpCPUData.class
+emulators/java/OpCPU/OpCPUDataInterface.class
+emulators/java/OpCPU/KernelData.class
+emulators/java/OpCPU/KernelData.java
+emulators/java/OpCPU/OpCPU$1.class
+emulators/java/OpCPU/OpCPU$InstructionType.class
+emulators/c/linux-emulator-example
+emulators/c/linux-emulator-example-data.l0.c
+emulators/python/python_op_cpu_package/python_l0_module.py
+emulators/python/python_op_cpu_package/*.pyc
 chrome/data-dir/*
 *.o
 builtin/*.i
@@ -37,6 +49,8 @@ builtin/print_decimal.l2
 builtin/signed_greater_than.l2
 builtin/signed_less_than_or_equal_to.l2
 stdlib/printf.i
+stdlib/malloc.i
+stdlib/malloc.l2
 stdlib/printf.l2
 test/*.l2
 test/*.l1
@@ -45,6 +59,7 @@ test/*.gccoutput
 test/*.jsoutput
 test/*.diff
 test/*.i
+test/*.l0.js
 data-structures/char_ptr_list.c
 data-structures/char_ptr_list.h
 data-structures/struct_normalized_declaration_element_ptr_list.c

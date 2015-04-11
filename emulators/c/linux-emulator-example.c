@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -27,6 +27,10 @@ of non-standard terminal input, and output.
 #include <string.h>
 #include <fcntl.h>
 
+extern unsigned char data_start[4];
+extern unsigned char data_end[4];
+extern unsigned char data[1][5];
+
 struct termios * terminal_setup(void);
 
 struct termios * terminal_setup(void){
@@ -47,14 +51,13 @@ struct termios * terminal_setup(void){
         return original;
 }
 
-int main(int argc, char ** argv){
+int main(void){
 	struct virtual_machine * vm;
 	unsigned int output;
         unsigned char c;
 	struct termios * original = terminal_setup();
 
-	assert(argc == 2 && "Emulator was invoked with the wrong number of arguments.");
-	vm = vm_create(argv[1]);
+	vm = vm_create(data_start, data_end, data);
 
 	while(!is_halted(vm)){
 		if(vm_getc(vm, &output)){

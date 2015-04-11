@@ -2,7 +2,7 @@
 ;                This code represents the very first code that is executed,
 ;                and is responsible for calling the main method and halting
 ;                the processor when returning from main.
-OFFSET RELOCATABLE
+OFFSET 0x0
 IMPLEMENTS, REQUIRES EXTERNAL exitmain
 IMPLEMENTS EXTERNAL __g_entry
 REQUIRES EXTERNAL main
@@ -19,3 +19,4 @@ exitmain:
 ;                This will halt the processor
 ll r1 0x1;
 add FR FR r1;
+sw 0x100;

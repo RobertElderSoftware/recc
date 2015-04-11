@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -45,7 +45,6 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 				if(tokens[i]->type == B_FILENAME){
 					struct unsigned_char_ptr_list in_files;
 					unsigned_char_ptr_list_create(&in_files);
-					unsigned_char_ptr_list_add(&in_files, (unsigned char *)"builtin/mainstub.l2");
 					unsigned_char_ptr_list_add(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte));
 					i++;
 					while(tokens[i]->type != B_SPACE || tokens[i]->type != B_COMMA_CHAR || tokens[i]->type != B_FILENAME){
@@ -92,7 +91,7 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 									unsigned char * f2 = copy_string(filename2->first_byte, filename2->last_byte);
 									unsigned int j;
 									printf("Linking ");
-									for(j = 1; j < unsigned_char_ptr_list_size(&in_files); j++){
+									for(j = 0; j < unsigned_char_ptr_list_size(&in_files); j++){
 										printf("%s", unsigned_char_ptr_list_get(&in_files, j));
 										if(j != unsigned_char_ptr_list_size(&in_files) -1){
 											printf(",");
@@ -100,7 +99,7 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 									}
 									printf(" to %s\n", f2);
 									do_link(memory_pooler_collection, &in_files, f2, symbol_file);
-									for(j = 1; j < unsigned_char_ptr_list_size(&in_files); j++){
+									for(j = 0; j < unsigned_char_ptr_list_size(&in_files); j++){
 										free(unsigned_char_ptr_list_get(&in_files, j));
 									}
 									unsigned_char_ptr_list_destroy(&in_files);

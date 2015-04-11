@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -123,7 +123,7 @@ const char * build_script_token_type_names[10] = {
 };
 
 
-const char * asm_token_type_names[31] = {
+const char * asm_token_type_names[32] = {
 	"A_SPACE",
 	"A_NEWLINE",
 	"A_ASM_COMMENT",
@@ -154,7 +154,8 @@ const char * asm_token_type_names[31] = {
 	"A_NOT",
 	"A_SHR",
 	"A_SHL",
-	"A_DW"
+	"A_DW",
+	"A_SW"
 };
 
 /*  Interfaces not in .h file to discourage external usage */
@@ -1018,6 +1019,8 @@ int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, 
 			type = A_SHL;
 		}else if((rtn = t_keyword_space_check((const unsigned char *)"dw", &asm_lexer_state->c, asm_lexer_state->c.position))){
 			type = A_DW;
+		}else if((rtn = t_keyword_space_check((const unsigned char *)"sw", &asm_lexer_state->c, asm_lexer_state->c.position))){
+			type = A_SW;
 		}else if((rtn = t_identifier(&asm_lexer_state->c, asm_lexer_state->c.position))){
 			type = A_IDENTIFIER;
 		}else{

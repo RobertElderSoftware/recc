@@ -1,0 +1,9 @@
+;                The purpose of this file is to declare a non-relocable
+;                memory object that covers the memory-mapped registers at
+;                offset 0x300000.  This will also prevent generated code 
+;                from accidentally covering these registers after linking.
+OFFSET 0x300000
+sw 0x10;         0x300000 UART1_OUT
+sw 0x10;         0x300010 UART1_IN
+sw 0x10;         0x300020 IRQ_HANDLER
+sw 0x10;         0x300030 TIMER1_PERIOD

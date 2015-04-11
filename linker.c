@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -18,26 +18,177 @@ void buffered_token_output(struct unsigned_char_list *, struct asm_lexer_token *
 void free_symbol_map(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *);
 unsigned int set_post_linking_offsets(struct linker_object * linker_object);
 unsigned int get_instruction_size(struct asm_instruction *);
+unsigned int parse_hexidecimal_string(struct asm_lexer_token *);
+unsigned int get_linker_object_size(struct linker_object *);
 
+void reorder_linker_objects(struct struct_linker_object_ptr_list *, struct struct_linker_object_ptr_list *, unsigned int);
+
+unsigned int is_non_descending_order(struct struct_linker_object_ptr_list *);
+
+unsigned int is_non_descending_order(struct struct_linker_object_ptr_list * linker_objects){
+	unsigned int i;
+	struct linker_object * prev = 0;
+	for(i = 0; i < struct_linker_object_ptr_list_size(linker_objects); i++){
+		if(i != 0){
+			if(struct_linker_object_ptr_list_get(linker_objects, i)->linker_object_post_linking_offset < prev->linker_object_post_linking_offset){
+				return 0;
+			}
+		}
+		prev = struct_linker_object_ptr_list_get(linker_objects, i);
+	}
+	return 1;
+}
+
+void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_objects, struct struct_linker_object_ptr_list * reordered_linker_objects, unsigned int starting_offset){
+	/*  Some linker objects must be put at a fixed address, and some are relocatable.
+	    Re-order them so that they can be contiguously placed (with possible space in-between)
+	*/
+	unsigned int i;
+	struct struct_linker_object_ptr_list relocatable_linker_objects;
+	struct struct_linker_object_ptr_list non_relocatable_linker_objects;
+	unsigned int previous_linker_object_end = starting_offset; /*  Offsets in #words */
+	unsigned int current_linker_object_start;
+
+	struct_linker_object_ptr_list_create(&relocatable_linker_objects);
+	struct_linker_object_ptr_list_create(&non_relocatable_linker_objects);
+
+	/*  Sort the linker objects into relocatable and non-relocatable */
+	for(i = 0; i < struct_linker_object_ptr_list_size(linker_objects); i++){
+		struct linker_object * obj = struct_linker_object_ptr_list_get(linker_objects, i);
+		if(obj->is_relocatable){
+			struct_linker_object_ptr_list_add(&relocatable_linker_objects, obj);
+		}else{
+			struct_linker_object_ptr_list_add(&non_relocatable_linker_objects, obj);
+		}
+	}
+
+	/*  Pre-condition: non relocatable linker objects must be ordered in non decreasing order */
+	while(!is_non_descending_order(&non_relocatable_linker_objects)){
+		unsigned int i;
+		struct linker_object * prev = 0;
+		/* Bubble sort for now because it is easy, change for a better algorithm later. */
+		for(i = 0; i < struct_linker_object_ptr_list_size(&non_relocatable_linker_objects); i++){
+			if(i != 0){
+				if(struct_linker_object_ptr_list_get(&non_relocatable_linker_objects, i)->linker_object_post_linking_offset < prev->linker_object_post_linking_offset){
+					/* Out of order, switch them */
+					struct linker_object ** data = struct_linker_object_ptr_list_data(&non_relocatable_linker_objects);
+					struct linker_object * tmp = data[i];
+					data[i] = data[i-1];
+					data[i-1] = tmp;
+					break;
+				}
+			}
+			prev = struct_linker_object_ptr_list_get(&non_relocatable_linker_objects, i);
+		}
+		if(i == struct_linker_object_ptr_list_size(&non_relocatable_linker_objects)){
+			break; /* sort finished */
+		}
+	}
+	/*  Make sure there is no conflict between non-relocatable linker objects */
+	{
+		struct linker_object * prev = 0;
+		for(i = 0; i < struct_linker_object_ptr_list_size(&non_relocatable_linker_objects); i++){
+			struct linker_object * current = struct_linker_object_ptr_list_get(&non_relocatable_linker_objects, i);
+			if(i != 0){
+				/*  It won't fit */
+				assert(prev->linker_object_post_linking_offset + get_linker_object_size(prev) <= current->linker_object_post_linking_offset);
+			}
+			prev = current;
+		}
+	}
+	/*  Fit in all the relocatable linker objects between the non relocatable ones */
+	for(i = 0; i < struct_linker_object_ptr_list_size(&non_relocatable_linker_objects); i++){
+		struct linker_object * non_relocatable = struct_linker_object_ptr_list_get(&non_relocatable_linker_objects, i);
+		current_linker_object_start = non_relocatable->linker_object_post_linking_offset;  /*  Offset in # words */
+		while(struct_linker_object_ptr_list_size(&relocatable_linker_objects)){
+			unsigned int j;
+			/* Look for an object that will fit */
+			for(j = 0; j < struct_linker_object_ptr_list_size(&relocatable_linker_objects); j++){
+				struct linker_object * relocatable = struct_linker_object_ptr_list_get(&relocatable_linker_objects, j);
+				unsigned int relocatable_size = get_linker_object_size(relocatable);
+				if(previous_linker_object_end + relocatable_size <= current_linker_object_start){
+					previous_linker_object_end = previous_linker_object_end + relocatable_size;
+					struct_linker_object_ptr_list_add(reordered_linker_objects, relocatable);
+					/* Don't try to add this one multiple times */
+					struct_linker_object_ptr_list_remove_all(&relocatable_linker_objects, relocatable);
+					break; /* List size changed, do iteration again. */
+				}
+			}
+			if(struct_linker_object_ptr_list_size(&relocatable_linker_objects) == j){
+				/*  Non of the relocatable objects will fit if we got throught the loop*/
+				break;
+			}
+		}
+		/*  No more of the relocatable objects will fit, put the non relocatable object after them */
+		struct_linker_object_ptr_list_add(reordered_linker_objects, non_relocatable);
+		/*  Next object needs to know where it can start from */
+		previous_linker_object_end = previous_linker_object_end + get_linker_object_size(non_relocatable);
+	}
+
+	/*  Add all the leftover relocatable linker objects at the end */
+	for(i = 0; i < struct_linker_object_ptr_list_size(&relocatable_linker_objects); i++){
+		struct linker_object * relocatable = struct_linker_object_ptr_list_get(&relocatable_linker_objects, i);
+		struct_linker_object_ptr_list_add(reordered_linker_objects, relocatable);
+	}
+	/*  Now all the linker objects are guaranteed to fit. */
+
+	struct_linker_object_ptr_list_destroy(&relocatable_linker_objects);
+	struct_linker_object_ptr_list_destroy(&non_relocatable_linker_objects);
+}
+
+unsigned int parse_hexidecimal_string(struct asm_lexer_token * token){
+	unsigned int i = 0;
+	unsigned int base = 1;
+	unsigned char * c = token->last_byte;
+	do{
+		unsigned int n;
+		if(*c >= '0' && *c <= '9'){
+			n = *c - '0';
+		}else if(*c >= 'A' && *c <= 'F'){
+			n = (*c - 'A') + 10;
+		}else{
+			printf("%c\n", *c);
+			assert(0 && "Unknown hex character.");
+		}
+		i += (n * base);
+		base *= 16;
+	}while(*(--c) != 'x');
+	return i;
+}
 
 unsigned int get_instruction_size(struct asm_instruction * instruction){
 	enum asm_token_type type = instruction->op_token->type;
 
-	if ((type == A_BLT || type == A_BEQ) && instruction->identifier_token){
+	if ((type == A_BLT || type == A_BEQ) && instruction->identifier_token){ /* Gets re-written for long jumps */
 		return 4;
 	}
 
-	if (type == A_LL && instruction->identifier_token){
+	if (type == A_LL && instruction->identifier_token){ /* Gets re-written for large values */
 		return 9;
+	}
+
+	if (type == A_SW){
+		return parse_hexidecimal_string(instruction->number_token); /* Size depends on number of words skipped */
 	}
 
 	return 1; /* 1 word */
 }
 
+unsigned int get_linker_object_size(struct linker_object * linker_object){
+	unsigned int i;
+	unsigned int num_instructions = struct_asm_instruction_ptr_list_size(&linker_object->instructions);
+	unsigned int current_offset = 0; /*  Offset in # words */
+	for(i = 0; i < num_instructions; i++){
+		struct asm_instruction * instruction = struct_asm_instruction_ptr_list_get(&linker_object->instructions, i);
+		current_offset += get_instruction_size(instruction);
+	}
+	return current_offset;
+}
+
 unsigned int set_post_linking_offsets(struct linker_object * linker_object){
 	unsigned int i;
 	unsigned int num_instructions = struct_asm_instruction_ptr_list_size(&linker_object->instructions);
-	unsigned int current_offset = 0;
+	unsigned int current_offset = 0; /*  Offset in # words */
 	for(i = 0; i < num_instructions; i++){
 		struct asm_instruction * instruction = struct_asm_instruction_ptr_list_get(&linker_object->instructions, i);
 		instruction->post_linking_offset = current_offset;
@@ -92,6 +243,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 	unsigned int num_tokens = struct_asm_lexer_token_ptr_list_size(&asm_lexer_state->tokens);
 	struct asm_lexer_token ** tokens =  struct_asm_lexer_token_ptr_list_data(&asm_lexer_state->tokens);
 	unsigned int i = 0;
+	unsigned int offset_declared = 0;
 	linker_object->is_relocatable = 0; /* Assume false */
 	linker_object->current_line = 1;
 	linker_object->asm_lexer_state = asm_lexer_state;
@@ -170,7 +322,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 					}else{ assert(0 && "Expected space."); }
 				}else{ assert(0 && "Expected register."); }
 			}else{ assert(0 && "Expected space."); }
-		}else if(tokens[i]->type == A_DW){
+		}else if(tokens[i]->type == A_DW || tokens[i]->type == A_SW){
 			struct asm_instruction * new_instruction = malloc(sizeof(struct asm_instruction));
 			new_instruction->op_token = tokens[i];
 			i++;
@@ -269,15 +421,21 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 				}else{ assert(0 && "Expected register."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_OFFSET){
+			assert(!offset_declared && "OFFSET declared multiple times.");
 			i++;
 			if(tokens[i]->type == A_SPACE){
 				i++;
 				if(tokens[i]->type == A_RELOCATABLE){
 					i++;
 					linker_object->is_relocatable = 1; /* All symbols are relative */
+					offset_declared = 1;
 				}else if(tokens[i]->type == A_CONSTANT_HEX){
+					unsigned int parsed_value = parse_hexidecimal_string(tokens[i]);
+					linker_object->is_relocatable = 0; /* This linker object must be placed at a fixed location in memory */
+					linker_object->linker_object_post_linking_offset = (parsed_value / 4); /*  Offset in # words */
+					assert(parsed_value % 4 == 0 && "Value must be evenly divisible by word size.");
+					offset_declared = 1;
 					i++;
-					assert(0 && "Cannot link using non relocatable file.");
 				}else{ assert(0 && "Expected space."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_REQUIRES){
@@ -405,6 +563,10 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 			assert(0 && "Unable to process assembly file.");
 		}
 	}
+
+	if(!offset_declared){
+		printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename); assert(0 && "OFFSET not declared..");
+	}
 	return linker_object;
 }
 
@@ -441,10 +603,12 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 	struct asm_instruction ** data = struct_asm_instruction_ptr_list_data(instructions);
 	unsigned int i;
 
+	/*
 	if(!linker_object->is_relocatable){
 		printf("File %s does not specify that symbols are relocatable.", linker_object->asm_lexer_state->c.filename);
 		assert(0 && "Symbols not relocatable.");
 	}
+	*/
 
 	for(i = 0; i < size; i++){
 		struct asm_instruction * instruction = data[i];
@@ -545,6 +709,15 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 				buffered_token_output(file_output, instruction->number_token);
 			}
 			buffered_printf(file_output, "\n");
+		}else if(type == A_SW){
+			buffered_token_output(file_output, instruction->op_token);
+			buffered_printf(file_output, " ");
+			if(instruction->identifier_token){
+				assert(0 && "Unexpected lablel with skip words instruction.");
+			}else{
+				buffered_token_output(file_output, instruction->number_token);
+			}
+			buffered_printf(file_output, "\n");
 		}else{
 			assert(0 && "Unknown instruction type.");
 		}
@@ -582,12 +755,14 @@ void free_symbol_map(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map * 
 int do_link(struct memory_pooler_collection * memory_pooler_collection, struct unsigned_char_ptr_list * in_files, unsigned char * out_file, unsigned char * symbol_file){
 	struct struct_unsigned_char_list_ptr_list input_file_buffers;
 	struct struct_linker_object_ptr_list linker_objects;
+	struct struct_linker_object_ptr_list reordered_linker_objects;
 	struct struct_asm_lexer_state_ptr_list lexer_states;
 	struct unsigned_char_list file_output;
 	struct unsigned_char_list symbol_output;
 	struct unsigned_char_list asm_lexer_output;
 	unsigned int i;
-	unsigned int next_linker_object_post_linking_offset = 0;
+	unsigned int starting_offset = 0;
+	unsigned int next_linker_object_post_linking_offset = starting_offset;
 
 	g_format_buffer_use();
 
@@ -597,8 +772,9 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 	struct_unsigned_char_list_ptr_list_create(&input_file_buffers);
 	struct_asm_lexer_state_ptr_list_create(&lexer_states);
 	struct_linker_object_ptr_list_create(&linker_objects);
+	struct_linker_object_ptr_list_create(&reordered_linker_objects);
 
-
+	/*  Load and parser all the linker objects */
 	for(i = 0; i < unsigned_char_ptr_list_size(in_files); i++){
 		struct unsigned_char_list * file_input = malloc(sizeof(struct unsigned_char_list));
 		struct asm_lexer_state * asm_lexer_state = malloc(sizeof(struct asm_lexer_state));
@@ -611,19 +787,49 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 
 		lex_asm(asm_lexer_state, unsigned_char_ptr_list_get(in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
 		linker_object = process_assembly(asm_lexer_state);
-		linker_object->linker_object_post_linking_offset = next_linker_object_post_linking_offset;
-		next_linker_object_post_linking_offset += set_post_linking_offsets(linker_object); 
 
 		struct_unsigned_char_list_ptr_list_add(&input_file_buffers, file_input);
 		struct_linker_object_ptr_list_add(&linker_objects, linker_object);
 		struct_asm_lexer_state_ptr_list_add(&lexer_states, asm_lexer_state);
 	}
 
-	/* TODO:  Allow the user to specify the offset */
-	buffered_printf(&file_output, "OFFSET 0x0\n");
+	/*  Re-order them to give priority to the placement of fixed offset objects */
+	reorder_linker_objects(&linker_objects, &reordered_linker_objects, starting_offset);
 
-	for(i = 0; i < struct_linker_object_ptr_list_size(&linker_objects); i++){
-		output_artifacts(&file_output, struct_linker_object_ptr_list_get(&linker_objects, i), &linker_objects, &symbol_output);
+	/*  Resolve all the post-linking offsets in the re-ordered list of linker objects */
+	for(i = 0; i < struct_linker_object_ptr_list_size(&reordered_linker_objects); i++){
+		struct linker_object * obj = struct_linker_object_ptr_list_get(&reordered_linker_objects, i);
+		if(obj->is_relocatable){
+			/*  If it is non-relocatable, the offset is already decided. */
+			obj->linker_object_post_linking_offset = next_linker_object_post_linking_offset;
+			next_linker_object_post_linking_offset += set_post_linking_offsets(obj);
+		}else{
+			/* Skip some area between the last object and the non-relocatable object that follows */
+			next_linker_object_post_linking_offset = obj->linker_object_post_linking_offset + set_post_linking_offsets(obj); 
+		}
+	}
+	/* Need to count along again */
+	next_linker_object_post_linking_offset = starting_offset;
+
+	buffered_printf(&file_output, "OFFSET 0x%X\n", starting_offset);
+
+	/*  Output all of the objects linked together  */
+	for(i = 0; i < struct_linker_object_ptr_list_size(&reordered_linker_objects); i++){
+		struct linker_object * obj = struct_linker_object_ptr_list_get(&reordered_linker_objects, i);
+		if(obj->is_relocatable){
+			/*  If it is non-relocatable, the offset is already decided. */
+			next_linker_object_post_linking_offset += get_linker_object_size(obj);
+		}else{
+			/* Skip some area between the last object and the non-relocatable object that follows */
+			if(next_linker_object_post_linking_offset < obj->linker_object_post_linking_offset){
+				buffered_printf(&file_output, "sw 0x%X\n", obj->linker_object_post_linking_offset - next_linker_object_post_linking_offset);
+			}else if(next_linker_object_post_linking_offset == obj->linker_object_post_linking_offset){
+			}else{
+				assert(0 && "This should never happen.");
+			}
+			next_linker_object_post_linking_offset = obj->linker_object_post_linking_offset + get_linker_object_size(obj); 
+		}
+		output_artifacts(&file_output, obj, &reordered_linker_objects, &symbol_output);
 	}
 
 	/*  Clean up all the resources */
@@ -659,6 +865,7 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 	struct_asm_lexer_state_ptr_list_destroy(&lexer_states);
 	struct_unsigned_char_list_ptr_list_destroy(&input_file_buffers);
 	struct_linker_object_ptr_list_destroy(&linker_objects);
+	struct_linker_object_ptr_list_destroy(&reordered_linker_objects);
 	g_format_buffer_release();
 
 	return EXIT_SUCCESS;

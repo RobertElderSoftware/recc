@@ -18,4 +18,4 @@ CODE GENERATE kernel/kernel_impl.i TO kernel/kernel_impl.l2
 
 PREPROCESS kernel/user_proc.c TO kernel/user_proc.i
 CODE GENERATE kernel/user_proc.i TO kernel/user_proc.l2
-LINK kernel/assert.l2, kernel/putchar_nobusy.l2, kernel/getchar_nobusy.l2, kernel/putchar.l2, kernel/kernel_state.l2, kernel/user_proc.l2, kernel/kernel_interface.l2, kernel/main.l2, kernel/queue.l2, builtin/signed_greater_than_or_equal_to.l2, builtin/signed_less_than_or_equal_to.l2, builtin/print_decimal.l2, stdlib/printf.l2, kernel/kernel_impl.l2 TO kernel/kernel.l1 SYMBOLS TO kernel/kernel.sym
+LINK builtin/memory_mapped_registers.l2, builtin/mainstub.l2, kernel/assert.l2, kernel/putchar_nobusy.l2, kernel/getchar_nobusy.l2, kernel/putchar.l2, kernel/kernel_state.l2, kernel/user_proc.l2, kernel/kernel_interface.l2, kernel/main.l2, kernel/queue.l2, builtin/signed_greater_than_or_equal_to.l2, builtin/signed_less_than_or_equal_to.l2, builtin/print_decimal.l2, stdlib/printf.l2, kernel/kernel_impl.l2 TO kernel/kernel.l1 SYMBOLS TO kernel/kernel.sym

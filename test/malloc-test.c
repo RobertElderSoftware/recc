@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -12,22 +12,9 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-<?php  
- 
-$response_object = Array();
+#include <stdlib.h>
 
-$files = scandir('/home/robert/git-projects/os/test/');
-
-if($files === false){
-	$response_object['error'] = "Unable to find test cases.";
-}else{
-	$files = array_filter($files, function($a) { return ($a != "." && $a != ".." && preg_match('/\.c$/', $a));});
-
-	$files = array_map(function($a) { $s = explode(".",$a); return $s[0]; }, $files);
-
-	$response_object['available_tests'] = array_values($files);
+int main(void){
+	malloc(8);
+	return 0;
 }
-
-echo json_encode($response_object);
-
-?>

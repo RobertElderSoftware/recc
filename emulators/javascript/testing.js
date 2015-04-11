@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -12,13 +12,106 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
+"use strict";
 var running_kernel = window.top.location.href.indexOf("kernel_mode") > -1 ? "kernel" : null;
 var specific_tests = running_kernel ? "kernel" : null;
 var input_queue = [];
-var memoryuint32;
 var memory_size_ints;
-var memorysint16;
 var is_debug_mode;
+var num_special_registers = 6;
+
+function get_register_name(n){
+  var exceptions = ["PC","SP","FP","ZR","FR","WR"];
+  return n > (num_special_registers - 1) ? ("r" + (n - (num_special_registers -1))) : exceptions[n];
+}
+
+function get_register_number(name){
+  var exceptions = { "PC": 0, "SP": 1,"FP": 2,"ZR": 3, "FR": 4, "WR": 5}
+  if(name in exceptions){
+    return exceptions[name];
+  }else{
+    var a = name.split("r")[1]
+    return parseInt(a,10) + (num_special_registers - 1);
+  }
+}
+
+function format_binary_string(str){
+  rtn = "";
+  rtn += "Ctrl: " + str.substring(0, 4) + " ";
+  rtn += "r" + str.substring(4, 10) + " ";
+  rtn += "r" + str.substring(10, 16) + " ";
+  rtn += "r" + str.substring(16, 22) + " ";
+  rtn += "r" + str.substring(22, 28) + " ";
+  rtn += "left: " + str.substring(28, 32) + " ";
+  return rtn;
+}
+
+function get_binary_string(int32bit, base){
+  var str = "";
+  do{
+    base /= 2;
+    str += (int32bit & base) ? "1" : "0";
+  }while (base != 1);
+  return str;
+}
+
+function binary_disassemble_instruction(instruction, vm){
+  var branch_binary = instruction & 0x0000FFFF;
+  var operation = (0xF0000000 & instruction)>>>0;
+  var literal22bit = (vm.literal22bitmask & instruction)>>>0;
+  var literal5bit = (0x0000001F & instruction)>>>0;
+  var ra = (0x0FC00000 & instruction) / 0x400000;
+  var rb = (0x003F0000 & instruction) / 0x10000;
+  var rc = (0x0000FC00 & instruction) / 0x400;
+  var rd = (0x000003F0 & instruction) / 0x10;
+  switch(operation){
+    case vm._asm_op_codes["add"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40) + " r" + get_binary_string(rc, 0x40);
+      break;
+    }case vm._asm_op_codes["sub"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40) + " r" + get_binary_string(rc, 0x40);
+      break;
+    }case vm._asm_op_codes["mul"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40) + " r" + get_binary_string(rc, 0x40);
+      break;
+    }case vm._asm_op_codes["div"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40) + " r" + get_binary_string(rc, 0x40) +  " r" + get_binary_string(rd, 0x40);
+      break;
+    }case vm._asm_op_codes["beq"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40) + " i" + get_binary_string(branch_binary, 0x10000);
+      break;
+    }case vm._asm_op_codes["blt"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40) + " i" + get_binary_string(branch_binary, 0x10000);
+      break;
+    }case vm._asm_op_codes["loa"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40);
+      break;
+    }case vm._asm_op_codes["sto"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40);
+      break;
+    }case vm._asm_op_codes["ll"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " l" + get_binary_string(literal22bit, 0x400000);
+      break;
+    }case vm._asm_op_codes["and"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40) + " r" + get_binary_string(rc, 0x40);
+      break;
+    }case vm._asm_op_codes["or"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40) + " r" + get_binary_string(rc, 0x40);
+      break;
+    }case vm._asm_op_codes["not"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40);
+      break;
+    }case vm._asm_op_codes["shr"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40);
+      break;
+    }case vm._asm_op_codes["shl"]:{
+      return "op" + get_binary_string(operation >> 28, 0x10) + " r" + get_binary_string(ra, 0x40) + " r" + get_binary_string(rb, 0x40);
+      break;
+    }default:{
+      return "op-code:" + get_binary_string(operation >> 28, 0x10) + "(Unrecognized op code.)";
+    }
+  }
+}
 
 function clear_state(){
   $(".debug-view-area").hide();
@@ -35,7 +128,10 @@ function clear_state(){
 }
 
 
-function print_state(){
+function print_state(vm){
+  var memoryuint32 = vm.get_memoryuint32();
+  var memorysint16 = vm.get_memorysint16();
+  var registeruint32 = vm.get_registeruint32();
   function disassemble_instruction(index){
     var current_inst = memoryuint32[index];
     //  TODO this is little-endian dependant
@@ -49,23 +145,23 @@ function print_state(){
 
     var op_name = "dw";
     var parts = [];
-    for(var key in _asm_op_codes){
-      if(_asm_op_codes[key] == operation){
+    for(var key in vm._asm_op_codes){
+      if(vm._asm_op_codes[key] == operation){
         op_name = key;
         break;
       }
     }
 
-    for(var i = 0; i < _asm_templates[op_name].length; i++){
-      if(_asm_templates[op_name][i] == "register"){
+    for(var i = 0; i < vm._asm_templates[op_name].length; i++){
+      if(vm._asm_templates[op_name][i] == "register"){
         parts.push(get_register_name(r[i]));
-      }else if(_asm_templates[op_name][i] == "hexadecimal-number"){
+      }else if(vm._asm_templates[op_name][i] == "hexadecimal-number"){
         if(op_name == "ll"){
-          parts.push("0x" + (literal22bitmask & memoryuint32[index]).toString(16));
+          parts.push("0x" + (vm.literal22bitmask & memoryuint32[index]).toString(16));
         }else{
           alert("Unknown state.");
         }
-      }else if(_asm_templates[op_name][i] == "decimal-number"){
+      }else if(vm._asm_templates[op_name][i] == "decimal-number"){
         parts.push(branch_dist);
       }
     }
@@ -73,9 +169,9 @@ function print_state(){
     return "<span class='op-name'>" + op_name + "</span> " + parts.join(" ");
   }
 
-  var current_inst = memoryuint32[registeruint32[0] / sizeof_int];
+  var current_inst = memoryuint32[registeruint32[0] / vm.sizeof_int];
   //  TODO this is little-endian dependant
-  var branch_dist = memorysint16[(registeruint32[0] / (sizeof_int / 2))];
+  var branch_dist = memorysint16[(registeruint32[0] / (vm.sizeof_int / 2))];
   var operation = (0xF0000000 & current_inst)>>>0;
   var r = new Array();
   r[0] = (0x0FC00000 & current_inst) / 0x400000;
@@ -84,8 +180,8 @@ function print_state(){
   r[3] = (0x000003F0 & current_inst) / 0x10;
 
   var op_name = "dw";
-  for(var key in _asm_op_codes){
-    if(_asm_op_codes[key] == operation){
+  for(var key in vm._asm_op_codes){
+    if(vm._asm_op_codes[key] == operation){
       op_name = key;
       break;
     }
@@ -122,24 +218,24 @@ function print_state(){
     }case "beq":{
       hilighted_registers.push({value: r[0], color: input_color});
       hilighted_registers.push({value: r[1], color: input_color});
-      hilighted_memory_locations.push({value: (registeruint32[0] + sizeof_int * branch_dist), color: input_color});
+      hilighted_memory_locations.push({value: (registeruint32[0] + vm.sizeof_int * branch_dist), color: input_color});
       break;
     }case "blt":{
       hilighted_registers.push({value: r[0], color: input_color});
       hilighted_registers.push({value: r[1], color: input_color});
-      hilighted_memory_locations.push({value: (registeruint32[0] + sizeof_int * branch_dist), color: input_color});
+      hilighted_memory_locations.push({value: (registeruint32[0] + vm.sizeof_int * branch_dist), color: input_color});
       break;
     }case "loa":{
       hilighted_registers.push({value: r[0], color: output_color});
-      hilighted_memory_locations.push({value: registeruint32[r[1]]/sizeof_int, color: output_color});
+      hilighted_memory_locations.push({value: registeruint32[r[1]]/vm.sizeof_int, color: output_color});
       break;
     }case "sto":{
       hilighted_registers.push({value: r[0], color: output_color});
-      hilighted_memory_locations.push({value: registeruint32[r[0]]/sizeof_int, color: input_color});
+      hilighted_memory_locations.push({value: registeruint32[r[0]]/vm.sizeof_int, color: input_color});
       break;
     }case "ll":{
       hilighted_registers.push({value: r[0], color: output_color});
-      hilighted_memory_locations.push({value: registeruint32[0]/sizeof_int, color: input_color});
+      hilighted_memory_locations.push({value: registeruint32[0]/vm.sizeof_int, color: input_color});
       break;
     }case "and":{
       hilighted_registers.push({value: r[0], color: output_color});
@@ -181,26 +277,26 @@ function print_state(){
         break;
       }
     }
-    text = '<div style="color: ' + style + ';">' + get_register_name(i) + "). 0x" + registeruint32[i].toString(16) + "</div>"
+    var text = '<div style="color: ' + style + ';">' + get_register_name(i) + "). 0x" + registeruint32[i].toString(16) + "</div>"
     $(".register-container").append(text);
   }
 
-  var cur_pc_loc = registeruint32[PC_index] / sizeof_int;
+  var cur_pc_loc = registeruint32[vm.PC_index] / vm.sizeof_int;
   var starting_loc = (cur_pc_loc - 5) < 0 ? 0 : (cur_pc_loc - 5);
 
   $(".debug-view-area").show();
 
-  if(registeruint32[FR_index] & HALTED_BIT) $(".fr-bits td:nth-child(11)").addClass('active');
-  if(registeruint32[FR_index] & GLOBAL_INTERRUPT_ENABLE_BIT) $(".fr-bits td:nth-child(10)").addClass('active');
-  if(registeruint32[FR_index] & RTE_BIT) $(".fr-bits td:nth-child(9)").addClass('active');
-  if(registeruint32[FR_index] & TIMER1_ENABLE_BIT) $(".fr-bits td:nth-child(8)").addClass('active');
-  if(registeruint32[FR_index] & TIMER1_ASSERTED_BIT) $(".fr-bits td:nth-child(7)").addClass('active');
-  if(registeruint32[FR_index] & UART1_OUT_ENABLE_BIT) $(".fr-bits td:nth-child(6)").addClass('active');
-  if(registeruint32[FR_index] & UART1_OUT_ASSERTED_BIT) $(".fr-bits td:nth-child(5)").addClass('active');
-  if(registeruint32[FR_index] & UART1_IN_ENABLE_BIT) $(".fr-bits td:nth-child(4)").addClass('active');
-  if(registeruint32[FR_index] & UART1_IN_ASSERTED_BIT) $(".fr-bits td:nth-child(3)").addClass('active');
-  if(registeruint32[FR_index] & UART1_OUT_READY_BIT) $(".fr-bits td:nth-child(2)").addClass('active');
-  if(registeruint32[FR_index] & UART1_IN_READY_BIT) $(".fr-bits td:nth-child(1)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.HALTED_BIT) $(".fr-bits td:nth-child(11)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.GLOBAL_INTERRUPT_ENABLE_BIT) $(".fr-bits td:nth-child(10)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.RTE_BIT) $(".fr-bits td:nth-child(9)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.TIMER1_ENABLE_BIT) $(".fr-bits td:nth-child(8)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.TIMER1_ASSERTED_BIT) $(".fr-bits td:nth-child(7)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_OUT_ENABLE_BIT) $(".fr-bits td:nth-child(6)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_OUT_ASSERTED_BIT) $(".fr-bits td:nth-child(5)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_IN_ENABLE_BIT) $(".fr-bits td:nth-child(4)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_IN_ASSERTED_BIT) $(".fr-bits td:nth-child(3)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_OUT_READY_BIT) $(".fr-bits td:nth-child(2)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_IN_READY_BIT) $(".fr-bits td:nth-child(1)").addClass('active');
 
   for(var i = starting_loc; i < starting_loc + 20; i++){
     var css_class = "";
@@ -209,16 +305,16 @@ function print_state(){
     }
     $(".location-container").append('<div class="' + css_class + '">0x' + ((i*4)>>>0).toString(16) + "</div>");
     $(".instruction-container").append('<div class="' + css_class + '">' + disassemble_instruction(i) + "</div>");
-    $(".binary-container").append('<div class="' + css_class + '">' + binary_disassemble_instruction(memoryuint32[i]) + "</div>");
+    $(".binary-container").append('<div class="' + css_class + '">' + binary_disassemble_instruction(memoryuint32[i], vm) + "</div>");
     $(".value-container").append('<div class="' + css_class + '">' + " 0x" + (memoryuint32[i]>>>0).toString(16) + "</div>");
   }
 
   for(var i = 0; i < 20; i++){
-    var val = (registeruint32[SP_index] + (i * 4));
+    var val = (registeruint32[vm.SP_index] + (i * 4));
     var prefix = val % 16 == 0 ? "^^" : "&nbsp;&nbsp;";
     var color = val % 32 == 0 ? "#ee4136" : "#0000FF";
-    $(".stack-address-container").append('<div><span style="color: ' + color + ';">' + prefix + '</span>0x' + (registeruint32[SP_index] + (i * 4)).toString(16) + "</div>");
-    $(".stack-value-container").append("<div>0x" + (memoryuint32[((registeruint32[SP_index] + (i * 4)) / sizeof_int)]).toString(16) + "</div>");
+    $(".stack-address-container").append('<div><span style="color: ' + color + ';">' + prefix + '</span>0x' + (registeruint32[vm.SP_index] + (i * 4)).toString(16) + "</div>");
+    $(".stack-value-container").append("<div>0x" + (memoryuint32[((registeruint32[vm.SP_index] + (i * 4)) / vm.sizeof_int)]).toString(16) + "</div>");
   }
 }
 
@@ -234,19 +330,15 @@ $(document).ready(function () {
 
   function test_function(test_names){
     var test_name = test_names.shift();
-    $.get(
-      "get-test?test_name=" + test_name,
-      function (test_data) {
-        var test = eval('(' + test_data + ')');
-        if(test.error){
-          alert("Error: " + test.error);
-        }else if(test.test_code){
-          var input = test.test_code;
-          var vm = new virtual_machine();
-          vm.assemble_l1_asm_to_memory(input);
-          memoryuint32 = vm.get_memoryuint32();
-          memorysint16 = vm.get_memorysint16();
-          registeruint32 = vm.get_registeruint32();
+    $.ajax({
+      url: "get-test?test_name=" + test_name,
+      dataType: 'jsonp',
+      jsonpCallback: "jsonpCallback",
+      success: function (test_data) {
+        if(test_data.error){
+          alert("Error: " + test_data.error);
+        }else{
+          var vm = new opCPU(test_data);
           var timeout = "none";
           var output = "";
           var first_tick = true; 
@@ -261,7 +353,7 @@ $(document).ready(function () {
             }
             vm.step();
             if(is_debug_mode && timeout != "skip-to-breakpoint" && timeout != "skip-to-watch-change"){
-              print_state();
+              print_state(vm);
             }
             if(input_queue.length){
               var in_chr = input_queue.shift()
@@ -332,7 +424,7 @@ $(document).ready(function () {
               }
               timeout = "stopped";
               if(is_debug_mode){
-                print_state();
+                print_state(vm);
               }
             }else if(timeout == "stopped"){
               f();
@@ -380,7 +472,7 @@ $(document).ready(function () {
           });
         }
       }
-    );
+    });
   }
 
   $.get(

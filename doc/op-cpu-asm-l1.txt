@@ -1,4 +1,4 @@
-#  Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+#  Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 #
 #  This specification is not currently available under any license, and
 #  unauthorized use or copying is not permitted.
@@ -51,13 +51,13 @@ This definition should be applied greedily, meaning that in the event of an
 ambiguity due to neighbouring characters, as many characters as possible
 should be consumed from left to right as long as this definition is satisfied.
 
-10.  There are 15 "instruction identifiers".  They are defined as "add", "sub",
+10.  There are 14 "instruction identifiers".  They are defined as "add", "sub",
 "mul", "div", "beq", "blt", "loa", "sto", "ll", "and", "or", "not", "shr",
-"shl" and "dw".
+and "shl".  There are also 2 "directive identifiers", defined as "dw" and "sw".
 
-11.  Each of the 15 instruction identifiers corresponds to a characteristic
-form for an instruction.  An "instruction statement" is defined as one of the
-following:
+11.  Each of the 14 instruction identifiers, and 2 directive identifers
+corresponds to a characteristic form for an instruction.  An "instruction
+statement" is defined as one of the following:
 
   11.1.  "add", "space", "aggregate register", "space", "aggregate register",
 "space", "aggregate register"
@@ -82,6 +82,7 @@ following:
 "space", "aggregate register"
   11.14.  "ll", "space", "aggregate register", "space", "hexadecimal constant"
   11.15.  "dw", "space", "hexadecimal constant"
+  11.16.  "sw", "space", "hexadecimal constant"
 
 There are no spaces at the start or end of an instruction statement.
 
@@ -96,4 +97,4 @@ offset declaration, followed by zero or more of the following:
 and finally, an optional additional newline can be the last character in the
 file.
 
-The sha1sum of the lines above is 9a2849d085158843f425d2b517c388078320de84
+The sha1sum of the lines above is 72885e6fe3e1991510d4bd209998860cdef5a54e

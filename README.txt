@@ -119,15 +119,13 @@ LINK library.l2, main.l2 TO test/basic-operations.l1 SYMBOLS TO main.symbols
 
 * Emulators *
 
-There are currently emulators for the op-cpu in 2 different languages.  C89 and javascript.  The javascript emulator runs as part of the unit tests, and a useful example of the C emulator on Linux can be built on linux with 
+There are currently emulators for the op-cpu in 4 different languages.  C89, Javascript, Python and Java.  The javascript emulator runs as part of the unit tests.  The other 3 emulators can be run with these commands:
 
-make emulators/linux-emulator-example
+make bootstrap-datatypes && make kernel/kernel.l1
 
-This emulator can 'run' .l1 files directly from the command line:
+Then
 
-./linux-emulator-example file.l1
-
-You can even run the full RECC microkernel from the command line:
-
-make build-kernel && make ./emulators/linux-emulator-example && ./emulators/linux-emulator-example ./kernel/kernel.l1
+make run-c-emulator  # Runs the kernel inside the C emulator
+make run-python-emulator  # Runs the kernel inside the Python emulator
+make run-java-emulator  # Runs the kernel inside the Java emulator
 

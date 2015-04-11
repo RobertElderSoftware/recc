@@ -1,5 +1,5 @@
 /*
-	Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
 	This software is not currently available under any license, and unauthorized use
 	or copying is not permitted.
@@ -445,11 +445,10 @@ int main(void){
 	create_stack_type("unsigned int");
 	create_stack_type("struct parser_operation");
 
-	add_string_literal_to_buffer((unsigned char *)": bootstrap-datatypes", &file_dependencies, 1);
+	add_string_literal_to_buffer((unsigned char *)": bootstrap-datatypes", &file_dependencies, 0);
 	add_string_literal_to_buffer((unsigned char *)"", &library_buildcommand, 1);
-	add_string_literal_to_buffer((unsigned char *)binary_exponential_buffer_data(&library_buildcommand), &library_dependency, 1);
+	add_string_literal_to_buffer((unsigned char *)binary_exponential_buffer_data(&library_buildcommand), &library_dependency, 0);
 
-	output_buffer_to_file(&file_dependencies, (unsigned char *)"data-structures/file-dependencies");
 	output_buffer_to_file(&library_dependency, (unsigned char *)"data-structures/library-data-structures");
 	output_buffer_to_file(&object_makefile, (unsigned char *)"data-structures/object-data-structures");
 	output_buffer_to_file(&clean_files, (unsigned char *)"data-structures/clean-data-structures");

@@ -1,4 +1,5 @@
 CUSTOM_CC=./recc
+CUSTOM_PRELOADER=./preloader
 HOSTCC=gcc
 CLANG_FLAGS=-g -ferror-limit=3 -W -Wextra -Wall -Werror -Weverything -pedantic
 GCC_FLAGS=-g -std=c89 -W -Wextra -Wall -Werror -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
@@ -35,16 +36,21 @@ linker.h: bootstrap-datatypes
 linker.o: linker.c linker.h
 	@$(HOSTCC) -c linker.c $(CUSTOM_FLAGS)
 
-io.h: bootstrap-datatypes
+io.h: data-structures/unsigned_char_list.h
 
-io.o: io.c io.h
+io.o: io.c io.h data-structures/unsigned_char_list.o
 	@$(HOSTCC) -c io.c $(CUSTOM_FLAGS)
 
 preprocessor.o: preprocessor.c bootstrap-datatypes
 	@$(HOSTCC) -c preprocessor.c $(CUSTOM_FLAGS)
 
+preloader.h: io.h
+
+preloader: preloader.c preloader.h
+	@$(HOSTCC) preloader.c -o preloader $(CUSTOM_FLAGS)
+
 clean: clean-data-structures clean-tests clean-builtins clean-stdlib clean-kernel clean-emulators
-	@rm -f recc *.o
+	@rm -f recc preloader *.o
 
 include kernel/Makefile
 include data-structures/Makefile

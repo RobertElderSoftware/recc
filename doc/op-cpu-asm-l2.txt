@@ -1,4 +1,4 @@
-#  Copyright 2014 Robert Elder Software Inc.  All rights reserved.
+#  Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 #
 #  This specification is not currently available under any license, and
 #  unauthorized use or copying is not permitted.
@@ -62,8 +62,8 @@ by zero or more spaces, followed by "REQUIRES".
   6.4  A decimal digit.
 
 7.  A "symbol linkage declaration" is defined as an interface specifier list,
-followed by a space, followed by a linkage domain, followed by a space,
-followed by a symbol identifier.
+followed by zero or more spaces, followed by a linkage domain, followed by zero
+or more spaces, followed by a symbol identifier.
 
 8.  Section 11.5 of the L1 specification is redefined to be one of the
 following:
@@ -116,4 +116,4 @@ An optional additional newline can be the last character in the file.
 L1 specification may be expanded to include one or more spaces using the
 definition of a space in section 1 of this document.
 
-The sha1sum of the lines above is 87ccd083a77f2deec8fed541cde9fb212eb9c296
+The sha1sum of the lines above is 1d5b4c3a8eb58616bd9d15cf9265049030410adb
