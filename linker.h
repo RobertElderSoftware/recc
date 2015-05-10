@@ -23,7 +23,6 @@
 #include "lexer.h"
 #include "parser.h"
 #include "linker.h"
-#include "code_generator.h"
 #include "data-structures/unsigned_char_list.h"
 #include "data-structures/unsigned_char_ptr_list.h"
 #include "data-structures/struct_unsigned_char_list_ptr_list.h"

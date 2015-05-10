@@ -33,6 +33,8 @@ const char * g_unsigned_string = "unsigned";
 const char * g_ptr_string = "*";
 const char * g_open_paren_string = "(";
 const char * g_close_paren_string = ")";
+const char * g_open_square_bracket_string = "[";
+const char * g_close_square_bracket_string = "]";
 
 struct memory_pooler * g_parser_node_pool;
 struct memory_pooler * g_c_lexer_token_pool;
@@ -360,6 +362,32 @@ struct parser_node * get_last_terminal_node(struct parser_node * n){
 	}
 }
 
+void print_error_with_type(struct c_lexer_state * state, struct type_description * t1, struct parser_node * context, const char * msg){
+	struct unsigned_char_list l;
+	unsigned_char_list_create(&l);
+	buffered_printf(&l,"\n%s\n", msg);
+	buffered_printf(&l,"Type #1:\n");
+	print_normalized_declaration_declarator_and_specifiers(&l, t1->declarator, t1->specifiers, 0, 0);
+	unsigned_char_list_add(&l, 0);
+	printf("%s\n", unsigned_char_list_data(&l));
+	print_node_context(state, context);
+	unsigned_char_list_destroy(&l);
+}
+
+void print_error_with_types(struct c_lexer_state * state, struct type_description * t1, struct type_description * t2, struct parser_node * context, const char * msg){
+	struct unsigned_char_list l;
+	unsigned_char_list_create(&l);
+	buffered_printf(&l,"\n%s\n", msg);
+	buffered_printf(&l,"Type #1:\n");
+	print_normalized_declaration_declarator_and_specifiers(&l, t1->declarator, t1->specifiers, 0, 0);
+	buffered_printf(&l,"Type #2:\n");
+	print_normalized_declaration_declarator_and_specifiers(&l, t2->declarator, t2->specifiers, 0, 0);
+	unsigned_char_list_add(&l, 0);
+	printf("%s\n", unsigned_char_list_data(&l));
+	print_node_context(state, context);
+	unsigned_char_list_destroy(&l);
+}
+
 void print_node_context(struct c_lexer_state * state, struct parser_node * n){
 	struct parser_node * first_terminal = n;
 	struct parser_node * last_terminal = n ? (n->type == TERMINAL ? n : n->first_child) : (struct parser_node *)0;
@@ -493,17 +521,19 @@ struct type_description * create_type_description_from_type_name(struct parser_s
 	struct normalized_declarator * normalized_declarator = malloc(sizeof(struct normalized_declarator));
 	struct scope_level * scope = state->top_scope;
 	descend_scope(&scope, state->current_scope_depth);
-	rtn->source_scope_level = scope;
-
 	assert(n->type == TYPE_NAME);
-	rtn->specifiers = get_normalized_specifier_list(n->first_child);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
 	if(n->first_child->next && n->first_child->next->type == ABSTRACT_DECLARATOR){
 		normalized_declarator->declarator = copy_parser_node_children_only(n->first_child->next);
 	}else{
 		normalized_declarator->declarator = 0;
 	}
+	rtn->specifiers = get_normalized_specifier_list(n->first_child);
 	rtn->declarator = normalized_declarator;
+	rtn->source_scope_level = scope;
+	rtn->context = n;
+	rtn->value_type = RVALUE;
+	rtn->source_element = (struct normalized_declaration_element *)0;
 	return rtn;
 }
 
@@ -516,10 +546,9 @@ struct type_description * get_current_function_return_type_description(struct ty
 	struct parser_node * fcn_type = convert_abstract_declarator_to_function_type(abstract);
 	normalized_declarator_return->declarator = fcn_type;
 	normalized_declarator_return->type = NORMALIZED_ABSTRACT_DECLARATOR;
-	return_type_description = create_type_description_from_normalized_declarator_and_specifiers(normalized_declarator_return, t->specifiers);
+	return_type_description = create_type_description_from_normalized_declarator_and_specifiers(normalized_declarator_return, t->specifiers, t->context, t->source_scope_level, t->value_type, t->source_element);
 	destroy_parser_node_tree_and_c_lexer_tokens(normalized_declarator_return->declarator);
 	free(normalized_declarator_return);
-	return_type_description->source_scope_level = t->source_scope_level;
 	return return_type_description;
 }
 
@@ -543,10 +572,9 @@ struct type_description * create_dereferenced_array_type_description_from_type_d
 		assert(0 && "Trying to perform [] operator on something that is not an array or pointer.");
 	}
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
-	rtn = create_type_description_from_normalized_declarator_and_specifiers(normalized_declarator, a->specifiers);
+	rtn = create_type_description_from_normalized_declarator_and_specifiers(normalized_declarator, a->specifiers, a->context, a->source_scope_level, a->value_type, a->source_element);
 	destroy_parser_node_tree_and_c_lexer_tokens(normalized_declarator->declarator);
 	free(normalized_declarator);
-	rtn->source_scope_level = a->source_scope_level;
 	return rtn;
 }
 
@@ -558,10 +586,9 @@ struct type_description * create_dereferenced_pointer_type_description_from_type
 	temp = create_abstract_declarator_from_normalized_declarator(a->declarator);
 	normalized_declarator->declarator = convert_abstract_declarator_to_pointer_type(temp);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
-	rtn = create_type_description_from_normalized_declarator_and_specifiers(normalized_declarator, a->specifiers);
+	rtn = create_type_description_from_normalized_declarator_and_specifiers(normalized_declarator, a->specifiers, a->context, a->source_scope_level, a->value_type, a->source_element);
 	destroy_parser_node_tree_and_c_lexer_tokens(normalized_declarator->declarator);
 	free(normalized_declarator);
-	rtn->source_scope_level = a->source_scope_level;
 	return rtn;
 }
 
@@ -727,7 +754,7 @@ void convert_to_untypedefed_type_description(struct type_description * t){
 				struct normalized_declaration_element * element;
 				struct type_description * typedefed_type;
 				element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
-				typedefed_type = create_type_description_from_normalized_declaration_element(element);
+				typedefed_type = create_type_description_from_normalized_declaration_element(element, t->context, t->source_scope_level, t->value_type);
 				/*  If there is a corresponding object in the identifier namespace that was declared using a typedef. */
 				if(obj && count_specifiers(typedefed_type, TYPEDEF)){
 					struct parser_node * abstract_typedefed_type;
@@ -779,17 +806,16 @@ void convert_to_untypedefed_type_description(struct type_description * t){
 }
 
 struct type_description * create_address_type_description_from_type_description(struct type_description * a){
-	/* Take a type description as input and return a type description of the address type do the & operator */
+	/* Take a type description as input and return a type description of the address type (do the & operator) */
 	struct type_description * rtn;
 	struct normalized_declarator * normalized_declarator = malloc(sizeof(struct normalized_declarator));
 	struct parser_node * temp = 0;
 	temp = create_abstract_declarator_from_normalized_declarator(a->declarator);
 	normalized_declarator->declarator = convert_abstract_declarator_to_address_type(temp);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
-	rtn = create_type_description_from_normalized_declarator_and_specifiers(normalized_declarator, a->specifiers);
+	rtn = create_type_description_from_normalized_declarator_and_specifiers(normalized_declarator, a->specifiers, a->context, a->source_scope_level, a->value_type, a->source_element);
 	destroy_parser_node_tree_and_c_lexer_tokens(normalized_declarator->declarator);
 	free(normalized_declarator);
-	rtn->source_scope_level = a->source_scope_level;
 	return rtn;
 }
 
@@ -900,7 +926,7 @@ int type_description_cmp(struct type_description * a, struct type_description * 
 	return 0;
 }
 
-struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct normalized_declarator * normalized_declarator, struct struct_normalized_specifier_ptr_list * specifiers){
+struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct normalized_declarator * normalized_declarator, struct struct_normalized_specifier_ptr_list * specifiers, struct parser_node * context, struct scope_level * source_scope_level, enum value_type value_type, struct normalized_declaration_element * source_element){
 	/* Take a normalized declarator and specifiers, change any declarator it has into an abstract one, and copy all parser nodes */
 	/* Make copies of everything so we can manage memory more consistently */
 	struct struct_normalized_specifier_ptr_list * normalized_specifiers_copy = malloc(sizeof(struct struct_normalized_specifier_ptr_list));
@@ -912,6 +938,10 @@ struct type_description * create_type_description_from_normalized_declarator_and
 	normalized_declarator_copy->type = NORMALIZED_ABSTRACT_DECLARATOR;
 	new_description->declarator = normalized_declarator_copy;
 	new_description->specifiers = normalized_specifiers_copy;
+	new_description->context = context;
+	new_description->source_scope_level = source_scope_level;
+	new_description->value_type = value_type;
+	new_description->source_element = source_element;
 	struct_normalized_specifier_ptr_list_create(normalized_specifiers_copy);
 	for(i = 0; i < num_specifiers; i++){
 		struct normalized_specifier * src_normalized_specifier = struct_normalized_specifier_ptr_list_get(specifiers, i);
@@ -924,17 +954,15 @@ struct type_description * create_type_description_from_normalized_declarator_and
 	return new_description;
 }
 
-struct type_description * create_type_description_from_normalized_declaration_element(struct normalized_declaration_element * element){
+struct type_description * create_type_description_from_normalized_declaration_element(struct normalized_declaration_element * element, struct parser_node * context, struct scope_level * source_scope_level, enum value_type value_type){
 	if(element->normalized_declarator && element->normalized_declarator->type == NORMALIZED_ENUMERATOR){
 		/*  For an enumerator, the individual enumerator identifier doesn't have specifiers on it, they're on the parent node */
 		struct normalized_declaration_set * declaration_set = create_normalized_declaration_set_from_parser_node(element->normalized_declaration_set->parent_normalized_declaration_set->set, 0);
-		struct type_description * type = create_type_description_from_normalized_declarator_and_specifiers(element->normalized_declarator, declaration_set->normalized_specifiers);
-		destroy_normalized_declaration_element_list(create_normalized_declaration_element_list(declaration_set));
-		type->source_element = element;
+		struct type_description * type = create_type_description_from_normalized_declarator_and_specifiers(element->normalized_declarator, declaration_set->normalized_specifiers, context, source_scope_level, value_type, element);
+		destroy_normalized_declaration_element_list(create_normalized_declaration_element_list(declaration_set)); /* TODO:  Unnecessary, but cleans up memory easily */
 		return type;
 	}else{
-		struct type_description * type = create_type_description_from_normalized_declarator_and_specifiers(element->normalized_declarator, element->normalized_specifiers);
-		type->source_element = element;
+		struct type_description * type = create_type_description_from_normalized_declarator_and_specifiers(element->normalized_declarator, element->normalized_specifiers, context, source_scope_level, value_type, element);
 		return type;
 	}
 }
@@ -3109,6 +3137,67 @@ unsigned char * convert_string_literal(unsigned char * str){
 	return max_buffer;
 }
 
+struct normalized_declarator * make_array_brackets(void){
+	struct normalized_declarator * normalized_declarator = malloc(sizeof(struct normalized_declarator));
+	struct parser_node * abstract_declarator = memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * direct_abstract_declarator = memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * direct_abstract_declarator_rest = memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * epsilon = memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * terminal_1 = memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * terminal_2 = memory_pooler_malloc(g_parser_node_pool);
+	struct c_lexer_token * open = memory_pooler_malloc(g_c_lexer_token_pool);
+	struct c_lexer_token * close = memory_pooler_malloc(g_c_lexer_token_pool);
+
+	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
+	normalized_declarator->declarator = abstract_declarator;
+
+	/* ABSTRACT_DECLARATOR node */
+	abstract_declarator->type = ABSTRACT_DECLARATOR;
+	abstract_declarator->first_child = direct_abstract_declarator;
+	abstract_declarator->next = (struct parser_node *)0;
+	abstract_declarator->c_lexer_token = (struct c_lexer_token *)0;
+
+	/* DIRECT_ABSTRACT_DECLARATOR node */
+	direct_abstract_declarator->type = DIRECT_ABSTRACT_DECLARATOR;
+	direct_abstract_declarator->first_child = terminal_1;
+	direct_abstract_declarator->next = (struct parser_node *)0;
+	direct_abstract_declarator->c_lexer_token = (struct c_lexer_token *)0;
+
+	/* DIRECT_ABSTRACT_DECLARATOR_REST node */
+	direct_abstract_declarator_rest->type = DIRECT_ABSTRACT_DECLARATOR_REST;
+	direct_abstract_declarator_rest->first_child = epsilon;
+	direct_abstract_declarator_rest->next = (struct parser_node *)0;
+	direct_abstract_declarator_rest->c_lexer_token = (struct c_lexer_token *)0;
+
+	/* EPSILON node */
+	epsilon->type = EPSILON;
+	epsilon->first_child = (struct parser_node *)0;
+	epsilon->next = (struct parser_node *)0;
+	epsilon->c_lexer_token = (struct c_lexer_token *)0;
+
+	/* ( node */
+	terminal_1->type = TERMINAL;
+	terminal_1->first_child = (struct parser_node *)0;
+	terminal_1->next = terminal_2;
+	terminal_1->c_lexer_token = open;
+
+	/* ) node */
+	terminal_2->type = TERMINAL;
+	terminal_2->first_child = (struct parser_node *)0;
+	terminal_2->next = direct_abstract_declarator_rest;
+	terminal_2->c_lexer_token = close;
+
+	open->type = OPEN_SQUARE_BRACKET_CHAR;
+	open->first_byte = (unsigned char *)g_open_square_bracket_string;
+	open->last_byte = (unsigned char *)g_open_square_bracket_string;
+
+	close->type = CLOSE_SQUARE_BRACKET_CHAR;
+	close->first_byte = (unsigned char *)g_close_square_bracket_string;
+	close->last_byte = (unsigned char *)g_close_square_bracket_string;
+
+	return normalized_declarator;
+}
+
 void manage_constant(struct parser_state * state, struct parser_node * n, enum add_or_remove add_or_remove){
 	unsigned char * constant_string_representation = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte);
 	if(add_or_remove == ADD){
@@ -3128,6 +3217,7 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 				new_description->native_data = calloc(4,1);
 				*(new_description->native_data) = convert_hexadecimal_constant(new_description->str);
 				new_description->type_description = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+				new_description->type_description->value_type = RVALUE;
 				break;
 			}case CONSTANT_EXPONENT:{
 				assert(0 && "constant exponent conversion not implemented.");
@@ -3142,19 +3232,22 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 				new_description->native_data = calloc(4,1);
 				*(new_description->native_data) = convert_decimal_constant(new_description->str);
 				new_description->type_description = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+				new_description->type_description->value_type = RVALUE;
 				break;
 			}case CONSTANT_CHARACTER:{
 				new_description->native_data = calloc(4,1);
 				convert_character_constant(&new_description->str[1], (unsigned char *)(&new_description->native_data[0]));
 				new_description->type_description = add_specifier(add_specifier(create_empty_type_description(), CONST), CHAR);
+				new_description->type_description->value_type = RVALUE;
 				break;
 			}case STRING_LITERAL:{
 				struct type_description * type_description;
 				/* TODO:  This will not work properly for character constants with multiple embeded string literals because of the strlen */
 				new_description->native_data = (void *)convert_string_literal(&new_description->str[1]); /* offset 1 to jump over the first quote */
 				type_description = add_specifier(add_specifier(create_empty_type_description(), CONST), CHAR);
-				new_description->type_description = create_address_type_description_from_type_description(type_description);
-				destroy_type_description(type_description);
+				type_description->declarator = make_array_brackets();
+				type_description->value_type = LVALUE;
+				new_description->type_description = type_description;
 				break;
 			}default:{
 				assert(0 && "Unknown conversion.");
@@ -4485,7 +4578,7 @@ struct parser_node * type_specifier(struct parser_state * parser_state){
 		obj = get_namespace_object_from_closest_namespace(ident, IDENTIFIER_NAMESPACE, scope, 0);
 		if(obj){
 			element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
-			type_description = create_type_description_from_normalized_declaration_element(element);
+			type_description = create_type_description_from_normalized_declaration_element(element, n1, scope, LVALUE);
 		}
 		if(obj && count_specifiers(type_description, TYPEDEF)){
 			destroy_type_description(type_description);
@@ -5951,11 +6044,10 @@ struct type_description * create_empty_type_description(void){
 }
 
 struct type_description * copy_type_description(struct type_description * type){
-	return create_type_description_from_normalized_declarator_and_specifiers(type->declarator, type->specifiers);
+	return create_type_description_from_normalized_declarator_and_specifiers(type->declarator, type->specifiers, type->context, type->source_scope_level, type->value_type, type->source_element);
 }
 
 int parse(struct c_lexer_state * c_lexer_state, struct parser_state * parser_state, unsigned char * buffer){
-	struct type_description * const_char;
 	g_parser_node_pool = memory_pooler_collection_get_pool(parser_state->memory_pooler_collection, sizeof(struct parser_node));
 	g_c_lexer_token_pool = memory_pooler_collection_get_pool(parser_state->memory_pooler_collection, sizeof(struct c_lexer_token));
 	parser_state->c_lexer_state = c_lexer_state;
@@ -5963,9 +6055,9 @@ int parse(struct c_lexer_state * c_lexer_state, struct parser_state * parser_sta
 	parser_state->tokens_position = 0;
 	parser_state->current_scope_depth = 0;
 	parser_state->top_scope = create_empty_scope(0);
-	const_char = add_specifier(add_specifier(create_empty_type_description(), CONST), CHAR);
 
 	parser_state->unsigned_int_description = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+	parser_state->unsigned_int_description->value_type = RVALUE;
 	struct_parser_operation_stack_create(&parser_state->operation_stack);
 	g_format_buffer_use();
 
@@ -5982,7 +6074,6 @@ int parse(struct c_lexer_state * c_lexer_state, struct parser_state * parser_sta
 
 	assert(parser_state->top_node && "Parsing FAILED.\n");
 	print_scope_level(parser_state, parser_state->top_scope, 0);
-	destroy_type_description(const_char);
 	return 0;
 }
 
@@ -6188,9 +6279,8 @@ unsigned int get_ceil_modulo(unsigned int n, unsigned int modulo){
 	return modulo * (quotient + (remainder ? 1 : 0));
 }
 
-unsigned int arithmetic_type_size(struct type_description * t, enum type_size_class tsc){
+unsigned int arithmetic_type_size(struct type_description * t, enum value_type tsc){
 	enum type_class type_class = determine_type_class(t);
-	unsigned int address_bits = 32;
 	unsigned int data_bits;
 
 	switch(type_class){
@@ -6229,18 +6319,10 @@ unsigned int arithmetic_type_size(struct type_description * t, enum type_size_cl
 	}
 
 	switch (tsc){
-		case MINIMAL_BITS:{
-			return data_bits;
-		}case MINIMAL_BYTES:{
-			return data_bits / 8;
-		}case FORCED_WORD_BITS:{
-			return get_ceil_modulo(data_bits, 32);
-		}case FORCED_WORD_BYTES:{
+		case RVALUE:{
 			return get_ceil_modulo(data_bits, 32) / 8;
-		}case DATA_AND_PTR_BITS:{
-			return get_ceil_modulo(data_bits, 32) + address_bits;
-		}case DATA_AND_PTR_BYTES:{
-			return (get_ceil_modulo(data_bits, 32) + address_bits) / 8;
+		}case LVALUE:{
+			return 4;
 		}default:{
 			assert(0 && "Unknown type class size.");
 			return 0;
@@ -6248,25 +6330,14 @@ unsigned int arithmetic_type_size(struct type_description * t, enum type_size_cl
 	}
 }
 
-unsigned int void_type_size(enum type_size_class tsc){
-	unsigned int address_bits = 32;
-	unsigned int data_bits = 32;
+unsigned int void_type_size(enum value_type tsc){
 	/*  Void isn't supposed to have a size, but for now it gets returned from void 
             functions as if were and int.  This makes certain things easier.  */
-
 	switch (tsc){
-		case MINIMAL_BITS:{
-			return data_bits;
-		}case MINIMAL_BYTES:{
-			return data_bits / 8;
-		}case FORCED_WORD_BITS:{
-			return get_ceil_modulo(data_bits, 32);
-		}case FORCED_WORD_BYTES:{
-			return get_ceil_modulo(data_bits, 32) / 8;
-		}case DATA_AND_PTR_BITS:{
-			return get_ceil_modulo(data_bits, 32) + address_bits;
-		}case DATA_AND_PTR_BYTES:{
-			return (get_ceil_modulo(data_bits, 32) + address_bits) / 8;
+		case RVALUE:{
+			return 4;
+		}case LVALUE:{
+			return 4;
 		}default:{
 			assert(0 && "Unknown type class size.");
 			return 0;
@@ -6274,21 +6345,13 @@ unsigned int void_type_size(enum type_size_class tsc){
 	}
 }
 
-unsigned int enum_type_size(struct type_description * t, enum type_size_class tsc){
+unsigned int enum_type_size(struct type_description * t, enum value_type tsc){
 	(void)t;
 	switch (tsc){
-		case MINIMAL_BITS:{
-			return 32;
-		}case MINIMAL_BYTES:{
+		case RVALUE:{
 			return 4;
-		}case FORCED_WORD_BITS:{
-			return 32;
-		}case FORCED_WORD_BYTES:{
+		}case LVALUE:{
 			return 4;
-		}case DATA_AND_PTR_BITS:{
-			return 64;
-		}case DATA_AND_PTR_BYTES:{
-			return 8;
 		}default:{
 			assert(0 && "Unknown type class size.");
 			return 0;
@@ -6296,21 +6359,13 @@ unsigned int enum_type_size(struct type_description * t, enum type_size_class ts
 	}
 }
 
-unsigned int pointer_type_size(struct type_description * t, enum type_size_class tsc){
+unsigned int pointer_type_size(struct type_description * t, enum value_type tsc){
 	(void)t;
 	switch (tsc){
-		case MINIMAL_BITS:{
-			return 32;
-		}case MINIMAL_BYTES:{
+		case RVALUE:{
 			return 4;
-		}case FORCED_WORD_BITS:{
-			return 32;
-		}case FORCED_WORD_BYTES:{
+		}case LVALUE:{
 			return 4;
-		}case DATA_AND_PTR_BITS:{
-			return 64;
-		}case DATA_AND_PTR_BYTES:{
-			return 8;
 		}default:{
 			assert(0 && "Unknown type class size.");
 			return 0;

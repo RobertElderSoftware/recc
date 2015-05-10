@@ -13,8 +13,27 @@
 	use of this software.
 */
 #include <stdlib.h>
+#include <stdio.h>
+
+unsigned int get_input_space_partitioned_random(void);
 
 int main(void){
-	malloc(8);
+	unsigned int num_items = 20;
+	unsigned int i;
+	unsigned int j;
+	unsigned int ** p = (unsigned int **)malloc(sizeof(unsigned int *) * num_items);
+	for(i = 0; i < num_items; i++){
+		p[i] = (unsigned int*)malloc(sizeof(unsigned int) * num_items);
+		for(j = 0; j < num_items; j++){
+			p[i][j] = get_input_space_partitioned_random();
+		}
+	}
+	for(i = 0; i < num_items; i++){
+		for(j = 0; j < num_items; j++){
+			printf("%X\n", p[i][j]);
+		}
+		free(p[i]);
+	}
+	free(p);
 	return 0;
 }

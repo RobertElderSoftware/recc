@@ -36,6 +36,7 @@ struct scope_level;
 struct switch_frame;
 struct constant_description;
 struct constant_initializer_level;
+struct type_traversal;
 
 enum parser_operation_type{
 	INCREMENT_NEWLINE_COUNT,

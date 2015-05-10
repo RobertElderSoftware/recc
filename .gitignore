@@ -121,3 +121,5 @@ data-structures/struct_linker_symbol_ptr_list.c
 data-structures/struct_linker_symbol_ptr_list.h
 data-structures/struct_constant_initializer_level_ptr_list.c
 data-structures/struct_constant_initializer_level_ptr_list.h
+data-structures/struct_type_traversal_ptr_list.c
+data-structures/struct_type_traversal_ptr_list.h

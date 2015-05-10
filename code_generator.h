@@ -27,6 +27,7 @@
 #include "data-structures/unsigned_int_stack.h"
 #include "data-structures/struct_type_description_ptr_list.h"
 #include "data-structures/struct_constant_initializer_level_ptr_list.h"
+#include "data-structures/struct_type_traversal_ptr_list.h"
 #include "data-structures/char_ptr_list.h"
 #include "linker.h"
 #include "lexer.h"
@@ -34,12 +35,20 @@
 #include <assert.h>
 #include <stdarg.h>
 
-enum traversal_type{
-	SETUP_GLOBAL_SPACE,
+enum copy_method{
 	ASSIGN_COPY,
 	REF_COPY,
-	NEW_COPY,
-	MAKE_PARAMETER_VALUE
+	NEW_COPY
+};
+
+struct type_traversal{
+	struct type_description * type_description;
+	struct struct_type_traversal_ptr_list children;
+	unsigned int arity; /* For arrays */
+	unsigned int arrays_as_pointers; /* For arrays */
+	unsigned char * parent_tag_name; /* structs, enums, unions */
+	unsigned char * member_name; /* for structs, enums */
+	enum type_class type_class;
 };
 
 struct switch_frame{
@@ -80,8 +89,8 @@ struct compile_time_constant * evaluate_constant_expression_h2(struct code_gen_s
 struct compile_time_constant * evaluate_constant_expression_h1(struct code_gen_state *, struct parser_node *);
 struct compile_time_constant * evaluate_constant_constant_expression(struct code_gen_state *, struct parser_node *);
 void perform_integral_promotion(struct type_description **);
-unsigned int type_size(struct code_gen_state *, struct type_description *, enum type_size_class, unsigned int, struct scope_level *);
-unsigned int struct_type_size(struct code_gen_state *, struct type_description *, enum type_size_class, struct scope_level *);
+unsigned int type_size(struct code_gen_state *, struct type_description *, enum value_type, unsigned int, struct scope_level *);
+unsigned int struct_type_size(struct code_gen_state *, struct type_description *, enum value_type, struct scope_level *);
 
 #define LITERAL22BITMASK 0x003FFFFF
 

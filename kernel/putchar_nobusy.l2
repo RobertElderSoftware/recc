@@ -1,10 +1,7 @@
 OFFSET RELOCATABLE
 IMPLEMENTS EXTERNAL putchar_nobusy
 putchar_nobusy:
-;  Move over the pointer of the first argument
-add SP SP WR;  We're now pointing at the *value* of the first arg
 loa r2 SP;  Load whatever that argument was.
-sub SP SP WR;  We're again pointing at the *ptr* of the first arg
 ;  The bit mask for UART1_OUT ready
 ll r3 0x200;
 ;  The address of UART1_OUT
@@ -16,8 +13,7 @@ not r7 r3;
 ;  Apply the mask to unset the UART1_OUT ready bit
 and FR FR r7;
 ;  Increment the stack pointer to get over the one argument
-;  that is a 4 byte integer and its pointer
-add SP SP WR;
+;  that is a 4 byte integer
 add SP SP WR;
 ;  Load the previous frame pointer
 loa FP SP;

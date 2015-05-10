@@ -96,6 +96,7 @@ function opCPU(l0_description) {
   this.breakpoint_address = 0;
   this.breakpoint_active = 0;
   this.breakpoint_tripped = 0;
+  this.recent_pc_values = [];
 
   //  Set the program counter to the instruction at 0.
   this.registeruint32[this.PC_index] = 0;
@@ -132,9 +133,15 @@ opCPU.prototype.assert_memory_index_in_range = function (index, thing){
   if(!(index < this.memory_size_ints)){
     this.registeruint32[this.FR_index] = this.registeruint32[this.FR_index] | this.HALTED_BIT;
   }
+
+  var pc_values = "";
+  for(var i = 0; i < this.recent_pc_values.length; i++){
+    pc_values += ", 0x" + this.recent_pc_values[i].toString(16);
+  }
+
   this.assert(
     index < this.memory_size_ints,
-    thing + " was out of bounds at index " + index + " but memory only contains " + this.memory_size_ints + " ints."
+    thing + " was out of bounds at index " + index + " but memory only contains " + this.memory_size_ints + " ints.  Recent PC values:" + pc_values
   );
 }
 
@@ -158,6 +165,15 @@ opCPU.prototype.perform_stack_zeroing = function (ra, newvalue, oldvalue){
 }
 
 opCPU.prototype.fetch_decode_execute = function(){
+  /*
+  Too slow to use all the time.
+  this.recent_pc_values.push(this.registeruint32[this.PC_index]);
+
+  if(this.recent_pc_values.length > 30){
+    this.recent_pc_values.shift();
+  }
+  */
+
   this.assert_memory_index_in_range(this.registeruint32[this.PC_index] / this.sizeof_int, "PC");
   var current_inst = this.memoryuint32[this.registeruint32[this.PC_index] / this.sizeof_int];
   //  TODO this is little-endian dependent
@@ -275,7 +291,7 @@ opCPU.prototype.get_registeruint32 = function () {
 opCPU.prototype.get_memorysint16 = function () {
   return this.memorysint16;
 }
-opCPU.prototype.watch_modified = function () {
+opCPU.prototype.is_watch_modified = function () {
   return this.watch_modified;
 }
 opCPU.prototype.unmodify_watch = function () {
@@ -284,7 +300,7 @@ opCPU.prototype.unmodify_watch = function () {
 opCPU.prototype.untrip_breakpoint = function () {
   return this.breakpoint_tripped = 0;
 }
-opCPU.prototype.breakpoint_tripped = function () {
+opCPU.prototype.is_breakpoint_tripped = function () {
   return this.breakpoint_tripped;
 }
 opCPU.prototype.is_halted = function () {

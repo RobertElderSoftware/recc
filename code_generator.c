@@ -148,7 +148,7 @@ unsigned int get_local_offset_h1(struct code_gen_state *, struct namespace_objec
 unsigned int get_local_offset(struct code_gen_state *, struct namespace_object *);
 unsigned int get_namespace_object_size(struct code_gen_state *, struct namespace_object *, unsigned int);
 unsigned int get_normalized_declaration_element_size(struct code_gen_state *, struct normalized_declaration_element *, unsigned int, struct scope_level *);
-void consume_scalar_type(struct code_gen_state *, struct parser_node *);
+struct type_description * consume_scalar_type(struct code_gen_state *, struct parser_node *);
 struct type_description * usual_arithmetic_conversion(struct code_gen_state *, struct parser_node *);
 struct type_description * perform_pointer_conversion(struct code_gen_state *, struct parser_node *);
 
@@ -157,22 +157,22 @@ void implement_external_symbol(struct unsigned_char_ptr_to_struct_linker_symbol_
 void require_internal_symbol(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *, unsigned char * );
 void implement_internal_symbol(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *, unsigned char * );
 struct linker_symbol * make_linker_symbol(unsigned int, unsigned int, unsigned int, unsigned int);
-void pop(struct code_gen_state *, const char *);
-void push(struct code_gen_state *, const char *);
+void pop(struct code_gen_state *, const char *, enum value_type);
+void push(struct code_gen_state *, const char *, enum value_type);
 void do_signed_operation_function_call(struct code_gen_state *, const char *);
 void manage_local_space(struct code_gen_state *, struct namespace_object *, unsigned);
 struct scope_level * get_current_scope_level(struct code_gen_state *);
 void clear_locals_from_scope(struct code_gen_state *, struct scope_level *);
 void find_child_case_labels(struct code_gen_state *, struct parser_node *, struct switch_frame *);
 void find_child_case_labels_h(struct code_gen_state *, struct parser_node *, struct switch_frame *);
-void do_dot_operator(struct code_gen_state *, unsigned char *, struct parser_node *);
-void do_ptr_operator(struct code_gen_state *, unsigned char *, struct parser_node *);
+void do_struct_dereference_operator(struct code_gen_state *, unsigned char *, struct parser_node *, unsigned int);
 unsigned int calculate_type_stack_size(struct code_gen_state *);
 void delete_top_type(struct code_gen_state *);
 void copy_words(struct code_gen_state *, const char *, const char *, const char *, unsigned int);
 struct type_description * manage_assignment_type_change(struct code_gen_state *, struct parser_node *);
-void traverse_type(struct code_gen_state *, struct type_description *, const char *, const char *, const char *, struct scope_level *, enum traversal_type, unsigned int, struct constant_initializer_level *);
-void handle_pointer_on_traversal(struct code_gen_state *, const char *, const char *, const char *, enum traversal_type);
+void copy_type(struct code_gen_state *, struct type_traversal *, const char *, const char *, const char *, const char *, const char *, enum copy_method);
+struct type_traversal * construct_type_traversal(struct code_gen_state *, struct type_description *, struct scope_level *, unsigned int);
+void destroy_type_traversal(struct type_traversal *);
 void move_pointers_down(struct code_gen_state *, const char *, const char *);
 struct constant_initializer_level * evaluate_constant_initializer(struct code_gen_state *, struct parser_node *);
 struct compile_time_constant * evaluate_constant_assignment_expression(struct code_gen_state *, struct parser_node *);
@@ -180,6 +180,16 @@ struct compile_time_constant * evaluate_constant_conditional_expression(struct c
 void evaluate_constant_initializer_list(struct code_gen_state *, struct constant_initializer_level *, struct parser_node *);
 unsigned int evaluate_compile_time_constant(struct code_gen_state * code_gen_state, struct compile_time_constant *);
 void destroy_constant_initializer_level(struct constant_initializer_level *);
+void copy_primative_type(struct code_gen_state *, struct type_traversal *, const char *, const char *, const char *);
+void setup_global_type(struct code_gen_state *, struct type_traversal *, struct constant_initializer_level *);
+void setup_global_primative(struct code_gen_state *, struct type_description *, struct constant_initializer_level *);
+void make_parameter_value(struct code_gen_state *, struct type_traversal *, const char *, const char *);
+void ensure_top_values_are_rvalues(struct code_gen_state *, struct parser_node *);
+void l_to_lr_transform(struct code_gen_state *, struct type_description *);
+void do_multiplicative_expression(struct code_gen_state *, struct parser_node *, enum c_token_type);
+void do_additive_expression(struct code_gen_state *, struct parser_node *, enum c_token_type);
+struct type_description * ensure_top_type_is_r_value(struct code_gen_state *, struct parser_node *);
+void copy_lvalue_into_rvalue(struct code_gen_state *, const char *, const char *, const char *, const char *, unsigned int);
 
 void destroy_constant_initializer_level(struct constant_initializer_level * level){
 	unsigned int i;
@@ -264,6 +274,13 @@ struct compile_time_constant * evaluate_constant_expression_h1(struct code_gen_s
 }
 
 struct compile_time_constant * evaluate_constant_constant_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	if(!(n && n->type == CONSTANT_EXPRESSION)){
+		int i = 3;
+		int * ii = &i;
+		printf("it is %s after\n", get_node_type_names()[n->type]);
+		ii+=9999;
+		*ii=444;
+	}
 	assert(n && n->type == CONSTANT_EXPRESSION);
 	return evaluate_constant_conditional_expression(code_gen_state, n->first_child);
 }
@@ -346,14 +363,78 @@ void perform_integral_promotion(struct type_description ** t){
 			break;
 		}case TYPE_CLASS_POINTER:{
 			/*  Replace with unsigned int */
-			destroy_type_description(*t);
+			struct type_description * old_t = *t;
 			*t = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+			(*t)->value_type = old_t->value_type;
+			destroy_type_description(old_t);
 			break;
 		}default:{
 			assert(0 && "Should not call with this type");
 			break;
 		}
 	}
+}
+
+void ensure_top_values_are_rvalues(struct code_gen_state * code_gen_state, struct parser_node * context){
+	struct type_description * top_type = pop_type_without_type_check(code_gen_state, context);
+	struct type_description * bottom_type = pop_type_without_type_check(code_gen_state, context);
+	enum value_type target_value_type_top = RVALUE;
+	enum value_type target_value_type_bottom = RVALUE;
+	unsigned int current_size_top = type_size(code_gen_state, top_type, top_type->value_type, 1, top_type->source_scope_level);
+	unsigned int current_size_bottom = type_size(code_gen_state, bottom_type, bottom_type->value_type, 1, bottom_type->source_scope_level);
+	unsigned int target_size_top = type_size(code_gen_state, top_type, target_value_type_top, 1, top_type->source_scope_level);
+	unsigned int target_size_bottom = type_size(code_gen_state, bottom_type, target_value_type_bottom, 1, bottom_type->source_scope_level);
+
+	unsigned int total_current = current_size_top + current_size_bottom;
+	unsigned int total_target = target_size_top + target_size_bottom;
+	struct type_traversal * type_traversal;
+
+	(void)type_traversal;
+
+	if(top_type->value_type == RVALUE && bottom_type->value_type == RVALUE){
+		/*  Nothing to do */
+	}else if(top_type->value_type == LVALUE && bottom_type->value_type == LVALUE){
+		buffered_printf(code_gen_state->buffered_output, "add r1 SP ZR;        Make a copy of stack pointer\n");
+		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          Amount to push on SP\n", total_target - total_current); 
+		buffered_printf(code_gen_state->buffered_output, "sub SP SP r2;        Push SP to final resting place\n");
+		buffered_printf(code_gen_state->buffered_output, "loa r3 r1;           Load top lvalue into r3\n");
+		buffered_printf(code_gen_state->buffered_output, "add r1 r1 WR;        Go down to next lvalue\n");
+		buffered_printf(code_gen_state->buffered_output, "loa r4 r1;           Load bottom lvalue into r4\n");
+		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          For bottom rvalue\n", target_size_bottom - 4); 
+		copy_lvalue_into_rvalue(code_gen_state, "r4", "r1", "r2", "r5", target_size_bottom);
+		buffered_printf(code_gen_state->buffered_output, "sub r1 r1 WR;        Go up to where we copy the next rvalue\n");
+		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          For top rvalue\n", target_size_top - 4); 
+		copy_lvalue_into_rvalue(code_gen_state, "r3", "r1", "r2", "r5", target_size_top);
+	}else if(top_type->value_type == RVALUE && bottom_type->value_type == LVALUE){
+		buffered_printf(code_gen_state->buffered_output, "add r1 SP ZR;        Make a copy of top of stack\n");
+		/*  The difference needed to add when lvalue on bottom is expanded. */
+		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          Amount to push on SP\n", target_size_bottom - current_size_bottom);
+		buffered_printf(code_gen_state->buffered_output, "sub SP SP r2;        Push SP to final resting place\n");
+		buffered_printf(code_gen_state->buffered_output, "ll r3 0x%X;          Amount down to last word of top rvalue\n", target_size_top - 4);
+		buffered_printf(code_gen_state->buffered_output, "add r4 r1 ZR;        Copy of where top of rvalue is (the lvalue of the top)\n");
+		buffered_printf(code_gen_state->buffered_output, "add r5 SP r3;        Bottom word of resting place of top rvalue\n");
+		copy_lvalue_into_rvalue(code_gen_state, "r4", "r5", "r3", "r6", target_size_top);
+		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          Amount down from SP to lvalue\n", total_target - 4);
+		buffered_printf(code_gen_state->buffered_output, "add r1 SP r2;        r1 points to lvalue\n");
+		buffered_printf(code_gen_state->buffered_output, "loa r2 r1;           r2 contains lvalue\n");
+		buffered_printf(code_gen_state->buffered_output, "ll r3 0x%X;          rvalue size -4\n", target_size_bottom - 4);
+		copy_lvalue_into_rvalue(code_gen_state, "r2", "r1", "r3", "r6", target_size_bottom);
+	}else if(top_type->value_type == LVALUE && bottom_type->value_type == RVALUE){
+		buffered_printf(code_gen_state->buffered_output, "add r1 SP ZR;        Make a copy of top of stack\n");
+		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          Amount to push on SP\n", target_size_top - current_size_top); 
+		buffered_printf(code_gen_state->buffered_output, "sub SP SP r2;        Push SP to final resting place\n");
+		buffered_printf(code_gen_state->buffered_output, "loa r3 r1;           Load the lvalue into r3\n"); 
+		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          For copy\n", target_size_top - 4); 
+		copy_lvalue_into_rvalue(code_gen_state, "r3", "r1", "r2", "r5", target_size_top);
+	}else{
+		assert(0);
+	}
+
+	top_type->value_type = target_value_type_top;
+	bottom_type->value_type = target_value_type_bottom;
+
+	push_type(code_gen_state, bottom_type, context);
+	push_type(code_gen_state, top_type, context);
 }
 
 struct type_description * usual_arithmetic_conversion(struct code_gen_state * code_gen_state, struct parser_node * context){
@@ -384,25 +465,24 @@ struct type_description * usual_arithmetic_conversion(struct code_gen_state * co
 
 	if((is_signed(t1) && !is_signed(t2)) || (is_signed(t2) && !is_signed(t1))){
 		if(c1 == TYPE_CLASS_INT && c2 == TYPE_CLASS_INT){
+			struct type_description * rtn;
+			rtn = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+			rtn->value_type = RVALUE;
+			rtn->context = t1->context;
+			rtn->source_element = t1->source_element;
+			rtn->source_scope_level = t1->source_scope_level;
 			destroy_type_description(t1);
 			destroy_type_description(t2);
-			return add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+			return rtn;
 		}else{
-			assert(0);
+			print_error_with_types(parser_state->c_lexer_state, t1, t2, context, "Here are the two types we're doing usual arithmetic conversion on:");
+			assert(0 && "This case is not supported.\n");
 			return (struct type_description *)0;
 		}
 	}else{
-		struct unsigned_char_list l;
-		unsigned_char_list_create(&l);
-		buffered_printf(&l,"\nHere are the two types we're doing usual arithmetic conversion on:\n");
-		buffered_printf(&l,"Type #1:\n");
-		print_normalized_declaration_declarator_and_specifiers(&l, t1->declarator, t1->specifiers, 0, 0);
-		buffered_printf(&l,"Type #2:\n");
-		print_normalized_declaration_declarator_and_specifiers(&l, t2->declarator, t2->specifiers, 0, 0);
-		unsigned_char_list_add(&l, 0);
-		printf("%s\n", unsigned_char_list_data(&l));
-		print_node_context(parser_state->c_lexer_state, context);
+		print_error_with_types(parser_state->c_lexer_state, t1, t2, context, "Here are the two types we're doing usual arithmetic conversion on:");
 		assert(0 && "This case is not supported.\n");
+		return (struct type_description *)0;
 	}
 }
 
@@ -425,18 +505,7 @@ struct type_description * pop_type(struct code_gen_state * code_gen_state, struc
 	assert(found_type);
 	compare_successful = !type_description_cmp(required_type, found_type);
 	if(!compare_successful){
-		struct unsigned_char_list list;
-		unsigned_char_list_create(&list);
-		buffered_printf(&list,";Type missmatch:\n");
-		buffered_printf(&list,";Compare required type A:\n");
-		print_normalized_declaration_declarator_and_specifiers(&list, required_type->declarator, required_type->specifiers, 0, 0);
-		buffered_printf(&list,";With observed type B:\n");
-		print_normalized_declaration_declarator_and_specifiers(&list, found_type->declarator, found_type->specifiers, 0, 0);
-		buffered_printf(&list,";Type compare failed\n");
-		unsigned_char_list_add(&list, 0);
-		printf("%s", (unsigned char *)unsigned_char_list_data(&list));
-		unsigned_char_list_destroy(&list);
-		print_node_context(code_gen_state->parser_state->c_lexer_state, context);
+		print_error_with_types(code_gen_state->parser_state->c_lexer_state, required_type, found_type, context, "Type missmatch.  Required former, but found latter.");
 		assert(0 && "Compare failed.");
 	}
 	return found_type;
@@ -618,7 +687,8 @@ int is_terminal_c_token_type(struct parser_node * p, enum c_token_type t){
 	return p->c_lexer_token && p->c_lexer_token->type == t;
 }
 
-unsigned int struct_type_size(struct code_gen_state * code_gen_state, struct type_description * t, enum type_size_class tsc, struct scope_level * source_scope_level){
+unsigned int struct_type_size(struct code_gen_state * code_gen_state, struct type_description * t, enum value_type tsc, struct scope_level * source_scope_level){
+	/*  Uses tsc instead of t->value type in case we want to see how big an lvalu's rvalue is */
 	struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(t->specifiers);
 	struct c_lexer_token * token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
 	unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte) : make_up_identifier(t->source_element);
@@ -633,62 +703,32 @@ unsigned int struct_type_size(struct code_gen_state * code_gen_state, struct typ
 		printf("Unknown structure: %s in file %s.\n", tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier in struct_type_size.");
 	}
+	free(tag_identifier);
 
 	num_children = struct_namespace_object_ptr_list_size(obj->children);
 	assert(num_children);
 
-	for(i = num_children - 1; ; i--){
-		struct namespace_object * child_obj = struct_namespace_object_ptr_list_get(obj->children, i);
-		unsigned int size;
-		struct type_description * member_description;
-		assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
-		element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
-		member_description = create_type_description_from_normalized_declaration_element(element);
-		size = type_size(code_gen_state, member_description, tsc, 0, obj->scope_level);
-		total_size += size;
-		destroy_type_description(member_description);
-		if(i == 0){
-			break;
+	if(tsc == RVALUE){
+		for(i = num_children - 1; ; i--){
+			struct namespace_object * child_obj = struct_namespace_object_ptr_list_get(obj->children, i);
+			unsigned int size;
+			struct type_description * member_description;
+			assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
+			element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
+			member_description = create_type_description_from_normalized_declaration_element(element, element->normalized_declaration_set->set, child_obj->scope_level, LVALUE);
+			size = type_size(code_gen_state, member_description, tsc, 0, obj->scope_level);
+			total_size += size;
+			destroy_type_description(member_description);
+			if(i == 0){
+				break;
+			}
 		}
-	}
-	free(tag_identifier);
-	return total_size;
-}
-
-void handle_pointer_on_traversal(struct code_gen_state * code_gen_state, const char * src, const char * dst, const char * tmp1, enum traversal_type traversal_type){
-	(void)src;
-	(void)dst;
-	(void)tmp1;
-	switch(traversal_type){
-		case ASSIGN_COPY:{
-			/* Do nothing, leave the pointer alone */
-			buffered_printf(code_gen_state->buffered_output, ";                 Leave pointer alone\n");
-			break;
-		}case NEW_COPY:{
-			buffered_printf(code_gen_state->buffered_output, "sto %s %s;        New item, point to self\n", dst, dst);
-			break;
-		}case SETUP_GLOBAL_SPACE:{
-			unsigned char * name;
-			sprintf_hook("global_var_ptr_%d", code_gen_state->global_var_ptr_index);
-			name = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
-			buffered_printf(code_gen_state->buffered_output, "%s:\n", name);
-			buffered_printf(code_gen_state->buffered_output, "dw %s; Ptr to item.\n", name);
-			code_gen_state->global_var_ptr_index = code_gen_state->global_var_ptr_index + 1;
-			require_internal_symbol(&code_gen_state->symbols, name);
-			implement_internal_symbol(&code_gen_state->symbols, name);
-			free(name);
-			break;
-		}case REF_COPY:{
-			buffered_printf(code_gen_state->buffered_output, "loa %s %s;\n", tmp1, src);
-			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, tmp1);
-			break;
-		}case MAKE_PARAMETER_VALUE:{
-			buffered_printf(code_gen_state->buffered_output, "sto %s %s;        Convert to by value for function call.\n", dst, dst);
-			break;
-		}default:{
-			assert(0 && "Case not expected.");
-			break;
-		}
+		return total_size;
+	}else if(tsc == LVALUE){
+		return pointer_type_size(t, tsc);
+	}else{
+		assert(0);
+		return 0;
 	}
 }
 
@@ -697,208 +737,273 @@ void move_pointers_down(struct code_gen_state * code_gen_state, const char * ra,
 	buffered_printf(code_gen_state->buffered_output, "sub %s %s WR;\n", rb, rb);
 }
 
-void traverse_type(struct code_gen_state * code_gen_state, struct type_description * t, const char * src, const char * dst, const char * tmp1, struct scope_level * source_scope_level, enum traversal_type traversal_type, unsigned int arrays_as_pointers, struct constant_initializer_level * initializer_level){
-	/*  src should point to where the bits come from, and dst should point to where they will be copied. tmp1 is for temporary store of word as it is copied */
-	enum type_class c = determine_type_class(t);
-	(void)initializer_level;
-	if(c == TYPE_CLASS_POINTER){
-		if(traversal_type == SETUP_GLOBAL_SPACE){
-			unsigned int value = initializer_level ? (initializer_level->constant ? (initializer_level->constant->constant_description ? initializer_level->constant->constant_description->native_data[0] : 0) : 0) : 0;
-			handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-			buffered_printf(code_gen_state->buffered_output, "dw 0x%X;\n", value);
-			if(initializer_level && initializer_level->constant){
-				free(initializer_level->constant);
-			}
-		}else{
-			if(traversal_type != MAKE_PARAMETER_VALUE){
-				copy_words(code_gen_state, src, dst, tmp1, pointer_type_size(t, FORCED_WORD_BYTES));
-			}
-			move_pointers_down(code_gen_state, dst, src);
-			handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-		}
-		return;
-	}
-
-	if(c == TYPE_CLASS_ARRAY){
-		struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(t->declarator);
-		struct parser_node * constant_expression = get_constant_expression_from_abstract_declarator(abstract_declarator);
-		if(constant_expression){
-			unsigned int size;
-			struct type_description * arr_type = create_dereferenced_array_type_description_from_type_description(t);
-			unsigned element_size = type_size(code_gen_state, arr_type, FORCED_WORD_BYTES, 0, source_scope_level);
-			enum type_class element_type = determine_type_class(arr_type);
-			unsigned int i;
-			assert(constant_expression->type == CONSTANT_EXPRESSION);
-			size = evaluate_compile_time_constant(code_gen_state, evaluate_constant_constant_expression(code_gen_state, constant_expression));
-			destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
-
-			if(arrays_as_pointers){
-				assert(!initializer_level);
-				/* Reduce the entire array to the pointer to the first element */
-				if(traversal_type == MAKE_PARAMETER_VALUE){
-					move_pointers_down(code_gen_state, dst, src);
-				}else{
-					buffered_printf(code_gen_state->buffered_output, "ll %s 0x%X;\n", tmp1, 4);
-					buffered_printf(code_gen_state->buffered_output, "sub %s %s %s;\n", src, src, tmp1);
-					buffered_printf(code_gen_state->buffered_output, "loa %s %s; Copy ptr\n", tmp1, src);
-					buffered_printf(code_gen_state->buffered_output, "sto %s %s; Store as val\n", dst, tmp1);
-					buffered_printf(code_gen_state->buffered_output, "sub %s %s WR;\n", dst, dst);
-					buffered_printf(code_gen_state->buffered_output, "sto %s %s; Store as ptr\n", dst, tmp1);
-				}
-			}else{
-				/* TODO: clean all of this up */
-				for(i = 0; i < size; i++){
-					/*  If the item type is an atomic type, recurse otherwise copy */
-					if(element_type == TYPE_CLASS_ARRAY || element_type == TYPE_CLASS_STRUCT){
-						struct constant_initializer_level * child = 0; 
-						if(initializer_level && struct_constant_initializer_level_ptr_list_size(&initializer_level->children)){
-							child = struct_constant_initializer_level_ptr_list_get(&initializer_level->children, i);
-						}
-						assert(!initializer_level || (initializer_level && !initializer_level->constant));
-						assert(!initializer_level || (initializer_level->constant || struct_constant_initializer_level_ptr_list_size(&initializer_level->children)));
-						traverse_type(code_gen_state, arr_type, src, dst, tmp1, source_scope_level, traversal_type, arrays_as_pointers, child);
-					}else{
-						if(traversal_type == SETUP_GLOBAL_SPACE){
-							/*  TODO:  this branch should be removed and use recursion */
-							struct constant_initializer_level * current_initializer_level = initializer_level ? struct_constant_initializer_level_ptr_list_get(&initializer_level->children, i) : 0; 
-							unsigned int value = current_initializer_level ? (current_initializer_level->constant ? (current_initializer_level->constant->constant_description ? current_initializer_level->constant->constant_description->native_data[0] : 0) : 0) : 0;
-							handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-							if(current_initializer_level && current_initializer_level->constant && current_initializer_level->constant->constant_description && current_initializer_level->constant->constant_description->type  == STRING_LITERAL){
-								/*  If it is a string literal, we don't know the addr, use the label*/
-								unsigned char * string_literal_identifier_str;
-								sprintf_hook("stringliteral_%p", (void *)current_initializer_level->constant->constant_description->native_data);
-								string_literal_identifier_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
-								buffered_printf(code_gen_state->buffered_output, "dw %s;\n", string_literal_identifier_str);
-								free(string_literal_identifier_str);
-							}else{
-								buffered_printf(code_gen_state->buffered_output, "dw 0x%X;\n", value);
-							}
-							if(current_initializer_level && current_initializer_level->constant){
-								free(current_initializer_level->constant);
-							}
-						}else{
-							if(traversal_type != MAKE_PARAMETER_VALUE){
-								copy_words(code_gen_state, src, dst, tmp1, element_size);
-							}
-							move_pointers_down(code_gen_state, dst, src);
-							handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-						}
-					}
-					if(i != (size -1)){
-						if(traversal_type != SETUP_GLOBAL_SPACE){
-							move_pointers_down(code_gen_state, dst, src);
-						}
-					}
-				}
-			}
-
-			destroy_type_description(arr_type);
-			return;
-		}else{
-			destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
-			assert(0 && "not implemented.");
-			return;
-		}
-	}
-
-	if(c == TYPE_CLASS_FUNCTION){
-		assert(0 && "Not implemented.");
-		return;
-	}
-
-	if(c == TYPE_CLASS_STRUCT){
-		struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(t->specifiers);
-		struct c_lexer_token * token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
-		unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte) : make_up_identifier(t->source_element);
-		unsigned int num_children;
-		struct namespace_object * obj;
-		struct normalized_declaration_element * element;
+void destroy_type_traversal(struct type_traversal * traversal){
+	if(traversal->type_class == TYPE_CLASS_STRUCT || traversal->type_class == TYPE_CLASS_ARRAY){
 		unsigned int i;
-		assert(!initializer_level || (initializer_level && !initializer_level->constant));
-		obj = get_namespace_object_from_closest_namespace(tag_identifier, TAG_NAMESPACE, source_scope_level, 1);
-		if(!obj){
-			printf("Unknown structure: %s in file %s.\n", tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
-			assert(obj && "Unknown identifier in traverse_type.");
+		for(i = 0; i < struct_type_traversal_ptr_list_size(&traversal->children); i++){
+			destroy_type_traversal(struct_type_traversal_ptr_list_get(&traversal->children, i));
 		}
-
-		num_children = struct_namespace_object_ptr_list_size(obj->children);
-		assert(num_children);
-
-		for(i = 0; i < num_children; i++){
-			struct namespace_object * child_obj = struct_namespace_object_ptr_list_get(obj->children, i);
-			struct type_description * member_description;
-			assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
-			element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
-			member_description = create_type_description_from_normalized_declaration_element(element);
-
-			/* Traverse structure member, doing deep copy of arrays if necessary */
-			buffered_printf(code_gen_state->buffered_output, ";                 Begin copy of struct member %d of %s\n", i, tag_identifier);
-			traverse_type(code_gen_state, member_description, src, dst, tmp1, source_scope_level, traversal_type, 0, (struct constant_initializer_level *)0);
-			buffered_printf(code_gen_state->buffered_output, ";                 Finish copy of struct member %d of %s\n", i, tag_identifier);
-			if(i != (num_children -1)){
-				if(traversal_type != SETUP_GLOBAL_SPACE){
-					move_pointers_down(code_gen_state, dst, src);
-				}
-			}
-
-			destroy_type_description(member_description);
-		}
-		free(tag_identifier);
-		return;
-	}else if(c == TYPE_CLASS_UNION){
-		assert(0);
-		return;
-	}else if(c == TYPE_CLASS_ENUM){
-		if(traversal_type == SETUP_GLOBAL_SPACE){
-			handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-			buffered_printf(code_gen_state->buffered_output, "dw 0x0;\n");
-			if(initializer_level && initializer_level->constant){
-				free(initializer_level->constant);
-			}
-		}else{
-			if(traversal_type != MAKE_PARAMETER_VALUE){
-				copy_words(code_gen_state, src, dst, tmp1, pointer_type_size(t, FORCED_WORD_BYTES));
-			}
-			move_pointers_down(code_gen_state, dst, src);
-			handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-		}
-		return;
-	}else if(c == TYPE_CLASS_VOID){
-		if(traversal_type == SETUP_GLOBAL_SPACE){
-			handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-			buffered_printf(code_gen_state->buffered_output, "dw 0x0;\n");
-			if(initializer_level && initializer_level->constant){
-				free(initializer_level->constant);
-			}
-		}else{
-			if(traversal_type != MAKE_PARAMETER_VALUE){
-				copy_words(code_gen_state, src, dst, tmp1, pointer_type_size(t, FORCED_WORD_BYTES));
-			}
-			move_pointers_down(code_gen_state, dst, src);
-			handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-		}
-		return;
-	}else{
-		if(traversal_type == SETUP_GLOBAL_SPACE){
-			unsigned int value = initializer_level ? (initializer_level->constant ? (initializer_level->constant->constant_description ? initializer_level->constant->constant_description->native_data[0] : 0) : 0) : 0;
-			handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-			buffered_printf(code_gen_state->buffered_output, "dw 0x%X;\n", value);
-			if(initializer_level && initializer_level->constant){
-				free(initializer_level->constant);
-			}
-		}else{
-			if(traversal_type != MAKE_PARAMETER_VALUE){
-				copy_words(code_gen_state, src, dst, tmp1, pointer_type_size(t, FORCED_WORD_BYTES));
-			}
-			move_pointers_down(code_gen_state, dst, src);
-			handle_pointer_on_traversal(code_gen_state, src, dst, tmp1, traversal_type);
-		}
-		return;
+		struct_type_traversal_ptr_list_destroy(&traversal->children);
 	}
-
+	destroy_type_description(traversal->type_description);
+	free(traversal);
 }
 
-unsigned int type_size(struct code_gen_state * code_gen_state, struct type_description * t, enum type_size_class tsc, unsigned int force_arity_1, struct scope_level * source_scope_level){
+struct type_traversal * construct_type_traversal(struct code_gen_state * code_gen_state, struct type_description * t, struct scope_level * source_scope_level, unsigned int arrays_as_pointers){
+	struct type_traversal * traversal = malloc(sizeof(struct type_traversal));
+	traversal->type_class = determine_type_class(t);
+	traversal->type_description = copy_type_description(t);
+	traversal->type_description->source_scope_level = source_scope_level;
+	switch(traversal->type_class){
+		case TYPE_CLASS_POINTER:{
+			break;
+		}case TYPE_CLASS_ARRAY:{
+			struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(t->declarator);
+			struct parser_node * constant_expression = get_constant_expression_from_abstract_declarator(abstract_declarator);
+			struct type_description * arr_type = create_dereferenced_array_type_description_from_type_description(t);
+			struct type_traversal * element_traversal = construct_type_traversal(code_gen_state, arr_type, source_scope_level, arrays_as_pointers);
+			traversal->arrays_as_pointers = arrays_as_pointers;
+			struct_type_traversal_ptr_list_create(&traversal->children);
+			struct_type_traversal_ptr_list_add(&traversal->children, element_traversal);
+			destroy_type_description(arr_type);
+			if(constant_expression){
+				assert(constant_expression->type == CONSTANT_EXPRESSION);
+				traversal->arity = evaluate_compile_time_constant(code_gen_state, evaluate_constant_constant_expression(code_gen_state, constant_expression));
+			}else{
+				if(!arrays_as_pointers){
+					assert(0 && "not implemented.");
+				}
+			}
+			destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
+			break;
+		}case TYPE_CLASS_FUNCTION:{
+			assert(0 && "Not implemented.");
+			break;
+		}case TYPE_CLASS_STRUCT:{
+			struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(t->specifiers);
+			struct c_lexer_token * token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
+			unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte) : make_up_identifier(t->source_element);
+			unsigned int num_children;
+			struct namespace_object * obj;
+			struct normalized_declaration_element * element;
+			unsigned int i;
+			obj = get_namespace_object_from_closest_namespace(tag_identifier, TAG_NAMESPACE, source_scope_level, 1);
+			if(!obj){
+				printf("Unknown structure: %s in file %s.\n", tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
+				assert(obj && "Unknown identifier in construct_type_traversal.");
+			}
+        
+			num_children = struct_namespace_object_ptr_list_size(obj->children);
+			assert(num_children);
+
+			struct_type_traversal_ptr_list_create(&traversal->children);
+        
+			for(i = 0; i < num_children; i++){
+				struct namespace_object * child_obj = struct_namespace_object_ptr_list_get(obj->children, i);
+				struct type_description * member_description;
+				struct type_traversal * member_traversal;
+				assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
+				element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
+				member_description = create_type_description_from_normalized_declaration_element(element, element->normalized_declaration_set->set, source_scope_level, LVALUE);
+        
+				member_traversal = construct_type_traversal(code_gen_state, member_description, source_scope_level, 0);
+				struct_type_traversal_ptr_list_add(&traversal->children, member_traversal);
+        
+				destroy_type_description(member_description);
+			}
+			free(tag_identifier);
+			break;
+		}case TYPE_CLASS_UNION:{
+			assert(0 && "Not implemented.");
+			break;
+		}case TYPE_CLASS_ENUM:{
+			break;
+		}case TYPE_CLASS_VOID:{
+			break;
+		}default:{
+			break;
+		}
+	}
+	return traversal;
+}
+
+void copy_type(struct code_gen_state * code_gen_state, struct type_traversal * traversal, const char * src, const char * dst, const char * offset, const char * tmp1, const char * orig, enum copy_method copy_method){
+	switch(traversal->type_class){
+		case TYPE_CLASS_POINTER:{
+			copy_primative_type(code_gen_state, traversal, src, dst, tmp1);
+			break;
+		}case TYPE_CLASS_ARRAY:{
+			unsigned int size = traversal->arity;
+			unsigned int i;
+			struct type_traversal * element_traversal = struct_type_traversal_ptr_list_get(&traversal->children, 0);
+			if(traversal->arrays_as_pointers){
+				/* Reduce the entire array to the pointer to the first element */
+				buffered_printf(code_gen_state->buffered_output, "ll %s 0x%X;\n", tmp1, 4);
+				buffered_printf(code_gen_state->buffered_output, "sub %s %s %s;\n", src, src, tmp1);
+				buffered_printf(code_gen_state->buffered_output, "loa %s %s; Copy ptr\n", tmp1, src);
+				buffered_printf(code_gen_state->buffered_output, "sto %s %s; Store as val\n", dst, tmp1);
+				buffered_printf(code_gen_state->buffered_output, "sub %s %s WR;\n", dst, dst);
+				buffered_printf(code_gen_state->buffered_output, "sto %s %s; Store as ptr\n", dst, tmp1);
+			}else{
+				for(i = 0; i < size; i++){
+					copy_type(code_gen_state, element_traversal, src, dst, offset, tmp1, orig, copy_method);
+					if(i != (size -1)){
+						move_pointers_down(code_gen_state, dst, src);
+					}
+				}
+			}
+			break;
+		}case TYPE_CLASS_FUNCTION:{
+			assert(0 && "Not implemented.");
+			break;
+		}case TYPE_CLASS_STRUCT:{
+			unsigned int i;
+			unsigned int num_children = struct_type_traversal_ptr_list_size(&traversal->children);
+			for(i = 0; i < num_children; i++){
+				struct type_traversal * member = struct_type_traversal_ptr_list_get(&traversal->children, i);
+				copy_type(code_gen_state, member, src, dst, offset, tmp1, orig, copy_method);
+				if(i != (num_children -1)){
+					move_pointers_down(code_gen_state, dst, src);
+				}
+			}
+			break;
+		}case TYPE_CLASS_UNION:{
+			assert(0);
+			break;
+		}case TYPE_CLASS_ENUM:{
+			copy_primative_type(code_gen_state, traversal, src, dst, tmp1);
+			break;
+		}case TYPE_CLASS_VOID:{
+			copy_primative_type(code_gen_state, traversal, src, dst, tmp1);
+			break;
+		}default:{
+			copy_primative_type(code_gen_state, traversal, src, dst, tmp1);
+			break;
+		}
+	}
+}
+
+void make_parameter_value(struct code_gen_state * code_gen_state, struct type_traversal * type_traversal, const char * src, const char * dst){
+	switch(type_traversal->type_class){
+		case TYPE_CLASS_POINTER:{
+			move_pointers_down(code_gen_state, dst, src);
+			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, dst);
+			break;
+		}case TYPE_CLASS_ARRAY:{
+			unsigned int i;
+			struct type_traversal * element_traversal = struct_type_traversal_ptr_list_get(&type_traversal->children, 0);
+			if(!type_traversal->arrays_as_pointers){
+				for(i = 0; i < type_traversal->arity; i++){
+					make_parameter_value(code_gen_state, element_traversal, src, dst);
+					if(i != (type_traversal->arity -1)){
+						move_pointers_down(code_gen_state, dst, src);
+					}
+				}
+			}
+			break;
+		}case TYPE_CLASS_FUNCTION:{
+			assert(0 && "Not implemented.");
+			break;
+		}case TYPE_CLASS_STRUCT:{
+			unsigned int num_children = struct_type_traversal_ptr_list_size(&type_traversal->children);
+			unsigned int i;
+			for(i = 0; i < num_children; i++){
+				struct type_traversal * member = struct_type_traversal_ptr_list_get(&type_traversal->children, i);
+				make_parameter_value(code_gen_state, member, src, dst);
+				if(i != (num_children -1)){
+					move_pointers_down(code_gen_state, dst, src);
+				}
+			}
+			break;
+		}case TYPE_CLASS_UNION:{
+			assert(0);
+			break;
+		}case TYPE_CLASS_ENUM:{
+			move_pointers_down(code_gen_state, dst, src);
+			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, dst);
+			break;
+		}case TYPE_CLASS_VOID:{
+			move_pointers_down(code_gen_state, dst, src);
+			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, dst);
+			break;
+		}default: {
+			move_pointers_down(code_gen_state, dst, src);
+			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, dst);
+			break;
+		}
+	}
+}
+
+void setup_global_type(struct code_gen_state * code_gen_state, struct type_traversal * type_traversal, struct constant_initializer_level * initializer_level){
+	switch(type_traversal->type_class){
+		case TYPE_CLASS_POINTER:{
+			setup_global_primative(code_gen_state, type_traversal->type_description, initializer_level);
+			break;
+		}case TYPE_CLASS_ARRAY:{
+			unsigned int i;
+			struct type_traversal * element_traversal = struct_type_traversal_ptr_list_get(&type_traversal->children, 0);
+			for(i = 0; i < type_traversal->arity; i++){
+				struct constant_initializer_level * current_initializer_level = initializer_level ? struct_constant_initializer_level_ptr_list_get(&initializer_level->children, i) : 0; 
+				setup_global_type(code_gen_state, element_traversal, current_initializer_level);
+			}
+			break;
+		}case TYPE_CLASS_FUNCTION:{
+			assert(0 && "Not implemented.");
+			break;
+		}case TYPE_CLASS_STRUCT:{
+			unsigned int num_children = struct_type_traversal_ptr_list_size(&type_traversal->children);
+			unsigned int i;
+			for(i = 0; i < num_children; i++){
+				struct type_traversal * member = struct_type_traversal_ptr_list_get(&type_traversal->children, i);
+				setup_global_type(code_gen_state, member, (struct constant_initializer_level *)0);
+			}
+			break;
+		}case TYPE_CLASS_UNION:{
+			assert(0);
+			break;
+		}case TYPE_CLASS_ENUM:{
+			setup_global_primative(code_gen_state, type_traversal->type_description, initializer_level);
+			break;
+		}case TYPE_CLASS_VOID:{
+			setup_global_primative(code_gen_state, type_traversal->type_description, initializer_level);
+			break;
+		}default: {
+			setup_global_primative(code_gen_state, type_traversal->type_description, initializer_level);
+			break;
+		}
+	}
+}
+
+void setup_global_primative(struct code_gen_state * code_gen_state, struct type_description * t, struct constant_initializer_level * current_initializer_level){
+	unsigned int element_size = type_size(code_gen_state, t, RVALUE, 0, t->source_scope_level);
+	struct compile_time_constant * constant = current_initializer_level ? current_initializer_level->constant : 0;
+	struct constant_description * constant_description = constant ? constant->constant_description : 0;
+	unsigned int value = constant_description ? constant_description->native_data[0] : 0;
+
+	(void)element_size;
+
+	if(constant_description && constant_description->type == STRING_LITERAL){
+		/*  If it is a string literal, we don't know the addr, use the label*/
+		unsigned char * string_literal_identifier_str;
+		sprintf_hook("stringliteral_%p", (void *)current_initializer_level->constant->constant_description->native_data);
+		string_literal_identifier_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
+		buffered_printf(code_gen_state->buffered_output, "dw %s;\n", string_literal_identifier_str);
+		free(string_literal_identifier_str);
+	}else{
+		buffered_printf(code_gen_state->buffered_output, "dw 0x%X;\n", value);
+	}
+	if(current_initializer_level && current_initializer_level->constant){
+		free(current_initializer_level->constant);
+	}
+}
+
+void copy_primative_type(struct code_gen_state * code_gen_state, struct type_traversal * t, const char * src, const char * dst, const char * tmp1){
+	unsigned int element_size = type_size(code_gen_state, t->type_description, RVALUE, 0, t->type_description->source_scope_level);
+	copy_words(code_gen_state, src, dst, tmp1, element_size);
+	move_pointers_down(code_gen_state, dst, src);
+}
+
+unsigned int type_size(struct code_gen_state * code_gen_state, struct type_description * t, enum value_type tsc, unsigned int force_arity_1, struct scope_level * source_scope_level){
 	enum type_class c = determine_type_class(t);
 	if(c == TYPE_CLASS_POINTER){
 		return pointer_type_size(t, tsc);
@@ -950,10 +1055,9 @@ unsigned int type_size(struct code_gen_state * code_gen_state, struct type_descr
 
 unsigned int get_normalized_declaration_element_size(struct code_gen_state * code_gen_state, struct normalized_declaration_element * element, unsigned int force_arity_1, struct scope_level * source_scope_level){
 	unsigned int rtn;
-	struct type_description * type_description = create_type_description_from_normalized_declaration_element(element);
-	type_description->source_scope_level = source_scope_level;
+	struct type_description * type_description = create_type_description_from_normalized_declaration_element(element, element->normalized_declaration_set->set, source_scope_level, RVALUE);
 	convert_to_untypedefed_type_description(type_description);
-	rtn = type_size(code_gen_state, type_description, DATA_AND_PTR_BYTES, force_arity_1, source_scope_level);
+	rtn = type_size(code_gen_state, type_description, type_description->value_type, force_arity_1, source_scope_level);
 	destroy_type_description(type_description);
 	return rtn;
 }
@@ -966,7 +1070,23 @@ unsigned int get_namespace_object_size(struct code_gen_state * code_gen_state, s
 
 unsigned int get_parameter_offset(struct code_gen_state * code_gen_state, struct namespace_object * obj){
 	if(obj){
-		return get_namespace_object_size(code_gen_state, obj, 0) + get_parameter_offset(code_gen_state, obj->previous);
+		unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
+		struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements - 1);
+		unsigned int rtn;
+		struct type_description * type_description = create_type_description_from_normalized_declaration_element(element, 0, obj->scope_level, LVALUE);
+		struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(element->normalized_declarator);
+		convert_to_untypedefed_type_description(type_description);
+
+		if(is_array(abstract_declarator)){
+			/*  Array parameters are just the pointer */
+			rtn = 4 + get_parameter_offset(code_gen_state, obj->previous);
+		}else{
+			rtn = get_namespace_object_size(code_gen_state, obj, 0) + get_parameter_offset(code_gen_state, obj->previous);
+		}
+		
+		destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
+		destroy_type_description(type_description);
+		return rtn;
 	}else{
 		return 0;
 	}
@@ -1023,7 +1143,7 @@ unsigned int calculate_type_stack_size(struct code_gen_state * code_gen_state){
 	unsigned total_size = 0;
 	for(i = 0; i < num_types; i++){
 		struct type_description * t = struct_type_description_ptr_list_get(&code_gen_state->type_stack, i);
-		unsigned int current_type_size = type_size(code_gen_state, t, DATA_AND_PTR_BYTES, 1, get_current_scope_level(code_gen_state));
+		unsigned int current_type_size = type_size(code_gen_state, t, t->value_type, 1, get_current_scope_level(code_gen_state));
 		total_size += current_type_size;
 		buffered_printf(code_gen_state->buffered_output, "; Temps type size: %X\n", current_type_size);
 	}
@@ -1037,7 +1157,7 @@ void delete_top_type(struct code_gen_state * code_gen_state){
 	unsigned int i;
 	assert(struct_type_description_ptr_list_size(&code_gen_state->type_stack));
 	t = struct_type_description_ptr_list_pop(&code_gen_state->type_stack);
-	size = type_size(code_gen_state, t, DATA_AND_PTR_BYTES, 1, get_current_scope_level(code_gen_state));
+	size = type_size(code_gen_state, t, t->value_type, 1, get_current_scope_level(code_gen_state));
 	num_words = size / 4;
 	assert(size - (4*num_words) == 0);
 	for(i = 0; i < num_words; i++){
@@ -1051,6 +1171,7 @@ void copy_words(struct code_gen_state * code_gen_state, const char * src_addr, c
 	/*  Copy starts at high address and goes down for stack and src_addr  */
 	unsigned int words_to_copy = bytes_to_copy / 4;
 	unsigned int i;
+	assert(bytes_to_copy != 0);
 	assert((bytes_to_copy - (words_to_copy * 4)) == 0);
 	for(i = 0; i < (words_to_copy -1); i++){
 		buffered_printf(code_gen_state->buffered_output,"loa %s %s;\n", tmp, src_addr);
@@ -1080,47 +1201,43 @@ void load_identifier(struct code_gen_state * code_gen_state, unsigned char * ide
 	buffered_printf(code_gen_state->buffered_output,"; Loading identifier %s ", identifier);
 	buffered_printf(code_gen_state->buffered_output,"from location %d\n", obj->object_location);
 
-	type_description = create_type_description_from_normalized_declaration_element(element);
-	type_description->source_scope_level = obj->scope_level;
+	type_description = create_type_description_from_normalized_declaration_element(element, context, obj->scope_level, LVALUE);
 	convert_to_untypedefed_type_description(type_description);
+	assert(type_description->value_type == LVALUE);
 
-	abstract_declarator = create_abstract_declarator_from_normalized_declarator(element->normalized_declarator);
+	abstract_declarator = create_abstract_declarator_from_normalized_declarator(type_description->declarator);
 	switch(obj->object_location){
 		case GLOBAL:{
 			if(is_function(abstract_declarator)){
 				struct type_description * ptr = create_address_type_description_from_type_description(type_description);
-				buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Now pointing to variable value\n");
+				buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Push \n");
 				buffered_printf(code_gen_state->buffered_output,"ll r1 %s;  Load the variable %s\n", identifier, identifier); 
 				buffered_printf(code_gen_state->buffered_output,"sto SP r1;  Store it on the stack.\n");
-				buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Now pointing to variabl ptr\n");
-				buffered_printf(code_gen_state->buffered_output,"sto SP SP;  Point to itself.\n");
-				push_type(code_gen_state, ptr, context);
 				destroy_type_description(type_description);
 				require_external_symbol(&code_gen_state->symbols, identifier);
+				ptr->value_type = RVALUE;
+				push_type(code_gen_state, ptr, context);
 			}else{
 				unsigned char * name;
-
-				unsigned int g_size = type_size(code_gen_state, type_description, DATA_AND_PTR_BYTES, 1, type_description->source_scope_level);
 				sprintf_hook("globalvar_%s", identifier);
 				name = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
-
-				buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Now pointing to value\n");
-				buffered_printf(code_gen_state->buffered_output,"ll r1 %s;  Load the global var addr %s\n", name, name); 
-				buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Offset to last word value.\n", g_size -4); 
-				buffered_printf(code_gen_state->buffered_output,"add r1 r1 r2;  addr of last word value.\n"); 
-
-				traverse_type(code_gen_state, type_description, "r1", "SP", "r2", type_description->source_scope_level, REF_COPY, 1, (struct constant_initializer_level *)0);
-
+				buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Push\n");
+				buffered_printf(code_gen_state->buffered_output,"ll r1 %s;  Load address of %s\n", name, name); 
+				buffered_printf(code_gen_state->buffered_output,"sto SP r1;  store address.\n"); 
 				push_type(code_gen_state, type_description, context);
 				require_external_symbol(&code_gen_state->symbols, name);
 				free(name);
 			}
 			break;
 		}case PARAMETER:{
-			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; This is the number of bytes up from the FP where the value is stored\n", (get_parameter_offset(code_gen_state, obj->previous) + 4));
+			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Push\n");
+			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; This is the number of bytes up from the FP where the value is stored\n", get_parameter_offset(code_gen_state, obj));
 			buffered_printf(code_gen_state->buffered_output,"sub r1 FP r1; r1 now stores the addr of the value of the argument.\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Get stack ready\n");
-			traverse_type(code_gen_state, type_description, "r1", "SP", "r2", type_description->source_scope_level, REF_COPY, 1, (struct constant_initializer_level *)0);
+			if(is_array(abstract_declarator)){
+				buffered_printf(code_gen_state->buffered_output,"loa r1 r1;  For an array, parameter data is one extra level of indirection.\n");
+			}
+			buffered_printf(code_gen_state->buffered_output,"sto SP r1; Store lvalue\n");
+
 			push_type(code_gen_state, type_description, context);
 			break;
 		}case LOCAL:{
@@ -1136,11 +1253,10 @@ void load_identifier(struct code_gen_state * code_gen_state, unsigned char * ide
 			}
 			offset = get_local_offset(code_gen_state, obj);
 			current_obj_size = get_namespace_object_size(code_gen_state, obj, 1);
-			/* - 4 because we start at the obj value */
-			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; Offset due to locals (%d) - 4 + %d for temps\n", (offset - 4) + temps_size, offset, temps_size);
-			buffered_printf(code_gen_state->buffered_output,"add r1 SP r1; r1 now stores the addr of the value of the local.\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Go up to where new value gets copied.\n");
-			traverse_type(code_gen_state, type_description, "r1", "SP", "r2", type_description->source_scope_level, REF_COPY, 1, (struct constant_initializer_level *)0);
+			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; Offset due to locals (%d) + %d for temps\n", (offset + temps_size) - current_obj_size, offset, temps_size);
+			buffered_printf(code_gen_state->buffered_output,"add r1 SP r1; r1 now stores the addr the the local.\n");
+			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Push\n");
+			buffered_printf(code_gen_state->buffered_output,"sto SP r1; store address\n");
 			push_type(code_gen_state, type_description, context);
 			break;
 		}case ENUM_IDENTIFIER:{
@@ -1149,8 +1265,7 @@ void load_identifier(struct code_gen_state * code_gen_state, unsigned char * ide
 			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Point to new value\n");
 			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; load enum integer value\n", enum_value);
 			buffered_printf(code_gen_state->buffered_output,"sto SP r1; Store variable ptr in value too\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Point to address\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP; Point to iteself\n");
+			type_description->value_type = RVALUE;
 			push_type(code_gen_state, type_description, context);
 			break;
 		}case LOCATION_STRUCT:{
@@ -1185,8 +1300,6 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * code_g
 			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
 			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;\n", ((unsigned char *)description->native_data)[0]);
 			buffered_printf(code_gen_state->buffered_output,"sto SP r1;\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP;\n");
 			push_type(code_gen_state, copy_type_description(description->type_description), p);
 			free(constant);
 		}else if(is_terminal_c_token_type(first_child(p), CONSTANT_DECIMAL) || is_terminal_c_token_type(first_child(p), CONSTANT_HEX)){
@@ -1210,8 +1323,6 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * code_g
 			}
 
 			buffered_printf(code_gen_state->buffered_output,"sto SP r1;\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP;\n");
 			push_type(code_gen_state, copy_type_description(description->type_description), p);
 			free(constant);
 		}else if(is_terminal_c_token_type(first_child(p), IDENTIFIER)){
@@ -1229,8 +1340,6 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * code_g
 			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
 			buffered_printf(code_gen_state->buffered_output,"ll r1 %s;\n", string_literal_identifier_str);
 			buffered_printf(code_gen_state->buffered_output,"sto SP r1;\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP;\n");
 			push_type(code_gen_state, copy_type_description(description->type_description), p);
 			require_internal_symbol(&code_gen_state->symbols, string_literal_identifier_str);
 			free(string_literal_identifier_str);
@@ -1246,20 +1355,50 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * code_g
 void g_epsilon(void){
 }
 
+
+
+void copy_lvalue_into_rvalue(struct code_gen_state * code_gen_state, const char * source_lvalue, const char * dst, const char * size_minus_4, const char * tmp, unsigned int size){
+	buffered_printf(code_gen_state->buffered_output,"add r3 r3 %s;     Copy from last word of rvalue\n", size_minus_4);
+	copy_words(code_gen_state, source_lvalue, dst, tmp, size);
+}
+
+struct type_description * ensure_top_type_is_r_value(struct code_gen_state * code_gen_state, struct parser_node * context){
+	struct type_description * description = pop_type_without_type_check(code_gen_state, context);
+	unsigned int size = type_size(code_gen_state, description, RVALUE, 1, description->source_scope_level);
+	if(description->value_type == LVALUE){
+		struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(description->declarator);
+		unsigned int its_an_array = (unsigned int)is_array(abstract_declarator);
+		destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
+		if(its_an_array){
+			/*  Arrays decay to pointers */
+			struct type_description * dereferenced_array_type = create_dereferenced_array_type_description_from_type_description(description);
+        		struct type_description * pointer_description = create_address_type_description_from_type_description(dereferenced_array_type);
+			buffered_printf(code_gen_state->buffered_output,";       Converted an array lvalue to pointer rvalue\n");
+			destroy_type_description(dereferenced_array_type);
+			destroy_type_description(description);
+			pointer_description->value_type = RVALUE;
+			return pointer_description;
+		}else{
+			buffered_printf(code_gen_state->buffered_output,";       convert to rvalue\n");
+			buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;       r2 now stores num bytes to end of rvalue\n", (size -4));
+			buffered_printf(code_gen_state->buffered_output,"loa r3 SP;        r3 now stores the lvalue\n");
+			copy_lvalue_into_rvalue(code_gen_state, "r3", "SP", "r2", "r5", size);
+			description->value_type = RVALUE;
+			return description;
+		}
+	}
+	return description;
+}
+
 unsigned int g_argument_expression_list_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, ASSIGNMENT_EXPRESSION, ARGUMENT_EXPRESSION_LIST_REST)){
 		if(is_terminal_c_token_type(first_child(p),COMMA_CHAR)){
-			struct type_description * arg_type;
 			unsigned int arg_type_size;
+			struct type_description * arg_type;
+			buffered_printf(code_gen_state->buffered_output,";       About to load function argument\n");
 			g_assignment_expression(second_child(p), code_gen_state);
-			arg_type = pop_type_without_type_check(code_gen_state, second_child(p));
-			arg_type_size = type_size(code_gen_state, arg_type, DATA_AND_PTR_BYTES, 1, arg_type->source_scope_level);
-			buffered_printf(code_gen_state->buffered_output,"add r2 SP ZR; \n"); /* src not actually used */
-			buffered_printf(code_gen_state->buffered_output,"add r3 SP ZR; \n");
-			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;\n", arg_type_size -4);
-			buffered_printf(code_gen_state->buffered_output,"add r3 r3 r1;  Set up ptr so we can traverse the item.\n");
-			/*  This makes all the members of the parameter by value */
-			traverse_type(code_gen_state, arg_type, "r2", "r3", "r5", arg_type->source_scope_level, MAKE_PARAMETER_VALUE, 1, (struct constant_initializer_level *)0);
+			arg_type = ensure_top_type_is_r_value(code_gen_state, second_child(p));
+			arg_type_size = type_size(code_gen_state, arg_type, arg_type->value_type, 1, arg_type->source_scope_level);
 			push_type(code_gen_state, arg_type, second_child(p));
 			return arg_type_size + g_argument_expression_list_rest(third_child(p), code_gen_state);
 		}else{
@@ -1275,17 +1414,12 @@ unsigned int g_argument_expression_list_rest(struct parser_node * p, struct code
 
 unsigned int g_argument_expression_list(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_two_children(p, ASSIGNMENT_EXPRESSION, ARGUMENT_EXPRESSION_LIST_REST)){
-		struct type_description * arg_type;
 		unsigned int arg_type_size;
+		struct type_description * arg_type;
+		buffered_printf(code_gen_state->buffered_output,";       About to load function argument\n");
 		g_assignment_expression(first_child(p), code_gen_state);
-		arg_type = pop_type_without_type_check(code_gen_state, first_child(p));
-        	arg_type_size = type_size(code_gen_state, arg_type, DATA_AND_PTR_BYTES, 1, arg_type->source_scope_level);
-		buffered_printf(code_gen_state->buffered_output,"add r2 SP ZR; \n"); /* src not actually used */
-		buffered_printf(code_gen_state->buffered_output,"add r3 SP ZR; \n");
-		buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;\n", arg_type_size -4);
-		buffered_printf(code_gen_state->buffered_output,"add r3 r3 r1;  Set up ptr so we can traverse the item.\n");
-		/*  This makes all the members of the parameter by value */
-		traverse_type(code_gen_state, arg_type, "r2", "r3", "r5", arg_type->source_scope_level, MAKE_PARAMETER_VALUE, 1, (struct constant_initializer_level *)0);
+		arg_type = ensure_top_type_is_r_value(code_gen_state, first_child(p));
+		arg_type_size = type_size(code_gen_state, arg_type, arg_type->value_type, 1, arg_type->source_scope_level);
 		push_type(code_gen_state, arg_type, first_child(p));
 		return arg_type_size + g_argument_expression_list_rest(second_child(p), code_gen_state);
 	}else{
@@ -1301,20 +1435,22 @@ void function_call(struct parser_node * argument_expression_list, struct parser_
         unsigned int bytes_arguments = 0;
         unsigned int type_stack_size_before;
         /*  Grab the function type from the top of the stack */
-        struct type_description * fcn_ptr_type = pop_type_without_type_check(code_gen_state, context);
+        struct type_description * fcn_ptr_type = ensure_top_type_is_r_value(code_gen_state, context);
         struct type_description * fcn_type = create_dereferenced_pointer_type_description_from_type_description(fcn_ptr_type);
 	struct type_description * return_type_description = get_current_function_return_type_description(fcn_type);
 	convert_to_untypedefed_type_description(return_type_description);
 
+	return_type_description->value_type = RVALUE;
 	push_type(code_gen_state, return_type_description, context);
-        bytes_return_value = type_size(code_gen_state, return_type_description, DATA_AND_PTR_BYTES, 0, return_type_description->source_scope_level);
+        bytes_return_value = type_size(code_gen_state, return_type_description, RVALUE, 0, return_type_description->source_scope_level);
 	/*  -8 because the function address that was loaded gets overwritten with the return value. */
-        buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Number of extra bytes for rtn val\n", bytes_return_value - 8);
+        buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Number of extra bytes for rtn val\n", bytes_return_value - 4);
         buffered_printf(code_gen_state->buffered_output,"sub SP SP r2; SP points to top of rtn value space\n");
         buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Inc another 4 bytes for the return address.\n");
         buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Push another 4 bytes for the frame pointer.\n");
         buffered_printf(code_gen_state->buffered_output,"sto SP FP;  Put the frame pointer on the stack\n");
-	push_type(code_gen_state, copy_type_description(parser_state->unsigned_int_description), context); /*  We pushed the rtnaddr and fp, which is an int in size = 4 byte + 4 byte = 8 = int */
+	push_type(code_gen_state, copy_type_description(parser_state->unsigned_int_description), context); /* For FP */
+	push_type(code_gen_state, copy_type_description(parser_state->unsigned_int_description), context); /* For return addr */
 	type_stack_size_before = struct_type_description_ptr_list_size(&code_gen_state->type_stack);
 	if(argument_expression_list){
 		bytes_arguments = g_argument_expression_list(argument_expression_list, code_gen_state);
@@ -1349,15 +1485,15 @@ void function_call(struct parser_node * argument_expression_list, struct parser_
 	/*  Pop each of the arguments loaded in the argument_expression_list */
 	backtrack_type_stack(code_gen_state, type_stack_size_before, context);
 	buffered_printf(code_gen_state->buffered_output,";  Finished poping arguments.\n");
-	/*  One more pop for fp and rtnaddr */
+	/*  two more pop for fp and rtnaddr */
+	destroy_type_description(pop_type(code_gen_state, parser_state->unsigned_int_description, context));
 	destroy_type_description(pop_type(code_gen_state, parser_state->unsigned_int_description, context));
 	destroy_type_description(fcn_ptr_type);
 	destroy_type_description(fcn_type);
 	g_postfix_expression_rest(postfix_experssion_rest, code_gen_state);
 }
 
-
-void do_ptr_operator(struct code_gen_state * code_gen_state, unsigned char * target_member_identifier, struct parser_node * context){
+void do_struct_dereference_operator(struct code_gen_state * code_gen_state, unsigned char * target_member_identifier, struct parser_node * context, unsigned int is_ptr){
 	struct parser_node * struct_or_union_or_enum_specifier;
 	struct c_lexer_token * struct_tag_token;
 	unsigned char * struct_tag_identifier;
@@ -1366,132 +1502,16 @@ void do_ptr_operator(struct code_gen_state * code_gen_state, unsigned char * tar
 	struct normalized_declaration_element * element;
 	unsigned int i;
 	unsigned int bytes_before = 0;
-	unsigned int bytes_target_member = 0;
-	unsigned int bytes_after = 0;
-	struct type_description * t = pop_type_without_type_check(code_gen_state, context);
-	struct type_description * dereferenced_type;
-	unsigned int member_found = 0;
-	unsigned int words_after;
-	unsigned int words_member;
-	unsigned int words_before;
-	struct parser_node * abstract_declarator = (struct parser_node *)0;
-	struct parser_node * temp = create_abstract_declarator_from_normalized_declarator(t->declarator);
-	(void)words_before;
-	(void)words_after;
-	(void)words_member;
-
-	if(!is_pointer(temp)){
-		assert(0 && "Trying to do ptr op on something that isn't a pointer.");
-	}
-
-	destroy_parser_node_tree_and_c_lexer_tokens(temp);
-	dereferenced_type = create_dereferenced_pointer_type_description_from_type_description(t);
-	dereferenced_type->source_scope_level = t->source_scope_level;
-	destroy_type_description(t);
-
-	struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(dereferenced_type->specifiers);
-	struct_tag_token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
-
-	struct_tag_identifier = struct_tag_token ? copy_string(struct_tag_token->first_byte, struct_tag_token->last_byte) : make_up_identifier(t->source_element);
-
-	obj = get_namespace_object_from_closest_namespace(struct_tag_identifier, TAG_NAMESPACE, dereferenced_type->source_scope_level, 1);
-	if(!obj){
-		printf("Unknown structure: %s in file %s.\n", struct_tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
-		assert(obj && "Unknown identifier in do_dot_operator.");
-	}
-	/*printf("Ptr op: structure %s found\n", struct_tag_identifier);*/
-
-	num_children = struct_namespace_object_ptr_list_size(obj->children);
-	assert(num_children);
-
-	for(i = 0; i < num_children; i++){
-		struct namespace_object * child_obj = struct_namespace_object_ptr_list_get(obj->children, i);
-		unsigned int size;
-		struct type_description * member_description;
-		struct c_lexer_token * member_identifier_token;
-		unsigned char * member_name;
-		assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
-		element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
-		member_identifier_token = get_identifier_token_from_normalized_declarator(element->normalized_declarator);
-		member_description = create_type_description_from_normalized_declaration_element(element);
-		member_description->source_scope_level = obj->scope_level;
-		member_name = copy_string(member_identifier_token->first_byte, member_identifier_token->last_byte);
-		size = type_size(code_gen_state, member_description, DATA_AND_PTR_BYTES, 0, obj->scope_level);
-		/*printf("Member %s has size %d\n", member_name, size);*/
-		if(!unsigned_strcmp(member_name, target_member_identifier)){
-			push_type(code_gen_state, member_description, context);
-			member_found = 1;
-			bytes_target_member += size;
-			abstract_declarator = create_abstract_declarator_from_normalized_declarator(member_description->declarator);
-		}else{
-			if(member_found){
-				bytes_after += size;
-			}else{
-				bytes_before += size;
-			}
-			destroy_type_description(member_description);
-		}
-		free(member_name);
-	}
-	if(!member_found){
-		printf("Member %s of struct %s not found, in file %s.\n", target_member_identifier, struct_tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
-		assert(0 && "Member of struct not found.");
-	}
-	words_member = (bytes_target_member / 4);
-	words_before = (bytes_before / 4);
-	if(is_array(abstract_declarator)){
-		buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Go down to value(addr)\n");
-
-		buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Load ptr\n");
-		buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; Jump over the arr\n", words_before * 4);
-		buffered_printf(code_gen_state->buffered_output,"add r2 r1 r2;\n");
-		buffered_printf(code_gen_state->buffered_output,"loa r2 r2; Grab the first arr element addr\n");
-
-		buffered_printf(code_gen_state->buffered_output,"sto SP r2; Write address\n");
-		buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
-		buffered_printf(code_gen_state->buffered_output,"sto SP r2; For pointer too\n");
-	}else{
-		buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Go down to value(addr)\n");
-		buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Load ptr\n");
-		buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; Offset in struct to member\n", ((words_before + words_member) - 1) * 4);
-		buffered_printf(code_gen_state->buffered_output,"add r1 r2 r1; The address of the struct member\n");
-		copy_words(code_gen_state, "r1", "SP", "r2", bytes_target_member);
-	}
-	/* Copy the member onto the stack */
-	/*printf("Found member %s.  It is size %d, has %d bytes before and %d after.\n", target_member_identifier, bytes_target_member, bytes_before, bytes_after);*/
-	destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
-	free(struct_tag_identifier);
-	destroy_type_description(dereferenced_type);
-	/*printf("done ptr op, offset was %d\n", ((words_before + words_member) -1) * 4);*/
-}
-
-void do_dot_operator(struct code_gen_state * code_gen_state, unsigned char * target_member_identifier, struct parser_node * context){
-	struct parser_node * struct_or_union_or_enum_specifier;
-	struct c_lexer_token * struct_tag_token;
-	unsigned char * struct_tag_identifier;
-	unsigned int num_children;
-	struct namespace_object * obj;
-	struct normalized_declaration_element * element;
-	unsigned int i;
-	unsigned int bytes_before = 0;
-	unsigned int bytes_target_member = 0;
-	unsigned int bytes_after = 0;
+	unsigned int bytes_total = 0;
+	unsigned int bytes_member = 0;
 	struct type_description * t = pop_type_without_type_check(code_gen_state, context);
 	unsigned int member_found = 0;
-	unsigned int words_after;
-	unsigned int words_member;
-	unsigned int words_before;
 	struct parser_node * abstract_declarator = (struct parser_node *)0;
+	unsigned int is_lvalue = t->value_type == LVALUE;
 
 	struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(t->specifiers);
 	if(!struct_or_union_or_enum_specifier){
-		struct unsigned_char_list l;
-		unsigned_char_list_create(&l);
-		buffered_printf(&l,"\nBad structure type:\n");
-		print_normalized_declaration_declarator_and_specifiers(&l, t->declarator, t->specifiers, 0, 0);
-		unsigned_char_list_add(&l, 0);
-		printf("%s\n", unsigned_char_list_data(&l));
-		print_node_context(code_gen_state->parser_state->c_lexer_state, context);
+		print_error_with_type(code_gen_state->parser_state->c_lexer_state, t, context, "Bad structure type:");
 		assert(0);
 	}
 	struct_tag_token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
@@ -1502,8 +1522,6 @@ void do_dot_operator(struct code_gen_state * code_gen_state, unsigned char * tar
 		printf("Unknown structure: %s in file %s.\n", struct_tag_identifier, code_gen_state->parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier.");
 	}
-	/*printf("Dot op: Got structure: %s \n", struct_tag_identifier);*/
-
 	num_children = struct_namespace_object_ptr_list_size(obj->children);
 	assert(num_children);
 
@@ -1516,20 +1534,25 @@ void do_dot_operator(struct code_gen_state * code_gen_state, unsigned char * tar
 		assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
 		element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
 		member_identifier_token = get_identifier_token_from_normalized_declarator(element->normalized_declarator);
-		member_description = create_type_description_from_normalized_declaration_element(element);
-		member_description->source_scope_level = obj->scope_level;
+		member_description = create_type_description_from_normalized_declaration_element(element, context, obj->scope_level, LVALUE);
 		member_name = copy_string(member_identifier_token->first_byte, member_identifier_token->last_byte);
-		size = type_size(code_gen_state, member_description, DATA_AND_PTR_BYTES, 0, obj->scope_level);
-		/*printf("Member %s has size %d\n", member_name, size);*/
+		size = type_size(code_gen_state, member_description, RVALUE, 0, obj->scope_level);
+		bytes_total += size;
+		buffered_printf(code_gen_state->buffered_output,";member %s has size %d      \n", member_name, size);
 		if(!unsigned_strcmp(member_name, target_member_identifier)){
+			if(is_lvalue || is_ptr){
+				member_description->value_type = LVALUE;
+			}else{
+				member_description->value_type = RVALUE;
+			}
 			push_type(code_gen_state, member_description, context);
 			member_found = 1;
-			bytes_target_member += size;
+			bytes_member = size;
 			abstract_declarator = create_abstract_declarator_from_normalized_declarator(member_description->declarator);
+			free(member_name);
+			break;
 		}else{
-			if(member_found){
-				bytes_after += size;
-			}else{
+			if(!member_found){
 				bytes_before += size;
 			}
 			destroy_type_description(member_description);
@@ -1539,52 +1562,34 @@ void do_dot_operator(struct code_gen_state * code_gen_state, unsigned char * tar
 	if(!member_found){
 		assert(0 && "Member of struct not found.");
 	}
-	words_after = (bytes_after / 4);
-	words_member = (bytes_target_member / 4);
-	words_before = (bytes_before / 4);
-	assert((bytes_after - (words_after * 4)) == 0);
-	for(i = 0; i < words_before; i++){
-		buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Ignore this part of struct\n");
-	}
-	/*  If there were bytes before this memeber, we need to get rid of them and move the member down to that space */
-	if(bytes_after){
-		/*  If we're accessing an array member of a struct, we need to turn the array into a pointer */
-		if(is_array(abstract_declarator)){
-			assert(words_member > 0);
-			/* Go down to where we can grab the pointer to the first array element */
-			buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Grab the first arr element addr\n");
-			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; Jump over the after members and arr\n", (words_member + words_after -1)  * 4);
-			buffered_printf(code_gen_state->buffered_output,"add SP SP r1;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP r2; Write address\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP r2; For pointer too\n");
-		}else{
-			/*  Start copying from here */
-			/*printf("Move source down %d\n", (words_member -1) * 4);*/
-			buffered_printf(code_gen_state->buffered_output,"add r3 SP ZR;\n");
-			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;\n", (words_member -1) * 4);
-			buffered_printf(code_gen_state->buffered_output,"add r1 r3 r1;\n");
-			/*  To here */
-			/*printf("Move dst down %d\n", ((words_after + words_member) -1) * 4);*/
-			buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;\n", ((words_after + words_member) -1) * 4);
-			buffered_printf(code_gen_state->buffered_output,"add r3 r3 r2;\n");
-			/*  Copy the member down on the stack */
-			copy_words(code_gen_state, "r1", "r3", "r2", bytes_target_member);
-			buffered_printf(code_gen_state->buffered_output,"ll r3 0x%X;\n", words_after * 4);
-			buffered_printf(code_gen_state->buffered_output,"add SP SP r3;\n");
-		}
+
+	if(is_lvalue){
+		buffered_printf(code_gen_state->buffered_output,"loa r1 SP;      Load lvalue of structure\n");
 	}else{
-		if(is_array(abstract_declarator)){
-			/* Go down to where we can grab the pointer to the first array element */
-			buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Grab the first arr element addr\n");
-			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; Jump over the arr\n", (words_member -1)  * 4);
-			buffered_printf(code_gen_state->buffered_output,"add SP SP r1;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP r2; Write address\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP r2; For pointer too\n");
-		}
+		buffered_printf(code_gen_state->buffered_output,"add r1 SP ZR;      Structure already on stack, start with SP\n");
 	}
-	/*printf("Found member %s.  It is size %d, has %d bytes before and %d after.\n", target_member_identifier, bytes_target_member, bytes_before, bytes_after);*/
+
+	if(is_ptr){
+		buffered_printf(code_gen_state->buffered_output,"loa r1 r1;      Go through extra indirection level\n");
+	}
+
+	buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;     Offset to item\n", bytes_before);
+	buffered_printf(code_gen_state->buffered_output,"add r1 r1 r2;   r1 stores address of item\n");
+
+	/*  If original was an lvalue, then we can store the result as an lvalue too */
+	if(is_lvalue || is_ptr){
+		buffered_printf(code_gen_state->buffered_output,"sto SP r1;      Save as new lvalue \n");
+	}else{
+		/*  Otherwise must create new rvalue on stack */
+		buffered_printf(code_gen_state->buffered_output,"ll r3 0x%X;      Bytes to last word of struct rvalue \n", bytes_total - 4);
+		buffered_printf(code_gen_state->buffered_output,"ll r5 0x%X;      Bytes to last word of member\n", bytes_member - 4);
+		buffered_printf(code_gen_state->buffered_output,"add r4 SP r3;      r4 pointing to last word of struct rvalue\n");
+		buffered_printf(code_gen_state->buffered_output,"add r6 r1 r5;      r6 pointing to last word of member to copy out\n");
+		copy_words(code_gen_state, "r6", "r4", "r7", bytes_total);
+		buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;      Bytes to pop off stack\n", bytes_total - bytes_member);
+		buffered_printf(code_gen_state->buffered_output,"add SP SP r1;      Bytes to pop off stack\n");
+	}
+
 	destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
 	free(struct_tag_identifier);
 	destroy_type_description(t);
@@ -1596,43 +1601,61 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 			is_terminal_c_token_type(first_child(p), OPEN_SQUARE_BRACKET_CHAR) &&
 			is_terminal_c_token_type(third_child(p), CLOSE_SQUARE_BRACKET_CHAR)
 		){
+			struct type_description * index_type;
 			struct type_description * array_type;
 			struct type_description * dereferenced_array_type;
 			unsigned int element_size;
 			unsigned int its_an_array;
 			struct parser_node * abstract_declarator;
+			unsigned int is_lvalue;
 			g_expression(second_child(p), code_gen_state);
-			/*  The array index */
-			consume_scalar_type(code_gen_state, p);
+
+			index_type = ensure_top_type_is_r_value(code_gen_state, p);
+			pop(code_gen_state, "r1", index_type->value_type); /* Array index */
+			destroy_type_description(index_type);
+
 			array_type = pop_type_without_type_check(code_gen_state, p);
+			is_lvalue = array_type->value_type == LVALUE;
+
 			dereferenced_array_type = create_dereferenced_array_type_description_from_type_description(array_type);
 			push_type(code_gen_state, dereferenced_array_type, p);
-			destroy_type_description(array_type);
 
-			element_size = type_size(code_gen_state, dereferenced_array_type, DATA_AND_PTR_BYTES, 0, dereferenced_array_type->source_scope_level);
+			element_size = type_size(code_gen_state, dereferenced_array_type, RVALUE, 0, dereferenced_array_type->source_scope_level);
 			/*  Determine if the result will be an array (multi-dimensional array case) */
-			abstract_declarator = create_abstract_declarator_from_normalized_declarator(dereferenced_array_type->declarator);
+			abstract_declarator = create_abstract_declarator_from_normalized_declarator(array_type->declarator);
+			/*  If it is not an array it should be a pointer */
 			its_an_array = (unsigned int)is_array(abstract_declarator);
 			destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
 
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Go down to value of expr\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r1 SP; Load the index value\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Go down to addr of address\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Go down to value of address\n");
 			buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Load the address of the first arr element\n");
+
+			if((!its_an_array && is_lvalue)){
+				buffered_printf(code_gen_state->buffered_output,"loa r2 r2; Load whatever the pointer was\n");
+			}
+
 			buffered_printf(code_gen_state->buffered_output,"ll r5 0x%X;\n", element_size);
 			buffered_printf(code_gen_state->buffered_output,"mul r3 r1 r5; compute offset in array \n");
 			buffered_printf(code_gen_state->buffered_output,"add r1 r2 r3; Actual address of item \n");
-			if(its_an_array){
-				buffered_printf(code_gen_state->buffered_output,"sto SP r1; Write address\n");
-				buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Go to addr\n");
-				buffered_printf(code_gen_state->buffered_output,"sto SP r1; Write address\n");
+
+			/*  rvalue arrays */
+			if((its_an_array && !is_lvalue)){
+				buffered_printf(code_gen_state->buffered_output,"ll r6 0x%X;\n", element_size -4);
+				buffered_printf(code_gen_state->buffered_output,"add r3 SP ZR; Copy stack pointer\n");
+				buffered_printf(code_gen_state->buffered_output,"sub SP SP r6; Make room on stack\n");
+				copy_words(code_gen_state, "r2", "r3", "r4", element_size);
 			}else{
-				/* We want the pointer at the base of where this item starts, so we can copy it */
-				buffered_printf(code_gen_state->buffered_output,"ll r5 0x%X;\n", element_size - 4); 
-				buffered_printf(code_gen_state->buffered_output,"add r1 r1 r5; Address of base of item\n");
-				copy_words(code_gen_state, "r1", "SP", "r2", element_size);
+				buffered_printf(code_gen_state->buffered_output,"sto SP r1; Write address\n");
 			}
+
+			if((its_an_array && is_lvalue) || (!its_an_array && !is_lvalue) || (!its_an_array && is_lvalue)){
+				buffered_printf(code_gen_state->buffered_output,";Result of array indexing was lvalue\n");
+				dereferenced_array_type->value_type = LVALUE;
+			}else if(its_an_array && !is_lvalue){
+				buffered_printf(code_gen_state->buffered_output,";Result of array indexing was rvalue\n");
+				dereferenced_array_type->value_type = RVALUE;
+			}
+
+			destroy_type_description(array_type);
 			g_postfix_expression_rest(fourth_child(p), code_gen_state);
 		}else{
 			assert(0 &&"Expected [] in postfix expression rest.\n");
@@ -1657,7 +1680,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 			is_terminal_c_token_type(second_child(p), IDENTIFIER)
 		){
 			unsigned char * identifier = copy_string(second_child(p)->c_lexer_token->first_byte, second_child(p)->c_lexer_token->last_byte);
-			do_dot_operator(code_gen_state, identifier, second_child(p));
+			do_struct_dereference_operator(code_gen_state, identifier, second_child(p), 0);
 			g_postfix_expression_rest(third_child(p), code_gen_state);
 			free(identifier);
 		}else if(
@@ -1665,7 +1688,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 			is_terminal_c_token_type(second_child(p), IDENTIFIER)
 		){
 			unsigned char * identifier = copy_string(second_child(p)->c_lexer_token->first_byte, second_child(p)->c_lexer_token->last_byte);
-			do_ptr_operator(code_gen_state, identifier, second_child(p));
+			do_struct_dereference_operator(code_gen_state, identifier, second_child(p), 1);
 			g_postfix_expression_rest(third_child(p), code_gen_state);
 			free(identifier);
 		}else{
@@ -1673,28 +1696,52 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 		}
 	}else if(check_two_children(p, TERMINAL, POSTFIX_EXPRESSION_REST)){
 		if(is_terminal_c_token_type(first_child(p), INC_OP)){
-			buffered_printf(code_gen_state->buffered_output,"ll r1 0x1; Value to inc by\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Copy ptr to value\n");
-			buffered_printf(code_gen_state->buffered_output,"add r3 r2 WR; Ptr to origin of value\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r5 r3; Load the original value\n");
-			buffered_printf(code_gen_state->buffered_output,"add r6 r5 r1; Increment that val by 1\n");
-			buffered_printf(code_gen_state->buffered_output,"sto r3 r6; Store the original value at origin\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Point to result val\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP r5; Result is value before increment\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Point back to address\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP; Point to itself\n");
+			struct type_description * orig_lvalue = pop_type_without_type_check(code_gen_state, p); /*  Pop the base type */
+			struct type_description * copy_lvalue = copy_type_description(orig_lvalue);
+			struct type_description * t = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+			struct type_description * result_description;
+			t->value_type = RVALUE;
+			t->source_scope_level = get_current_scope_level(code_gen_state);
+			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;    Lvalue\n");
+			buffered_printf(code_gen_state->buffered_output,"loa r9 r1;    value before\n");
+			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Push for new lvalue\n");
+			buffered_printf(code_gen_state->buffered_output,"sto SP r1;    Write copy of lvalue\n");
+			buffered_printf(code_gen_state->buffered_output,"ll r1 0x1;    Increment\n");
+			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Push for increment \n");
+			buffered_printf(code_gen_state->buffered_output,"sto SP r1;    Write increment value\n");
+			push_type(code_gen_state, orig_lvalue, p);
+			push_type(code_gen_state, copy_lvalue, p);
+			push_type(code_gen_state, t, p);
+			do_additive_expression(code_gen_state, p, PLUS_CHAR);
+			do_assignment(code_gen_state, p);
+			buffered_printf(code_gen_state->buffered_output,"sto SP r9;    Previous value\n");
+			result_description = pop_type_without_type_check(code_gen_state, p); /*  Pop the base type */
+			result_description->value_type = RVALUE;
+			push_type(code_gen_state, result_description, p);
 			g_postfix_expression_rest(second_child(p), code_gen_state);
 		}else if(is_terminal_c_token_type(first_child(p), DEC_OP)){
-			buffered_printf(code_gen_state->buffered_output,"ll r1 0x1; Value to dec by\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Copy ptr to value\n");
-			buffered_printf(code_gen_state->buffered_output,"add r3 r2 WR; Ptr to origin of value\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r5 r3; Load the original value\n");
-			buffered_printf(code_gen_state->buffered_output,"sub r6 r5 r1; Decrement that val by 1\n");
-			buffered_printf(code_gen_state->buffered_output,"sto r3 r6; Store the original value at origin\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Point to result val\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP r5; Result is value before increment\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Point back to address\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP; Point to itself\n");
+			struct type_description * orig_lvalue = pop_type_without_type_check(code_gen_state, p); /*  Pop the base type */
+			struct type_description * copy_lvalue = copy_type_description(orig_lvalue);
+			struct type_description * t = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+			struct type_description * result_description;
+			t->value_type = RVALUE;
+			t->source_scope_level = get_current_scope_level(code_gen_state);
+			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;    Lvalue\n");
+			buffered_printf(code_gen_state->buffered_output,"loa r9 r1;    value before\n");
+			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Push for new lvalue\n");
+			buffered_printf(code_gen_state->buffered_output,"sto SP r1;    Write copy of lvalue\n");
+			buffered_printf(code_gen_state->buffered_output,"ll r1 0x1;    Decrement\n");
+			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Push for decrement\n");
+			buffered_printf(code_gen_state->buffered_output,"sto SP r1;    Write decrement value\n");
+			push_type(code_gen_state, orig_lvalue, p);
+			push_type(code_gen_state, copy_lvalue, p);
+			push_type(code_gen_state, t, p);
+			do_additive_expression(code_gen_state, p, MINUS_CHAR);
+			do_assignment(code_gen_state, p);
+			buffered_printf(code_gen_state->buffered_output,"sto SP r9;    Previous value\n");
+			result_description = pop_type_without_type_check(code_gen_state, p); /*  Pop the base type */
+			result_description->value_type = RVALUE;
+			push_type(code_gen_state, result_description, p);
 			g_postfix_expression_rest(second_child(p), code_gen_state);
 		}else{
 			assert(0 &&"Expected () in postfix expression rest.\n");
@@ -1716,94 +1763,66 @@ void g_postfix_expression(struct parser_node * p, struct code_gen_state * code_g
 }
 
 void g_unary_operator(struct parser_node * p, struct code_gen_state * code_gen_state){
-	struct parser_state * parser_state = code_gen_state->parser_state;
 	if(check_one_child(p, TERMINAL)){
 		if(is_terminal_c_token_type(first_child(p), AMPERSAND_CHAR)){
-			unsigned int size;
-			unsigned int num_words;
-			unsigned int i;
 			struct type_description * found;
 			struct type_description * address_type;
 			found = pop_type_without_type_check(code_gen_state, p); /*  Pop the base type */
+
+			assert(found->value_type == LVALUE);
 			buffered_printf(code_gen_state->buffered_output,"; Perform & operator\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;  Copy address\n");
-			size = type_size(code_gen_state, found, DATA_AND_PTR_BYTES, 1, found->source_scope_level);
-			num_words = size / 4;
-			assert(size - (4*num_words) == 0);
-			for(i = 0; i < num_words; i++){
-				buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Remove type for & %d.\n", i);
-			}
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Move to value\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP r1; Addr becomes value\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Up to address\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP; Point to itself\n");
 
         		address_type = create_address_type_description_from_type_description(found);
-			address_type->source_scope_level = found->source_scope_level;
+        		address_type->value_type = RVALUE;
 			push_type(code_gen_state, address_type, p); /* Put back the pointer type */
 
 			destroy_type_description(found);
 		}else if(is_terminal_c_token_type(first_child(p), MULTIPLY_CHAR)){
 			struct type_description * found_type = pop_type_without_type_check(code_gen_state, p);
 			struct type_description * dereferenced_type = create_dereferenced_pointer_type_description_from_type_description(found_type);
-			unsigned int item_size = type_size(code_gen_state, dereferenced_type, DATA_AND_PTR_BYTES, 1, dereferenced_type->source_scope_level);
 			struct parser_node * abstract_declarator = (struct parser_node *)0;
 
-			buffered_printf(code_gen_state->buffered_output,";                 Pointer Dereference\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;     Point at value now\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;        Copy value, which is an address\n");
-			buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;        Load the size of the item\n", item_size - 4);
-			buffered_printf(code_gen_state->buffered_output,"add r2 r1 r2;     r2 Now holds the address of the last word of the item we're pointing to\n");
+			if(found_type->value_type == LVALUE){
+				buffered_printf(code_gen_state->buffered_output,";                 Pointer Dereference\n");
+				buffered_printf(code_gen_state->buffered_output,"loa r1 SP;        Copy value, which is an address\n");
+				buffered_printf(code_gen_state->buffered_output,"loa r1 r1;        Load the address that it points to\n");
+				buffered_printf(code_gen_state->buffered_output,"sto SP r1;     store address\n");
+			}else{
+				/*  If the pointer was an rvalue, we just need to convert it to an lvalue */
+				dereferenced_type->value_type = LVALUE;
+			}
 
 			abstract_declarator = create_abstract_declarator_from_normalized_declarator(dereferenced_type->declarator);
-
-			if(is_array(abstract_declarator)){
-				/*  For an array, we don't do the normal copy of the item, just create a ptr */
-				buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;     Point to ptr for array\n");
-				buffered_printf(code_gen_state->buffered_output,"sto SP r1;        Store array address\n");
-			}else{
-				traverse_type(code_gen_state, dereferenced_type, "r2", "SP", "r5", dereferenced_type->source_scope_level, REF_COPY, 0, (struct constant_initializer_level *)0);
-			}
 
 			destroy_type_description(found_type);
 			push_type(code_gen_state, dereferenced_type, p);
 			destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
 		}else if(is_terminal_c_token_type(first_child(p), PLUS_CHAR)){
+			struct type_description * found_type = ensure_top_type_is_r_value(code_gen_state, p);
 			buffered_printf(code_gen_state->buffered_output,";unary plus operator (Do Nothing).\n");
-			destroy_type_description(pop_type(code_gen_state, parser_state->unsigned_int_description, p)); /*  Pop the base type */
-			push_type(code_gen_state, copy_type_description(parser_state->unsigned_int_description), p); /* Put back the type */
+			push_type(code_gen_state, found_type, p); /* Put back the type */
 		}else if(is_terminal_c_token_type(first_child(p), MINUS_CHAR)){
-			struct type_description * type;
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;  Point at value now\n");
+			struct type_description * found_type = ensure_top_type_is_r_value(code_gen_state, p);
 			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;  Copy value\n");
 			buffered_printf(code_gen_state->buffered_output,"not r1 r1;  Ones complement\n");
 			buffered_printf(code_gen_state->buffered_output,"ll r2 0x1;\n");
 			buffered_printf(code_gen_state->buffered_output,"add r1 r1 r2; Twos complement\n");
 			buffered_printf(code_gen_state->buffered_output,"sto SP r1;  Save\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Go back to addr\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP;  ptr to self\n");
-			type = pop_type_without_type_check(code_gen_state, p); /*  Pop the base type */
-			push_type(code_gen_state, type, p); /* Put back the type */
+			push_type(code_gen_state, found_type, p); /* Put back the type */
 		}else if(is_terminal_c_token_type(first_child(p), TILDE_CHAR)){
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;  Point at value now\n");
+			struct type_description * found_type = ensure_top_type_is_r_value(code_gen_state, p);
 			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;  Copy value\n");
 			buffered_printf(code_gen_state->buffered_output,"not r1 r1;  logical not\n");
 			buffered_printf(code_gen_state->buffered_output,"sto SP r1;  Save value\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Point at value now\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP;  ptr to self\n");
-			destroy_type_description(pop_type(code_gen_state, parser_state->unsigned_int_description, p)); /*  Pop the base type */
-			push_type(code_gen_state, copy_type_description(parser_state->unsigned_int_description), p); /* Put back the type */
+			push_type(code_gen_state, found_type, p); /* Put back the type */
 		}else if(is_terminal_c_token_type(first_child(p), EXCLAMATION_MARK_CHAR)){
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;  Point at value now\n");
+			struct type_description * found_type = ensure_top_type_is_r_value(code_gen_state, p);
 			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;  Copy value\n");
 			buffered_printf(code_gen_state->buffered_output,"ll r2 0x1; Assume false and invert to 1\n");
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR 1; If it is zero\n");
 			buffered_printf(code_gen_state->buffered_output,"ll r2 0x0; It was not 0, inverse is 0\n");
 			buffered_printf(code_gen_state->buffered_output,"sto SP r2;  Save value\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Point at value now\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP;  ptr to self\n");
-			consume_scalar_type(code_gen_state, p);
-			push_type(code_gen_state, copy_type_description(parser_state->unsigned_int_description), p); /* Put back the type */
+			push_type(code_gen_state, found_type, p); /* Put back the type */
 		}else{
 			assert(0 && ";Unsupported unary operator unknown terminal.\n");
 		}
@@ -1819,7 +1838,16 @@ void g_unary_expression(struct parser_node * p, struct code_gen_state * code_gen
 			is_terminal_c_token_type(second_child(p), OPEN_PAREN_CHAR) &&
 			is_terminal_c_token_type(fourth_child(p), CLOSE_PAREN_CHAR)
 		){
-			buffered_printf(code_gen_state->buffered_output,";TODO: Sizeof\n");
+			struct type_description * sized_type = create_type_description_from_type_name(code_gen_state->parser_state, third_child(p));
+			struct type_description * result_type = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+			unsigned int size = type_size(code_gen_state, sized_type, RVALUE, 0, get_current_scope_level(code_gen_state));
+			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
+			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;\n", size);
+			buffered_printf(code_gen_state->buffered_output,"sto SP r1;\n");
+			result_type->value_type = RVALUE;
+			result_type->source_scope_level = get_current_scope_level(code_gen_state);
+			push_type(code_gen_state, result_type, p);
+			destroy_type_description(sized_type);
 		}else{
 			assert(0 &&"Expected sizeof type.\n");
 		}
@@ -1828,20 +1856,24 @@ void g_unary_expression(struct parser_node * p, struct code_gen_state * code_gen
 		g_unary_operator(first_child(p), code_gen_state);
 	}else if(check_two_children(p, TERMINAL, UNARY_EXPRESSION)){
 		if(is_terminal_c_token_type(first_child(p), INC_OP)){
+			struct type_description * found_type;
+			g_unary_expression(second_child(p), code_gen_state);
+			found_type = pop_type_without_type_check(code_gen_state, p);
 			buffered_printf(code_gen_state->buffered_output,"Do INC_OP.\n");
-			g_unary_expression(second_child(p), code_gen_state);
+			push_type(code_gen_state, found_type, p); /* Put back the type */
+			assert(0);
 		}else if(is_terminal_c_token_type(first_child(p), DEC_OP)){
+			struct type_description * found_type;
 			g_unary_expression(second_child(p), code_gen_state);
+			found_type = pop_type_without_type_check(code_gen_state, p);
+			assert(found_type->value_type == LVALUE);
 			buffered_printf(code_gen_state->buffered_output,"ll r1 0x1; Value to dec by\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Copy ptr to value\n");
-			buffered_printf(code_gen_state->buffered_output,"add r3 r2 WR; Ptr to origin of value\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r5 r3; Load the original value\n");
-			buffered_printf(code_gen_state->buffered_output,"sub r6 r5 r1; Decrement that val by 1\n");
-			buffered_printf(code_gen_state->buffered_output,"sto r3 r6; Store the original value at origin\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Point to result val\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP r6; Result is value after increment\n");
-			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Point back to address\n");
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP; Point to itself\n");
+			buffered_printf(code_gen_state->buffered_output,"loa r2 SP; Load item lvalue\n");
+			buffered_printf(code_gen_state->buffered_output,"loa r3 r2; Load original value\n");
+			buffered_printf(code_gen_state->buffered_output,"sub r4 r3 r1; Decrement that val by 1\n");
+			buffered_printf(code_gen_state->buffered_output,"sto r2 r4; Store the original value at origin\n");
+			buffered_printf(code_gen_state->buffered_output,"sto SP r2; Result is lvalue\n");
+			push_type(code_gen_state, found_type, p); /* Put back the type */
 		}else if(is_terminal_c_token_type(first_child(p), SIZEOF)){
 			buffered_printf(code_gen_state->buffered_output,"sizeof unary expr.\n");
 			g_unary_expression(second_child(p), code_gen_state);
@@ -1863,11 +1895,16 @@ void g_cast_expression(struct parser_node * p, struct code_gen_state * code_gen_
 			is_terminal_c_token_type(first_child(p), OPEN_PAREN_CHAR) ||
 			is_terminal_c_token_type(third_child(p), CLOSE_PAREN_CHAR)
 		){
+			struct type_description * old_type;
 			struct type_description * new_type = create_type_description_from_type_name(code_gen_state->parser_state, second_child(p));
 			g_cast_expression(fourth_child(p), code_gen_state);
-			destroy_type_description(pop_type_without_type_check(code_gen_state, p));
+
+			old_type = pop_type_without_type_check(code_gen_state, p);
+
 			buffered_printf(code_gen_state->buffered_output,";  Performing an explicit type cast.\n");
+			new_type->value_type = old_type->value_type;
 			push_type(code_gen_state, new_type, p);
+			destroy_type_description(old_type);
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unsupported cast expression.\n");
 		}
@@ -1876,70 +1913,85 @@ void g_cast_expression(struct parser_node * p, struct code_gen_state * code_gen_
 	}
 }
 
-void pop(struct code_gen_state * code_gen_state, const char * r){
-	buffered_printf(code_gen_state->buffered_output, "add SP SP WR;\n"); /* Pop addr */
+void pop(struct code_gen_state * code_gen_state, const char * r, enum value_type value_type){
+	(void)value_type;
 	buffered_printf(code_gen_state->buffered_output, "loa %s SP;\n", r); /* Load the value into register */
 	buffered_printf(code_gen_state->buffered_output, "add SP SP WR;\n"); /* Pop value */
 }
 
-void push(struct code_gen_state * code_gen_state, const char * r){
+void push(struct code_gen_state * code_gen_state, const char * r, enum value_type value_type){
+	(void)value_type;
 	buffered_printf(code_gen_state->buffered_output, "sub SP SP WR;\n"); /*  Point to value  */
 	buffered_printf(code_gen_state->buffered_output, "sto SP %s;\n", r); /*  Assign value  */
-	buffered_printf(code_gen_state->buffered_output, "sub SP SP WR;\n"); /*  Point to address  */
-	buffered_printf(code_gen_state->buffered_output, "sto SP SP;\n");    /*  Point to address  */
 }
 
 void do_signed_operation_function_call(struct code_gen_state * code_gen_state, const char * function_name){
-	push(code_gen_state, "ZR"); /*  Space for the integer return value */
+	push(code_gen_state, "ZR", RVALUE); /*  Space for the integer return value */
 	/* Start setting up a stack frame */
-	buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Inc another 4 bytes for the return address.\n");
-	buffered_printf(code_gen_state->buffered_output,"ll r3 0x3C;  Constant offset from current PC value to return.\n");
-	buffered_printf(code_gen_state->buffered_output,"add r3 r3 PC;.\n");
-	buffered_printf(code_gen_state->buffered_output,"sto SP r3;  Store the return address.\n");
-	buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Push another 4 bytes for the frame pointer.\n");
-	buffered_printf(code_gen_state->buffered_output,"sto SP FP;  Put the frame pointer on the stack\n");
+	buffered_printf(code_gen_state->buffered_output,"ll r3 %s;\n", function_name);
+	buffered_printf(code_gen_state->buffered_output,"sub r3 r3 PC;   Diff from current SP to call point\n");
+	buffered_printf(code_gen_state->buffered_output,"ll r4 0x40;     Constant offset from above evaluated PC value to return.\n");
+	buffered_printf(code_gen_state->buffered_output,"sub r3 r3 r4;   Subtract offset\n");
+	buffered_printf(code_gen_state->buffered_output,"ll r4 0x30;     Offset from evaluated PC to return point\n");
+	buffered_printf(code_gen_state->buffered_output,"add r4 r4 PC;\n");
+	buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;   Push another 4 bytes for return address.\n");
+	buffered_printf(code_gen_state->buffered_output,"sto SP r4;      Store the return address.\n");
+	buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;   Push another 4 bytes for the frame pointer.\n");
+	buffered_printf(code_gen_state->buffered_output,"sto SP FP;      Put the frame pointer on the stack\n");
 	/* Load arguments */
-	push(code_gen_state, "r1");
-	push(code_gen_state, "r2");
+	buffered_printf(code_gen_state->buffered_output, "sub SP SP WR;\n"); /*  Point to value  */
+	buffered_printf(code_gen_state->buffered_output, "sto SP r1;\n");    /*  Assign value  */
+	buffered_printf(code_gen_state->buffered_output, "sub SP SP WR;\n"); /*  Point to value  */
+	buffered_printf(code_gen_state->buffered_output, "sto SP r2;\n");    /*  Assign value  */
 
-	buffered_printf(code_gen_state->buffered_output,"add FP SP ZR;  Copy the stack pointer into the frame pointer.\n");
-	buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;  But need to add the bytes arguments\n", 16);
-	buffered_printf(code_gen_state->buffered_output,"add FP FP r1;  because we just incremented the SP by that much.\n");
-	buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;\n", function_name);
+	buffered_printf(code_gen_state->buffered_output,"add FP SP ZR;   Copy the stack pointer into the frame pointer.\n");
+	buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;     But need to add the bytes arguments\n", 8);
+	buffered_printf(code_gen_state->buffered_output,"add FP FP r1;   Because we just incremented the SP by that much.\n");
+	buffered_printf(code_gen_state->buffered_output,"add PC PC r3;\n");
 	require_external_symbol(&code_gen_state->symbols, (unsigned char *)function_name);
 }
 
-void g_multiplicative_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
-	if(check_three_children(p, TERMINAL, CAST_EXPRESSION, MULTIPLICATIVE_EXPRESSION_REST)){
-		unsigned int iz_signed;
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		iz_signed = is_signed(t);
+void do_multiplicative_expression(struct code_gen_state * code_gen_state, struct parser_node * p, enum c_token_type type){
+	unsigned int iz_signed;
+	struct type_description * t;
+	ensure_top_values_are_rvalues(code_gen_state, p);
+	t = usual_arithmetic_conversion(code_gen_state, p);
+	iz_signed = is_signed(t);
 
-		pop(code_gen_state, "r2"); /* Arg 2 */
-		pop(code_gen_state, "r1"); /* Arg 1 */
+	pop(code_gen_state, "r2", t->value_type); /* Arg 2 */
+	pop(code_gen_state, "r1", t->value_type); /* Arg 1 */
 
-		if(is_terminal_c_token_type(first_child(p), MULTIPLY_CHAR)){
+	switch(type){
+		case MULTIPLY_CHAR:{
 			buffered_printf(code_gen_state->buffered_output,"mul r1 r1 r2;\n");
-			push(code_gen_state, "r1");
-		}else if(is_terminal_c_token_type(first_child(p), DIVIDE_CHAR)){
+			push(code_gen_state, "r1", RVALUE);
+			break;
+		}case DIVIDE_CHAR:{
 			if(iz_signed){
 				do_signed_operation_function_call(code_gen_state, "signed_division");
 			}else{
 				buffered_printf(code_gen_state->buffered_output,"div r1 r2 r1 r2;\n");
-				push(code_gen_state, "r1");
+				push(code_gen_state, "r1", RVALUE);
 			}
-		}else if(is_terminal_c_token_type(first_child(p), PERCENT_CHAR)){
+			break;
+		}case PERCENT_CHAR:{
 			if(iz_signed){
 				do_signed_operation_function_call(code_gen_state, "signed_modulo");
 			}else{
 				buffered_printf(code_gen_state->buffered_output,"div r2 r1 r1 r2;\n");
-				push(code_gen_state, "r1");
+				push(code_gen_state, "r1", RVALUE);
 			}
-		}else{
+			break;
+		}default:{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in multiplicative_expression_rest.\n");
 		}
+	}
+	push_type(code_gen_state, t, p);
+}
 
-		push_type(code_gen_state, t, p);
+void g_multiplicative_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
+	if(check_three_children(p, TERMINAL, CAST_EXPRESSION, MULTIPLICATIVE_EXPRESSION_REST)){
+		do_multiplicative_expression(code_gen_state, p, p->first_child->c_lexer_token->type);
 
 		if(is_second_child_type(third_child(p), CAST_EXPRESSION)){
 			g_cast_expression(second_child(third_child(p)), code_gen_state);
@@ -1974,31 +2026,38 @@ struct type_description * perform_pointer_conversion(struct code_gen_state * cod
 	unsigned int is_integral_type1 = is_integral_type(t1);
 	unsigned int is_integral_type2 = is_integral_type(t2);
 
-	if(c1 == TYPE_CLASS_POINTER && is_integral_type2){
-		struct type_description * dereferenced = create_dereferenced_pointer_type_description_from_type_description(t1);
-		unsigned int size = type_size(code_gen_state, dereferenced, DATA_AND_PTR_BYTES, 0, get_current_scope_level(code_gen_state));
-		pop(code_gen_state, "r1");
-		pop(code_gen_state, "r2");
-		buffered_printf(code_gen_state->buffered_output,"ll r3 0x%X; Load the arr element size\n", size);
-		buffered_printf(code_gen_state->buffered_output,"mul r5 r2 r3; Multiply by amount to add or sub\n");
-		push(code_gen_state, "r5");
-		push(code_gen_state, "r1");
-		destroy_type_description(dereferenced);
-		destroy_type_description(t2);
-		return t1;
-	}else if(c2 == TYPE_CLASS_POINTER && is_integral_type1){
-		struct type_description * dereferenced = create_dereferenced_pointer_type_description_from_type_description(t2);
-		unsigned int size = type_size(code_gen_state, dereferenced, DATA_AND_PTR_BYTES, 0, get_current_scope_level(code_gen_state));
-		pop(code_gen_state, "r1");
-		buffered_printf(code_gen_state->buffered_output,"ll r3 0x%X; Load the arr element size\n", size);
-		buffered_printf(code_gen_state->buffered_output,"mul r5 r1 r3; Multiply by amount to add or sub\n");
-		push(code_gen_state, "r5");
-		destroy_type_description(dereferenced);
-		destroy_type_description(t1);
-		return t2;
-	}else if(c1 == TYPE_CLASS_POINTER && c2 == TYPE_CLASS_POINTER){
-		destroy_type_description(t1);
-		return t2;
+	if(c1 == TYPE_CLASS_POINTER || c2 == TYPE_CLASS_POINTER){
+		push_type(code_gen_state, t2, context);
+		push_type(code_gen_state, t1, context);
+		t1 = ensure_top_type_is_r_value(code_gen_state, context);
+		pop(code_gen_state, "r1", t1->value_type);
+		t2 = ensure_top_type_is_r_value(code_gen_state, context);
+		pop(code_gen_state, "r2", t2->value_type);
+
+		if(c1 == TYPE_CLASS_POINTER && is_integral_type2){
+			struct type_description * dereferenced = create_dereferenced_pointer_type_description_from_type_description(t1);
+			unsigned int size = type_size(code_gen_state, dereferenced, dereferenced->value_type, 0, get_current_scope_level(code_gen_state));
+			buffered_printf(code_gen_state->buffered_output,"ll r3 0x%X; Load the arr element size\n", size);
+			buffered_printf(code_gen_state->buffered_output,"mul r2 r2 r3; Multiply by amount to add or sub\n");
+			push(code_gen_state, "r2", RVALUE);
+			push(code_gen_state, "r1", RVALUE);
+			destroy_type_description(dereferenced);
+			destroy_type_description(t2);
+			return t1;
+		}else if(c2 == TYPE_CLASS_POINTER && is_integral_type1){
+			struct type_description * dereferenced = create_dereferenced_pointer_type_description_from_type_description(t2);
+			unsigned int size = type_size(code_gen_state, dereferenced, dereferenced->value_type, 0, get_current_scope_level(code_gen_state));
+			buffered_printf(code_gen_state->buffered_output,"ll r3 0x%X; Load the arr element size\n", size);
+			buffered_printf(code_gen_state->buffered_output,"mul r1 r1 r3; Multiply by amount to add or sub\n");
+			push(code_gen_state, "r2", RVALUE);
+			push(code_gen_state, "r1", RVALUE);
+			destroy_type_description(dereferenced);
+			destroy_type_description(t1);
+			return t2;
+		}else if(c1 == TYPE_CLASS_POINTER && c2 == TYPE_CLASS_POINTER){
+			destroy_type_description(t1);
+			return t2;
+		}
 	}
 	/*  Neither one is a pointer */
 	push_type(code_gen_state, t2, context);
@@ -2006,23 +2065,33 @@ struct type_description * perform_pointer_conversion(struct code_gen_state * cod
 	return (struct type_description *)0;
 }
 
-void g_additive_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
-	if(check_three_children(p, TERMINAL, MULTIPLICATIVE_EXPRESSION, ADDITIVE_EXPRESSION_REST)){
-		struct type_description * t = perform_pointer_conversion(code_gen_state, p);
-		if(!t){
-			t = usual_arithmetic_conversion(code_gen_state, p);
-		}
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
-		if(is_terminal_c_token_type(first_child(p), PLUS_CHAR)){
+void do_additive_expression(struct code_gen_state * code_gen_state, struct parser_node * p, enum c_token_type type){
+	struct type_description * t;
+	ensure_top_values_are_rvalues(code_gen_state, p);
+	t = perform_pointer_conversion(code_gen_state, p);
+	if(!t){
+		t = usual_arithmetic_conversion(code_gen_state, p);
+	}
+	pop(code_gen_state, "r2", t->value_type);
+	pop(code_gen_state, "r1", t->value_type);
+	switch(type){
+		case PLUS_CHAR:{
 			buffered_printf(code_gen_state->buffered_output,"add r1 r1 r2;\n"); /* Addition */
-		}else if(is_terminal_c_token_type(first_child(p), MINUS_CHAR)){
+			break;
+		}case MINUS_CHAR:{
 			buffered_printf(code_gen_state->buffered_output,"sub r1 r1 r2;\n"); /* Subtraction */
-		}else{
+			break;
+		}default:{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in multiplicative_expression_rest.\n");
 		}
-		push(code_gen_state, "r1");
-		push_type(code_gen_state, t, p);
+	}
+	push(code_gen_state, "r1", RVALUE);
+	push_type(code_gen_state, t, p);
+}
+
+void g_additive_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
+	if(check_three_children(p, TERMINAL, MULTIPLICATIVE_EXPRESSION, ADDITIVE_EXPRESSION_REST)){
+		do_additive_expression(code_gen_state, p, p->first_child->c_lexer_token->type);
 		if(is_second_child_type(third_child(p), MULTIPLICATIVE_EXPRESSION)){
 			g_multiplicative_expression(second_child(third_child(p)), code_gen_state);
 			g_additive_expression_rest(third_child(p), code_gen_state);
@@ -2048,9 +2117,11 @@ void g_additive_expression(struct parser_node * p, struct code_gen_state * code_
 
 void g_shift_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, ADDITIVE_EXPRESSION, SHIFT_EXPRESSION_REST)){
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
+		struct type_description * t;
+		ensure_top_values_are_rvalues(code_gen_state, p);
+		t = usual_arithmetic_conversion(code_gen_state, p);
+		pop(code_gen_state, "r2", t->value_type);
+		pop(code_gen_state, "r1", t->value_type);
 		if(is_terminal_c_token_type(first_child(p), LEFT_OP)){
 			buffered_printf(code_gen_state->buffered_output,"shl r1 r2;\n");
 		}else if(is_terminal_c_token_type(first_child(p), RIGHT_OP)){
@@ -2058,7 +2129,7 @@ void g_shift_expression_rest(struct parser_node * p, struct code_gen_state * cod
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in shift_expression_rest.\n");
 		}
-		push(code_gen_state, "r1");
+		push(code_gen_state, "r1", RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), ADDITIVE_EXPRESSION)){
@@ -2086,10 +2157,13 @@ void g_shift_expression(struct parser_node * p, struct code_gen_state * code_gen
 
 void g_relational_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, SHIFT_EXPRESSION, RELATIONAL_EXPRESSION_REST)){
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		unsigned int iz_signed = is_signed(t);
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
+		unsigned int iz_signed;
+		struct type_description * t;
+		ensure_top_values_are_rvalues(code_gen_state, p);
+		t = usual_arithmetic_conversion(code_gen_state, p);
+		iz_signed = is_signed(t);
+		pop(code_gen_state, "r2", t->value_type);
+		pop(code_gen_state, "r1", t->value_type);
 		if(is_terminal_c_token_type(first_child(p),OPEN_ANGLE_BRACKET_CHAR)){
 			if(iz_signed){
 				do_signed_operation_function_call(code_gen_state, "signed_less_than");
@@ -2097,7 +2171,7 @@ void g_relational_expression_rest(struct parser_node * p, struct code_gen_state 
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x1; Assume r1 < r2\n");
 				buffered_printf(code_gen_state->buffered_output,"blt r1 r2 1;\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x0;\n");
-				push(code_gen_state, "r3");
+				push(code_gen_state, "r3", RVALUE);
 			}
 		}else if(is_terminal_c_token_type(first_child(p),CLOSE_ANGLE_BRACKET_CHAR)){
 			if(iz_signed){
@@ -2107,7 +2181,7 @@ void g_relational_expression_rest(struct parser_node * p, struct code_gen_state 
 				buffered_printf(code_gen_state->buffered_output,"blt r1 r2 2;\n");
 				buffered_printf(code_gen_state->buffered_output,"beq r1 r2 1;\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x1;\n");
-				push(code_gen_state, "r3");
+				push(code_gen_state, "r3", RVALUE);
 			}
 		}else if(is_terminal_c_token_type(first_child(p),LE_OP)){
 			if(iz_signed){
@@ -2117,7 +2191,7 @@ void g_relational_expression_rest(struct parser_node * p, struct code_gen_state 
 				buffered_printf(code_gen_state->buffered_output,"blt r1 r2 2;\n");
 				buffered_printf(code_gen_state->buffered_output,"beq r1 r2 1;\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x0;\n");
-				push(code_gen_state, "r3");
+				push(code_gen_state, "r3", RVALUE);
 			}
 		}else if(is_terminal_c_token_type(first_child(p),GE_OP)){
 			if(iz_signed){
@@ -2126,7 +2200,7 @@ void g_relational_expression_rest(struct parser_node * p, struct code_gen_state 
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x0; Assume r1 >= r2 is not true\n");
 				buffered_printf(code_gen_state->buffered_output,"blt r1 r2 1;\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x1;\n");
-				push(code_gen_state, "r3");
+				push(code_gen_state, "r3", RVALUE);
 			}
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in shift_expression_rest.\n");
@@ -2158,9 +2232,11 @@ void g_relational_expression(struct parser_node * p, struct code_gen_state * cod
 
 void g_equality_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, RELATIONAL_EXPRESSION, EQUALITY_EXPRESSION_REST)){
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
+		struct type_description * t;
+		ensure_top_values_are_rvalues(code_gen_state, p);
+		t = usual_arithmetic_conversion(code_gen_state, p);
+		pop(code_gen_state, "r2", t->value_type);
+		pop(code_gen_state, "r1", t->value_type);
 		if(is_terminal_c_token_type(first_child(p),EQ_OP)){
 			buffered_printf(code_gen_state->buffered_output,"ll r3 0x1; Assume r1 == r2 is true\n");
 			buffered_printf(code_gen_state->buffered_output,"beq r1 r2 1;\n");
@@ -2172,7 +2248,7 @@ void g_equality_expression_rest(struct parser_node * p, struct code_gen_state * 
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in equality_expression_rest.\n");
 		}
-		push(code_gen_state, "r3");
+		push(code_gen_state, "r3", RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), RELATIONAL_EXPRESSION)){
@@ -2200,15 +2276,17 @@ void g_equality_expression(struct parser_node * p, struct code_gen_state * code_
 
 void g_and_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, EQUALITY_EXPRESSION, AND_EXPRESSION_REST)){
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
+		struct type_description * t;
+		ensure_top_values_are_rvalues(code_gen_state, p);
+		t = usual_arithmetic_conversion(code_gen_state, p);
+		pop(code_gen_state, "r2", t->value_type);
+		pop(code_gen_state, "r1", t->value_type);
 		if(is_terminal_c_token_type(first_child(p),AMPERSAND_CHAR)){
 			buffered_printf(code_gen_state->buffered_output,"and r1 r1 r2;\n"); /* Bitwise and */
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in and_expression_rest.\n");
 		}
-		push(code_gen_state, "r1");
+		push(code_gen_state, "r1", RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), EQUALITY_EXPRESSION)){
@@ -2236,9 +2314,11 @@ void g_and_expression(struct parser_node * p, struct code_gen_state * code_gen_s
 
 void g_exclusive_or_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, AND_EXPRESSION, EXCLUSIVE_OR_EXPRESSION_REST)){
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
+		struct type_description * t;
+		ensure_top_values_are_rvalues(code_gen_state, p);
+		t = usual_arithmetic_conversion(code_gen_state, p);
+		pop(code_gen_state, "r2", t->value_type);
+		pop(code_gen_state, "r1", t->value_type);
 		if(is_terminal_c_token_type(first_child(p),CARET_CHAR)){
 			buffered_printf(code_gen_state->buffered_output,"or r3 r1 r2;   Bitwise or\n");
 			buffered_printf(code_gen_state->buffered_output,"and r5 r1 r2;  Bitwise and\n");
@@ -2247,7 +2327,7 @@ void g_exclusive_or_expression_rest(struct parser_node * p, struct code_gen_stat
 		}else{
 			assert(0 && "Unknown operator in exclusive_or_expression_rest.\n");
 		}
-		push(code_gen_state, "r1");
+		push(code_gen_state, "r1", RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), AND_EXPRESSION)){
@@ -2275,15 +2355,17 @@ void g_exclusive_or_expression(struct parser_node * p, struct code_gen_state * c
 
 void g_inclusive_or_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, EXCLUSIVE_OR_EXPRESSION, INCLUSIVE_OR_EXPRESSION_REST)){
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
+		struct type_description * t;
+		ensure_top_values_are_rvalues(code_gen_state, p);
+		t = usual_arithmetic_conversion(code_gen_state, p);
+		pop(code_gen_state, "r2", t->value_type);
+		pop(code_gen_state, "r1", t->value_type);
 		if(is_terminal_c_token_type(first_child(p),PIPE_CHAR)){
 			buffered_printf(code_gen_state->buffered_output,"or r1 r1 r2;\n"); /* Bitwise or */
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in inclusive_or_expression_rest.\n");
 		}
-		push(code_gen_state, "r1");
+		push(code_gen_state, "r1", RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), EXCLUSIVE_OR_EXPRESSION)){
@@ -2311,9 +2393,11 @@ void g_inclusive_or_expression(struct parser_node * p, struct code_gen_state * c
 
 void g_logical_and_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, INCLUSIVE_OR_EXPRESSION, LOGICAL_AND_EXPRESSION_REST)){
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
+		struct type_description * t;
+		ensure_top_values_are_rvalues(code_gen_state, p);
+		t = usual_arithmetic_conversion(code_gen_state, p);
+		pop(code_gen_state, "r2", t->value_type);
+		pop(code_gen_state, "r1", t->value_type);
 		if(is_terminal_c_token_type(first_child(p),AND_OP)){
 			buffered_printf(code_gen_state->buffered_output,"ll r3 0x0;\n"); /* Assume false */
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR 2;\n");
@@ -2322,7 +2406,7 @@ void g_logical_and_expression_rest(struct parser_node * p, struct code_gen_state
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in logical_and_expression_rest.\n");
 		}
-		push(code_gen_state, "r3");
+		push(code_gen_state, "r3", RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), INCLUSIVE_OR_EXPRESSION)){
@@ -2350,9 +2434,11 @@ void g_logical_and_expression(struct parser_node * p, struct code_gen_state * co
 
 void g_logical_or_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, LOGICAL_AND_EXPRESSION, LOGICAL_OR_EXPRESSION_REST)){
-		struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2");
-		pop(code_gen_state, "r1");
+		struct type_description * t;
+		ensure_top_values_are_rvalues(code_gen_state, p);
+		t = usual_arithmetic_conversion(code_gen_state, p);
+		pop(code_gen_state, "r2", t->value_type);
+		pop(code_gen_state, "r1", t->value_type);
 		if(is_terminal_c_token_type(first_child(p),OR_OP)){
 			buffered_printf(code_gen_state->buffered_output,"ll r3 0x0;\n"); /* Assume false */
 			buffered_printf(code_gen_state->buffered_output,"or r1 r1 r2;\n"); /* Put all the one bits in one variable */
@@ -2361,7 +2447,7 @@ void g_logical_or_expression_rest(struct parser_node * p, struct code_gen_state 
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in logical_or_expression_rest.\n");
 		}
-		push(code_gen_state, "r3");
+		push(code_gen_state, "r3", RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), LOGICAL_AND_EXPRESSION)){
@@ -2405,10 +2491,11 @@ void g_conditional_expression(struct parser_node * p, struct code_gen_state * co
 			after_condition_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 			g_logical_or_expression(first_child(p), code_gen_state);
 			/*  Pop the item that was loaded in the conditional */
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;\n"); /* Pop addr  */
-			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;\n"); /* Pop value */
-			consume_scalar_type(code_gen_state, first_child(p));
+			t1 = ensure_top_type_is_r_value(code_gen_state, first_child(p));
+			push_type(code_gen_state, t1, first_child(p));
+			t1 = consume_scalar_type(code_gen_state, first_child(p));
+			pop(code_gen_state, "r1", t1->value_type);
+			destroy_type_description(t1);
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s;\n", false_condition_str);
 			g_expression(third_child(p), code_gen_state);
 			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;\n", after_condition_str);
@@ -2441,58 +2528,54 @@ void g_conditional_expression(struct parser_node * p, struct code_gen_state * co
 }
 
 void g_assignment_operator(struct parser_node * p, struct code_gen_state * code_gen_state){
-	struct type_description * t = usual_arithmetic_conversion(code_gen_state, p);
-	push_type(code_gen_state, copy_type_description(t), p);
-	push_type(code_gen_state, t, p);
+	struct type_description * top = pop_type_without_type_check(code_gen_state, p);
+	struct type_description * bottom = pop_type_without_type_check(code_gen_state, p);
+	unsigned int top_current_size = type_size(code_gen_state, top, top->value_type, 1, top->source_scope_level);
+
+	push_type(code_gen_state, bottom, p);
+	if(is_terminal_c_token_type(first_child(p),EQUALS_CHAR)){
+		/*  nothing to do for simple assignment case */
+		push_type(code_gen_state, top, p);
+		return;
+	}
+
+	/*  Insert a copy of the lvaue we're assigning to */
+	buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;     Create space for the lvalue\n");
+	buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;       Bytes in top value\n", top_current_size);
+	buffered_printf(code_gen_state->buffered_output,"add r2 SP r1;     Now pointing at last word of rvalue\n");
+	buffered_printf(code_gen_state->buffered_output,"sub r3 r2 WR;     r3 now has bottom word of destination\n");
+	/*  Move top value up one word */
+	copy_words(code_gen_state, "r2", "r3", "r4", top_current_size);
+	buffered_printf(code_gen_state->buffered_output,"add r2 SP r1;     Now pointing at last word of where rvalue was\n");
+	buffered_printf(code_gen_state->buffered_output,"add r3 r2 WR;     Now pointing to lvalue\n");
+	buffered_printf(code_gen_state->buffered_output,"loa r4 r3;        Load lvalue\n");
+	buffered_printf(code_gen_state->buffered_output,"sto r2 r4;        Store lvalue\n");
+
+	push_type(code_gen_state, copy_type_description(bottom), p);
+	push_type(code_gen_state, top, p);
 	if(check_one_child(p, TERMINAL)){
 		if(is_terminal_c_token_type(first_child(p),EQUALS_CHAR)){
+			/*  Do nothing */
 		}else if(is_terminal_c_token_type(first_child(p),MUL_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"code for *=.\n");
+			do_multiplicative_expression(code_gen_state, p, MULTIPLY_CHAR);
 		}else if(is_terminal_c_token_type(first_child(p),DIV_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"add r5 SP ZR; Copy of stack pointer\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r1 r5; value being subtracted\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r2 r5; value being subtracted from\n");
-			buffered_printf(code_gen_state->buffered_output,"div r1 r2 r2 r1;\n");
-			buffered_printf(code_gen_state->buffered_output,"sub r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sub r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto r5 r1; Set this as value to assign\n");
+			do_multiplicative_expression(code_gen_state, p, DIVIDE_CHAR);
 		}else if(is_terminal_c_token_type(first_child(p),MOD_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"code for %%=.\n");
+			do_multiplicative_expression(code_gen_state, p, PERCENT_CHAR);
 		}else if(is_terminal_c_token_type(first_child(p),ADD_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"add r5 SP ZR; Copy of stack pointer\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r1 r5; value being added\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r2 r5; value being added\n");
-			buffered_printf(code_gen_state->buffered_output,"add r3 r1 r2; New value we're going to assign \n");
-			buffered_printf(code_gen_state->buffered_output,"sub r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sub r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto r5 r3; Set this as value to assign\n");
+			do_additive_expression(code_gen_state, p, PLUS_CHAR);
 		}else if(is_terminal_c_token_type(first_child(p),SUB_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"add r5 SP ZR; Copy of stack pointer\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r1 r5; value being subtracted\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"add r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r2 r5; value being subtracted from\n");
-			buffered_printf(code_gen_state->buffered_output,"sub r3 r2 r1; New value we're going to assign \n");
-			buffered_printf(code_gen_state->buffered_output,"sub r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sub r5 r5 WR;\n");
-			buffered_printf(code_gen_state->buffered_output,"sto r5 r3; Set this as value to assign\n");
+			do_additive_expression(code_gen_state, p, MINUS_CHAR);
 		}else if(is_terminal_c_token_type(first_child(p),LEFT_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"code for <<=.\n");
+			/*  TODO */
 		}else if(is_terminal_c_token_type(first_child(p),RIGHT_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"code for >>=.\n");
+			/*  TODO */
 		}else if(is_terminal_c_token_type(first_child(p),AND_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"code for &=.\n");
+			/*  TODO */
 		}else if(is_terminal_c_token_type(first_child(p),XOR_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"code for ^=.\n");
+			/*  TODO */
 		}else if(is_terminal_c_token_type(first_child(p),OR_ASSIGN)){
-			buffered_printf(code_gen_state->buffered_output,"code for |=.\n");
+			/*  TODO */
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unsupported assignment.\n");
 		}
@@ -2503,7 +2586,6 @@ void g_assignment_operator(struct parser_node * p, struct code_gen_state * code_
 
 
 void g_assignment_expression(struct parser_node * p, struct code_gen_state * code_gen_state){
-
 	if(check_three_children(p, UNARY_EXPRESSION, ASSIGNMENT_OPERATOR, ASSIGNMENT_EXPRESSION)){
 		g_unary_expression(first_child(p), code_gen_state);      /*  This loads what we're going to assign to */
 		g_assignment_expression(third_child(p), code_gen_state); /*  Compute the value of what we want to assign */
@@ -2654,15 +2736,14 @@ void go_up_scope(struct code_gen_state * code_gen_state){
 void create_default_return_value(struct code_gen_state * code_gen_state, struct parser_node * possible_function, struct parser_node * context){
 	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&code_gen_state->current_function->elements);
 	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&code_gen_state->current_function->elements, num_elements - 1);
-	struct type_description * t = create_type_description_from_normalized_declaration_element(element);
+	struct type_description * t = create_type_description_from_normalized_declaration_element(element, context, get_current_scope_level(code_gen_state), RVALUE);
 	struct type_description * return_type_description = get_current_function_return_type_description(t);
 	unsigned int rtn_val_size;
 	unsigned int num_words;
 	unsigned int i;
         (void)possible_function;
-	return_type_description->source_scope_level = get_current_scope_level(code_gen_state);
 	convert_to_untypedefed_type_description(return_type_description);
-	rtn_val_size = type_size(code_gen_state, return_type_description, DATA_AND_PTR_BYTES, 1, get_current_scope_level(code_gen_state));
+	rtn_val_size = type_size(code_gen_state, return_type_description, return_type_description->value_type, 1, get_current_scope_level(code_gen_state));
 	num_words = rtn_val_size / 4;
 	for(i = 0; i < num_words; i++){
 		buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Creating default rtn value, word %d.\n", i);
@@ -2676,21 +2757,21 @@ void create_default_return_value(struct code_gen_state * code_gen_state, struct 
 void return_from_function(struct code_gen_state * code_gen_state, struct parser_node * context){
 	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&code_gen_state->current_function->elements);
 	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&code_gen_state->current_function->elements, num_elements - 1);
-	struct type_description * t = create_type_description_from_normalized_declaration_element(element);
+	struct type_description * t = create_type_description_from_normalized_declaration_element(element, context, get_current_scope_level(code_gen_state), RVALUE);
 	struct type_description * return_type_description = get_current_function_return_type_description(t);
 	unsigned int rtn_val_size;
-	return_type_description->source_scope_level = get_current_scope_level(code_gen_state);
+	destroy_type_description(ensure_top_type_is_r_value(code_gen_state, context));
 	convert_to_untypedefed_type_description(return_type_description);
-	rtn_val_size = type_size(code_gen_state, return_type_description, DATA_AND_PTR_BYTES, 1, get_current_scope_level(code_gen_state));
+	rtn_val_size = type_size(code_gen_state, return_type_description, return_type_description->value_type, 1, get_current_scope_level(code_gen_state));
         destroy_type_description(t);
         /*  SP should now be pointing to the top of the return value */
         buffered_printf(code_gen_state->buffered_output,"add r1 FP ZR;  r1 points to FP.\n");
-        buffered_printf(code_gen_state->buffered_output,"add r1 r1 WR;  r1 points to return addr \n");
-        buffered_printf(code_gen_state->buffered_output,"add r1 r1 WR;  r1 points to top of rtn space \n");
+        buffered_printf(code_gen_state->buffered_output,"add r1 r1 WR;  r1 points to rtn address\n");
+        buffered_printf(code_gen_state->buffered_output,"add r1 r1 WR;  r1 points top of rtn space \n");
         buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;    Distance to last word of rtn space\n", rtn_val_size - 4);
-        buffered_printf(code_gen_state->buffered_output,"add r1 r2 r1;  Source\n");
-        buffered_printf(code_gen_state->buffered_output,"add r5 r2 SP;  Destination\n");
-	traverse_type(code_gen_state, return_type_description, "r5", "r1", "r2", get_current_scope_level(code_gen_state), NEW_COPY, 0, (struct constant_initializer_level *)0);
+        buffered_printf(code_gen_state->buffered_output,"add r1 r2 r1;  Destination\n");
+        buffered_printf(code_gen_state->buffered_output,"add r5 r2 SP;  Source\n");
+	copy_words(code_gen_state, "r5", "r1", "r2", rtn_val_size);
 	buffered_printf(code_gen_state->buffered_output,";  Put the SP at the FP to get over the arguments and top rtn value \n");
 	buffered_printf(code_gen_state->buffered_output,"add SP FP ZR;\n");
 	buffered_printf(code_gen_state->buffered_output,"loa FP FP;  load the previous frame pointer \n");
@@ -2703,7 +2784,6 @@ void return_from_function(struct code_gen_state * code_gen_state, struct parser_
 	buffered_printf(code_gen_state->buffered_output,";  Jump back to the place where the function was called\n");
 	buffered_printf(code_gen_state->buffered_output,"add PC ZR r1;\n");
 
-	destroy_type_description(pop_type(code_gen_state, return_type_description, context));
 	destroy_type_description(return_type_description);
 	/*  There should never be anything on the type stack after we've poped returned the final value */
 	if(struct_type_description_ptr_list_size(&code_gen_state->type_stack) != 0){
@@ -3180,14 +3260,10 @@ void manage_local_space(struct code_gen_state * code_gen_state, struct namespace
 	unsigned int i;
 	const char * instruction = is_initializing ? "sub" : "add";
 	unsigned int obj_size = get_namespace_object_size(code_gen_state, obj, 0);
-	arity = obj_size / 8;
-	assert((obj_size - (arity * 8)) == 0);
+	arity = obj_size / 4;
+	assert((obj_size - (arity * 4)) == 0);
 	for(i = 0; i < arity; i++){
 		buffered_printf(code_gen_state->buffered_output,"%s SP SP WR; Room for local val\n", instruction);
-		buffered_printf(code_gen_state->buffered_output,"%s SP SP WR; Room for local ptr\n", instruction); 
-		if(is_initializing){
-			buffered_printf(code_gen_state->buffered_output,"sto SP SP; Make it point to itself.\n"); 
-		}
 	}
 }
 
@@ -3269,61 +3345,85 @@ void g_initializer(struct parser_node * p, struct code_gen_state * code_gen_stat
 	}
 }
 
-void consume_scalar_type(struct code_gen_state * code_gen_state, struct parser_node * context){
+struct type_description * consume_scalar_type(struct code_gen_state * code_gen_state, struct parser_node * context){
 	struct type_description * observed_type = pop_type_without_type_check(code_gen_state, context);
 	if(!is_scalar_type(observed_type)){
-		struct unsigned_char_list l;
-		unsigned_char_list_create(&l);
-		buffered_printf(&l,"\nThis is not a scalar type:\n");
-		print_normalized_declaration_declarator_and_specifiers(&l, observed_type->declarator, observed_type->specifiers, 0, 0);
-		unsigned_char_list_add(&l, 0);
-		printf("%s\n", unsigned_char_list_data(&l));
-		print_node_context(code_gen_state->parser_state->c_lexer_state, context);
+		print_error_with_type(code_gen_state->parser_state->c_lexer_state, observed_type, context, "This is not a scalar type:");
 		assert(0 && "This is not a scalar type.\n");
 	}
-	destroy_type_description(observed_type);
+	return observed_type;
 }
 
 struct type_description * manage_assignment_type_change(struct code_gen_state * code_gen_state, struct parser_node * context){
-	struct type_description * t1 = pop_type_without_type_check(code_gen_state, context);
+	struct type_description * t1 = ensure_top_type_is_r_value(code_gen_state, context);
 	struct type_description * t2 = pop_type_without_type_check(code_gen_state, context);
-	unsigned int compare_successful = !type_description_cmp(t1, t2);
-	if(compare_successful){
-		push_type(code_gen_state, t2, context);
-		return t1;
-	}else{
-		struct type_description * t;
-		push_type(code_gen_state, t1, context);
-		push_type(code_gen_state, t2, context);
-		t = usual_arithmetic_conversion(code_gen_state, context);
-		push_type(code_gen_state, t, context);
-		return copy_type_description(t);
+	if(t2->value_type != LVALUE){
+		print_error_with_types(code_gen_state->parser_state->c_lexer_state, t1, t2, context, "Performing assignment with left operand as non lvalue.");
+		assert(0);
 	}
+
+	if(is_arithmetic_type(t2)){
+		push_type(code_gen_state, t2, context); /*  Poped inside usual_arithmetic_conversion */
+		push_type(code_gen_state, t1, context);
+		return usual_arithmetic_conversion(code_gen_state, context);
+	}else if(determine_type_class(t2) == TYPE_CLASS_POINTER){
+		unsigned int compare_successful;
+		compare_successful = !type_description_cmp(t1, t2);
+		if(compare_successful){
+			destroy_type_description(t2);
+			t1->value_type = LVALUE;
+			return t1;
+		}
+	}else{
+		unsigned int compare_successful = !type_description_cmp(t1, t2);
+		if(compare_successful){
+			destroy_type_description(t2);
+			t1->value_type = LVALUE;
+			return t1;
+		}
+	}
+	print_error_with_types(code_gen_state->parser_state->c_lexer_state, t1, t2, context, "Unsupported type for assignment:");
+	assert(0);
+	return (struct type_description *)0;
 }
 
 void do_assignment(struct code_gen_state * code_gen_state, struct parser_node * context){
         /*  Stack top is thing we assign to, stack top -1 is thing to assign  */
         struct type_description * assign_type = manage_assignment_type_change(code_gen_state, context);
-	unsigned int size = type_size(code_gen_state, assign_type, DATA_AND_PTR_BYTES, 0, assign_type->source_scope_level);
+	unsigned int size = type_size(code_gen_state, assign_type, RVALUE, 0, assign_type->source_scope_level);
+	assign_type->value_type = LVALUE;
+	push_type(code_gen_state, assign_type, context);
 
+
+        /*  Expects the top of the stack to contain the rvalue to assign, and below that is an lvalue */
         buffered_printf(code_gen_state->buffered_output,";                 Begin Assignment\n");
-        buffered_printf(code_gen_state->buffered_output,"ll r6 0x%X;        Bytes to last word of value to assign\n", size - 4);
-        buffered_printf(code_gen_state->buffered_output,"add r7 SP r6;\n");
-        buffered_printf(code_gen_state->buffered_output,"add r1 r7 ZR;     We want to start the copy from addr in r1\n");
-        buffered_printf(code_gen_state->buffered_output,"add r7 r7 WR;     Go down to get ptr to item\n");
-        buffered_printf(code_gen_state->buffered_output,";                 Now r7 Points to a the pointer that will point to the location\n");
-        buffered_printf(code_gen_state->buffered_output,";                 of the item we want to assign the value to\n");
-        buffered_printf(code_gen_state->buffered_output,"loa r2 r7;\n");
-        buffered_printf(code_gen_state->buffered_output,"add r7 r7 r6;     Point stack to value\n");
-        buffered_printf(code_gen_state->buffered_output,"add r2 r2 r6;     r2 points the the value's pointer, move to its last word value\n");
-	traverse_type(code_gen_state, assign_type, "r1", "r2", "r5", assign_type->source_scope_level, ASSIGN_COPY, 0, (struct constant_initializer_level *)0);
-        buffered_printf(code_gen_state->buffered_output,"add r1 r1 r6;     Move src pointer back down to do copy again\n");
-	traverse_type(code_gen_state, assign_type, "r1", "r7", "r5", assign_type->source_scope_level, NEW_COPY, 0, (struct constant_initializer_level *)0);
-        buffered_printf(code_gen_state->buffered_output,"ll r6 0x%X;        It is now safe to move SP down\n", size);
-        buffered_printf(code_gen_state->buffered_output,"add SP SP r6;     Now only one item\n");
-        buffered_printf(code_gen_state->buffered_output,";                 End Assignment\n");
+        if(size != 4){
+        	buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;       r1 now stores num bytes in rvalue\n", size);
+        	buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;       r2 now stores num bytes to end of rvalue\n", (size -4));
+        }
 
-        destroy_type_description(assign_type);
+        if(size == 4){
+        	buffered_printf(code_gen_state->buffered_output,"add r3 SP WR;     now stores the address of lvalue on stack\n");
+        }else{
+        	buffered_printf(code_gen_state->buffered_output,"add r3 SP r1;     now stores the address of lvalue on stack\n");
+        }
+
+        buffered_printf(code_gen_state->buffered_output,"loa r3 r3;        now stores top place to assign to\n");
+
+        if(size == 4){
+		buffered_printf(code_gen_state->buffered_output,"add r4 SP ZR;     stores bottom word of rvalue on stack\n");
+        }else{
+		buffered_printf(code_gen_state->buffered_output,"add r3 r3 r2;     last word of assign space\n");
+		buffered_printf(code_gen_state->buffered_output,"add r4 SP r2;     stores bottom word of rvalue on stack\n");
+        }
+
+	copy_words(code_gen_state, "r4", "r3", "r5", size);
+
+        if(size == 4){
+        	buffered_printf(code_gen_state->buffered_output,"add SP SP WR;     Remove the rvalue, and leave the lvalue as result\n");
+        }else{
+        	buffered_printf(code_gen_state->buffered_output,"add SP SP r1;     Remove the rvalue, and leave the lvalue as result\n");
+        }
 }
 
 void g_init_declarator(struct parser_node * p, struct code_gen_state * code_gen_state){
@@ -3339,8 +3439,7 @@ void g_init_declarator(struct parser_node * p, struct code_gen_state * code_gen_
 	obj = get_namespace_object_from_closest_namespace(identifier_str, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
 	num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
 	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements - 1);
-	type_description = create_type_description_from_normalized_declaration_element(element);
-	type_description->source_scope_level = obj->scope_level;
+	type_description = create_type_description_from_normalized_declaration_element(element, p, obj->scope_level, LVALUE);
 	convert_to_untypedefed_type_description(type_description);
 	is_global = obj->scope_level == code_gen_state->parser_state->top_scope;
 
@@ -3355,11 +3454,15 @@ void g_init_declarator(struct parser_node * p, struct code_gen_state * code_gen_
 					if(!is_extern){
 						unsigned char * name;
 						struct constant_initializer_level * initializer_level = evaluate_constant_initializer(code_gen_state, third_child(p));
+						struct type_traversal * type_traversal;
 						sprintf_hook("globalvar_%s", identifier_str);
 						name = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 						buffered_printf(code_gen_state->buffered_output,"%s:\n", name);
-						/*  The register specified here don't actually do anything. */
-						traverse_type(code_gen_state, type_description, "SP", "SP", "SP", get_current_scope_level(code_gen_state), SETUP_GLOBAL_SPACE, 0, initializer_level);
+
+						type_traversal = construct_type_traversal(code_gen_state, type_description, get_current_scope_level(code_gen_state), 0);
+						setup_global_type(code_gen_state, type_traversal, initializer_level);
+						destroy_type_traversal(type_traversal);
+
 						implement_external_symbol(&code_gen_state->symbols, name);
 						free(name);
 						destroy_constant_initializer_level(initializer_level);
@@ -3379,12 +3482,14 @@ void g_init_declarator(struct parser_node * p, struct code_gen_state * code_gen_
 			if(is_global){
 				if(!is_extern){
 					unsigned char * name;
+					struct type_traversal * type_traversal;
 					sprintf_hook("globalvar_%s", identifier_str);
 					name = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 					buffered_printf(code_gen_state->buffered_output,"%s:\n", name);
 
-					/*  The register specified here don't actually do anything. */
-					traverse_type(code_gen_state, type_description, "SP", "SP", "SP", get_current_scope_level(code_gen_state), SETUP_GLOBAL_SPACE, 0, (struct constant_initializer_level *)0);
+					type_traversal = construct_type_traversal(code_gen_state, type_description, get_current_scope_level(code_gen_state), 0);
+					setup_global_type(code_gen_state, type_traversal, (struct constant_initializer_level *)0);
+					destroy_type_traversal(type_traversal);
 
 					implement_external_symbol(&code_gen_state->symbols, name);
 					free(name);
@@ -3817,6 +3922,7 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * code_
 			is_terminal_c_token_type(fourth_child(p),CLOSE_PAREN_CHAR) &&
 			is_terminal_c_token_type(sixth_child(p),ELSE)
 		){
+			struct type_description * t;
 			unsigned int cond_index = code_gen_state->condition_index;
 			unsigned char * false_condition_str;
 			unsigned char * after_condition_str;
@@ -3827,10 +3933,11 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * code_
 			after_condition_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 			g_expression(third_child(p), code_gen_state);
 			/*  Pop the item that was loaded in the conditional */
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;\n"); /* Pop addr  */
-			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;\n"); /* Pop value */
-			consume_scalar_type(code_gen_state, third_child(p));
+			t = ensure_top_type_is_r_value(code_gen_state, p);
+			push_type(code_gen_state, t, p);
+			t = consume_scalar_type(code_gen_state, third_child(p));
+			pop(code_gen_state, "r1", t->value_type);
+			destroy_type_description(t);
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s;\n", false_condition_str);
 			g_statement(fifth_child(p), code_gen_state, 0, 0);
 			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;\n", after_condition_str);
@@ -3854,15 +3961,17 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * code_
 		){
 			unsigned int cond_index = code_gen_state->condition_index;
 			unsigned char * after_condition_str;
+			struct type_description * t;
 			code_gen_state->condition_index = code_gen_state->condition_index + 1;
 			sprintf_hook("aftercondition%d", cond_index);
 			after_condition_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 			g_expression(third_child(p), code_gen_state);
 			/*  Pop the item that was loaded in the conditional */
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;\n"); /* Pop addr  */
-			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;\n"); /* Pop value */
-			consume_scalar_type(code_gen_state, third_child(p));
+			t = ensure_top_type_is_r_value(code_gen_state, third_child(p));
+			push_type(code_gen_state, t, third_child(p));
+			t = consume_scalar_type(code_gen_state, third_child(p));
+			pop(code_gen_state, "r1", t->value_type);
+			destroy_type_description(t);
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s;\n", after_condition_str);
 			g_statement(fifth_child(p), code_gen_state, 0, 0);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", after_condition_str);
@@ -3881,14 +3990,18 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * code_
 			struct switch_frame * frame = malloc(sizeof(struct switch_frame));
 			unsigned int num_cases;
 			unsigned int i;
+			struct type_description * t;
 			code_gen_state->condition_index = code_gen_state->condition_index + 1;
 			frame->condition_index = code_gen_state->condition_index;
 			sprintf_hook("aftercondition%d", cond_index);
 			after_condition_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 			g_expression(third_child(p), code_gen_state);
 
-			pop(code_gen_state, "r1"); /* This is the value we need to compare against in the jump table */
-			consume_scalar_type(code_gen_state, third_child(p));
+			t = ensure_top_type_is_r_value(code_gen_state, third_child(p));
+			push_type(code_gen_state, t, third_child(p));
+			t = consume_scalar_type(code_gen_state, third_child(p));
+			pop(code_gen_state, "r1", t->value_type); /* This is the value we need to compare against in the jump table */
+			destroy_type_description(t);
 
 			find_child_case_labels(code_gen_state, fifth_child(p), frame);
 			num_cases = unsigned_int_list_size(&frame->values);
@@ -3958,6 +4071,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			unsigned int cond_index = code_gen_state->condition_index;
 			struct scope_level * scope = get_current_scope_level(code_gen_state);
 			unsigned int uses_compound_statement = first_child(second_child(p))->type == COMPOUND_STATEMENT;
+			struct type_description * t;
 			(void)scope;
 			code_gen_state->condition_index = code_gen_state->condition_index + 1;
 			sprintf_hook("endwhile%d", cond_index);
@@ -3977,8 +4091,13 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			}
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", evaluatewhile_str);
 			g_expression(fifth_child(p), code_gen_state);
-			consume_scalar_type(code_gen_state, third_child(p));
-			pop(code_gen_state, "r1");
+
+			t = ensure_top_type_is_r_value(code_gen_state, third_child(p));
+			push_type(code_gen_state, t, third_child(p));
+			t = consume_scalar_type(code_gen_state, third_child(p));
+			pop(code_gen_state, "r1", t->value_type);
+			destroy_type_description(t);
+
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s; If not true, skip to end\n", endwhile_str);
 			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s; Test condition again\n", startwhile_str);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", endwhile_str);
@@ -4024,11 +4143,13 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", startfor_str);
 			/*  Need to keep the value of the expression so we can inspect it */
 			if(fourth_child(p)->first_child->type == EXPRESSION){
+				struct type_description * t;
 				g_expression(fourth_child(p)->first_child, code_gen_state);
-				buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Go down to value loaded\n");
-				buffered_printf(code_gen_state->buffered_output,"loa r1 SP; Load value\n");
-				buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Pop value\n");
-				destroy_type_description(pop_type_without_type_check(code_gen_state, fourth_child(p)));
+				t = ensure_top_type_is_r_value(code_gen_state, p);
+				push_type(code_gen_state, t, p);
+				t = consume_scalar_type(code_gen_state, p);
+				pop(code_gen_state, "r1", t->value_type);
+				destroy_type_description(t);
 
 				buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s; If not true, skip to end\n", endfor_str);
 			}
@@ -4041,7 +4162,6 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			}
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", evaluatefor_str);
 			g_expression(fifth_child(p), code_gen_state);
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Pop value of statement\n");
 			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Pop value of statement\n");
 			destroy_type_description(pop_type_without_type_check(code_gen_state, fifth_child(p)));
 			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s; Test condition again\n", startfor_str);
@@ -4085,11 +4205,13 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", startfor_str);
 			/*  Need to keep the value of the expression so we can inspect it */
 			if(fourth_child(p)->first_child->type == EXPRESSION){
+				struct type_description * t;
 				g_expression(fourth_child(p)->first_child, code_gen_state);
-				buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Go down to value loaded\n");
-				buffered_printf(code_gen_state->buffered_output,"loa r1 SP; Load value\n");
-				buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Pop value\n");
-				consume_scalar_type(code_gen_state, p);
+				t = ensure_top_type_is_r_value(code_gen_state, p);
+				push_type(code_gen_state, t, p);
+				t = consume_scalar_type(code_gen_state, p);
+				pop(code_gen_state, "r1", t->value_type);
+				destroy_type_description(t);
 				buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s; If not true, skip to end\n", endfor_str);
 			}
 			if(uses_compound_statement){
@@ -4126,6 +4248,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			unsigned int cond_index = code_gen_state->condition_index;
 			struct scope_level * scope = get_current_scope_level(code_gen_state);
 			unsigned int uses_compound_statement = first_child(fifth_child(p))->type == COMPOUND_STATEMENT;
+			struct type_description * t;
 			(void)scope;
 			code_gen_state->condition_index = code_gen_state->condition_index + 1;
 			sprintf_hook("endwhile%d", cond_index);
@@ -4134,10 +4257,11 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			startwhile_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", startwhile_str);
 			g_expression(third_child(p), code_gen_state);
-			consume_scalar_type(code_gen_state, third_child(p));
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Go down to value loaded\n");
-			buffered_printf(code_gen_state->buffered_output,"loa r1 SP; Load value\n");
-			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Pop value\n");
+			t = ensure_top_type_is_r_value(code_gen_state, p);
+			push_type(code_gen_state, t, p);
+			t = consume_scalar_type(code_gen_state, p);
+			pop(code_gen_state, "r1", t->value_type);
+			destroy_type_description(t);
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s; If not true, skip to end\n", endwhile_str);
 			if(uses_compound_statement){
 				g_statement(fifth_child(p), code_gen_state, startwhile_str, endwhile_str);
@@ -4312,7 +4436,6 @@ void g_translation_unit(struct parser_node * p, struct code_gen_state * code_gen
 			string_literal_identifier_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", string_literal_identifier_str);
 			for(j = 0; j < (len + 1); j++){
-				buffered_printf(code_gen_state->buffered_output,"dw 0x%X;\n", 0); /* TODO: these addresses are wrong.  Character constants shouldn't be modified anyway, but might implement ability to modify rvalues */
 				if(c[j] == '\n'){
 					buffered_printf(code_gen_state->buffered_output,"dw 0x%X; \\n\n", c[j]);
 				}else if(c[j] == '\0'){

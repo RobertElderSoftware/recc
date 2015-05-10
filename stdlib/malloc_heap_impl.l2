@@ -4,16 +4,14 @@ IMPLEMENTS EXTERNAL globalvar_free_mem_end;
 IMPLEMENTS, REQUIRES INTERNAL free_mem_start;
 IMPLEMENTS, REQUIRES INTERNAL free_mem_end;
 free_mem_start:
-sw 0x100;                     Just change this value to whatever you want the heap size to be.
+sw 0x10000;                     Just change this value to whatever you want the heap size to be.
 ;                             Value indicates number of 4-byte words.
 free_mem_end:
 
 ;  Now set up some global variables so we can determine freemem size at run time
 
 globalvar_free_mem_start:
-dw globalvar_free_mem_start;
 dw free_mem_start;  Allows us to access the heap start address from within malloc via an external symbol.
 
 globalvar_free_mem_end:
-dw globalvar_free_mem_end;
 dw free_mem_end;    Allows us to access the heap end address from within malloc via an external symbol.

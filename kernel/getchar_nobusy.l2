@@ -19,13 +19,7 @@ add SP SP WR;
 loa r1 SP;
 ;  Jump over the return address, which points us at the return address space (an int)
 add SP SP WR;
-;  Point to the location of the value to return
-add SP SP WR;
 ;  Store our return value
 sto SP r2;
-;  Back up to pointer
-sub SP SP WR;
-;  Point to self
-sto SP SP;
 ;  Jump back to the place where the function was called
 add PC ZR r1;

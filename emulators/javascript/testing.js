@@ -17,8 +17,9 @@ var running_kernel = window.top.location.href.indexOf("kernel_mode") > -1 ? "ker
 var specific_tests = running_kernel ? "kernel" : null;
 var input_queue = [];
 var memory_size_ints;
-var is_debug_mode;
+var is_debug_mode = running_kernel ? true : false;
 var num_special_registers = 6;
+var begin_paused = false;
 
 function get_register_name(n){
   var exceptions = ["PC","SP","FP","ZR","FR","WR"];
@@ -319,9 +320,7 @@ function print_state(vm){
 }
 
 $(document).ready(function () {
-  if(running_kernel){
-    $('.debug-mode')[0].checked = true;
-  }
+  $('.debug-mode')[0].checked = is_debug_mode;
 
   var closeTabFunction = function () {
     /*  If you have the special chrome plugin installed, this will close your browser. */
@@ -411,13 +410,13 @@ $(document).ready(function () {
             if(timeout == "skip-to-watch-change" | timeout == "skip-to-breakpoint"){
               if(timeout == "skip-to-watch-change"){
                 vm.set_options({ "watch_active": 1 });
-                while (!vm.is_halted() && !vm.watch_modified() && timeout != "stopped"){
+                while (!vm.is_halted() && !vm.is_watch_modified() && timeout != "stopped"){
                   f();
                 };
                 vm.set_options({ "watch_active": 0 });
               }else if(timeout == "skip-to-breakpoint"){
                 vm.set_options({ "breakpoint_active": 1 });
-                while (!vm.is_halted() && !vm.breakpoint_tripped() && timeout != "stopped"){
+                while (!vm.is_halted() && !vm.is_breakpoint_tripped() && timeout != "stopped"){
                   f();
                 };
                 vm.set_options({ "breakpoint_active": 0 });
@@ -439,7 +438,7 @@ $(document).ready(function () {
             }
           }
 
-          if(1 || !is_debug_mode){
+          if(!begin_paused){
             do_f();
           }
 

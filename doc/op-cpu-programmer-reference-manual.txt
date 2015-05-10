@@ -164,7 +164,7 @@
 
 3.  INSTRUCTIONS
 
-  2.1  There are 14 machine instructions supported by the One Page CPU. Space
+  3.1  There are 14 machine instructions supported by the One Page CPU. Space
   for 2 additional instructions was left intentionally to provide room for
   future enhancement.  All machine instructions are 32 bits in width.
   Particular emphasis has been placed on making the instructions themselves as
@@ -175,7 +175,7 @@
   one valid syntax, where the only variability is the registers or the
   immediate values which are always part of the instruction.
 
-  2.2  READING THIS SECTION
+  3.2  READING THIS SECTION
 
                       31..28   27..22   21..16   15..10   9......0
   +----------------------------------------------------------------+
@@ -193,7 +193,7 @@
   If register rC was 'r1' bits 15 to 10 would have the value '000110'.
 
 
-  2.2  ADD
+  3.3  ADD
                       31..28   27..22   21..16   15..10   9......0
   +----------------------------------------------------------------+
   | add rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
@@ -207,7 +207,7 @@
   add SP SP WR;  Pop the stack pointer (without retrieving value)
   add PC r1 ZR;  Branch to value in r1
 
-  2.3  SUB
+  3.4  SUB
                       31..28   27..22   21..16   15..10   9......0
   +----------------------------------------------------------------+
   | sub rX rY rZ    |  0001  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
@@ -220,7 +220,7 @@
   sub r1 r2 r3;  Simple subtraction
   sub SP SP WR;  Push stack pointer (without storing anything)
 
-  2.4  MUL
+  3.5  MUL
                       31..28   27..22   21..16   15..10   9......0
   +----------------------------------------------------------------+
   | mul rX rY rZ    |  0010  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
@@ -232,7 +232,7 @@
   Examples:
   mul r1 r1 r3;
 
-  2.5  DIV
+  3.6  DIV
                         31..28   27..22   21..16   15..10   9...4    3......0
   +---------------------------------------------------------------------------+
   | div rX rY rZ rW   |  0011  | XXXXXX | YYYYYY | ZZZZZZ | WWWWWW | Reserved |
@@ -244,7 +244,7 @@
   Examples:
   div r1 r2 r3 r4;
 
-  2.6  BEQ
+  3.7  BEQ
                    31..28   27..22   21..16   15.............0
   +------------------------------------------------------------+
   | beq rX rY i  |  0100  | XXXXXX | YYYYYY | iiiiiiiiiiiiiiii |
@@ -265,7 +265,7 @@
   beq ZR ZR -2;  Re-execute the previous instruction
 
 
-  2.7  BLT
+  3.8  BLT
                    31..28   27..22   21..16   15.............0
   +------------------------------------------------------------+
   | blt rX rY i  |  0101  | XXXXXX | YYYYYY | iiiiiiiiiiiiiiii |
@@ -277,7 +277,7 @@
   Examples:
   blt r1 r2 39;  Conditional jump over the next 39 instructions
 
-  2.8  LOA
+  3.9  LOA
                  31..28   27..22   21..16   15.............0
   +----------------------------------------------------------+
   | loa rX rY  |  0110  | XXXXXX | YYYYYY | ----Reserved---- |
@@ -292,7 +292,7 @@
   loa PC PC;      Branch to the address in the next word
   dw 0x0DDFC;     The address of something interesting
 
-  2.9  STO
+  3.10  STO
                  31..28   27..22   21..16   15.............0
   +----------------------------------------------------------+
   | sto rX rY  |  0111  | XXXXXX | YYYYYY | ----Reserved---- |
@@ -307,7 +307,7 @@
   ll r1 0x42;    Load 'B' into r1
   sto SP r1;     Store again on stack
 
-  2.10  LL
+  3.11  LL
                  31..28   27..22   21...................0
   +-------------------------------------------------------+
   | ll rX 0xN  |  1000  | XXXXXX | NNNNNNNNNNNNNNNNNNNNNN |
@@ -319,7 +319,7 @@
   Examples:
   ll r1 0x41;    Load 'A' into r1
 
-  2.11  AND
+  3.12  AND
                       31..28   27..22   21..16   15..10   9......0
   +----------------------------------------------------------------+
   | and rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
@@ -331,7 +331,7 @@
   Examples:
   and r1 r2 r3;
 
-  2.12  OR
+  3.13  OR
                      31..28   27..22   21..16   15..10   9......0
   +----------------------------------------------------------------+
   | or rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
@@ -343,7 +343,7 @@
   Examples:
   or r1 r2 r3;
 
-  2.13  NOT
+  3.14  NOT
                    31..28   27..22   21..16   15.....0
   +----------------------------------------------------+
   | not rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
@@ -354,7 +354,7 @@
   Examples:
   not r1 r2;
 
-  2.14  SHR
+  3.15  SHR
                    31..28   27..22   21..16   15.....0
   +----------------------------------------------------+
   | shr rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
@@ -366,7 +366,7 @@
   Examples:
   shr r1 r2
 
-  2.15  SHL
+  3.16  SHL
                    31..28   27..22   21..16   15.....0
   +----------------------------------------------------+
   | shl rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
@@ -378,9 +378,9 @@
   Examples:
   shl r1 r2
 
-3.  LINKER AND LOADER DIRECTIVES
+4.  LINKER AND LOADER DIRECTIVES
 
-  3.1  SW
+  4.1  SW
 
   The sw directive (skip words) is used during the process of loading machine
   code to indicate that the loader program should 'skip words'.  For example,
@@ -393,7 +393,7 @@
   0x0001 0404 sub SP SP WR;  0x400 bytes of unused space above this instruction
   ...
 
-  3.2  DW
+  4.2  DW
 
   The dw directive (define word) tells the linker to explicitly define 32 bits
   to be some explicit value.  This allows defining of arbitrary data:
@@ -402,7 +402,7 @@
   dw 0x0;         This assembles to be the same thing as 'add PC PC PC'.
   dw 0x41;        The letter 'A'
 
-  3.3  OFFSET
+  4.3  OFFSET
 
   An offset declaration is used in L1 and L2 files to describe whether the code
   in that file should be relocatable or not.  If the code is not relocatable
@@ -410,16 +410,16 @@
   directive should be the first statement in a file.  An offset declaration
   has one of two syntaxes:
 
-    3.3.1  'OFFSET RELOCATABLE'  The code in this file can be relocated
+    4.3.1  'OFFSET RELOCATABLE'  The code in this file can be relocated
            anywhere.  Any addresses in this file must be stated abstractly
            with identifiers that will be replaced in a further linking step.
 
-    3.3.2  'OFFSET 0xNNNNNNNN'   The code in this file must be linked in such a
+    4.3.2  'OFFSET 0xNNNNNNNN'   The code in this file must be linked in such a
            way that the resulting executable will be loaded to address
            0xNNNNNNNN.  If an attempt is made to link multiple non relocatable
            L2 files to overlapping memory locations an error will occur.
          
-  3.4  IMPLEMENTS, REQUIRES, EXTERNAL INTERNAL
+  4.4  IMPLEMENTS, REQUIRES, EXTERNAL INTERNAL
 
   Linkage declarations are used to specify information about relative symbols
   in L2 files.  A symbol declared as INTERNAL will not be visible outside the
@@ -438,7 +438,7 @@
   IMPLEMENTS, REQUIRES EXTERNAL boo; The symbol 'boo' is used in this file, and
   visible externally as well.
 
-  3.5  Labels
+  4.5  Labels
 
   Labels can be used in L2 files only.  They are used to abstractly represent
   addresses that will change after the linking step.  They consist of a line
@@ -476,4 +476,4 @@
   This is important because it relies on the assumption that the stack pointer
   is always pointing to the top of the stack.
 
-The sha1sum of the lines above is e58da80340887b6670e30890c21413bac7a53bfc
+The sha1sum of the lines above is 92ac1fc02d29db93660b8d709e3564aaa3f7e1e3

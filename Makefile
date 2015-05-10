@@ -4,7 +4,7 @@ HOSTCC=gcc
 CLANG_FLAGS=-g -ferror-limit=3 -W -Wextra -Wall -Werror -Weverything -pedantic
 GCC_FLAGS=-g -std=c89 -W -Wextra -Wall -Werror -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 CUSTOM_FLAGS=$(GCC_FLAGS)
-VALGRIND=#valgrind -q --leak-check=full --show-reachable=yes --track-origins=yes
+VALGRIND=#valgrind -q --leak-check=full --show-reachable=yes --track-origins=yes --log-file=out
 
 test: run-tests
 
@@ -16,27 +16,27 @@ recc: data-structures/binary_exponential_buffer.o data-structures/memory_pooler.
 recc.o: recc.c parser.h lexer.h linker.h preprocessor.h code_generator.h
 	@$(HOSTCC) -c recc.c $(CUSTOM_FLAGS)
 
-lexer.h: bootstrap-datatypes
+lexer.h: bootstrap-datatypes io.h
 
 lexer.o: lexer.h lexer.c
 	@$(HOSTCC) -c lexer.c $(CUSTOM_FLAGS)
 
-parser.h: bootstrap-datatypes
+parser.h: bootstrap-datatypes io.h core_data_types.h lexer.h
 
 parser.o: parser.h parser.c
 	@$(HOSTCC) -c parser.c $(CUSTOM_FLAGS)
 
-code_generator.o: code_generator.h code_generator.c parser.h lexer.h
+code_generator.o: code_generator.h code_generator.c
 	@$(HOSTCC) -c code_generator.c $(CUSTOM_FLAGS)
 
-code_generator.h: bootstrap-datatypes
+code_generator.h: bootstrap-datatypes parser.h linker.h lexer.h
 
-linker.h: bootstrap-datatypes
+linker.h: bootstrap-datatypes core_data_types.h io.h lexer.h parser.h
 
 linker.o: linker.c linker.h
 	@$(HOSTCC) -c linker.c $(CUSTOM_FLAGS)
 
-io.h: data-structures/unsigned_char_list.h
+io.h: bootstrap-datatypes
 
 io.o: io.c io.h data-structures/unsigned_char_list.o
 	@$(HOSTCC) -c io.c $(CUSTOM_FLAGS)

@@ -442,6 +442,7 @@ int main(void){
 	create_list_type("struct type_description *");
 	create_list_type("struct constant_description *");
 	create_list_type("struct constant_initializer_level *");
+	create_list_type("struct type_traversal *");
 	create_stack_type("unsigned int");
 	create_stack_type("struct parser_operation");
 

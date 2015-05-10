@@ -130,15 +130,6 @@ enum node_type{
 	FUNCTION_DEFINITION
 };
 
-enum type_size_class{
-	MINIMAL_BITS,       /*  The smallest possible number of bits that you could use to represent this item */
-	MINIMAL_BYTES,       
-	FORCED_WORD_BITS,   /*  The number of bits you'd need if we force this item to take up a multiple of 4 bytes */
-	FORCED_WORD_BYTES,
-	DATA_AND_PTR_BITS,   /*  For simplicity, all data on the stack has a ptr associated with it.  This size includes that pointer */
-	DATA_AND_PTR_BYTES
-};
-
 enum type_class{
 	TYPE_CLASS_CHAR,
 	TYPE_CLASS_SHORT,
@@ -202,6 +193,12 @@ enum object_location{
 	GLOBAL,
 	LOCAL,
 	PARAMETER
+};
+
+
+enum value_type{
+	LVALUE,
+	RVALUE
 };
 
 struct parser_node;
@@ -350,6 +347,8 @@ struct type_description{
 	struct struct_normalized_specifier_ptr_list * specifiers;
 	struct parser_node * context;
 	struct scope_level * source_scope_level;
+	enum value_type value_type;
+	unsigned int pad;
 };
 
 struct parser_state{
@@ -385,7 +384,7 @@ int is_function(struct parser_node *);
 int is_array(struct parser_node *);
 struct parser_node * create_abstract_declarator_from_normalized_declarator(struct normalized_declarator *);
 struct parser_node * get_constant_expression_from_abstract_declarator(struct parser_node *);
-struct type_description * create_type_description_from_normalized_declaration_element(struct normalized_declaration_element *);
+struct type_description * create_type_description_from_normalized_declaration_element(struct normalized_declaration_element *, struct parser_node *, struct scope_level *, enum value_type);
 void destroy_type_description(struct type_description *);
 void print_normalized_declaration_element(struct unsigned_char_list *, struct normalized_declaration_element *, unsigned int);
 void print_normalized_declaration_declarator_and_specifiers(struct unsigned_char_list *, struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *, struct parser_node *, unsigned int);
@@ -395,7 +394,7 @@ struct parser_node * copy_parser_node_tree_and_c_lexer_tokens(struct parser_node
 struct parser_node * destroy_parser_node_tree_and_c_lexer_tokens(struct parser_node *);
 struct type_description * copy_type_description(struct type_description *);
 int type_description_cmp(struct type_description *, struct type_description *);
-struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *);
+struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *, struct parser_node *, struct scope_level *, enum value_type, struct normalized_declaration_element *);
 struct parser_node * convert_abstract_declarator_to_function_type(struct parser_node *);
 void convert_to_untypedefed_type_description(struct type_description *);
 struct type_description * create_address_type_description_from_type_description(struct type_description *);
@@ -418,10 +417,10 @@ unsigned int get_enum_value(struct normalized_declaration_element *);
 unsigned int convert_decimal_constant(unsigned char *);
 
 enum type_class determine_type_class(struct type_description *);
-unsigned int void_type_size(enum type_size_class);
-unsigned int arithmetic_type_size(struct type_description *, enum type_size_class);
-unsigned int pointer_type_size(struct type_description *, enum type_size_class);
-unsigned int enum_type_size(struct type_description *, enum type_size_class);
+unsigned int void_type_size(enum value_type);
+unsigned int arithmetic_type_size(struct type_description *, enum value_type);
+unsigned int pointer_type_size(struct type_description *, enum value_type);
+unsigned int enum_type_size(struct type_description *, enum value_type);
 unsigned int get_ceil_modulo(unsigned int, unsigned int);
 void remove_enum(struct type_description *);
 void remove_specifier(struct type_description *, unsigned int, enum c_token_type);
@@ -440,5 +439,8 @@ void destroy_normalized_declaration_element_list(struct struct_normalized_declar
 struct parser_node * get_enumerator_list(struct parser_node *);
 struct namespace_object * get_namespace_object_from_closest_namespace(unsigned char *, enum scope_type, struct scope_level *, unsigned int);
 unsigned char * make_up_identifier(struct normalized_declaration_element *);
+struct normalized_declarator * make_array_brackets(void);
+void print_error_with_types(struct c_lexer_state *, struct type_description *, struct type_description *, struct parser_node *, const char *);
+void print_error_with_type(struct c_lexer_state *, struct type_description *, struct parser_node *, const char *);
 
 #endif

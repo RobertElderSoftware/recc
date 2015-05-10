@@ -1,5 +1,7 @@
 * Project Home *
 
+This project is a collection of compiler, microkernel and OS tools.  Read more here:
+
 http://recc.robertelder.org/
 
 * Contributions *
@@ -30,7 +32,8 @@ In order to test the compiler on real C code, the following steps take place:
 2)  The recc executable is used to preprocess .i files from all of the .c files in the 'test' directory.
 3)  The recc executable is used to build .l2 files from all of the .i files in the 'test' directory.
 4)  The recc executable is used to build .l1 files for each test in the 'test' directory.
-5)  Once all .l1 files have been built, chrome is envoked directly from the makefile, and chrome is instructed to browse to a url served by localhost, which serves files in the test-api-endpoint directory.  This page contains javascript that interacts with the test API to obtain a list of all available test cases, then run each test and submit the result in the API.  The test result from running the compiled code in the javascript emulator is saved into the 'test' directory.
+4)  .l0.js files are created for each test in the 'test' directory.
+5)  Once all .l0.js files have been built, chrome is envoked directly from the makefile, and chrome is instructed to browse to a url served by localhost, which serves files in the test-api-endpoint directory.  This page contains javascript that interacts with the test API to obtain a list of all available test cases, then run each test and submit the result in the API.  The test result from running the compiled code in the javascript emulator is saved into the 'test' directory.
 6)  Each of the .c files in the 'test' are compiled using gcc into standard desktop executables.
 7)  The executables created using gcc are then run, and output is saved to the 'test' directory.
 8)  The saved output from javascript and gcc are diff'ed.  If the diff is not empty, the test failed.
@@ -69,6 +72,7 @@ The following things are supported:
 -  Some constant initializers for globals like (arr[3] = {1,2,3})
 -  anonymous structure instances
 -  Complex declarators like int (*(*foo[6])(int))(void);
+-  sizeof(...)
 
 The following things are current not implemented/supported:
 
@@ -78,7 +82,7 @@ The following things are current not implemented/supported:
 -  unions
 -  long and long long types
 -  float types (float, double, long double)
--  The standard library.  Only a small subset of printf is currently implemented. 
+-  The standard library.  Only a small subset of printf is currently implemented.   Proof of concept malloc works.
 -  The compiler is not yet self-hosting.  This is mainly due to the unimplemented parts of the c standard library.  It may also be necessary to introduce some optimizations in order to reduce the size of the generated code.
 
 * The Kernel *
@@ -117,6 +121,8 @@ LINK library.l2, main.l2 TO test/basic-operations.l1 SYMBOLS TO main.symbols
 
 *.l1 files do no contain any symbol information.  They are the equivalent of a compiled binary, but they still look like assembly code and the syntax is much less forgiving that the l2 file format. 
 
+*l0.<language extension> files are programming language specific files that are used to simplify the process of loading an executable into an emulator written in a given target language.
+
 * Emulators *
 
 There are currently emulators for the op-cpu in 4 different languages.  C89, Javascript, Python and Java.  The javascript emulator runs as part of the unit tests.  The other 3 emulators can be run with these commands:
@@ -125,7 +131,9 @@ make bootstrap-datatypes && make kernel/kernel.l1
 
 Then
 
-make run-c-emulator  # Runs the kernel inside the C emulator
+make run-c-emulator       # Runs the kernel inside the C emulator
 make run-python-emulator  # Runs the kernel inside the Python emulator
-make run-java-emulator  # Runs the kernel inside the Java emulator
+make run-java-emulator    # Runs the kernel inside the Java emulator
+
+By default 'make' will try to run the unit tests through the javascript emulator in chrome.
 

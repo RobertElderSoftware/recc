@@ -84,8 +84,8 @@ LINK builtin/memory_mapped_registers.l2, test/exotic-declarators.l2, builtin/mai
 
 PREPROCESS test/constants.c TO test/constants.i
 CODE GENERATE test/constants.i TO test/constants.l2
-LINK builtin/memory_mapped_registers.l2, builtin/signed_division.l2, builtin/signed_modulo.l2, builtin/signed_less_than.l2, builtin/signed_less_than_or_equal_to.l2, builtin/signed_greater_than.l2, builtin/signed_greater_than_or_equal_to.l2, builtin/print_decimal.l2,stdlib/printf.l2, test/constants.l2, stdlib/putchar.l2, builtin/mainstub.l2, TO test/constants.l1
+LINK builtin/memory_mapped_registers.l2, builtin/signed_division.l2, builtin/signed_modulo.l2, builtin/signed_less_than.l2, builtin/signed_less_than_or_equal_to.l2, builtin/signed_greater_than.l2, builtin/signed_greater_than_or_equal_to.l2, builtin/print_bits.l2, builtin/print_decimal.l2,stdlib/printf.l2, test/constants.l2, stdlib/putchar.l2, builtin/mainstub.l2, TO test/constants.l1
 
 PREPROCESS test/malloc-test.c TO test/malloc-test.i
 CODE GENERATE test/malloc-test.i TO test/malloc-test.l2
-LINK builtin/memory_mapped_registers.l2, builtin/signed_division.l2, builtin/signed_modulo.l2, builtin/signed_less_than.l2, builtin/signed_less_than_or_equal_to.l2, builtin/signed_greater_than.l2, builtin/signed_greater_than_or_equal_to.l2, builtin/print_decimal.l2,stdlib/printf.l2, test/malloc-test.l2, stdlib/malloc.l2, stdlib/malloc_heap_impl.l2, stdlib/putchar.l2, builtin/mainstub.l2, TO test/malloc-test.l1
+LINK builtin/memory_mapped_registers.l2, builtin/signed_division.l2, builtin/signed_modulo.l2, builtin/signed_less_than.l2, builtin/signed_less_than_or_equal_to.l2, builtin/signed_greater_than.l2, builtin/signed_greater_than_or_equal_to.l2, builtin/print_bits.l2, builtin/print_decimal.l2,stdlib/printf.l2, builtin/random.l2, test/malloc-test.l2, stdlib/malloc.l2, stdlib/malloc_heap_impl.l2, stdlib/putchar.l2, builtin/mainstub.l2, TO test/malloc-test.l1
