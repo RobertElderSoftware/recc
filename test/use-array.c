@@ -12,7 +12,8 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-int putchar(int);
+
+#include <stdio.h>
 
 int output(void);
 
@@ -140,5 +141,6 @@ int main(void){
 	putchar(arr1[1]);
 	putchar(arr1[2]);
 	putchar(arr1[3]);
+	putchar('a' + (int)(&arr1[1] - &arr1[0]));
 	return 0;
 }

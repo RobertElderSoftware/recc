@@ -12,9 +12,9 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#include <stdarg.h>
 
-int putchar(int);
+#include <stdarg.h>
+#include <stdio.h>
 
 void print(unsigned int arg1, ...);
 

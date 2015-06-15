@@ -22,6 +22,23 @@ int main(void){
 	unsigned int i;
 	unsigned int j;
 	unsigned int ** p = (unsigned int **)malloc(sizeof(unsigned int *) * num_items);
+	char * str = (char *)malloc(sizeof(char) * 8);
+	char * str2 = (char *)malloc(sizeof(char) * 256);
+	char * cpy = str2;
+	for(i = 0; i < 256; i++){
+		cpy[0] = (char)i;
+		cpy++;
+	}
+	cpy[0] = 0;
+	str[0] = 'a';
+	str[1] = 'b';
+	str[2] = 'c';
+	str[3] = 'd';
+	str[4] = 'e';
+	str[5] = 'f';
+	str[6] = 'g';
+	str[7] = 0;
+	printf("%s", str2);
 	for(i = 0; i < num_items; i++){
 		p[i] = (unsigned int*)malloc(sizeof(unsigned int) * num_items);
 		for(j = 0; j < num_items; j++){
@@ -35,5 +52,7 @@ int main(void){
 		free(p[i]);
 	}
 	free(p);
+	free(str);
+	free(str2);
 	return 0;
 }

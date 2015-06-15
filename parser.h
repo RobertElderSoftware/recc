@@ -31,6 +31,7 @@
 #include "data-structures/unsigned_char_list.h"
 #include "data-structures/unsigned_char_ptr_list.h"
 #include "data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -198,7 +199,8 @@ enum object_location{
 
 enum value_type{
 	LVALUE,
-	RVALUE
+	WORD_ALIGNED_RVALUE,
+	MINIMAL_RVALUE
 };
 
 struct parser_node;
@@ -356,7 +358,6 @@ struct parser_state{
 	struct c_lexer_state * c_lexer_state;
 	struct scope_level * top_scope;
 	struct parser_node * top_node;
-	struct type_description * unsigned_int_description;
 	struct unsigned_char_list * buffered_output;
 	struct struct_parser_operation_stack operation_stack;
 	struct unsigned_char_ptr_to_struct_constant_description_ptr_map constant_map;
@@ -442,5 +443,6 @@ unsigned char * make_up_identifier(struct normalized_declaration_element *);
 struct normalized_declarator * make_array_brackets(void);
 void print_error_with_types(struct c_lexer_state *, struct type_description *, struct type_description *, struct parser_node *, const char *);
 void print_error_with_type(struct c_lexer_state *, struct type_description *, struct parser_node *, const char *);
+struct type_description * get_type_description_from_suffix(unsigned char *);
 
 #endif

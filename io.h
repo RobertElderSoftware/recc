@@ -15,12 +15,18 @@
 #ifndef __IO_H__
 #define __IO_H__
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <string.h>
 #include "data-structures/unsigned_char_list.h"
+#include "data-structures/unsigned_char_ptr_list.h"
 
-size_t strlen(const char *);
+
+extern unsigned char * g_format_buffer;  /* TODO: get rid of this.  This is a hack that must exist until snprintf can be implemented */
+extern unsigned int g_format_buffer_uses;
+
 void g_format_buffer_use(void);
 void g_format_buffer_release(void);
 int add_file_to_buffer(struct unsigned_char_list *, char *);
@@ -29,11 +35,12 @@ void buffered_printf(struct unsigned_char_list * list, const char* format, ...);
 void vsprintf_hook(const char*, va_list);
 void sprintf_hook(const char*, ...);
 unsigned char * get_sprintf_buffer(void);
-int strcmp(const char *, const char *);
 unsigned char * copy_string(unsigned char *, unsigned char *);
 void copy_string_into_buffer(unsigned char *, unsigned char *, unsigned char *);
 unsigned char * get_null_terminator(unsigned char *);
 void add_string_to_buffer(struct unsigned_char_list *, unsigned char *, unsigned char *);
 int unsigned_strcmp(unsigned char *, unsigned char *);
+unsigned char * copy_null_terminated_string(unsigned char *);
+void resolve_path_components(unsigned char *, struct unsigned_char_ptr_list *);
 
 #endif

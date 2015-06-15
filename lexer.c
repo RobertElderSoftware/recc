@@ -16,7 +16,7 @@
 
 #define SHOW_LEXER_TOKENS 0
 
-const char * c_token_type_names[90] = {
+static const char * c_token_type_names[90] = {
 	"SPACE",
 	"NEWLINE",
 	"COMMENT",
@@ -109,7 +109,7 @@ const char * c_token_type_names[90] = {
 	"NUMBER_SIGN_CHAR"
 };
 
-const char * build_script_token_type_names[10] = {
+static const char * build_script_token_type_names[10] = {
 	"B_SPACE",
 	"B_NEWLINE",
 	"B_CODE_GENERATE",
@@ -123,7 +123,7 @@ const char * build_script_token_type_names[10] = {
 };
 
 
-const char * asm_token_type_names[32] = {
+static const char * asm_token_type_names[32] = {
 	"A_SPACE",
 	"A_NEWLINE",
 	"A_ASM_COMMENT",
@@ -188,7 +188,7 @@ unsigned int t_filename(struct common_lexer_state *, unsigned int);
 void show_lexer_token(struct unsigned_char_list *, const char *, unsigned char *, unsigned char *, unsigned int);
 
 unsigned int accept_range(unsigned char lo, unsigned char hi, struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
-	if(common_lexer_state->buf[tentative_position] >= lo && common_lexer_state->buf[tentative_position] <= hi){
+	if(tentative_position < common_lexer_state->buffer_size && common_lexer_state->buf[tentative_position] >= lo && common_lexer_state->buf[tentative_position] <= hi){
 		return 1;
 	}
 	return 0;
@@ -832,12 +832,12 @@ int lex_c(struct c_lexer_state * c_lexer_state, unsigned char * filename, unsign
 		}
 
 
-		new_token = memory_pooler_malloc(c_lexer_token_pool);
+		new_token = (struct c_lexer_token *)memory_pooler_malloc(c_lexer_token_pool);
 		new_token->type = type;
 		new_token->first_byte = first_byte;
-		new_token->last_byte = (first_byte + rtn) - 1;
+		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);
 
-		struct_c_lexer_token_ptr_list_add(&c_lexer_state->tokens, new_token);
+		struct_c_lexer_token_ptr_list_add_end(&c_lexer_state->tokens, new_token);
 		show_lexer_token(c_lexer_state->c.buffered_output, get_c_token_type_names()[new_token->type], new_token->first_byte, new_token->last_byte, SHOW_LEXER_TOKENS);
 		c_lexer_state->c.position += rtn;
 	}
@@ -927,12 +927,12 @@ int lex_build_script(struct build_script_lexer_state * build_script_lexer_state,
 			return 1;
 		}
 
-		new_token = memory_pooler_malloc(build_script_lexer_token_pool);
+		new_token = (struct build_script_lexer_token *)memory_pooler_malloc(build_script_lexer_token_pool);
 		new_token->type = type;
 		new_token->first_byte = first_byte;
-		new_token->last_byte = (first_byte + rtn) - 1;
+		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);
 
-		struct_build_script_lexer_token_ptr_list_add(&build_script_lexer_state->tokens, new_token);
+		struct_build_script_lexer_token_ptr_list_add_end(&build_script_lexer_state->tokens, new_token);
 		show_lexer_token(build_script_lexer_state->c.buffered_output, get_c_token_type_names()[new_token->type], new_token->first_byte, new_token->last_byte, SHOW_LEXER_TOKENS);
 		build_script_lexer_state->c.position += rtn;
 	}
@@ -1035,12 +1035,12 @@ int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, 
 			return 1;
 		}
 
-		new_token = memory_pooler_malloc(asm_lexer_token_pool);
+		new_token = (struct asm_lexer_token *)memory_pooler_malloc(asm_lexer_token_pool);
 		new_token->type = type;
 		new_token->first_byte = first_byte;
-		new_token->last_byte = (first_byte + rtn) - 1;
+		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);
 
-		struct_asm_lexer_token_ptr_list_add(&asm_lexer_state->tokens, new_token);
+		struct_asm_lexer_token_ptr_list_add_end(&asm_lexer_state->tokens, new_token);
 		show_lexer_token(asm_lexer_state->c.buffered_output, get_c_token_type_names()[new_token->type], new_token->first_byte, new_token->last_byte, SHOW_LEXER_TOKENS);
 		asm_lexer_state->c.position += rtn;
 	}

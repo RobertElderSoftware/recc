@@ -12,7 +12,8 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-int putchar(int);
+
+#include <stdio.h>
 
 int foo2(int);
 int output(int,int,int,int,int,int);

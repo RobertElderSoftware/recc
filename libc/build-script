@@ -1,0 +1,20 @@
+PREPROCESS libc/string.c TO libc/string.i
+CODE GENERATE libc/string.i TO libc/string.l2
+
+PREPROCESS libc/printf.c TO libc/printf.i
+CODE GENERATE libc/printf.i TO libc/printf.l2
+
+PREPROCESS libc/malloc.c TO libc/malloc.i
+CODE GENERATE libc/malloc.i TO libc/malloc.l2
+
+PREPROCESS libc/assert.c TO libc/assert.i
+CODE GENERATE libc/assert.i TO libc/assert.l2
+
+PREPROCESS libc/fopen.c TO libc/fopen.i
+CODE GENERATE libc/fopen.i TO libc/fopen.l2
+
+PREPROCESS libc/filesystem.c TO libc/filesystem.i
+CODE GENERATE libc/filesystem.i TO libc/filesystem.l2
+
+PREPROCESS libc/getcwd.c TO libc/getcwd.i
+CODE GENERATE libc/getcwd.i TO libc/getcwd.l2

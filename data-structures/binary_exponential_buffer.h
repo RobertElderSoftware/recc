@@ -30,6 +30,7 @@ void binary_exponential_buffer_increment(struct binary_exponential_buffer *, uns
 void binary_exponential_buffer_decrement(struct binary_exponential_buffer *, unsigned int);
 void * binary_exponential_buffer_data(struct binary_exponential_buffer *);
 unsigned int binary_exponential_buffer_size(struct binary_exponential_buffer *);
+unsigned int binary_exponential_buffer_element_size(struct binary_exponential_buffer *);
 void * binary_exponential_buffer_get(struct binary_exponential_buffer *, unsigned int);
 void binary_exponential_buffer_destroy(struct binary_exponential_buffer *);
 void binary_exponential_buffer_create(struct binary_exponential_buffer *, unsigned int);

@@ -17,8 +17,8 @@
   1.1  This document is a guide to assembly language programming for the 'One
   Page CPU'.  The One Page CPU is a specification for a very simple CPU that
   was designed with the primary goal of being easy to emulate in software,
-  while still providing a practical environment for programs runing on it.  The
-  CPU supports context switching, timer interrupts, I/O interrupts and 14
+  while still providing a practical environment for programs running on it.
+  The CPU supports context switching, timer interrupts, I/O interrupts and 14
   different machine instructions.  Performance regarding execution speed or
   memory consumption has not been a primary consideration for this project. The
   justification behind this is based on the observation that is typically more
@@ -88,9 +88,9 @@
 
   2.1  Register Names
 
-  The One Page CPU instruction set uses 64 registers.  Six of these registers
-  have 'special' names (PC, SP, FP, ZR, FR, WR), and the other 58 registers
-  are named r1, r2, ... r58.  Each register is referred to by only one name.
+  The One Page CPU instruction set uses 512 registers.  Six of these registers
+  have 'special' names (PC, SP, FP, ZR, FR, WR), and the other 506 registers
+  are named r1, r2, ... r506.  Each register is referred to by only one name.
   There are no restrictions on what registers can be used used with a given
   instruction.
 
@@ -103,8 +103,8 @@
   because after fetching an instruction the PC is incremented in anticipation
   of fetching the next instruction to execute.  In the encoding of machine
   instructions the special registers are given the following numeric values:
-  PC = 0, SP = 1, FP = 2, ZR = 3, FR = 4, and WR = 5.  The registers r1 to r58
-  are given a numeric representation of 6 to 63.
+  PC = 0, SP = 1, FP = 2, ZR = 3, FR = 4, and WR = 5.  The registers r1 to r506
+  are given a numeric representation of 6 to 511.
 
   2.2.2  The SP register is the stack pointer, which is of particular
   importance to any compiler targeting the One Page CPU architecture.  The
@@ -177,27 +177,28 @@
 
   3.2  READING THIS SECTION
 
-                      31..28   27..22   21..16   15..10   9......0
-  +----------------------------------------------------------------+
-  | foo rA rB rC    |  1111  | AAAAAA | BBBBBB | CCCCCC | Reserved |
-  +----------------------------------------------------------------+
+                      31...27   26.....18   17......9   8.......0
+  +---------------------------------------------------------------+
+  | foo rA rB rC    |  11111  | AAAAAAAAA | BBBBBBBBB | CCCCCCCCC |
+  +---------------------------------------------------------------+
 
   Diagrams like the one above are used in this section to describe the layout
   of the machine instructions used in the One Page CPU.  The above contrived
   example describes a ficticious instruction 'foo'.  When assembled to a 32
-  bit word, this machine instruction would have bits 31 to 28 set to the value
-  '1111'.  Bits 27 to 22 would describe the number used to identify whatever
+  bit word, this machine instruction would have bits 31 to 27 set to the value
+  '11111'.  Bits 26 to 18 would describe the number used to identify whatever
   register the user specified for the register 'rA'.  The register rA could be
-  any of PC, SP, FP, ZR, FR, WR or r1 to r58.  The same goes for registers rB
-  and rC.  If register rA was 'PC' bits 27 to 22 would have the value '000000'.
-  If register rC was 'r1' bits 15 to 10 would have the value '000110'.
+  any of PC, SP, FP, ZR, FR, WR or r1 to r506.  The same goes for registers rB
+  and rC.  If register rA was 'PC' bits 26 to 18 would have the value
+  '000000000'.  If register rC was 'r1' bits 8 to 0 would have the value
+  '000000110'.
 
 
   3.3  ADD
-                      31..28   27..22   21..16   15..10   9......0
-  +----------------------------------------------------------------+
-  | add rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
-  +----------------------------------------------------------------+
+                      31...27   26.....18   17.....9    8.......0
+  +---------------------------------------------------------------+
+  | add rX rY rZ    |  00000  | XXXXXXXXX | YYYYYYYYY | ZZZZZZZZZ |
+  +---------------------------------------------------------------+
 
   Performs a 32-bit unsigned addition bewteen the contents of register rY and
   rZ with the result stored in register rX.
@@ -208,10 +209,10 @@
   add PC r1 ZR;  Branch to value in r1
 
   3.4  SUB
-                      31..28   27..22   21..16   15..10   9......0
-  +----------------------------------------------------------------+
-  | sub rX rY rZ    |  0001  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
-  +----------------------------------------------------------------+
+                      31...27   26.....18   17.....9    8.......0
+  +---------------------------------------------------------------+
+  | sub rX rY rZ    |  00001  | XXXXXXXXX | YYYYYYYYY | ZZZZZZZZZ |
+  +---------------------------------------------------------------+
 
   Performs a 32-bit unsigned subtraction of rY - rZ with the result stored in
   register rX.
@@ -221,10 +222,10 @@
   sub SP SP WR;  Push stack pointer (without storing anything)
 
   3.5  MUL
-                      31..28   27..22   21..16   15..10   9......0
-  +----------------------------------------------------------------+
-  | mul rX rY rZ    |  0010  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
-  +----------------------------------------------------------------+
+                      31...27   26.....18   17.....9    8.......0
+  +---------------------------------------------------------------+
+  | mul rX rY rZ    |  00010  | XXXXXXXXX | YYYYYYYYY | ZZZZZZZZZ |
+  +---------------------------------------------------------------+
 
   Performs a 32-bit unsigned multiplication of rY and rZ with the result
   stored in register rX.  Overflow is discarded.
@@ -233,55 +234,60 @@
   mul r1 r1 r3;
 
   3.6  DIV
-                        31..28   27..22   21..16   15..10   9...4    3......0
-  +---------------------------------------------------------------------------+
-  | div rX rY rZ rW   |  0011  | XXXXXX | YYYYYY | ZZZZZZ | WWWWWW | Reserved |
-  +---------------------------------------------------------------------------+
+                      31...27   26.....18   17.....9    8.......0
+  +---------------------------------------------------------------+
+  | div rX rY rZ    |  00011  | XXXXXXXXX | YYYYYYYYY | ZZZZZZZZZ |
+  +---------------------------------------------------------------+
 
-  Performs a 32-bit unsigned division of rZ and rW with the result stored in
-  register rX.  Any remainder is stored in rY.
+  Performs a 32-bit unsigned division of rY and rZ with the result stored in
+  register rX.
 
   Examples:
   div r1 r2 r3 r4;
 
-  3.7  BEQ
-                   31..28   27..22   21..16   15.............0
-  +------------------------------------------------------------+
-  | beq rX rY i  |  0100  | XXXXXX | YYYYYY | iiiiiiiiiiiiiiii |
-  +------------------------------------------------------------+
+  3.7  AND
 
-  Performs a relative branch if the contents of register rX are equal to the
-  contents of register rY.  The branch distance is expressed as an immediate
-  positive or negative decimal number that dictates the number of words
-  instructions to jump forward or backward.  A distance of 0 would effectively
-  be a no op since it would just execute the next instruction as normal. The
-  immediate value is represented in the machine code as a 16 bit twos
-  complement integer in bits 0 to 15.
+                      31...27   26.....18   17.....9    8.......0
+  +---------------------------------------------------------------+
+  | and rX rY rZ    |  00100  | XXXXXXXXX | YYYYYYYYY | ZZZZZZZZZ |
+  +---------------------------------------------------------------+
+
+  A bitwise logical 'and' of the contents of rY and the contents of rZ stored
+  in rX.
 
   Examples:
-  beq ZR ZR 0;   No-op; advance to next instruction
-  beq ZR ZR -1;  Loop forever on this instruction
-  beq r1 r2 39;  Conditional jump over the next 39 instructions
-  beq ZR ZR -2;  Re-execute the previous instruction
+  and r1 r2 r3;
 
+  3.8  OR
+                      31...27   26.....18   17.....9    8.......0
+  +---------------------------------------------------------------+
+  | or rX rY rZ    |  00101  | XXXXXXXXX | YYYYYYYYY | ZZZZZZZZZ |
+  +---------------------------------------------------------------+
 
-  3.8  BLT
-                   31..28   27..22   21..16   15.............0
-  +------------------------------------------------------------+
-  | blt rX rY i  |  0101  | XXXXXX | YYYYYY | iiiiiiiiiiiiiiii |
-  +------------------------------------------------------------+
-
-  Behaves exactly like the beq instruction, except the branch only occurs if
-  rX is less than rY when rX and rY are treated as unsigned integers.
+  A bitwise logical 'or' of the contents of rY and the contents of rZ stored
+  in rX.
 
   Examples:
-  blt r1 r2 39;  Conditional jump over the next 39 instructions
+  or r1 r2 r3;
 
-  3.9  LOA
-                 31..28   27..22   21..16   15.............0
-  +----------------------------------------------------------+
-  | loa rX rY  |  0110  | XXXXXX | YYYYYY | ----Reserved---- |
-  +----------------------------------------------------------+
+  3.9  NOT
+
+                   31...27   26.....18   17.....9    8......0
+  +-----------------------------------------------------------+
+  | not rX rY    |  00110  | XXXXXXXXX | YYYYYYYYY | Reserved |
+  +-----------------------------------------------------------+
+
+  A bitwise logical 'not' of the contents of rY stored in rX.
+
+  Examples:
+  not r1 r2;
+
+  3.10  LOA
+
+                   31...27   26.....18   17.....9    8......0
+  +-----------------------------------------------------------+
+  | loa rX rY    |  00111  | XXXXXXXXX | YYYYYYYYY | Reserved |
+  +-----------------------------------------------------------+
 
   Load the contents of the memory location given in rY into register rX.
 
@@ -292,11 +298,12 @@
   loa PC PC;      Branch to the address in the next word
   dw 0x0DDFC;     The address of something interesting
 
-  3.10  STO
-                 31..28   27..22   21..16   15.............0
-  +----------------------------------------------------------+
-  | sto rX rY  |  0111  | XXXXXX | YYYYYY | ----Reserved---- |
-  +----------------------------------------------------------+
+  3.11  STO
+
+                   31...27   26.....18   17.....9    8......0
+  +-----------------------------------------------------------+
+  | sto rX rY    |  01000  | XXXXXXXXX | YYYYYYYYY | Reserved |
+  +-----------------------------------------------------------+
 
   Store the value in rY in the memory location given in rX.
 
@@ -307,58 +314,11 @@
   ll r1 0x42;    Load 'B' into r1
   sto SP r1;     Store again on stack
 
-  3.11  LL
-                 31..28   27..22   21...................0
-  +-------------------------------------------------------+
-  | ll rX 0xN  |  1000  | XXXXXX | NNNNNNNNNNNNNNNNNNNNNN |
-  +-------------------------------------------------------+
-
-  Load the immediate hexidecimal value 0xN into register rX.  The value 0xN
-  can be a maximum of 22 bits in size.
-
-  Examples:
-  ll r1 0x41;    Load 'A' into r1
-
-  3.12  AND
-                      31..28   27..22   21..16   15..10   9......0
-  +----------------------------------------------------------------+
-  | and rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
-  +----------------------------------------------------------------+
-
-  A bitwise logical 'and' of the contents of rY and the contents of rZ stored
-  in rX.
-
-  Examples:
-  and r1 r2 r3;
-
-  3.13  OR
-                     31..28   27..22   21..16   15..10   9......0
-  +----------------------------------------------------------------+
-  | or rX rY rZ    |  0000  | XXXXXX | YYYYYY | ZZZZZZ | Reserved |
-  +----------------------------------------------------------------+
-
-  A bitwise logical 'or' of the contents of rY and the contents of rZ stored
-  in rX.
-
-  Examples:
-  or r1 r2 r3;
-
-  3.14  NOT
-                   31..28   27..22   21..16   15.....0
-  +----------------------------------------------------+
-  | not rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
-  +----------------------------------------------------+
-
-  A bitwise logical 'not' of the contents of rY stored in rX.
-
-  Examples:
-  not r1 r2;
-
-  3.15  SHR
-                   31..28   27..22   21..16   15.....0
-  +----------------------------------------------------+
-  | shr rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
-  +----------------------------------------------------+
+  3.12  SHR
+                   31...27   26.....18   17.....9    8......0
+  +-----------------------------------------------------------+
+  | shr rX rY    |  01001  | XXXXXXXXX | YYYYYYYYY | Reserved |
+  +-----------------------------------------------------------+
 
   An bitwise logical shift applied to the contents of rX shifted rY bits to the
   right.  Bits are shifted into the left side as 0s.
@@ -366,17 +326,62 @@
   Examples:
   shr r1 r2
 
-  3.16  SHL
-                   31..28   27..22   21..16   15.....0
-  +----------------------------------------------------+
-  | shl rX rY    |  0000  | XXXXXX | YYYYYY | Reserved |
-  +----------------------------------------------------+
+  3.13  SHL
+                   31...27   26.....18   17.....9    8......0
+  +-----------------------------------------------------------+
+  | shl rX rY    |  01010  | XXXXXXXXX | YYYYYYYYY | Reserved |
+  +-----------------------------------------------------------+
 
   An bitwise logical shift applied to the contents of rX shifted rY bits to the
   left.  Bits are shifted into the right side as 0s.
 
   Examples:
   shl r1 r2
+
+  3.14  BEQ
+                      31...27   26.....18   17.....9    8.......0
+  +---------------------------------------------------------------+
+  | beq rX rY i     |  01011  | XXXXXXXXX | YYYYYYYYY | iiiiiiiii |
+  +---------------------------------------------------------------+
+
+  Performs a relative branch if the contents of register rX are equal to the
+  contents of register rY.  The branch distance is expressed as an immediate
+  positive or negative decimal number that dictates the number of words
+  instructions to jump forward or backward.  A distance of 0 would effectively
+  be a no op since it would just execute the next instruction as normal. The
+  immediate value is represented in the machine code as a 9 bit twos
+  complement integer in bits 0 to 8.
+
+  Examples:
+  beq ZR ZR 0;   No-op; advance to next instruction
+  beq ZR ZR -1;  Loop forever on this instruction
+  beq r1 r2 39;  Conditional jump over the next 39 instructions
+  beq ZR ZR -2;  Re-execute the previous instruction
+
+
+  3.15  BLT
+                      31...27   26.....18   17.....9    8.......0
+  +---------------------------------------------------------------+
+  | blt rX rY i     |  01100  | XXXXXXXXX | YYYYYYYYY | iiiiiiiii |
+  +---------------------------------------------------------------+
+
+  Behaves exactly like the beq instruction, except the branch only occurs if
+  rX is less than rY when rX and rY are treated as unsigned integers.
+
+  Examples:
+  blt r1 r2 39;  Conditional jump over the next 39 instructions
+
+  3.16  LL
+                 31...27   26.....18   17....16   15.............0
+  +----------------------------------------------------------------+
+  | ll rX 0xN  |  01101  | XXXXXXXXX | Reserved | NNNNNNNNNNNNNNNN |
+  +----------------------------------------------------------------+
+
+  Load the immediate hexidecimal value 0xN into register rX.  The value 0xN
+  can be a maximum of 16 bits in size.
+
+  Examples:
+  ll r1 0x41;    Load 'A' into r1
 
 4.  LINKER AND LOADER DIRECTIVES
 
@@ -476,4 +481,4 @@
   This is important because it relies on the assumption that the stack pointer
   is always pointing to the top of the stack.
 
-The sha1sum of the lines above is 92ac1fc02d29db93660b8d709e3564aaa3f7e1e3
+The sha1sum of the lines above is c9a239027bcad4b057ec80b737225c2d42c41640

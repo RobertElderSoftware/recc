@@ -26,10 +26,12 @@ void save_current_task_as_ready(void);
 void add_task_to_ready_queue(struct process_control_block *);
 
 void set_irq_handler(void (*)(void));
+void set_timer_period(unsigned int);
+void or_into_flags_register(unsigned int);
 unsigned int timer_interrupt_enable(void);
 unsigned int uart1_out_interrupt_enable(void);
 unsigned int uart1_in_interrupt_enable(void);
-unsigned int init_task_stack(unsigned int *, void (*)(void));
+unsigned int init_task_stack(unsigned int **, void (*)(void));
 unsigned int scheduler(void);
 unsigned int k_release_processor(void);
 void k_task_exit(void);

@@ -16,6 +16,7 @@
 #define __PRELOADER_H__
 
 #include "io.h"
+#include "core_data_types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>

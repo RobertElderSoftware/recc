@@ -13,36 +13,36 @@
 	use of this software.
 */
 
-#include "GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack.h"
+#include "T0_IDENTIFIER_stack.h"
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_push(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack, GENERIC_TYPE0_LITERAL item){
+void T0_IDENTIFIER_stack_push(struct T0_IDENTIFIER_stack * stack, T0_LITERAL item){
 	binary_exponential_buffer_increment(&stack->buffer, 1);
-	((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_data(&stack->buffer))[binary_exponential_buffer_size(&stack->buffer) -1] = item;
+	((T0_LITERAL *)binary_exponential_buffer_data(&stack->buffer))[binary_exponential_buffer_size(&stack->buffer) -1] = item;
 }
 
-GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_pop(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
+T0_LITERAL T0_IDENTIFIER_stack_pop(struct T0_IDENTIFIER_stack * stack){
 	unsigned int stack_size = binary_exponential_buffer_size(&stack->buffer);
-	GENERIC_TYPE0_LITERAL rtn;
+	T0_LITERAL rtn;
 	assert(stack_size && "Attempting to pop an empty stack.");
-	rtn = ((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_data(&stack->buffer))[stack_size -1];
+	rtn = ((T0_LITERAL *)binary_exponential_buffer_data(&stack->buffer))[stack_size -1];
 	binary_exponential_buffer_decrement(&stack->buffer, 1);
 	return rtn;
 }
 
-unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_size(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
+unsigned int T0_IDENTIFIER_stack_size(struct T0_IDENTIFIER_stack * stack){
 	return binary_exponential_buffer_size(&stack->buffer);
 }
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_destroy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
+void T0_IDENTIFIER_stack_destroy(struct T0_IDENTIFIER_stack * stack){
 	binary_exponential_buffer_destroy(&stack->buffer);
 }
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_create(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
-	binary_exponential_buffer_create(&stack->buffer, sizeof(GENERIC_TYPE0_LITERAL));
+void T0_IDENTIFIER_stack_create(struct T0_IDENTIFIER_stack * stack){
+	binary_exponential_buffer_create(&stack->buffer, sizeof(T0_LITERAL));
 }
 
-struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_copy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack * stack){
-	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack copy;
+struct T0_IDENTIFIER_stack T0_IDENTIFIER_stack_copy(struct T0_IDENTIFIER_stack * stack){
+	struct T0_IDENTIFIER_stack copy;
 	copy.buffer = binary_exponential_buffer_copy(&stack->buffer);
 	return copy;
 }

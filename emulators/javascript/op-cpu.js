@@ -15,21 +15,42 @@
 "use strict";
 
 function opCPU(l0_description) {
+
+  this.BITS_PER_BRANCH_DIST = 9;
+  this.BITS_PER_LITERAL = 16;
+  this.BITS_PER_OP_CODE = 5;
+  this.OP_CODE_OFFSET = 27;
+  this.BITS_PER_REGISTER = 9;
+  this.ra_OFFSET = 18;
+  this.rb_OFFSET = this.ra_OFFSET - this.BITS_PER_REGISTER;
+  this.rc_OFFSET = this.rb_OFFSET - this.BITS_PER_REGISTER;
+
+  this.UNSHIFTED_OP_CODE_MASK = (~0) >>> (32 - this.BITS_PER_OP_CODE);
+  this.OP_CODE_MASK = (this.UNSHIFTED_OP_CODE_MASK << this.OP_CODE_OFFSET) >>> 0;
+  this.UNSHIFTED_REGISTER_MASK = (~0) >>> (32 - this.BITS_PER_REGISTER);
+  this.ra_MASK = this.UNSHIFTED_REGISTER_MASK << this.ra_OFFSET;
+  this.rb_MASK = this.UNSHIFTED_REGISTER_MASK << this.rb_OFFSET;
+  this.rc_MASK = this.UNSHIFTED_REGISTER_MASK << this.rc_OFFSET;
+  this.LITERAL_MASK = (~0) >>> (32 - this.BITS_PER_LITERAL);
+  this.BRANCH_DISTANCE_MASK = (~0) >>> (32 - this.BITS_PER_BRANCH_DIST);
+
+  this.BRANCH_DISTANCE_SIGN_BIT = 0x100;
+
   this._asm_op_codes = {
-    "add": 0x00000000,
-    "sub": 0x10000000,
-    "mul": 0x20000000,
-    "div": 0x30000000,
-    "beq": 0x40000000,
-    "blt": 0x50000000,
-    "loa": 0x60000000,
-    "sto": 0x70000000,
-    "ll":  0x80000000,
-    "and": 0x90000000,
-    "or":  0xA0000000,
-    "not": 0xB0000000,
-    "shr": 0xC0000000,
-    "shl": 0xD0000000
+    "add": (0  << this.OP_CODE_OFFSET) >>> 0,
+    "sub": (1  << this.OP_CODE_OFFSET) >>> 0,
+    "mul": (2  << this.OP_CODE_OFFSET) >>> 0,
+    "div": (3  << this.OP_CODE_OFFSET) >>> 0,
+    "and": (4  << this.OP_CODE_OFFSET) >>> 0,
+    "or" : (5  << this.OP_CODE_OFFSET) >>> 0,
+    "not": (6  << this.OP_CODE_OFFSET) >>> 0,
+    "loa": (7  << this.OP_CODE_OFFSET) >>> 0,
+    "sto": (8  << this.OP_CODE_OFFSET) >>> 0,
+    "shr": (9  << this.OP_CODE_OFFSET) >>> 0,
+    "shl": (10 << this.OP_CODE_OFFSET) >>> 0,
+    "beq": (11 << this.OP_CODE_OFFSET) >>> 0,
+    "blt": (12 << this.OP_CODE_OFFSET) >>> 0,
+    "ll" : (13 << this.OP_CODE_OFFSET) >>> 0
   };
 
   this._asm_templates = {
@@ -70,8 +91,7 @@ function opCPU(l0_description) {
   this.FR_index = 4;
   this.WR_index = 5;
   
-  this.num_registers = 64;
-  this.literal22bitmask = 0x003FFFFF;
+  this.num_registers = 1 << this.BITS_PER_REGISTER;
   this.sizeof_int = 0x4;
 
   this.MAIN_MEMORY_SIZE = l0_description.data_end;
@@ -80,7 +100,6 @@ function opCPU(l0_description) {
   this.registeruint32 = new Uint32Array(this.REGISTERS);
   this.memoryuint32 = new Uint32Array(this.MAIN_MEMORY);
   this.memory_size_ints = this.memoryuint32.length;
-  this.memorysint16 = new Int16Array(this.MAIN_MEMORY);
   this.enable_stack_zeroing = 0; /* Must not be enabled when running kernel */
 
   this.UART1_OUT    = 0x300000;
@@ -176,16 +195,15 @@ opCPU.prototype.fetch_decode_execute = function(){
 
   this.assert_memory_index_in_range(this.registeruint32[this.PC_index] / this.sizeof_int, "PC");
   var current_inst = this.memoryuint32[this.registeruint32[this.PC_index] / this.sizeof_int];
-  //  TODO this is little-endian dependent
-  var branch_dist = this.memorysint16[(this.registeruint32[this.PC_index] / 2)];
+  var low_bits = (current_inst & this.BRANCH_DISTANCE_MASK) >>> 0;
+  var branch_dist = (current_inst & this.BRANCH_DISTANCE_SIGN_BIT) >>> 0 ? -((((this.BRANCH_DISTANCE_MASK & ~(low_bits)) >>> 0) + 1) >>> 0) : low_bits;
   this.registeruint32[this.PC_index] += this.sizeof_int;
-  var operation = (0xF0000000 & current_inst)>>>0;
-  var literal22bit = (this.literal22bitmask & current_inst)>>>0;
-  var literal5bit = (0x0000001F & current_inst)>>>0;
-  var ra = (0x0FC00000 & current_inst) / 0x400000;
-  var rb = (0x003F0000 & current_inst) / 0x10000;
-  var rc = (0x0000FC00 & current_inst) / 0x400;
-  var rd = (0x000003F0 & current_inst) / 0x10;
+  var operation = (this.OP_CODE_MASK & current_inst)>>>0;
+  var literal = (this.LITERAL_MASK & current_inst)>>>0;
+
+  var ra = (this.ra_MASK & current_inst) / (1 << this.ra_OFFSET);
+  var rb = (this.rb_MASK & current_inst) / (1 << this.rb_OFFSET);
+  var rc = (this.rc_MASK & current_inst) / (1 << this.rc_OFFSET);
 
   switch(operation){
     case this._asm_op_codes["add"]:{
@@ -219,10 +237,7 @@ opCPU.prototype.fetch_decode_execute = function(){
       this.registeruint32[ra] = (low_result >>> 0) | (high_result >>> 0);
       break;
     }case this._asm_op_codes["div"]:{
-      var c = this.registeruint32[rc];
-      var d = this.registeruint32[rd];
-      this.registeruint32[ra] = c / d;
-      this.registeruint32[rb] = c % d;
+      this.registeruint32[ra] = this.registeruint32[rb] / this.registeruint32[rc];
       break;
     }case this._asm_op_codes["beq"]:{
       if(this.registeruint32[ra] == this.registeruint32[rb]){
@@ -245,7 +260,7 @@ opCPU.prototype.fetch_decode_execute = function(){
       this.memoryuint32[this.registeruint32[ra]/this.sizeof_int] = this.registeruint32[rb];
       break;
     }case this._asm_op_codes["ll"]:{
-      this.registeruint32[ra] = literal22bit;
+      this.registeruint32[ra] = literal;
       break;
     }case this._asm_op_codes["and"]:{
       this.registeruint32[ra] = this.registeruint32[rb] & this.registeruint32[rc];
@@ -287,9 +302,6 @@ opCPU.prototype.get_memoryuint32 = function () {
 }
 opCPU.prototype.get_registeruint32 = function () {
   return this.registeruint32;
-}
-opCPU.prototype.get_memorysint16 = function () {
-  return this.memorysint16;
 }
 opCPU.prototype.is_watch_modified = function () {
   return this.watch_modified;

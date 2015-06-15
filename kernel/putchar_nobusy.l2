@@ -5,7 +5,9 @@ loa r2 SP;  Load whatever that argument was.
 ;  The bit mask for UART1_OUT ready
 ll r3 0x200;
 ;  The address of UART1_OUT
-ll r5 0x300000;
+ll r5 0x3000;
+shl r5 WR;    0x30000
+shl r5 WR;    0x300000
 ;  Put the byte
 sto r5 r2;
 ;  Create a mask to unset the UART1_OUT ready bit

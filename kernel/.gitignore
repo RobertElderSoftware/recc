@@ -1,0 +1,16 @@
+/kernel.l1
+/user_proc.l2
+/user_proc.i
+/kernel_impl.i
+/kernel_impl.l2
+/kernel_state.l2
+/kernel_state.i
+/putchar.l2
+/putchar.i
+/main.l2
+/main.i
+/assert.l2
+/assert.i
+/queue.l2
+/queue.i
+/kernel.sym

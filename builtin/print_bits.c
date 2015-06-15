@@ -12,9 +12,10 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-void print_bits(unsigned int);
 
-int putchar(int);
+#include <stdio.h>
+
+void print_bits(unsigned int);
 
 void print_bits(unsigned int a){
 	unsigned int i;

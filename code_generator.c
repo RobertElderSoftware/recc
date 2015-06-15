@@ -175,6 +175,23 @@ struct type_traversal * construct_type_traversal(struct code_gen_state *, struct
 void destroy_type_traversal(struct type_traversal *);
 void move_pointers_down(struct code_gen_state *, const char *, const char *);
 struct constant_initializer_level * evaluate_constant_initializer(struct code_gen_state *, struct parser_node *);
+struct compile_time_constant * evaluate_constant_literal(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_sizeof_type_name(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_identifier(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_primary_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_postfix_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_cast_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_unary_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_multiplicative_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_additive_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_equality_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_relational_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_shift_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_and_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_inclusive_or_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_exclusive_or_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_logical_and_expression(struct code_gen_state * code_gen_state, struct parser_node *);
+struct compile_time_constant * evaluate_constant_logical_or_expression(struct code_gen_state * code_gen_state, struct parser_node *);
 struct compile_time_constant * evaluate_constant_assignment_expression(struct code_gen_state *, struct parser_node *);
 struct compile_time_constant * evaluate_constant_conditional_expression(struct code_gen_state *, struct parser_node *);
 void evaluate_constant_initializer_list(struct code_gen_state *, struct constant_initializer_level *, struct parser_node *);
@@ -183,13 +200,21 @@ void destroy_constant_initializer_level(struct constant_initializer_level *);
 void copy_primative_type(struct code_gen_state *, struct type_traversal *, const char *, const char *, const char *);
 void setup_global_type(struct code_gen_state *, struct type_traversal *, struct constant_initializer_level *);
 void setup_global_primative(struct code_gen_state *, struct type_description *, struct constant_initializer_level *);
-void make_parameter_value(struct code_gen_state *, struct type_traversal *, const char *, const char *);
 void ensure_top_values_are_rvalues(struct code_gen_state *, struct parser_node *);
 void l_to_lr_transform(struct code_gen_state *, struct type_description *);
 void do_multiplicative_expression(struct code_gen_state *, struct parser_node *, enum c_token_type);
 void do_additive_expression(struct code_gen_state *, struct parser_node *, enum c_token_type);
+void do_shift_expression(struct code_gen_state *, struct parser_node *, enum c_token_type);
+void do_and_expression(struct code_gen_state *, struct parser_node *, enum c_token_type);
+void do_or_expression(struct code_gen_state *, struct parser_node *, enum c_token_type);
+void do_xor_expression(struct code_gen_state *, struct parser_node *, enum c_token_type);
 struct type_description * ensure_top_type_is_r_value(struct code_gen_state *, struct parser_node *);
 void copy_lvalue_into_rvalue(struct code_gen_state *, const char *, const char *, const char *, const char *, unsigned int);
+void perform_integral_promotion(struct code_gen_state * code_gen_state, struct type_description **, const char *);
+void perform_integral_promotions(struct code_gen_state * code_gen_state, struct type_description **, struct type_description **);
+void do_character_rvalue_conversion(struct code_gen_state *, const char *, const char *, const char *, const char *, const char *);
+void convert_top_rvalue_to_target_type(struct code_gen_state *, struct type_description *, struct type_description *);
+unsigned int decay_to_pointer_if_array(struct code_gen_state *, struct type_description **);
 
 void destroy_constant_initializer_level(struct constant_initializer_level * level){
 	unsigned int i;
@@ -214,82 +239,221 @@ unsigned int evaluate_compile_time_constant(struct code_gen_state * code_gen_sta
 	return rtn;
 }
 
-struct compile_time_constant * evaluate_constant_expression_h2(struct code_gen_state * code_gen_state, struct parser_node * n){
+struct compile_time_constant * evaluate_constant_sizeof_type_name(struct code_gen_state * code_gen_state, struct parser_node * n){
+	struct type_description * sized_type;
+	struct type_description * result_type;
+	unsigned int size;
 	struct compile_time_constant * rtn;
-	if(!n) return 0;
-	rtn = malloc(sizeof(struct compile_time_constant));
-	rtn->constant_description = 0;
-	rtn->element = 0;
-	if(n->type == TERMINAL && n->c_lexer_token->type != IDENTIFIER){
-		struct constant_description * constant_description;
-		unsigned char * str;
-		str = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte);
-		constant_description = find_constant(code_gen_state->parser_state, str);
-		assert(constant_description);
-		free(str);
-		rtn->constant_description = constant_description;
-	}else if(n->type == TERMINAL && n->c_lexer_token->type == IDENTIFIER){
-		unsigned char * identifier = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte);
-		struct namespace_object * obj;
-		struct normalized_declaration_element * element;
-		obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
-		assert(obj);
-		element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
-		if(element->normalized_declarator && element->normalized_declarator->type == NORMALIZED_ENUMERATOR){
-			rtn->element = element;
-		}else{
-			printf("Attempting to determine compile-time constant value of non enum identifier '%s'.\n", identifier);
-			assert(0 && "Attempting to determine compile-time constant value of non enum identifier.");
-		}
-		free(identifier);
-	}else{
-		free(rtn);
-		return 0;
-	}
+	sized_type = create_type_description_from_type_name(code_gen_state->parser_state, n);
+	convert_to_untypedefed_type_description(sized_type);
+	result_type = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+	size = type_size(code_gen_state, sized_type, MINIMAL_RVALUE, 0, get_current_scope_level(code_gen_state));
+	rtn = (struct compile_time_constant *)malloc(sizeof(struct compile_time_constant));
+	rtn->element = (struct normalized_declaration_element *)0;
+	rtn->constant_description = malloc(sizeof(struct constant_description));
+	rtn->constant_description->native_data = (unsigned int *)calloc(4,1);
+	rtn->constant_description->type = SIZEOF;
+	*(rtn->constant_description->native_data) = size;
+	rtn->constant_description->type_description = result_type;
+	rtn->constant_description->type_description->value_type = WORD_ALIGNED_RVALUE;
+	rtn->constant_description->type_description->source_scope_level = get_current_scope_level(code_gen_state);
+	destroy_type_description(sized_type);
 	return rtn;
 }
 
-struct compile_time_constant * evaluate_constant_expression_h1(struct code_gen_state * code_gen_state, struct parser_node * n){
-	struct compile_time_constant * success1 = 0;
-	struct compile_time_constant * success2 = 0;
-	struct compile_time_constant * success3 = 0;
-	success1 = evaluate_constant_expression_h2(code_gen_state, n);
-	if(n){
-		success2 = evaluate_constant_expression_h1(code_gen_state, n->next);
-		success3 = evaluate_constant_expression_h1(code_gen_state, n->first_child);
-	}
-	if((success1 && success2) || (success1 && success3) || (success2 && success3)){
-		assert(0 && "Compound constant expressions are not implemented.\n");
+struct compile_time_constant * evaluate_constant_literal(struct code_gen_state * code_gen_state, struct parser_node * n){
+	struct compile_time_constant * rtn;
+	struct constant_description * constant_description;
+	unsigned char * str;
+	assert(n);
+	rtn = (struct compile_time_constant *)malloc(sizeof(struct compile_time_constant));
+	rtn->constant_description = (struct constant_description *)0;
+	rtn->element = (struct normalized_declaration_element *)0;
+	str = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte);
+	constant_description = find_constant(code_gen_state->parser_state, str);
+	assert(constant_description);
+	free(str);
+	rtn->constant_description = constant_description;
+	return rtn;
+}
+
+struct compile_time_constant * evaluate_constant_identifier(struct code_gen_state * code_gen_state, struct parser_node * n){
+	struct compile_time_constant * rtn;
+	unsigned char * identifier = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte);
+	struct namespace_object * obj;
+	struct normalized_declaration_element * element;
+	rtn = (struct compile_time_constant *)malloc(sizeof(struct compile_time_constant));
+	rtn->constant_description = (struct constant_description *)0;
+	rtn->element = (struct normalized_declaration_element *)0;
+
+	obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, get_current_scope_level(code_gen_state), 0);
+	assert(obj);
+	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
+	if(element->normalized_declarator && element->normalized_declarator->type == NORMALIZED_ENUMERATOR){
+		rtn->element = element;
 	}else{
-		if(success1){
-			return success1;
-		}else if(success2){
-			return success2;
-		}else if(success3){
-			return success3;
-		}else{
-			return 0;
-		}
+		printf("Attempting to determine compile-time constant value of non enum identifier '%s'.\n", identifier);
+		assert(0 && "Attempting to determine compile-time constant value of non enum identifier.");
 	}
+	free(identifier);
+	return rtn;
 }
 
 struct compile_time_constant * evaluate_constant_constant_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
-	if(!(n && n->type == CONSTANT_EXPRESSION)){
-		int i = 3;
-		int * ii = &i;
-		printf("it is %s after\n", get_node_type_names()[n->type]);
-		ii+=9999;
-		*ii=444;
-	}
 	assert(n && n->type == CONSTANT_EXPRESSION);
 	return evaluate_constant_conditional_expression(code_gen_state, n->first_child);
+}
+
+struct compile_time_constant * evaluate_constant_primary_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == PRIMARY_EXPRESSION);
+	if(n->first_child->type == TERMINAL && n->first_child->c_lexer_token->type == STRING_LITERAL){
+		return evaluate_constant_literal(code_gen_state, n->first_child);
+	}else if(n->first_child->type == TERMINAL && n->first_child->c_lexer_token->type == CONSTANT_DECIMAL){
+		return evaluate_constant_literal(code_gen_state, n->first_child);
+	}else if(n->first_child->type == TERMINAL && n->first_child->c_lexer_token->type == CONSTANT_CHARACTER){
+		return evaluate_constant_literal(code_gen_state, n->first_child);
+	}else if(n->first_child->type == TERMINAL && n->first_child->c_lexer_token->type == CONSTANT_HEX){
+		return evaluate_constant_literal(code_gen_state, n->first_child);
+	}else if(n->first_child->type == TERMINAL && n->first_child->c_lexer_token->type == IDENTIFIER){
+		return evaluate_constant_identifier(code_gen_state, n->first_child);
+	}else{
+		assert(0);
+	}
+}
+
+struct compile_time_constant * evaluate_constant_postfix_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == POSTFIX_EXPRESSION);
+	if(n->first_child && n->first_child->type == PRIMARY_EXPRESSION){
+		return evaluate_constant_primary_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_postfix_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_unary_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == UNARY_EXPRESSION);
+	if(n->first_child && n->first_child->type == POSTFIX_EXPRESSION){
+		return evaluate_constant_postfix_expression(code_gen_state, n->first_child);
+	}else if(n->first_child && n->first_child->type == TERMINAL && n->first_child->c_lexer_token->type == SIZEOF){
+		return evaluate_constant_sizeof_type_name(code_gen_state, n->first_child->next->next);
+	}else{
+		assert(0 && "Not currently supporting constant_unary_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_cast_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == CAST_EXPRESSION);
+	if(n->first_child && n->first_child->type == UNARY_EXPRESSION){
+		return evaluate_constant_unary_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_unary_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_multiplicative_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == MULTIPLICATIVE_EXPRESSION);
+	if(n->first_child && n->first_child->type == CAST_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_cast_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_multiplicative_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_additive_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == ADDITIVE_EXPRESSION);
+	if(n->first_child && n->first_child->type == MULTIPLICATIVE_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_multiplicative_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_additive_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_shift_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == SHIFT_EXPRESSION);
+	if(n->first_child && n->first_child->type == ADDITIVE_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_additive_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_shift_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_relational_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == RELATIONAL_EXPRESSION);
+	if(n->first_child && n->first_child->type == SHIFT_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_shift_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_relational_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_equality_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == EQUALITY_EXPRESSION);
+	if(n->first_child && n->first_child->type == RELATIONAL_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_relational_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_relational_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_and_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == AND_EXPRESSION);
+	if(n->first_child && n->first_child->type == EQUALITY_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_equality_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_and_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_exclusive_or_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == EXCLUSIVE_OR_EXPRESSION);
+	if(n->first_child && n->first_child->type == AND_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_and_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_exclusive_or_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_inclusive_or_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == INCLUSIVE_OR_EXPRESSION);
+	if(n->first_child && n->first_child->type == EXCLUSIVE_OR_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_exclusive_or_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_inclusive_or_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_logical_and_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == LOGICAL_AND_EXPRESSION);
+	if(n->first_child && n->first_child->type == INCLUSIVE_OR_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_inclusive_or_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_logical_and_expression");
+	}
+}
+
+struct compile_time_constant * evaluate_constant_logical_or_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
+	assert(n->type == LOGICAL_OR_EXPRESSION);
+	if(n->first_child && n->first_child->type == LOGICAL_AND_EXPRESSION){
+		assert(n->first_child->next->first_child->type == EPSILON);
+		return evaluate_constant_logical_and_expression(code_gen_state, n->first_child);
+	}else{
+		assert(0 && "Not currently supporting constant_logical_or_expression.");
+	}
 }
 
 struct compile_time_constant * evaluate_constant_conditional_expression(struct code_gen_state * code_gen_state, struct parser_node * n){
 	assert(n->type == CONDITIONAL_EXPRESSION);
 	if(n->first_child && n->first_child->type == LOGICAL_OR_EXPRESSION){
-		/* TODO: add more specific rules */
-		return evaluate_constant_expression_h1(code_gen_state, n->first_child);
+		return evaluate_constant_logical_or_expression(code_gen_state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant conditional expressions.");
 	}
@@ -306,7 +470,7 @@ struct compile_time_constant * evaluate_constant_assignment_expression(struct co
 }
 
 void evaluate_constant_initializer_list(struct code_gen_state * code_gen_state, struct constant_initializer_level * parent_level, struct parser_node * n){
-	struct parser_node * initializer = 0;
+	struct parser_node * initializer = (struct parser_node *)0;
 	assert((n && n->type == INITIALIZER_LIST) || (n && n->type == INITIALIZER_LIST_REST));
 	if(!n){
 		assert(0 && "Should not be passed null.");
@@ -322,20 +486,20 @@ void evaluate_constant_initializer_list(struct code_gen_state * code_gen_state, 
 		assert(0 && "Unknown case.");
 	}
 
-	struct_constant_initializer_level_ptr_list_add(&parent_level->children, evaluate_constant_initializer(code_gen_state, initializer));
+	struct_constant_initializer_level_ptr_list_add_end(&parent_level->children, evaluate_constant_initializer(code_gen_state, initializer));
 	if(initializer->next->first_child->type != EPSILON){
 		evaluate_constant_initializer_list(code_gen_state, parent_level, initializer->next);
 	}
 }
 
 struct constant_initializer_level * evaluate_constant_initializer(struct code_gen_state * code_gen_state, struct parser_node * n){
-	struct constant_initializer_level * level = malloc(sizeof(struct constant_initializer_level));
+	struct constant_initializer_level * level = (struct constant_initializer_level *)malloc(sizeof(struct constant_initializer_level));
 	struct_constant_initializer_level_ptr_list_create(&level->children);
 	assert(n && n->type == INITIALIZER);
 	if(n->first_child && n->first_child->type == ASSIGNMENT_EXPRESSION){
 		level->constant = evaluate_constant_assignment_expression(code_gen_state, n->first_child);
 	}else if(n->first_child && n->first_child->next && n->first_child->next->type == INITIALIZER_LIST){
-		level->constant = 0;
+		level->constant = (struct compile_time_constant *)0;
 		evaluate_constant_initializer_list(code_gen_state, level, n->first_child->next);
 	}else{
 		assert(0 && "Unsupported initializer.");
@@ -344,8 +508,11 @@ struct constant_initializer_level * evaluate_constant_initializer(struct code_ge
 	return level;
 }
 
-void perform_integral_promotion(struct type_description ** t){
+void perform_integral_promotion(struct code_gen_state * code_gen_state, struct type_description ** t, const char * reg){
 	enum type_class c = determine_type_class(*t);
+	(void)reg;
+	(void)code_gen_state;
+
 	switch(c){
 		case TYPE_CLASS_CHAR:{
 			remove_specifier(*t, 0, CHAR);
@@ -369,19 +536,30 @@ void perform_integral_promotion(struct type_description ** t){
 			destroy_type_description(old_t);
 			break;
 		}default:{
-			assert(0 && "Should not call with this type");
+			/* No need to do anything */
 			break;
 		}
 	}
 }
 
+void perform_integral_promotions(struct code_gen_state * code_gen_state, struct type_description ** t1, struct type_description ** t2){
+	unsigned int current_size_top = type_size(code_gen_state, *t1, (*t1)->value_type, 1, (*t1)->source_scope_level);
+
+	perform_integral_promotion(code_gen_state, t1, "SP");
+	buffered_printf(code_gen_state->buffered_output, "ll r1 0x%X;          Amount down to value\n", current_size_top); 
+	buffered_printf(code_gen_state->buffered_output, "add r2 SP r1;          Ptr to bottom value\n", current_size_top); 
+	perform_integral_promotion(code_gen_state, t2, "r2");
+}
+
 void ensure_top_values_are_rvalues(struct code_gen_state * code_gen_state, struct parser_node * context){
 	struct type_description * top_type = pop_type_without_type_check(code_gen_state, context);
 	struct type_description * bottom_type = pop_type_without_type_check(code_gen_state, context);
-	enum value_type target_value_type_top = RVALUE;
-	enum value_type target_value_type_bottom = RVALUE;
+	enum value_type target_value_type_top = WORD_ALIGNED_RVALUE;
+	enum value_type target_value_type_bottom = WORD_ALIGNED_RVALUE;
 	unsigned int current_size_top = type_size(code_gen_state, top_type, top_type->value_type, 1, top_type->source_scope_level);
 	unsigned int current_size_bottom = type_size(code_gen_state, bottom_type, bottom_type->value_type, 1, bottom_type->source_scope_level);
+	unsigned int size_as_minimal_top = type_size(code_gen_state, top_type, MINIMAL_RVALUE, 1, top_type->source_scope_level);
+	unsigned int size_as_minimal_bottom = type_size(code_gen_state, bottom_type, MINIMAL_RVALUE, 1, bottom_type->source_scope_level);
 	unsigned int target_size_top = type_size(code_gen_state, top_type, target_value_type_top, 1, top_type->source_scope_level);
 	unsigned int target_size_bottom = type_size(code_gen_state, bottom_type, target_value_type_bottom, 1, bottom_type->source_scope_level);
 
@@ -391,7 +569,7 @@ void ensure_top_values_are_rvalues(struct code_gen_state * code_gen_state, struc
 
 	(void)type_traversal;
 
-	if(top_type->value_type == RVALUE && bottom_type->value_type == RVALUE){
+	if(top_type->value_type == WORD_ALIGNED_RVALUE && bottom_type->value_type == WORD_ALIGNED_RVALUE){
 		/*  Nothing to do */
 	}else if(top_type->value_type == LVALUE && bottom_type->value_type == LVALUE){
 		buffered_printf(code_gen_state->buffered_output, "add r1 SP ZR;        Make a copy of stack pointer\n");
@@ -401,11 +579,19 @@ void ensure_top_values_are_rvalues(struct code_gen_state * code_gen_state, struc
 		buffered_printf(code_gen_state->buffered_output, "add r1 r1 WR;        Go down to next lvalue\n");
 		buffered_printf(code_gen_state->buffered_output, "loa r4 r1;           Load bottom lvalue into r4\n");
 		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          For bottom rvalue\n", target_size_bottom - 4); 
-		copy_lvalue_into_rvalue(code_gen_state, "r4", "r1", "r2", "r5", target_size_bottom);
+		if(size_as_minimal_top == 1){
+			do_character_rvalue_conversion(code_gen_state, "r4", "r1", "r6", "r7", "r8");
+		}else{
+			copy_lvalue_into_rvalue(code_gen_state, "r4", "r1", "r2", "r5", target_size_bottom);
+		}
 		buffered_printf(code_gen_state->buffered_output, "sub r1 r1 WR;        Go up to where we copy the next rvalue\n");
 		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          For top rvalue\n", target_size_top - 4); 
-		copy_lvalue_into_rvalue(code_gen_state, "r3", "r1", "r2", "r5", target_size_top);
-	}else if(top_type->value_type == RVALUE && bottom_type->value_type == LVALUE){
+		if(size_as_minimal_bottom == 1){
+			do_character_rvalue_conversion(code_gen_state, "r3", "r1", "r6", "r7", "r8");
+		}else{
+			copy_lvalue_into_rvalue(code_gen_state, "r3", "r1", "r2", "r5", target_size_top);
+		}
+	}else if(top_type->value_type == WORD_ALIGNED_RVALUE && bottom_type->value_type == LVALUE){
 		buffered_printf(code_gen_state->buffered_output, "add r1 SP ZR;        Make a copy of top of stack\n");
 		/*  The difference needed to add when lvalue on bottom is expanded. */
 		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          Amount to push on SP\n", target_size_bottom - current_size_bottom);
@@ -418,17 +604,28 @@ void ensure_top_values_are_rvalues(struct code_gen_state * code_gen_state, struc
 		buffered_printf(code_gen_state->buffered_output, "add r1 SP r2;        r1 points to lvalue\n");
 		buffered_printf(code_gen_state->buffered_output, "loa r2 r1;           r2 contains lvalue\n");
 		buffered_printf(code_gen_state->buffered_output, "ll r3 0x%X;          rvalue size -4\n", target_size_bottom - 4);
-		copy_lvalue_into_rvalue(code_gen_state, "r2", "r1", "r3", "r6", target_size_bottom);
-	}else if(top_type->value_type == LVALUE && bottom_type->value_type == RVALUE){
+		if(size_as_minimal_bottom == 1){
+			do_character_rvalue_conversion(code_gen_state, "r2", "r1", "r6", "r7", "r8");
+		}else{
+			copy_lvalue_into_rvalue(code_gen_state, "r2", "r1", "r3", "r6", target_size_bottom);
+		}
+	}else if(top_type->value_type == LVALUE && bottom_type->value_type == WORD_ALIGNED_RVALUE){
 		buffered_printf(code_gen_state->buffered_output, "add r1 SP ZR;        Make a copy of top of stack\n");
 		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          Amount to push on SP\n", target_size_top - current_size_top); 
 		buffered_printf(code_gen_state->buffered_output, "sub SP SP r2;        Push SP to final resting place\n");
 		buffered_printf(code_gen_state->buffered_output, "loa r3 r1;           Load the lvalue into r3\n"); 
 		buffered_printf(code_gen_state->buffered_output, "ll r2 0x%X;          For copy\n", target_size_top - 4); 
-		copy_lvalue_into_rvalue(code_gen_state, "r3", "r1", "r2", "r5", target_size_top);
+		if(size_as_minimal_top == 1){
+			do_character_rvalue_conversion(code_gen_state, "r3", "r1", "r6", "r7", "r8");
+		}else{
+			copy_lvalue_into_rvalue(code_gen_state, "r3", "r1", "r2", "r5", target_size_top);
+		}
 	}else{
 		assert(0);
 	}
+
+	decay_to_pointer_if_array(code_gen_state, &top_type);
+	decay_to_pointer_if_array(code_gen_state, &bottom_type);
 
 	top_type->value_type = target_value_type_top;
 	bottom_type->value_type = target_value_type_bottom;
@@ -443,16 +640,10 @@ struct type_description * usual_arithmetic_conversion(struct code_gen_state * co
 	struct type_description * t1 = pop_type_without_type_check(code_gen_state, context);
 	struct type_description * t2 = pop_type_without_type_check(code_gen_state, context);
 
-	enum type_class c1 = determine_type_class(t1);
-	enum type_class c2 = determine_type_class(t2);
+	enum type_class c1;
+	enum type_class c2;
 
-	if(c1 == TYPE_CLASS_POINTER || c1 == TYPE_CLASS_CHAR || c1 == TYPE_CLASS_SHORT || c1 == TYPE_CLASS_ENUM){
-		perform_integral_promotion(&t1);
-	}
-
-	if(c2 == TYPE_CLASS_POINTER || c2 == TYPE_CLASS_CHAR || c2 == TYPE_CLASS_SHORT || c2 == TYPE_CLASS_ENUM){
-		perform_integral_promotion(&t2);
-	}
+	perform_integral_promotions(code_gen_state, &t1, &t2);
 
 	/*  These may have changed after the integer type promotion */
 	c1 = determine_type_class(t1);
@@ -467,7 +658,7 @@ struct type_description * usual_arithmetic_conversion(struct code_gen_state * co
 		if(c1 == TYPE_CLASS_INT && c2 == TYPE_CLASS_INT){
 			struct type_description * rtn;
 			rtn = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
-			rtn->value_type = RVALUE;
+			rtn->value_type = WORD_ALIGNED_RVALUE;
 			rtn->context = t1->context;
 			rtn->source_element = t1->source_element;
 			rtn->source_scope_level = t1->source_scope_level;
@@ -489,17 +680,17 @@ struct type_description * usual_arithmetic_conversion(struct code_gen_state * co
 void push_type(struct code_gen_state * code_gen_state, struct type_description * type, struct parser_node * context){
 	(void)context;
 	assert(type);
-	struct_type_description_ptr_list_add(&code_gen_state->type_stack, type);
+	struct_type_description_ptr_list_add_end(&code_gen_state->type_stack, type);
 }
 
 struct type_description * pop_type_without_type_check(struct code_gen_state * code_gen_state, struct parser_node * context){
-	struct type_description * found_type = struct_type_description_ptr_list_pop(&code_gen_state->type_stack);
+	struct type_description * found_type = struct_type_description_ptr_list_pop_end(&code_gen_state->type_stack);
 	(void)context;
 	return found_type;
 }
 
 struct type_description * pop_type(struct code_gen_state * code_gen_state, struct type_description * required_type, struct parser_node * context){
-	struct type_description * found_type = struct_type_description_ptr_list_pop(&code_gen_state->type_stack);
+	struct type_description * found_type = struct_type_description_ptr_list_pop_end(&code_gen_state->type_stack);
 	unsigned int compare_successful = 0;
 	assert(required_type);
 	assert(found_type);
@@ -708,7 +899,7 @@ unsigned int struct_type_size(struct code_gen_state * code_gen_state, struct typ
 	num_children = struct_namespace_object_ptr_list_size(obj->children);
 	assert(num_children);
 
-	if(tsc == RVALUE){
+	if(tsc == WORD_ALIGNED_RVALUE || tsc == MINIMAL_RVALUE){
 		for(i = num_children - 1; ; i--){
 			struct namespace_object * child_obj = struct_namespace_object_ptr_list_get(obj->children, i);
 			unsigned int size;
@@ -750,7 +941,7 @@ void destroy_type_traversal(struct type_traversal * traversal){
 }
 
 struct type_traversal * construct_type_traversal(struct code_gen_state * code_gen_state, struct type_description * t, struct scope_level * source_scope_level, unsigned int arrays_as_pointers){
-	struct type_traversal * traversal = malloc(sizeof(struct type_traversal));
+	struct type_traversal * traversal = (struct type_traversal *)malloc(sizeof(struct type_traversal));
 	traversal->type_class = determine_type_class(t);
 	traversal->type_description = copy_type_description(t);
 	traversal->type_description->source_scope_level = source_scope_level;
@@ -764,7 +955,7 @@ struct type_traversal * construct_type_traversal(struct code_gen_state * code_ge
 			struct type_traversal * element_traversal = construct_type_traversal(code_gen_state, arr_type, source_scope_level, arrays_as_pointers);
 			traversal->arrays_as_pointers = arrays_as_pointers;
 			struct_type_traversal_ptr_list_create(&traversal->children);
-			struct_type_traversal_ptr_list_add(&traversal->children, element_traversal);
+			struct_type_traversal_ptr_list_add_end(&traversal->children, element_traversal);
 			destroy_type_description(arr_type);
 			if(constant_expression){
 				assert(constant_expression->type == CONSTANT_EXPRESSION);
@@ -807,7 +998,7 @@ struct type_traversal * construct_type_traversal(struct code_gen_state * code_ge
 				member_description = create_type_description_from_normalized_declaration_element(element, element->normalized_declaration_set->set, source_scope_level, LVALUE);
         
 				member_traversal = construct_type_traversal(code_gen_state, member_description, source_scope_level, 0);
-				struct_type_traversal_ptr_list_add(&traversal->children, member_traversal);
+				struct_type_traversal_ptr_list_add_end(&traversal->children, member_traversal);
         
 				destroy_type_description(member_description);
 			}
@@ -883,57 +1074,6 @@ void copy_type(struct code_gen_state * code_gen_state, struct type_traversal * t
 	}
 }
 
-void make_parameter_value(struct code_gen_state * code_gen_state, struct type_traversal * type_traversal, const char * src, const char * dst){
-	switch(type_traversal->type_class){
-		case TYPE_CLASS_POINTER:{
-			move_pointers_down(code_gen_state, dst, src);
-			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, dst);
-			break;
-		}case TYPE_CLASS_ARRAY:{
-			unsigned int i;
-			struct type_traversal * element_traversal = struct_type_traversal_ptr_list_get(&type_traversal->children, 0);
-			if(!type_traversal->arrays_as_pointers){
-				for(i = 0; i < type_traversal->arity; i++){
-					make_parameter_value(code_gen_state, element_traversal, src, dst);
-					if(i != (type_traversal->arity -1)){
-						move_pointers_down(code_gen_state, dst, src);
-					}
-				}
-			}
-			break;
-		}case TYPE_CLASS_FUNCTION:{
-			assert(0 && "Not implemented.");
-			break;
-		}case TYPE_CLASS_STRUCT:{
-			unsigned int num_children = struct_type_traversal_ptr_list_size(&type_traversal->children);
-			unsigned int i;
-			for(i = 0; i < num_children; i++){
-				struct type_traversal * member = struct_type_traversal_ptr_list_get(&type_traversal->children, i);
-				make_parameter_value(code_gen_state, member, src, dst);
-				if(i != (num_children -1)){
-					move_pointers_down(code_gen_state, dst, src);
-				}
-			}
-			break;
-		}case TYPE_CLASS_UNION:{
-			assert(0);
-			break;
-		}case TYPE_CLASS_ENUM:{
-			move_pointers_down(code_gen_state, dst, src);
-			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, dst);
-			break;
-		}case TYPE_CLASS_VOID:{
-			move_pointers_down(code_gen_state, dst, src);
-			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, dst);
-			break;
-		}default: {
-			move_pointers_down(code_gen_state, dst, src);
-			buffered_printf(code_gen_state->buffered_output, "sto %s %s;\n", dst, dst);
-			break;
-		}
-	}
-}
-
 void setup_global_type(struct code_gen_state * code_gen_state, struct type_traversal * type_traversal, struct constant_initializer_level * initializer_level){
 	switch(type_traversal->type_class){
 		case TYPE_CLASS_POINTER:{
@@ -943,7 +1083,7 @@ void setup_global_type(struct code_gen_state * code_gen_state, struct type_trave
 			unsigned int i;
 			struct type_traversal * element_traversal = struct_type_traversal_ptr_list_get(&type_traversal->children, 0);
 			for(i = 0; i < type_traversal->arity; i++){
-				struct constant_initializer_level * current_initializer_level = initializer_level ? struct_constant_initializer_level_ptr_list_get(&initializer_level->children, i) : 0; 
+				struct constant_initializer_level * current_initializer_level = initializer_level ? struct_constant_initializer_level_ptr_list_get(&initializer_level->children, i) : (struct constant_initializer_level *)0; 
 				setup_global_type(code_gen_state, element_traversal, current_initializer_level);
 			}
 			break;
@@ -975,9 +1115,9 @@ void setup_global_type(struct code_gen_state * code_gen_state, struct type_trave
 }
 
 void setup_global_primative(struct code_gen_state * code_gen_state, struct type_description * t, struct constant_initializer_level * current_initializer_level){
-	unsigned int element_size = type_size(code_gen_state, t, RVALUE, 0, t->source_scope_level);
-	struct compile_time_constant * constant = current_initializer_level ? current_initializer_level->constant : 0;
-	struct constant_description * constant_description = constant ? constant->constant_description : 0;
+	unsigned int element_size = type_size(code_gen_state, t, WORD_ALIGNED_RVALUE, 0, t->source_scope_level);
+	struct compile_time_constant * constant = current_initializer_level ? current_initializer_level->constant : (struct compile_time_constant *)0;
+	struct constant_description * constant_description = constant ? constant->constant_description : (struct constant_description *)0;
 	unsigned int value = constant_description ? constant_description->native_data[0] : 0;
 
 	(void)element_size;
@@ -992,13 +1132,22 @@ void setup_global_primative(struct code_gen_state * code_gen_state, struct type_
 	}else{
 		buffered_printf(code_gen_state->buffered_output, "dw 0x%X;\n", value);
 	}
+
+	if(constant_description && constant_description->type == SIZEOF){
+		/*  TODO:  Need to improve how memory is consumed for constants */
+		/*  and managed when constants are added/subtracted etc. */
+		destroy_type_description(constant_description->type_description);
+		free(constant_description->native_data);
+		free(constant_description);
+	}
+
 	if(current_initializer_level && current_initializer_level->constant){
 		free(current_initializer_level->constant);
 	}
 }
 
 void copy_primative_type(struct code_gen_state * code_gen_state, struct type_traversal * t, const char * src, const char * dst, const char * tmp1){
-	unsigned int element_size = type_size(code_gen_state, t->type_description, RVALUE, 0, t->type_description->source_scope_level);
+	unsigned int element_size = type_size(code_gen_state, t->type_description, WORD_ALIGNED_RVALUE, 0, t->type_description->source_scope_level);
 	copy_words(code_gen_state, src, dst, tmp1, element_size);
 	move_pointers_down(code_gen_state, dst, src);
 }
@@ -1055,7 +1204,7 @@ unsigned int type_size(struct code_gen_state * code_gen_state, struct type_descr
 
 unsigned int get_normalized_declaration_element_size(struct code_gen_state * code_gen_state, struct normalized_declaration_element * element, unsigned int force_arity_1, struct scope_level * source_scope_level){
 	unsigned int rtn;
-	struct type_description * type_description = create_type_description_from_normalized_declaration_element(element, element->normalized_declaration_set->set, source_scope_level, RVALUE);
+	struct type_description * type_description = create_type_description_from_normalized_declaration_element(element, element->normalized_declaration_set->set, source_scope_level, WORD_ALIGNED_RVALUE);
 	convert_to_untypedefed_type_description(type_description);
 	rtn = type_size(code_gen_state, type_description, type_description->value_type, force_arity_1, source_scope_level);
 	destroy_type_description(type_description);
@@ -1156,7 +1305,7 @@ void delete_top_type(struct code_gen_state * code_gen_state){
 	unsigned int num_words;
 	unsigned int i;
 	assert(struct_type_description_ptr_list_size(&code_gen_state->type_stack));
-	t = struct_type_description_ptr_list_pop(&code_gen_state->type_stack);
+	t = struct_type_description_ptr_list_pop_end(&code_gen_state->type_stack);
 	size = type_size(code_gen_state, t, t->value_type, 1, get_current_scope_level(code_gen_state));
 	num_words = size / 4;
 	assert(size - (4*num_words) == 0);
@@ -1215,7 +1364,7 @@ void load_identifier(struct code_gen_state * code_gen_state, unsigned char * ide
 				buffered_printf(code_gen_state->buffered_output,"sto SP r1;  Store it on the stack.\n");
 				destroy_type_description(type_description);
 				require_external_symbol(&code_gen_state->symbols, identifier);
-				ptr->value_type = RVALUE;
+				ptr->value_type = WORD_ALIGNED_RVALUE;
 				push_type(code_gen_state, ptr, context);
 			}else{
 				unsigned char * name;
@@ -1265,7 +1414,7 @@ void load_identifier(struct code_gen_state * code_gen_state, unsigned char * ide
 			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR; Point to new value\n");
 			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X; load enum integer value\n", enum_value);
 			buffered_printf(code_gen_state->buffered_output,"sto SP r1; Store variable ptr in value too\n");
-			type_description->value_type = RVALUE;
+			type_description->value_type = WORD_ALIGNED_RVALUE;
 			push_type(code_gen_state, type_description, context);
 			break;
 		}case LOCATION_STRUCT:{
@@ -1310,12 +1459,12 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * code_g
 			buffered_printf(code_gen_state->buffered_output,"; onto top of stack\n");
 			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
 			
-			if(((unsigned int)LITERAL22BITMASK) < *(description->native_data)){
+			if(((unsigned int)MAX_LL_CONSTANT) < *(description->native_data)){
 				/*  Value must be loaded in 2 parts with shift */
-				buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;  Load upper 10 bits\n", ((*(description->native_data)) & (~((unsigned int)LITERAL22BITMASK))) >> 22);
-				buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Number of bits to shift them\n", 22);
-				buffered_printf(code_gen_state->buffered_output,"shl r1 r2;  r1 contains upper 10 bits of result\n");
-				buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Load lower 22 bits\n", (*(description->native_data)) & ((unsigned int)LITERAL22BITMASK));
+				buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;  Load upper 16 bits\n", ((*(description->native_data)) & (~((unsigned int)MAX_LL_CONSTANT))) >> 16);
+				buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Number of bits to shift them\n", 16);
+				buffered_printf(code_gen_state->buffered_output,"shl r1 r2;  r1 contains upper 16 bits of result\n");
+				buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Load lower 16 bits\n", (*(description->native_data)) & ((unsigned int)MAX_LL_CONSTANT));
 				buffered_printf(code_gen_state->buffered_output,"or r1 r1 r2;  Put the pieces together\n");
 			}else{
 				/*  If value can be loaded directly */
@@ -1362,30 +1511,57 @@ void copy_lvalue_into_rvalue(struct code_gen_state * code_gen_state, const char 
 	copy_words(code_gen_state, source_lvalue, dst, tmp, size);
 }
 
+void do_character_rvalue_conversion(struct code_gen_state * code_gen_state, const char * lvalue, const char * dst, const char * tmp1, const char * tmp2, const char * tmp3){
+	/*  Assumes that reg is pointing to an lvalue the represents the character */
+	buffered_printf(code_gen_state->buffered_output,"div %s %s WR;     stores int div amount\n", tmp3, lvalue);
+	buffered_printf(code_gen_state->buffered_output,"mul %s %s WR;     4 byte aligned address\n", tmp2, tmp3);
+	buffered_printf(code_gen_state->buffered_output,"loa %s %s;        stores the value with other bytes\n", tmp1, tmp2);
+	buffered_printf(code_gen_state->buffered_output,"sub %s %s %s;     mod amount\n", tmp2, lvalue, tmp2);
+	buffered_printf(code_gen_state->buffered_output,"ll %s 0xFF;       Byte mask\n", tmp3);
+	buffered_printf(code_gen_state->buffered_output,"mul %s WR %s;     Bytes to shift left\n", tmp2, tmp2);
+	buffered_printf(code_gen_state->buffered_output,"shl %s %s;        Shift mask to target byte\n", tmp3, tmp2);
+	buffered_printf(code_gen_state->buffered_output,"shl %s %s;        Shift mask to target byte\n", tmp3, tmp2);
+	buffered_printf(code_gen_state->buffered_output,"and %s %s %s;     Grab the bits we want\n", tmp1, tmp3, tmp1);
+	buffered_printf(code_gen_state->buffered_output,"shr %s %s;        Shift result to right\n", tmp1, tmp2);
+	buffered_printf(code_gen_state->buffered_output,"shr %s %s;        Shift result to right\n", tmp1, tmp2);
+	buffered_printf(code_gen_state->buffered_output,"sto %s %s;        Store result\n", dst, tmp1);
+}
+
+unsigned int decay_to_pointer_if_array(struct code_gen_state * code_gen_state, struct type_description ** t){
+	struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator((*t)->declarator);
+	unsigned int its_an_array = (unsigned int)is_array(abstract_declarator);
+	destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
+	if(its_an_array){
+		/*  Arrays decay to pointers */
+		struct type_description * dereferenced_array_type = create_dereferenced_array_type_description_from_type_description(*t);
+       		struct type_description * pointer_description = create_address_type_description_from_type_description(dereferenced_array_type);
+		buffered_printf(code_gen_state->buffered_output,";       Converted an array lvalue to pointer rvalue\n");
+		destroy_type_description(dereferenced_array_type);
+		destroy_type_description(*t);
+		*t = pointer_description;
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
 struct type_description * ensure_top_type_is_r_value(struct code_gen_state * code_gen_state, struct parser_node * context){
 	struct type_description * description = pop_type_without_type_check(code_gen_state, context);
-	unsigned int size = type_size(code_gen_state, description, RVALUE, 1, description->source_scope_level);
+	unsigned int size = type_size(code_gen_state, description, MINIMAL_RVALUE, 1, description->source_scope_level);
 	if(description->value_type == LVALUE){
-		struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(description->declarator);
-		unsigned int its_an_array = (unsigned int)is_array(abstract_declarator);
-		destroy_parser_node_tree_and_c_lexer_tokens(abstract_declarator);
-		if(its_an_array){
-			/*  Arrays decay to pointers */
-			struct type_description * dereferenced_array_type = create_dereferenced_array_type_description_from_type_description(description);
-        		struct type_description * pointer_description = create_address_type_description_from_type_description(dereferenced_array_type);
-			buffered_printf(code_gen_state->buffered_output,";       Converted an array lvalue to pointer rvalue\n");
-			destroy_type_description(dereferenced_array_type);
-			destroy_type_description(description);
-			pointer_description->value_type = RVALUE;
-			return pointer_description;
-		}else{
-			buffered_printf(code_gen_state->buffered_output,";       convert to rvalue\n");
-			buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;       r2 now stores num bytes to end of rvalue\n", (size -4));
-			buffered_printf(code_gen_state->buffered_output,"loa r3 SP;        r3 now stores the lvalue\n");
-			copy_lvalue_into_rvalue(code_gen_state, "r3", "SP", "r2", "r5", size);
-			description->value_type = RVALUE;
-			return description;
+		if(!decay_to_pointer_if_array(code_gen_state, &description)){
+			if(size == 1){
+				buffered_printf(code_gen_state->buffered_output,"loa r3 SP;        r3 now stores the lvalue\n");
+				do_character_rvalue_conversion(code_gen_state, "r3", "SP", "r1", "r2", "r4");
+			}else{
+				buffered_printf(code_gen_state->buffered_output,";       convert to rvalue\n");
+				buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;       r2 now stores num bytes to end of rvalue\n", (size -4));
+				buffered_printf(code_gen_state->buffered_output,"loa r3 SP;        r3 now stores the lvalue\n");
+				copy_lvalue_into_rvalue(code_gen_state, "r3", "SP", "r2", "r5", size);
+			}
 		}
+		description->value_type = WORD_ALIGNED_RVALUE;
+		return description;
 	}
 	return description;
 }
@@ -1430,7 +1606,6 @@ unsigned int g_argument_expression_list(struct parser_node * p, struct code_gen_
 
 
 void function_call(struct parser_node * argument_expression_list, struct parser_node * postfix_experssion_rest, struct code_gen_state * code_gen_state, struct parser_node * context){
-	struct parser_state * parser_state = code_gen_state->parser_state;
         unsigned int bytes_return_value;
         unsigned int bytes_arguments = 0;
         unsigned int type_stack_size_before;
@@ -1438,19 +1613,22 @@ void function_call(struct parser_node * argument_expression_list, struct parser_
         struct type_description * fcn_ptr_type = ensure_top_type_is_r_value(code_gen_state, context);
         struct type_description * fcn_type = create_dereferenced_pointer_type_description_from_type_description(fcn_ptr_type);
 	struct type_description * return_type_description = get_current_function_return_type_description(fcn_type);
+	struct type_description * word_type = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+	word_type->source_scope_level = get_current_scope_level(code_gen_state);
+	word_type->value_type = WORD_ALIGNED_RVALUE;
 	convert_to_untypedefed_type_description(return_type_description);
 
-	return_type_description->value_type = RVALUE;
+	return_type_description->value_type = WORD_ALIGNED_RVALUE;
 	push_type(code_gen_state, return_type_description, context);
-        bytes_return_value = type_size(code_gen_state, return_type_description, RVALUE, 0, return_type_description->source_scope_level);
+        bytes_return_value = type_size(code_gen_state, return_type_description, WORD_ALIGNED_RVALUE, 0, return_type_description->source_scope_level);
 	/*  -8 because the function address that was loaded gets overwritten with the return value. */
         buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;  Number of extra bytes for rtn val\n", bytes_return_value - 4);
         buffered_printf(code_gen_state->buffered_output,"sub SP SP r2; SP points to top of rtn value space\n");
         buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Inc another 4 bytes for the return address.\n");
         buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;  Push another 4 bytes for the frame pointer.\n");
         buffered_printf(code_gen_state->buffered_output,"sto SP FP;  Put the frame pointer on the stack\n");
-	push_type(code_gen_state, copy_type_description(parser_state->unsigned_int_description), context); /* For FP */
-	push_type(code_gen_state, copy_type_description(parser_state->unsigned_int_description), context); /* For return addr */
+	push_type(code_gen_state, copy_type_description(word_type), context); /* For FP */
+	push_type(code_gen_state, copy_type_description(word_type), context); /* For return addr */
 	type_stack_size_before = struct_type_description_ptr_list_size(&code_gen_state->type_stack);
 	if(argument_expression_list){
 		bytes_arguments = g_argument_expression_list(argument_expression_list, code_gen_state);
@@ -1486,10 +1664,11 @@ void function_call(struct parser_node * argument_expression_list, struct parser_
 	backtrack_type_stack(code_gen_state, type_stack_size_before, context);
 	buffered_printf(code_gen_state->buffered_output,";  Finished poping arguments.\n");
 	/*  two more pop for fp and rtnaddr */
-	destroy_type_description(pop_type(code_gen_state, parser_state->unsigned_int_description, context));
-	destroy_type_description(pop_type(code_gen_state, parser_state->unsigned_int_description, context));
+	destroy_type_description(pop_type(code_gen_state, word_type, context));
+	destroy_type_description(pop_type(code_gen_state, word_type, context));
 	destroy_type_description(fcn_ptr_type);
 	destroy_type_description(fcn_type);
+	destroy_type_description(word_type);
 	g_postfix_expression_rest(postfix_experssion_rest, code_gen_state);
 }
 
@@ -1536,14 +1715,14 @@ void do_struct_dereference_operator(struct code_gen_state * code_gen_state, unsi
 		member_identifier_token = get_identifier_token_from_normalized_declarator(element->normalized_declarator);
 		member_description = create_type_description_from_normalized_declaration_element(element, context, obj->scope_level, LVALUE);
 		member_name = copy_string(member_identifier_token->first_byte, member_identifier_token->last_byte);
-		size = type_size(code_gen_state, member_description, RVALUE, 0, obj->scope_level);
+		size = type_size(code_gen_state, member_description, WORD_ALIGNED_RVALUE, 0, obj->scope_level);
 		bytes_total += size;
 		buffered_printf(code_gen_state->buffered_output,";member %s has size %d      \n", member_name, size);
 		if(!unsigned_strcmp(member_name, target_member_identifier)){
 			if(is_lvalue || is_ptr){
 				member_description->value_type = LVALUE;
 			}else{
-				member_description->value_type = RVALUE;
+				member_description->value_type = WORD_ALIGNED_RVALUE;
 			}
 			push_type(code_gen_state, member_description, context);
 			member_found = 1;
@@ -1620,7 +1799,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 			dereferenced_array_type = create_dereferenced_array_type_description_from_type_description(array_type);
 			push_type(code_gen_state, dereferenced_array_type, p);
 
-			element_size = type_size(code_gen_state, dereferenced_array_type, RVALUE, 0, dereferenced_array_type->source_scope_level);
+			element_size = type_size(code_gen_state, dereferenced_array_type, MINIMAL_RVALUE, 0, dereferenced_array_type->source_scope_level);
 			/*  Determine if the result will be an array (multi-dimensional array case) */
 			abstract_declarator = create_abstract_declarator_from_normalized_declarator(array_type->declarator);
 			/*  If it is not an array it should be a pointer */
@@ -1639,10 +1818,14 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 
 			/*  rvalue arrays */
 			if((its_an_array && !is_lvalue)){
-				buffered_printf(code_gen_state->buffered_output,"ll r6 0x%X;\n", element_size -4);
-				buffered_printf(code_gen_state->buffered_output,"add r3 SP ZR; Copy stack pointer\n");
-				buffered_printf(code_gen_state->buffered_output,"sub SP SP r6; Make room on stack\n");
-				copy_words(code_gen_state, "r2", "r3", "r4", element_size);
+				if(element_size == 1){ /* Characters */
+					assert(0); /*TODO*/
+				}else{
+					buffered_printf(code_gen_state->buffered_output,"ll r6 0x%X;\n", element_size -4);
+					buffered_printf(code_gen_state->buffered_output,"add r3 SP ZR; Copy stack pointer\n");
+					buffered_printf(code_gen_state->buffered_output,"sub SP SP r6; Make room on stack\n");
+					copy_words(code_gen_state, "r2", "r3", "r4", element_size);
+				}
 			}else{
 				buffered_printf(code_gen_state->buffered_output,"sto SP r1; Write address\n");
 			}
@@ -1652,7 +1835,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 				dereferenced_array_type->value_type = LVALUE;
 			}else if(its_an_array && !is_lvalue){
 				buffered_printf(code_gen_state->buffered_output,";Result of array indexing was rvalue\n");
-				dereferenced_array_type->value_type = RVALUE;
+				dereferenced_array_type->value_type = WORD_ALIGNED_RVALUE;
 			}
 
 			destroy_type_description(array_type);
@@ -1700,7 +1883,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 			struct type_description * copy_lvalue = copy_type_description(orig_lvalue);
 			struct type_description * t = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
 			struct type_description * result_description;
-			t->value_type = RVALUE;
+			t->value_type = WORD_ALIGNED_RVALUE;
 			t->source_scope_level = get_current_scope_level(code_gen_state);
 			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;    Lvalue\n");
 			buffered_printf(code_gen_state->buffered_output,"loa r9 r1;    value before\n");
@@ -1716,7 +1899,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 			do_assignment(code_gen_state, p);
 			buffered_printf(code_gen_state->buffered_output,"sto SP r9;    Previous value\n");
 			result_description = pop_type_without_type_check(code_gen_state, p); /*  Pop the base type */
-			result_description->value_type = RVALUE;
+			result_description->value_type = WORD_ALIGNED_RVALUE;
 			push_type(code_gen_state, result_description, p);
 			g_postfix_expression_rest(second_child(p), code_gen_state);
 		}else if(is_terminal_c_token_type(first_child(p), DEC_OP)){
@@ -1724,7 +1907,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 			struct type_description * copy_lvalue = copy_type_description(orig_lvalue);
 			struct type_description * t = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
 			struct type_description * result_description;
-			t->value_type = RVALUE;
+			t->value_type = WORD_ALIGNED_RVALUE;
 			t->source_scope_level = get_current_scope_level(code_gen_state);
 			buffered_printf(code_gen_state->buffered_output,"loa r1 SP;    Lvalue\n");
 			buffered_printf(code_gen_state->buffered_output,"loa r9 r1;    value before\n");
@@ -1740,7 +1923,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * c
 			do_assignment(code_gen_state, p);
 			buffered_printf(code_gen_state->buffered_output,"sto SP r9;    Previous value\n");
 			result_description = pop_type_without_type_check(code_gen_state, p); /*  Pop the base type */
-			result_description->value_type = RVALUE;
+			result_description->value_type = WORD_ALIGNED_RVALUE;
 			push_type(code_gen_state, result_description, p);
 			g_postfix_expression_rest(second_child(p), code_gen_state);
 		}else{
@@ -1773,7 +1956,7 @@ void g_unary_operator(struct parser_node * p, struct code_gen_state * code_gen_s
 			buffered_printf(code_gen_state->buffered_output,"; Perform & operator\n");
 
         		address_type = create_address_type_description_from_type_description(found);
-        		address_type->value_type = RVALUE;
+        		address_type->value_type = WORD_ALIGNED_RVALUE;
 			push_type(code_gen_state, address_type, p); /* Put back the pointer type */
 
 			destroy_type_description(found);
@@ -1838,13 +2021,16 @@ void g_unary_expression(struct parser_node * p, struct code_gen_state * code_gen
 			is_terminal_c_token_type(second_child(p), OPEN_PAREN_CHAR) &&
 			is_terminal_c_token_type(fourth_child(p), CLOSE_PAREN_CHAR)
 		){
-			struct type_description * sized_type = create_type_description_from_type_name(code_gen_state->parser_state, third_child(p));
+			struct type_description * sized_type;
 			struct type_description * result_type = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
-			unsigned int size = type_size(code_gen_state, sized_type, RVALUE, 0, get_current_scope_level(code_gen_state));
+			unsigned int size;
+			sized_type = create_type_description_from_type_name(code_gen_state->parser_state, third_child(p));
+			convert_to_untypedefed_type_description(sized_type);
+			size = type_size(code_gen_state, sized_type, MINIMAL_RVALUE, 0, get_current_scope_level(code_gen_state));
 			buffered_printf(code_gen_state->buffered_output,"sub SP SP WR;\n");
 			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;\n", size);
 			buffered_printf(code_gen_state->buffered_output,"sto SP r1;\n");
-			result_type->value_type = RVALUE;
+			result_type->value_type = WORD_ALIGNED_RVALUE;
 			result_type->source_scope_level = get_current_scope_level(code_gen_state);
 			push_type(code_gen_state, result_type, p);
 			destroy_type_description(sized_type);
@@ -1896,10 +2082,29 @@ void g_cast_expression(struct parser_node * p, struct code_gen_state * code_gen_
 			is_terminal_c_token_type(third_child(p), CLOSE_PAREN_CHAR)
 		){
 			struct type_description * old_type;
-			struct type_description * new_type = create_type_description_from_type_name(code_gen_state->parser_state, second_child(p));
+			struct type_description * new_type;
+			unsigned int is_new_type_integral;
+			enum type_class old_type_class;
+			new_type = create_type_description_from_type_name(code_gen_state->parser_state, second_child(p));
+			convert_to_untypedefed_type_description(new_type);
+			is_new_type_integral = is_integral_type(new_type);
+
 			g_cast_expression(fourth_child(p), code_gen_state);
 
 			old_type = pop_type_without_type_check(code_gen_state, p);
+			convert_to_untypedefed_type_description(old_type);
+
+			if(decay_to_pointer_if_array(code_gen_state, &old_type)){
+				old_type->value_type = WORD_ALIGNED_RVALUE; /*  Array lvalue becomes a pointer rvalue */
+			}
+			convert_to_untypedefed_type_description(old_type);
+			old_type_class = determine_type_class(old_type);
+			if(is_new_type_integral && old_type_class == TYPE_CLASS_POINTER){
+				/*  TODO: Check if this is actually a special case */
+				struct type_description * dereferenced = create_dereferenced_pointer_type_description_from_type_description(old_type);
+				convert_to_untypedefed_type_description(dereferenced);
+				destroy_type_description(dereferenced);
+			}
 
 			buffered_printf(code_gen_state->buffered_output,";  Performing an explicit type cast.\n");
 			new_type->value_type = old_type->value_type;
@@ -1926,7 +2131,7 @@ void push(struct code_gen_state * code_gen_state, const char * r, enum value_typ
 }
 
 void do_signed_operation_function_call(struct code_gen_state * code_gen_state, const char * function_name){
-	push(code_gen_state, "ZR", RVALUE); /*  Space for the integer return value */
+	push(code_gen_state, "ZR", WORD_ALIGNED_RVALUE); /*  Space for the integer return value */
 	/* Start setting up a stack frame */
 	buffered_printf(code_gen_state->buffered_output,"ll r3 %s;\n", function_name);
 	buffered_printf(code_gen_state->buffered_output,"sub r3 r3 PC;   Diff from current SP to call point\n");
@@ -1964,22 +2169,24 @@ void do_multiplicative_expression(struct code_gen_state * code_gen_state, struct
 	switch(type){
 		case MULTIPLY_CHAR:{
 			buffered_printf(code_gen_state->buffered_output,"mul r1 r1 r2;\n");
-			push(code_gen_state, "r1", RVALUE);
+			push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
 			break;
 		}case DIVIDE_CHAR:{
 			if(iz_signed){
 				do_signed_operation_function_call(code_gen_state, "signed_division");
 			}else{
-				buffered_printf(code_gen_state->buffered_output,"div r1 r2 r1 r2;\n");
-				push(code_gen_state, "r1", RVALUE);
+				buffered_printf(code_gen_state->buffered_output,"div r1 r1 r2;\n");
+				push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
 			}
 			break;
 		}case PERCENT_CHAR:{
 			if(iz_signed){
 				do_signed_operation_function_call(code_gen_state, "signed_modulo");
 			}else{
-				buffered_printf(code_gen_state->buffered_output,"div r2 r1 r1 r2;\n");
-				push(code_gen_state, "r1", RVALUE);
+				buffered_printf(code_gen_state->buffered_output,"div r3 r1 r2;\n");
+				buffered_printf(code_gen_state->buffered_output,"mul r3 r3 r2;\n");
+				buffered_printf(code_gen_state->buffered_output,"sub r1 r1 r3;\n");
+				push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
 			}
 			break;
 		}default:{
@@ -2036,25 +2243,27 @@ struct type_description * perform_pointer_conversion(struct code_gen_state * cod
 
 		if(c1 == TYPE_CLASS_POINTER && is_integral_type2){
 			struct type_description * dereferenced = create_dereferenced_pointer_type_description_from_type_description(t1);
-			unsigned int size = type_size(code_gen_state, dereferenced, dereferenced->value_type, 0, get_current_scope_level(code_gen_state));
+			unsigned int size = type_size(code_gen_state, dereferenced, MINIMAL_RVALUE, 0, get_current_scope_level(code_gen_state));
 			buffered_printf(code_gen_state->buffered_output,"ll r3 0x%X; Load the arr element size\n", size);
 			buffered_printf(code_gen_state->buffered_output,"mul r2 r2 r3; Multiply by amount to add or sub\n");
-			push(code_gen_state, "r2", RVALUE);
-			push(code_gen_state, "r1", RVALUE);
+			push(code_gen_state, "r2", WORD_ALIGNED_RVALUE);
+			push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
 			destroy_type_description(dereferenced);
 			destroy_type_description(t2);
 			return t1;
 		}else if(c2 == TYPE_CLASS_POINTER && is_integral_type1){
 			struct type_description * dereferenced = create_dereferenced_pointer_type_description_from_type_description(t2);
-			unsigned int size = type_size(code_gen_state, dereferenced, dereferenced->value_type, 0, get_current_scope_level(code_gen_state));
+			unsigned int size = type_size(code_gen_state, dereferenced, MINIMAL_RVALUE, 0, get_current_scope_level(code_gen_state));
 			buffered_printf(code_gen_state->buffered_output,"ll r3 0x%X; Load the arr element size\n", size);
 			buffered_printf(code_gen_state->buffered_output,"mul r1 r1 r3; Multiply by amount to add or sub\n");
-			push(code_gen_state, "r2", RVALUE);
-			push(code_gen_state, "r1", RVALUE);
+			push(code_gen_state, "r2", WORD_ALIGNED_RVALUE);
+			push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
 			destroy_type_description(dereferenced);
 			destroy_type_description(t1);
 			return t2;
 		}else if(c1 == TYPE_CLASS_POINTER && c2 == TYPE_CLASS_POINTER){
+			push(code_gen_state, "r2", WORD_ALIGNED_RVALUE);
+			push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
 			destroy_type_description(t1);
 			return t2;
 		}
@@ -2067,11 +2276,13 @@ struct type_description * perform_pointer_conversion(struct code_gen_state * cod
 
 void do_additive_expression(struct code_gen_state * code_gen_state, struct parser_node * p, enum c_token_type type){
 	struct type_description * t;
+	enum type_class type_class;
 	ensure_top_values_are_rvalues(code_gen_state, p);
 	t = perform_pointer_conversion(code_gen_state, p);
 	if(!t){
 		t = usual_arithmetic_conversion(code_gen_state, p);
 	}
+	type_class = determine_type_class(t);
 	pop(code_gen_state, "r2", t->value_type);
 	pop(code_gen_state, "r1", t->value_type);
 	switch(type){
@@ -2085,8 +2296,28 @@ void do_additive_expression(struct code_gen_state * code_gen_state, struct parse
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in multiplicative_expression_rest.\n");
 		}
 	}
-	push(code_gen_state, "r1", RVALUE);
-	push_type(code_gen_state, t, p);
+	if(type == MINUS_CHAR && type_class == TYPE_CLASS_POINTER){
+		/*  Pointer subtraction returns the number of elements between the pointers */
+		struct type_description * dereferenced = create_dereferenced_pointer_type_description_from_type_description(t);
+		unsigned int unit_size;
+		struct type_description * result_type;
+		result_type = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+		result_type->value_type = WORD_ALIGNED_RVALUE;
+		result_type->context = t->context;
+		result_type->source_element = t->source_element;
+		result_type->source_scope_level = t->source_scope_level;
+		convert_to_untypedefed_type_description(dereferenced);
+		unit_size = type_size(code_gen_state, dereferenced, MINIMAL_RVALUE, 0, dereferenced->source_scope_level);
+		destroy_type_description(dereferenced);
+		destroy_type_description(t);
+		buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X; Unit size\n", unit_size);
+		buffered_printf(code_gen_state->buffered_output,"div r1 r1 r2;\n");
+		push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
+		push_type(code_gen_state, result_type, p);
+	}else{
+		push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
+		push_type(code_gen_state, t, p);
+	}
 }
 
 void g_additive_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
@@ -2115,23 +2346,99 @@ void g_additive_expression(struct parser_node * p, struct code_gen_state * code_
 	}
 }
 
+void do_xor_expression(struct code_gen_state * code_gen_state, struct parser_node * p, enum c_token_type type){
+	struct type_description * t;
+	ensure_top_values_are_rvalues(code_gen_state, p);
+	t = perform_pointer_conversion(code_gen_state, p);
+	if(!t){
+		t = usual_arithmetic_conversion(code_gen_state, p);
+	}
+	pop(code_gen_state, "r2", t->value_type);
+	pop(code_gen_state, "r1", t->value_type);
+	switch(type){
+		case CARET_CHAR:{
+			buffered_printf(code_gen_state->buffered_output,"or r3 r1 r2;   Bitwise or\n");
+			buffered_printf(code_gen_state->buffered_output,"and r5 r1 r2;  Bitwise and\n");
+			buffered_printf(code_gen_state->buffered_output,"not r5 r5;     Not both\n");
+			buffered_printf(code_gen_state->buffered_output,"and r1 r3 r5;  One of them, and not both\n");
+			break;
+		}default:{
+			buffered_printf(code_gen_state->buffered_output,"Unknown operator in xor expression.\n");
+		}
+	}
+	push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
+	push_type(code_gen_state, t, p);
+}
+
+void do_or_expression(struct code_gen_state * code_gen_state, struct parser_node * p, enum c_token_type type){
+	struct type_description * t;
+	ensure_top_values_are_rvalues(code_gen_state, p);
+	t = perform_pointer_conversion(code_gen_state, p);
+	if(!t){
+		t = usual_arithmetic_conversion(code_gen_state, p);
+	}
+	pop(code_gen_state, "r2", t->value_type);
+	pop(code_gen_state, "r1", t->value_type);
+	switch(type){
+		case PIPE_CHAR:{
+			buffered_printf(code_gen_state->buffered_output,"or r1 r1 r2;\n"); /* Bitwise or */
+			break;
+		}default:{
+			buffered_printf(code_gen_state->buffered_output,"Unknown operator in or expression.\n");
+		}
+	}
+	push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
+	push_type(code_gen_state, t, p);
+}
+
+void do_and_expression(struct code_gen_state * code_gen_state, struct parser_node * p, enum c_token_type type){
+	struct type_description * t;
+	ensure_top_values_are_rvalues(code_gen_state, p);
+	t = perform_pointer_conversion(code_gen_state, p);
+	if(!t){
+		t = usual_arithmetic_conversion(code_gen_state, p);
+	}
+	pop(code_gen_state, "r2", t->value_type);
+	pop(code_gen_state, "r1", t->value_type);
+	switch(type){
+		case AMPERSAND_CHAR:{
+			buffered_printf(code_gen_state->buffered_output,"and r1 r1 r2;\n"); /* Bitwise and */
+			break;
+		}default:{
+			buffered_printf(code_gen_state->buffered_output,"Unknown operator in and expression.\n");
+		}
+	}
+	push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
+	push_type(code_gen_state, t, p);
+}
+
+void do_shift_expression(struct code_gen_state * code_gen_state, struct parser_node * p, enum c_token_type type){
+	struct type_description * t;
+	ensure_top_values_are_rvalues(code_gen_state, p);
+	t = perform_pointer_conversion(code_gen_state, p);
+	if(!t){
+		t = usual_arithmetic_conversion(code_gen_state, p);
+	}
+	pop(code_gen_state, "r2", t->value_type);
+	pop(code_gen_state, "r1", t->value_type);
+	switch(type){
+		case LEFT_OP:{
+			buffered_printf(code_gen_state->buffered_output,"shl r1 r2;\n");
+			break;
+		}case RIGHT_OP:{
+			buffered_printf(code_gen_state->buffered_output,"shr r1 r2;\n");
+			break;
+		}default:{
+			buffered_printf(code_gen_state->buffered_output,"Unknown operator in shift expression.\n");
+		}
+	}
+	push(code_gen_state, "r1", WORD_ALIGNED_RVALUE);
+	push_type(code_gen_state, t, p);
+}
+
 void g_shift_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, ADDITIVE_EXPRESSION, SHIFT_EXPRESSION_REST)){
-		struct type_description * t;
-		ensure_top_values_are_rvalues(code_gen_state, p);
-		t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2", t->value_type);
-		pop(code_gen_state, "r1", t->value_type);
-		if(is_terminal_c_token_type(first_child(p), LEFT_OP)){
-			buffered_printf(code_gen_state->buffered_output,"shl r1 r2;\n");
-		}else if(is_terminal_c_token_type(first_child(p), RIGHT_OP)){
-			buffered_printf(code_gen_state->buffered_output,"shr r1 r2;\n");
-		}else{
-			buffered_printf(code_gen_state->buffered_output,"Unknown operator in shift_expression_rest.\n");
-		}
-		push(code_gen_state, "r1", RVALUE);
-		push_type(code_gen_state, t, p);
-
+		do_shift_expression(code_gen_state, p, first_child(p)->c_lexer_token->type);
 		if(is_second_child_type(third_child(p), ADDITIVE_EXPRESSION)){
 			g_additive_expression(second_child(third_child(p)), code_gen_state);
 			g_shift_expression_rest(third_child(p), code_gen_state);
@@ -2171,7 +2478,7 @@ void g_relational_expression_rest(struct parser_node * p, struct code_gen_state 
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x1; Assume r1 < r2\n");
 				buffered_printf(code_gen_state->buffered_output,"blt r1 r2 1;\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x0;\n");
-				push(code_gen_state, "r3", RVALUE);
+				push(code_gen_state, "r3", WORD_ALIGNED_RVALUE);
 			}
 		}else if(is_terminal_c_token_type(first_child(p),CLOSE_ANGLE_BRACKET_CHAR)){
 			if(iz_signed){
@@ -2181,7 +2488,7 @@ void g_relational_expression_rest(struct parser_node * p, struct code_gen_state 
 				buffered_printf(code_gen_state->buffered_output,"blt r1 r2 2;\n");
 				buffered_printf(code_gen_state->buffered_output,"beq r1 r2 1;\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x1;\n");
-				push(code_gen_state, "r3", RVALUE);
+				push(code_gen_state, "r3", WORD_ALIGNED_RVALUE);
 			}
 		}else if(is_terminal_c_token_type(first_child(p),LE_OP)){
 			if(iz_signed){
@@ -2191,7 +2498,7 @@ void g_relational_expression_rest(struct parser_node * p, struct code_gen_state 
 				buffered_printf(code_gen_state->buffered_output,"blt r1 r2 2;\n");
 				buffered_printf(code_gen_state->buffered_output,"beq r1 r2 1;\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x0;\n");
-				push(code_gen_state, "r3", RVALUE);
+				push(code_gen_state, "r3", WORD_ALIGNED_RVALUE);
 			}
 		}else if(is_terminal_c_token_type(first_child(p),GE_OP)){
 			if(iz_signed){
@@ -2200,7 +2507,7 @@ void g_relational_expression_rest(struct parser_node * p, struct code_gen_state 
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x0; Assume r1 >= r2 is not true\n");
 				buffered_printf(code_gen_state->buffered_output,"blt r1 r2 1;\n");
 				buffered_printf(code_gen_state->buffered_output,"ll r3 0x1;\n");
-				push(code_gen_state, "r3", RVALUE);
+				push(code_gen_state, "r3", WORD_ALIGNED_RVALUE);
 			}
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in shift_expression_rest.\n");
@@ -2248,7 +2555,7 @@ void g_equality_expression_rest(struct parser_node * p, struct code_gen_state * 
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in equality_expression_rest.\n");
 		}
-		push(code_gen_state, "r3", RVALUE);
+		push(code_gen_state, "r3", WORD_ALIGNED_RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), RELATIONAL_EXPRESSION)){
@@ -2276,19 +2583,7 @@ void g_equality_expression(struct parser_node * p, struct code_gen_state * code_
 
 void g_and_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, EQUALITY_EXPRESSION, AND_EXPRESSION_REST)){
-		struct type_description * t;
-		ensure_top_values_are_rvalues(code_gen_state, p);
-		t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2", t->value_type);
-		pop(code_gen_state, "r1", t->value_type);
-		if(is_terminal_c_token_type(first_child(p),AMPERSAND_CHAR)){
-			buffered_printf(code_gen_state->buffered_output,"and r1 r1 r2;\n"); /* Bitwise and */
-		}else{
-			buffered_printf(code_gen_state->buffered_output,"Unknown operator in and_expression_rest.\n");
-		}
-		push(code_gen_state, "r1", RVALUE);
-		push_type(code_gen_state, t, p);
-
+		do_and_expression(code_gen_state, p, first_child(p)->c_lexer_token->type);
 		if(is_second_child_type(third_child(p), EQUALITY_EXPRESSION)){
 			g_equality_expression(second_child(third_child(p)), code_gen_state);
 			g_and_expression_rest(third_child(p), code_gen_state);
@@ -2314,21 +2609,7 @@ void g_and_expression(struct parser_node * p, struct code_gen_state * code_gen_s
 
 void g_exclusive_or_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, AND_EXPRESSION, EXCLUSIVE_OR_EXPRESSION_REST)){
-		struct type_description * t;
-		ensure_top_values_are_rvalues(code_gen_state, p);
-		t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2", t->value_type);
-		pop(code_gen_state, "r1", t->value_type);
-		if(is_terminal_c_token_type(first_child(p),CARET_CHAR)){
-			buffered_printf(code_gen_state->buffered_output,"or r3 r1 r2;   Bitwise or\n");
-			buffered_printf(code_gen_state->buffered_output,"and r5 r1 r2;  Bitwise and\n");
-			buffered_printf(code_gen_state->buffered_output,"not r5 r5;     Not both\n");
-			buffered_printf(code_gen_state->buffered_output,"and r1 r3 r5;  One of them, and not both\n");
-		}else{
-			assert(0 && "Unknown operator in exclusive_or_expression_rest.\n");
-		}
-		push(code_gen_state, "r1", RVALUE);
-		push_type(code_gen_state, t, p);
+		do_xor_expression(code_gen_state, p, first_child(p)->c_lexer_token->type);
 
 		if(is_second_child_type(third_child(p), AND_EXPRESSION)){
 			g_and_expression(second_child(third_child(p)), code_gen_state);
@@ -2355,19 +2636,7 @@ void g_exclusive_or_expression(struct parser_node * p, struct code_gen_state * c
 
 void g_inclusive_or_expression_rest(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_three_children(p, TERMINAL, EXCLUSIVE_OR_EXPRESSION, INCLUSIVE_OR_EXPRESSION_REST)){
-		struct type_description * t;
-		ensure_top_values_are_rvalues(code_gen_state, p);
-		t = usual_arithmetic_conversion(code_gen_state, p);
-		pop(code_gen_state, "r2", t->value_type);
-		pop(code_gen_state, "r1", t->value_type);
-		if(is_terminal_c_token_type(first_child(p),PIPE_CHAR)){
-			buffered_printf(code_gen_state->buffered_output,"or r1 r1 r2;\n"); /* Bitwise or */
-		}else{
-			buffered_printf(code_gen_state->buffered_output,"Unknown operator in inclusive_or_expression_rest.\n");
-		}
-		push(code_gen_state, "r1", RVALUE);
-		push_type(code_gen_state, t, p);
-
+		do_or_expression(code_gen_state, p, first_child(p)->c_lexer_token->type);
 		if(is_second_child_type(third_child(p), EXCLUSIVE_OR_EXPRESSION)){
 			g_exclusive_or_expression(second_child(third_child(p)), code_gen_state);
 			g_inclusive_or_expression_rest(third_child(p), code_gen_state);
@@ -2406,7 +2675,7 @@ void g_logical_and_expression_rest(struct parser_node * p, struct code_gen_state
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in logical_and_expression_rest.\n");
 		}
-		push(code_gen_state, "r3", RVALUE);
+		push(code_gen_state, "r3", WORD_ALIGNED_RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), INCLUSIVE_OR_EXPRESSION)){
@@ -2447,7 +2716,7 @@ void g_logical_or_expression_rest(struct parser_node * p, struct code_gen_state 
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unknown operator in logical_or_expression_rest.\n");
 		}
-		push(code_gen_state, "r3", RVALUE);
+		push(code_gen_state, "r3", WORD_ALIGNED_RVALUE);
 		push_type(code_gen_state, t, p);
 
 		if(is_second_child_type(third_child(p), LOGICAL_AND_EXPRESSION)){
@@ -2498,7 +2767,8 @@ void g_conditional_expression(struct parser_node * p, struct code_gen_state * co
 			destroy_type_description(t1);
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s;\n", false_condition_str);
 			g_expression(third_child(p), code_gen_state);
-			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;\n", after_condition_str);
+			buffered_printf(code_gen_state->buffered_output,"loa PC PC;\n");
+			buffered_printf(code_gen_state->buffered_output,"dw %s;\n", after_condition_str);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", false_condition_str);
 			g_conditional_expression(fifth_child(p), code_gen_state);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", after_condition_str);
@@ -2567,15 +2837,15 @@ void g_assignment_operator(struct parser_node * p, struct code_gen_state * code_
 		}else if(is_terminal_c_token_type(first_child(p),SUB_ASSIGN)){
 			do_additive_expression(code_gen_state, p, MINUS_CHAR);
 		}else if(is_terminal_c_token_type(first_child(p),LEFT_ASSIGN)){
-			/*  TODO */
+			do_shift_expression(code_gen_state, p, LEFT_OP);
 		}else if(is_terminal_c_token_type(first_child(p),RIGHT_ASSIGN)){
-			/*  TODO */
+			do_shift_expression(code_gen_state, p, RIGHT_OP);
 		}else if(is_terminal_c_token_type(first_child(p),AND_ASSIGN)){
-			/*  TODO */
+			do_and_expression(code_gen_state, p, AMPERSAND_CHAR);
 		}else if(is_terminal_c_token_type(first_child(p),XOR_ASSIGN)){
-			/*  TODO */
+			do_xor_expression(code_gen_state, p, CARET_CHAR);
 		}else if(is_terminal_c_token_type(first_child(p),OR_ASSIGN)){
-			/*  TODO */
+			do_or_expression(code_gen_state, p, PIPE_CHAR);
 		}else{
 			buffered_printf(code_gen_state->buffered_output,"Unsupported assignment.\n");
 		}
@@ -2698,7 +2968,7 @@ void go_down_scope(struct code_gen_state * code_gen_state){
 		/* Will be 0 if this scope was actually a struct/enum/union defintion */
 		code_gen_state->current_function = parser_state->top_scope->scopes[code_gen_state->next_scope_index]->current_function;
 	}
-	unsigned_int_list_add(&code_gen_state->scope_index_list, code_gen_state->next_scope_index);
+	unsigned_int_list_add_end(&code_gen_state->scope_index_list, code_gen_state->next_scope_index);
 	code_gen_state->next_scope_index = 0;
 
 }
@@ -2727,7 +2997,7 @@ void clear_locals_from_scope(struct code_gen_state * code_gen_state, struct scop
 
 void go_up_scope(struct code_gen_state * code_gen_state){
 	clear_locals_from_scope(code_gen_state, get_current_scope_level(code_gen_state));
-	code_gen_state->next_scope_index = 1 + unsigned_int_list_pop(&code_gen_state->scope_index_list);
+	code_gen_state->next_scope_index = 1 + unsigned_int_list_pop_end(&code_gen_state->scope_index_list);
 	if(unsigned_int_list_size(&code_gen_state->scope_index_list) == 0){
 		code_gen_state->current_function = (struct namespace_object *)0; /*  We're not currently inside any function */
 	}
@@ -2736,7 +3006,7 @@ void go_up_scope(struct code_gen_state * code_gen_state){
 void create_default_return_value(struct code_gen_state * code_gen_state, struct parser_node * possible_function, struct parser_node * context){
 	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&code_gen_state->current_function->elements);
 	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&code_gen_state->current_function->elements, num_elements - 1);
-	struct type_description * t = create_type_description_from_normalized_declaration_element(element, context, get_current_scope_level(code_gen_state), RVALUE);
+	struct type_description * t = create_type_description_from_normalized_declaration_element(element, context, get_current_scope_level(code_gen_state), WORD_ALIGNED_RVALUE);
 	struct type_description * return_type_description = get_current_function_return_type_description(t);
 	unsigned int rtn_val_size;
 	unsigned int num_words;
@@ -2757,7 +3027,7 @@ void create_default_return_value(struct code_gen_state * code_gen_state, struct 
 void return_from_function(struct code_gen_state * code_gen_state, struct parser_node * context){
 	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&code_gen_state->current_function->elements);
 	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&code_gen_state->current_function->elements, num_elements - 1);
-	struct type_description * t = create_type_description_from_normalized_declaration_element(element, context, get_current_scope_level(code_gen_state), RVALUE);
+	struct type_description * t = create_type_description_from_normalized_declaration_element(element, context, get_current_scope_level(code_gen_state), WORD_ALIGNED_RVALUE);
 	struct type_description * return_type_description = get_current_function_return_type_description(t);
 	unsigned int rtn_val_size;
 	destroy_type_description(ensure_top_type_is_r_value(code_gen_state, context));
@@ -2810,19 +3080,19 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * code_g
 			go_down_scope(code_gen_state);
 			scope = get_current_scope_level(code_gen_state);
 			if(evaluate_label){
-				unsigned_char_ptr_list_add(&scope->evaluate_labels, evaluate_label);
+				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluate_label);
 			}
 			if(end_label){
-				unsigned_char_ptr_list_add(&scope->end_labels, end_label);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, end_label);
 			}
 			g_declaration_list(second_child(p), code_gen_state);
 			g_statement_list(third_child(p), code_gen_state);
 			do_default_function_return(code_gen_state, possible_function, fourth_child(p));
 			if(evaluate_label){
-				unsigned_char_ptr_list_pop(&scope->evaluate_labels);
+				unsigned_char_ptr_list_pop_end(&scope->evaluate_labels);
 			}
 			if(end_label){
-				unsigned_char_ptr_list_pop(&scope->end_labels);
+				unsigned_char_ptr_list_pop_end(&scope->end_labels);
 			}
 			go_up_scope(code_gen_state);
 		}else{
@@ -2837,18 +3107,18 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * code_g
 			go_down_scope(code_gen_state);
 			scope = get_current_scope_level(code_gen_state);
 			if(evaluate_label){
-				unsigned_char_ptr_list_add(&scope->evaluate_labels, evaluate_label);
+				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluate_label);
 			}
 			if(end_label){
-				unsigned_char_ptr_list_add(&scope->end_labels, end_label);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, end_label);
 			}
 			g_declaration_list(second_child(p), code_gen_state);
 			do_default_function_return(code_gen_state, possible_function, third_child(p));
 			if(evaluate_label){
-				unsigned_char_ptr_list_pop(&scope->evaluate_labels);
+				unsigned_char_ptr_list_pop_end(&scope->evaluate_labels);
 			}
 			if(end_label){
-				unsigned_char_ptr_list_pop(&scope->end_labels);
+				unsigned_char_ptr_list_pop_end(&scope->end_labels);
 			}
 			go_up_scope(code_gen_state);
 		}else{
@@ -2863,18 +3133,18 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * code_g
 			go_down_scope(code_gen_state);
 			scope = get_current_scope_level(code_gen_state);
 			if(evaluate_label){
-				unsigned_char_ptr_list_add(&scope->evaluate_labels, evaluate_label);
+				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluate_label);
 			}
 			if(end_label){
-				unsigned_char_ptr_list_add(&scope->end_labels, end_label);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, end_label);
 			}
 			g_statement_list(second_child(p), code_gen_state);
 			do_default_function_return(code_gen_state, possible_function, third_child(p));
 			if(evaluate_label){
-				unsigned_char_ptr_list_pop(&scope->evaluate_labels);
+				unsigned_char_ptr_list_pop_end(&scope->evaluate_labels);
 			}
 			if(end_label){
-				unsigned_char_ptr_list_pop(&scope->end_labels);
+				unsigned_char_ptr_list_pop_end(&scope->end_labels);
 			}
 			go_up_scope(code_gen_state);
 		}else{
@@ -2889,17 +3159,17 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * code_g
 			go_down_scope(code_gen_state);
 			scope = get_current_scope_level(code_gen_state);
 			if(evaluate_label){
-				unsigned_char_ptr_list_add(&scope->evaluate_labels, evaluate_label);
+				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluate_label);
 			}
 			if(end_label){
-				unsigned_char_ptr_list_add(&scope->end_labels, end_label);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, end_label);
 			}
 			do_default_function_return(code_gen_state, possible_function, second_child(p));
 			if(evaluate_label){
-				unsigned_char_ptr_list_pop(&scope->evaluate_labels);
+				unsigned_char_ptr_list_pop_end(&scope->evaluate_labels);
 			}
 			if(end_label){
-				unsigned_char_ptr_list_pop(&scope->end_labels);
+				unsigned_char_ptr_list_pop_end(&scope->end_labels);
 			}
 			go_up_scope(code_gen_state);
 		}else{
@@ -3354,6 +3624,34 @@ struct type_description * consume_scalar_type(struct code_gen_state * code_gen_s
 	return observed_type;
 }
 
+void convert_top_rvalue_to_target_type(struct code_gen_state * code_gen_state, struct type_description * rvalue_type, struct type_description * target_type){
+	enum type_class tcrvalue = determine_type_class(rvalue_type);
+	enum type_class tctarget = determine_type_class(target_type);
+	switch(tctarget){
+		case TYPE_CLASS_CHAR:{
+			switch(tcrvalue){
+				case TYPE_CLASS_CHAR:{
+					/* No conversion needed */
+					break;
+				}case TYPE_CLASS_INT:{
+        				buffered_printf(code_gen_state->buffered_output,"loa r1 SP;    \n");
+        				buffered_printf(code_gen_state->buffered_output,"ll r2 0xFF;    \n");
+        				buffered_printf(code_gen_state->buffered_output,"and r1 r1 r2;   Filter out higher bits \n");
+        				buffered_printf(code_gen_state->buffered_output,"sto SP r1;    \n");
+					break;
+				}default:{
+					print_error_with_types(code_gen_state->parser_state->c_lexer_state, rvalue_type, target_type, target_type->context, "Unsupported conversion to character:");
+					assert(0);
+				}
+			}
+			break;
+		}default:{
+			print_error_with_types(code_gen_state->parser_state->c_lexer_state, rvalue_type, target_type, target_type->context, "Unsupported conversion rule:");
+			assert(0);
+		}
+	}
+}
+
 struct type_description * manage_assignment_type_change(struct code_gen_state * code_gen_state, struct parser_node * context){
 	struct type_description * t1 = ensure_top_type_is_r_value(code_gen_state, context);
 	struct type_description * t2 = pop_type_without_type_check(code_gen_state, context);
@@ -3363,9 +3661,16 @@ struct type_description * manage_assignment_type_change(struct code_gen_state * 
 	}
 
 	if(is_arithmetic_type(t2)){
-		push_type(code_gen_state, t2, context); /*  Poped inside usual_arithmetic_conversion */
-		push_type(code_gen_state, t1, context);
-		return usual_arithmetic_conversion(code_gen_state, context);
+		enum type_class tc2 = determine_type_class(t2);
+		if(tc2 == TYPE_CLASS_CHAR || tc2 == TYPE_CLASS_SHORT){
+			convert_top_rvalue_to_target_type(code_gen_state, t1, t2);
+			destroy_type_description(t1);
+			return t2;
+		}else{
+			push_type(code_gen_state, t2, context); /*  Poped inside usual_arithmetic_conversion */
+			push_type(code_gen_state, t1, context);
+			return usual_arithmetic_conversion(code_gen_state, context);
+		}
 	}else if(determine_type_class(t2) == TYPE_CLASS_POINTER){
 		unsigned int compare_successful;
 		compare_successful = !type_description_cmp(t1, t2);
@@ -3390,39 +3695,63 @@ struct type_description * manage_assignment_type_change(struct code_gen_state * 
 void do_assignment(struct code_gen_state * code_gen_state, struct parser_node * context){
         /*  Stack top is thing we assign to, stack top -1 is thing to assign  */
         struct type_description * assign_type = manage_assignment_type_change(code_gen_state, context);
-	unsigned int size = type_size(code_gen_state, assign_type, RVALUE, 0, assign_type->source_scope_level);
+	unsigned int size = type_size(code_gen_state, assign_type, WORD_ALIGNED_RVALUE, 0, assign_type->source_scope_level);
 	assign_type->value_type = LVALUE;
 	push_type(code_gen_state, assign_type, context);
 
+        if(determine_type_class(assign_type) == TYPE_CLASS_CHAR){
+		buffered_printf(code_gen_state->buffered_output,"add r1 SP WR;     ptr to lvalue\n");
+		buffered_printf(code_gen_state->buffered_output,"loa r1 r1;        load lvalue\n");
+		buffered_printf(code_gen_state->buffered_output,"loa r2 SP;        load rvalue\n"); /*  Assume rvalue already has upper bits zeroed */
+		buffered_printf(code_gen_state->buffered_output,"div r3 r1 WR;     stores address div 4\n");
+		buffered_printf(code_gen_state->buffered_output,"mul r3 r3 WR;     4 byte aligned address\n");
+		buffered_printf(code_gen_state->buffered_output,"loa r5 r3;        Character word\n");
+		buffered_printf(code_gen_state->buffered_output,"sub r4 r1 r3;     mod amount\n");
+		
+		/*  Get the word with target byte zeroed out */
+		buffered_printf(code_gen_state->buffered_output,"ll r6 0xFF;       Byte mask\n");
+		buffered_printf(code_gen_state->buffered_output,"mul r7 WR r4;     Bytes to shift left\n");
+		buffered_printf(code_gen_state->buffered_output,"shl r6 r7;        Shift mask to target byte\n");
+		buffered_printf(code_gen_state->buffered_output,"shl r6 r7;        Shift mask to target byte\n");
+		buffered_printf(code_gen_state->buffered_output,"not r6 r6;        Invert mask\n");
+		buffered_printf(code_gen_state->buffered_output,"and r5 r5 r6;     Word without target byte\n");
 
-        /*  Expects the top of the stack to contain the rvalue to assign, and below that is an lvalue */
-        buffered_printf(code_gen_state->buffered_output,";                 Begin Assignment\n");
-        if(size != 4){
-        	buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;       r1 now stores num bytes in rvalue\n", size);
-        	buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;       r2 now stores num bytes to end of rvalue\n", (size -4));
-        }
-
-        if(size == 4){
-        	buffered_printf(code_gen_state->buffered_output,"add r3 SP WR;     now stores the address of lvalue on stack\n");
+		/*  Put byte into word  */
+		buffered_printf(code_gen_state->buffered_output,"shl r2 r7;        Shift mask to target byte\n");
+		buffered_printf(code_gen_state->buffered_output,"shl r2 r7;        Shift mask to target byte\n");
+		buffered_printf(code_gen_state->buffered_output,"or r2 r2 r5;      Add byte to word\n");
+		buffered_printf(code_gen_state->buffered_output,"sto r3 r2;        Store new word\n");
+		buffered_printf(code_gen_state->buffered_output,"add SP SP WR;     Pop rvalue off stack\n");
         }else{
-        	buffered_printf(code_gen_state->buffered_output,"add r3 SP r1;     now stores the address of lvalue on stack\n");
-        }
+		/*  Expects the top of the stack to contain the rvalue to assign, and below that is an lvalue */
+		buffered_printf(code_gen_state->buffered_output,";                 Begin Assignment\n");
+		if(size != 4){
+			buffered_printf(code_gen_state->buffered_output,"ll r1 0x%X;       r1 now stores num bytes in rvalue\n", size);
+			buffered_printf(code_gen_state->buffered_output,"ll r2 0x%X;       r2 now stores num bytes to end of rvalue\n", (size -4));
+		}
 
-        buffered_printf(code_gen_state->buffered_output,"loa r3 r3;        now stores top place to assign to\n");
+		if(size == 4){
+			buffered_printf(code_gen_state->buffered_output,"add r3 SP WR;     now stores the address of lvalue on stack\n");
+		}else{
+			buffered_printf(code_gen_state->buffered_output,"add r3 SP r1;     now stores the address of lvalue on stack\n");
+		}
 
-        if(size == 4){
-		buffered_printf(code_gen_state->buffered_output,"add r4 SP ZR;     stores bottom word of rvalue on stack\n");
-        }else{
-		buffered_printf(code_gen_state->buffered_output,"add r3 r3 r2;     last word of assign space\n");
-		buffered_printf(code_gen_state->buffered_output,"add r4 SP r2;     stores bottom word of rvalue on stack\n");
-        }
+		buffered_printf(code_gen_state->buffered_output,"loa r3 r3;        now stores top place to assign to\n");
 
-	copy_words(code_gen_state, "r4", "r3", "r5", size);
+		if(size == 4){
+			buffered_printf(code_gen_state->buffered_output,"add r4 SP ZR;     stores bottom word of rvalue on stack\n");
+		}else{
+			buffered_printf(code_gen_state->buffered_output,"add r3 r3 r2;     last word of assign space\n");
+			buffered_printf(code_gen_state->buffered_output,"add r4 SP r2;     stores bottom word of rvalue on stack\n");
+		}
 
-        if(size == 4){
-        	buffered_printf(code_gen_state->buffered_output,"add SP SP WR;     Remove the rvalue, and leave the lvalue as result\n");
-        }else{
-        	buffered_printf(code_gen_state->buffered_output,"add SP SP r1;     Remove the rvalue, and leave the lvalue as result\n");
+		copy_words(code_gen_state, "r4", "r3", "r5", size);
+
+		if(size == 4){
+			buffered_printf(code_gen_state->buffered_output,"add SP SP WR;     Remove the rvalue, and leave the lvalue as result\n");
+		}else{
+			buffered_printf(code_gen_state->buffered_output,"add SP SP r1;     Remove the rvalue, and leave the lvalue as result\n");
+		}
         }
 }
 
@@ -3482,15 +3811,13 @@ void g_init_declarator(struct parser_node * p, struct code_gen_state * code_gen_
 			if(is_global){
 				if(!is_extern){
 					unsigned char * name;
-					struct type_traversal * type_traversal;
+					unsigned int size = type_size(code_gen_state, type_description, WORD_ALIGNED_RVALUE, 0, type_description->source_scope_level);
+					assert(size % 4 == 0);
 					sprintf_hook("globalvar_%s", identifier_str);
 					name = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 					buffered_printf(code_gen_state->buffered_output,"%s:\n", name);
-
-					type_traversal = construct_type_traversal(code_gen_state, type_description, get_current_scope_level(code_gen_state), 0);
-					setup_global_type(code_gen_state, type_traversal, (struct constant_initializer_level *)0);
-					destroy_type_traversal(type_traversal);
-
+					/*  Don't need to create thousands of dw directives */
+					buffered_printf(code_gen_state->buffered_output,"sw 0x%X;\n", size / 4);
 					implement_external_symbol(&code_gen_state->symbols, name);
 					free(name);
 
@@ -3897,7 +4224,7 @@ void find_child_case_labels_h(struct code_gen_state * code_gen_state, struct par
 				unsigned int size;
 				assert(n->first_child->next->type == CONSTANT_EXPRESSION);
 				size = evaluate_compile_time_constant(code_gen_state, evaluate_constant_constant_expression(code_gen_state, n->first_child->next));
-				unsigned_int_list_add(&frame->values, size);
+				unsigned_int_list_add_end(&frame->values, size);
 				find_child_case_labels_h(code_gen_state, fourth_child(n), frame);
 			}else if(n->first_child->c_lexer_token->type == DEFAULT){
 				find_child_case_labels_h(code_gen_state, third_child(n), frame);
@@ -3940,7 +4267,8 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * code_
 			destroy_type_description(t);
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s;\n", false_condition_str);
 			g_statement(fifth_child(p), code_gen_state, 0, 0);
-			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;\n", after_condition_str);
+			buffered_printf(code_gen_state->buffered_output,"loa PC PC;\n");
+			buffered_printf(code_gen_state->buffered_output,"dw %s;\n", after_condition_str);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", false_condition_str);
 			g_statement(seventh_child(p), code_gen_state, 0, 0);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", after_condition_str);
@@ -3987,7 +4315,7 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * code_
 			unsigned char * after_condition_str;
 			struct scope_level * scope = get_current_scope_level(code_gen_state);
 			unsigned int uses_compound_statement = first_child(fifth_child(p))->type == COMPOUND_STATEMENT;
-			struct switch_frame * frame = malloc(sizeof(struct switch_frame));
+			struct switch_frame * frame = (struct switch_frame *)malloc(sizeof(struct switch_frame));
 			unsigned int num_cases;
 			unsigned int i;
 			struct type_description * t;
@@ -4020,23 +4348,25 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * code_
 				unsigned char * default_str;
 				sprintf_hook("select%ddefault", frame->condition_index);
 				default_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
-				buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;\n", default_str);
+				buffered_printf(code_gen_state->buffered_output,"loa PC PC;\n");
+				buffered_printf(code_gen_state->buffered_output,"dw %s;\n", default_str);
 				require_internal_symbol(&code_gen_state->symbols, default_str);
 				free(default_str);
 			}else{
 				/*  There is no case in this switch, jump directly to the end */
-				buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;\n", after_condition_str);
+				buffered_printf(code_gen_state->buffered_output,"loa PC PC;\n");
+				buffered_printf(code_gen_state->buffered_output,"dw %s;\n", after_condition_str);
 			}
 
-			struct_switch_frame_ptr_list_add(&code_gen_state->switch_frames, frame);
+			struct_switch_frame_ptr_list_add_end(&code_gen_state->switch_frames, frame);
 			if(uses_compound_statement){
 				g_statement(fifth_child(p), code_gen_state, 0, after_condition_str);
 			}else{
-				unsigned_char_ptr_list_add(&scope->end_labels, after_condition_str);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, after_condition_str);
 				g_statement(fifth_child(p), code_gen_state, 0, 0);
 			}
 			unsigned_int_list_destroy(&frame->values);
-			free(struct_switch_frame_ptr_list_pop(&code_gen_state->switch_frames));
+			free(struct_switch_frame_ptr_list_pop_end(&code_gen_state->switch_frames));
 
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", after_condition_str);
 			require_internal_symbol(&code_gen_state->symbols, after_condition_str);
@@ -4044,7 +4374,7 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * code_
 			if(uses_compound_statement){
 				free(after_condition_str);
 			}else{
-				free(unsigned_char_ptr_list_pop(&scope->end_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected if or switch.\n");
@@ -4085,8 +4415,8 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			if(uses_compound_statement){
 				g_statement(second_child(p), code_gen_state, evaluatewhile_str, endwhile_str);
 			}else{
-				unsigned_char_ptr_list_add(&scope->evaluate_labels, evaluatewhile_str);
-				unsigned_char_ptr_list_add(&scope->end_labels, endwhile_str);
+				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluatewhile_str);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, endwhile_str);
 				g_statement(second_child(p), code_gen_state, 0, 0);
 			}
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", evaluatewhile_str);
@@ -4099,7 +4429,8 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			destroy_type_description(t);
 
 			buffered_printf(code_gen_state->buffered_output,"beq r1 ZR %s; If not true, skip to end\n", endwhile_str);
-			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s; Test condition again\n", startwhile_str);
+			buffered_printf(code_gen_state->buffered_output,"loa PC PC; Test condition again\n");
+			buffered_printf(code_gen_state->buffered_output,"dw %s; Test condition again\n", startwhile_str);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", endwhile_str);
 			require_internal_symbol(&code_gen_state->symbols, evaluatewhile_str);
 			require_internal_symbol(&code_gen_state->symbols, startwhile_str);
@@ -4112,8 +4443,8 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 				free(evaluatewhile_str);
 				free(endwhile_str);
 			}else{
-				free(unsigned_char_ptr_list_pop(&scope->evaluate_labels));
-				free(unsigned_char_ptr_list_pop(&scope->end_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected do while.\n");
@@ -4156,15 +4487,16 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			if(uses_compound_statement){
 				g_statement(seventh_child(p), code_gen_state, evaluatefor_str, endfor_str);
 			}else{
-				unsigned_char_ptr_list_add(&scope->evaluate_labels, evaluatefor_str);
-				unsigned_char_ptr_list_add(&scope->end_labels, endfor_str);
+				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluatefor_str);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, endfor_str);
 				g_statement(seventh_child(p), code_gen_state, 0, 0);
 			}
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", evaluatefor_str);
 			g_expression(fifth_child(p), code_gen_state);
 			buffered_printf(code_gen_state->buffered_output,"add SP SP WR; Pop value of statement\n");
 			destroy_type_description(pop_type_without_type_check(code_gen_state, fifth_child(p)));
-			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s; Test condition again\n", startfor_str);
+			buffered_printf(code_gen_state->buffered_output,"loa PC PC; Test condition again\n");
+			buffered_printf(code_gen_state->buffered_output,"dw %s; Test condition again\n", startfor_str);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", endfor_str);
 			require_internal_symbol(&code_gen_state->symbols, startfor_str);
 			require_internal_symbol(&code_gen_state->symbols, endfor_str);
@@ -4177,8 +4509,8 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 				free(evaluatefor_str);
 				free(endfor_str);
 			}else{
-				free(unsigned_char_ptr_list_pop(&scope->evaluate_labels));
-				free(unsigned_char_ptr_list_pop(&scope->end_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected for thingy.\n");
@@ -4217,11 +4549,12 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			if(uses_compound_statement){
 				g_statement(sixth_child(p), code_gen_state, startfor_str, endfor_str);
 			}else{
-				unsigned_char_ptr_list_add(&scope->evaluate_labels, startfor_str);
-				unsigned_char_ptr_list_add(&scope->end_labels, endfor_str);
+				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, startfor_str);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, endfor_str);
 				g_statement(sixth_child(p), code_gen_state, 0, 0);
 			}
-			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s; Test condition again\n", startfor_str);
+			buffered_printf(code_gen_state->buffered_output,"loa PC PC; Test condition again\n");
+			buffered_printf(code_gen_state->buffered_output,"dw %s; Test condition again\n", startfor_str);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", endfor_str);
 			require_internal_symbol(&code_gen_state->symbols, startfor_str);
 			require_internal_symbol(&code_gen_state->symbols, endfor_str);
@@ -4231,8 +4564,8 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 				free(startfor_str);
 				free(endfor_str);
 			}else{
-				free(unsigned_char_ptr_list_pop(&scope->evaluate_labels));
-				free(unsigned_char_ptr_list_pop(&scope->end_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected for thingy.\n");
@@ -4266,11 +4599,12 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 			if(uses_compound_statement){
 				g_statement(fifth_child(p), code_gen_state, startwhile_str, endwhile_str);
 			}else{
-				unsigned_char_ptr_list_add(&scope->evaluate_labels, startwhile_str);
-				unsigned_char_ptr_list_add(&scope->end_labels, endwhile_str);
+				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, startwhile_str);
+				unsigned_char_ptr_list_add_end(&scope->end_labels, endwhile_str);
 				g_statement(fifth_child(p), code_gen_state, 0, 0);
 			}
-			buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s; Test condition again\n", startwhile_str);
+			buffered_printf(code_gen_state->buffered_output,"loa PC PC; Test condition again\n");
+			buffered_printf(code_gen_state->buffered_output,"dw %s; Test condition again\n", startwhile_str);
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", endwhile_str);
 			require_internal_symbol(&code_gen_state->symbols, startwhile_str);
 			require_internal_symbol(&code_gen_state->symbols, endwhile_str);
@@ -4280,8 +4614,8 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * code_
 				free(startwhile_str);
 				free(endwhile_str);
 			}else{
-				free(unsigned_char_ptr_list_pop(&scope->evaluate_labels));
-				free(unsigned_char_ptr_list_pop(&scope->end_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
+				free(unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected while thingy.\n");
@@ -4323,7 +4657,8 @@ void g_jump_statement(struct parser_node * p, struct code_gen_state * code_gen_s
 				if(unsigned_char_ptr_list_size(&current_scope->evaluate_labels)){
 					unsigned char * label = unsigned_char_ptr_list_get(&current_scope->evaluate_labels, unsigned_char_ptr_list_size(&current_scope->evaluate_labels) -1);
 					clear_locals_from_scope(code_gen_state, current_scope);
-					buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;  For continue statement\n", label);
+					buffered_printf(code_gen_state->buffered_output,"loa PC PC;  For continue statement\n");
+					buffered_printf(code_gen_state->buffered_output,"dw %s;  For continue statement\n", label);
 					break;
 				}else{
 					/*  This is likely an if statement (or switch), clear the locals from stack before branch */
@@ -4339,7 +4674,8 @@ void g_jump_statement(struct parser_node * p, struct code_gen_state * code_gen_s
 				if(unsigned_char_ptr_list_size(&current_scope->end_labels)){
 					unsigned char * label = unsigned_char_ptr_list_get(&current_scope->end_labels, unsigned_char_ptr_list_size(&current_scope->end_labels) -1);
 					clear_locals_from_scope(code_gen_state, current_scope);
-					buffered_printf(code_gen_state->buffered_output,"beq ZR ZR %s;  For break statement\n", label);
+					buffered_printf(code_gen_state->buffered_output,"loa PC PC;  For break statement\n");
+					buffered_printf(code_gen_state->buffered_output,"dw %s;  For break statement\n", label);
 					break;
 				}else{
 					/*  This is likely an if statement clear the locals from stack before branch */
@@ -4413,42 +4749,36 @@ void g_translation_unit_rest(struct parser_node * p, struct code_gen_state * cod
 void g_translation_unit(struct parser_node * p, struct code_gen_state * code_gen_state){
 	if(check_two_children(p, EXTERNAL_DECLARATION, TRANSLATION_UNIT_REST)){
 		unsigned int i;
-		unsigned int total_chars = 0;
 		struct struct_constant_description_ptr_list constants = unsigned_char_ptr_to_struct_constant_description_ptr_map_values(&code_gen_state->parser_state->constant_map);
-		struct char_ptr_list string_literals;
+		struct unsigned_int_ptr_list string_literals;
 		unsigned int num_constants = struct_constant_description_ptr_list_size(&constants);
 		unsigned int num_string_literals;
-		char_ptr_list_create(&string_literals);
+		unsigned_int_ptr_list_create(&string_literals);
 		for(i = 0; i < num_constants; i++){
 			struct constant_description * description = struct_constant_description_ptr_list_get(&constants, i);
 			if(description->type == STRING_LITERAL){
-				char_ptr_list_add(&string_literals, (char *)description->native_data);
+				unsigned_int_ptr_list_add_end(&string_literals, (unsigned int *)description->native_data);
 			}
 		}
-		num_string_literals = char_ptr_list_size(&string_literals);
+		num_string_literals = unsigned_int_ptr_list_size(&string_literals);
 		/*  Output string literals. */
 		for(i = 0; i < num_string_literals; i++){
-			char * c = char_ptr_list_get(&string_literals, i);
-			unsigned int len = (unsigned int)strlen(c);
+			unsigned int * c = unsigned_int_ptr_list_get(&string_literals, i);
+			unsigned int len = (unsigned int)strlen((char *)c) + 1;
 			unsigned int j;
 			unsigned char * string_literal_identifier_str;
+			unsigned int remain = len % sizeof(unsigned int);
+			unsigned int int_len = len / sizeof(unsigned int) + (remain ? 1 : 0);
 			sprintf_hook("stringliteral_%p", (void *)c);
 			string_literal_identifier_str = copy_string(get_sprintf_buffer(), get_null_terminator(get_sprintf_buffer()));
 			buffered_printf(code_gen_state->buffered_output,"%s:\n", string_literal_identifier_str);
-			for(j = 0; j < (len + 1); j++){
-				if(c[j] == '\n'){
-					buffered_printf(code_gen_state->buffered_output,"dw 0x%X; \\n\n", c[j]);
-				}else if(c[j] == '\0'){
-					buffered_printf(code_gen_state->buffered_output,"dw 0x%X; \\0\n", c[j]);
-				}else{
-					buffered_printf(code_gen_state->buffered_output,"dw 0x%X; %c\n", c[j], c[j]);
-				}
-				total_chars++;
+			for(j = 0; j < int_len; j++){
+				buffered_printf(code_gen_state->buffered_output,"dw 0x%X; \n", c[j]);
 			}
 			implement_internal_symbol(&code_gen_state->symbols, string_literal_identifier_str);
 			free(string_literal_identifier_str);
 		}
-		char_ptr_list_destroy(&string_literals);
+		unsigned_int_ptr_list_destroy(&string_literals);
 		struct_constant_description_ptr_list_destroy(&constants);
 
 		g_external_declaration(first_child(p), code_gen_state);
@@ -4459,7 +4789,7 @@ void g_translation_unit(struct parser_node * p, struct code_gen_state * code_gen
 }
 
 struct linker_symbol * make_linker_symbol(unsigned int is_impl, unsigned int is_req, unsigned int is_ext, unsigned int offset){
-	struct linker_symbol * new_symbol = malloc(sizeof(struct linker_symbol));
+	struct linker_symbol * new_symbol = (struct linker_symbol *)malloc(sizeof(struct linker_symbol));
 	new_symbol->is_implemented = is_impl;
 	new_symbol->is_required = is_req;
 	new_symbol->is_external = is_ext;
@@ -4625,7 +4955,7 @@ int do_code_generation(struct memory_pooler_collection * memory_pooler_collectio
 				data = unsigned_char_list_data(&generated_code);
 
 				for(i = 0; i < size; i++){
-					unsigned_char_list_add(&buffered_symbol_table, data[i]);
+					unsigned_char_list_add_end(&buffered_symbol_table, data[i]);
 				}
 
 				output_buffer_to_file(&buffered_symbol_table, (char *)out_file);

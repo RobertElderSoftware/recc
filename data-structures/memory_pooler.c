@@ -22,7 +22,7 @@
 	Pointers returned are guaranteed to be always point to the underlying object until they are freed, or this data structure is destroyed.
 */
 
-unsigned int pooling_active = 1;  /* Easy switch to toggle between pooling and normal malloc free */
+static unsigned int pooling_active = 1;  /* Easy switch to toggle between pooling and normal malloc free */
 
 unsigned int get_block_index(unsigned int);
 void * get_object_pointer(void **, unsigned int, unsigned int);
@@ -40,6 +40,7 @@ unsigned int get_block_index(unsigned int index){
 
 void * get_object_pointer(void ** block_pointers, unsigned int index, unsigned int object_size){
 	unsigned int block_index = get_block_index(index);
+	assert(object_size);
 	return &(((char *)(block_pointers[block_index]))[object_size * ((index + 1) - (1 << block_index))]);
 }
 
@@ -74,14 +75,14 @@ void * memory_pooler_malloc(struct memory_pooler * p){
 		if(void_ptr_list_size(&p->free_pointers)){
 			void * rtn;
 			p->objects_allocated = p->objects_allocated + 1;
-			rtn = void_ptr_list_pop(&p->free_pointers);
+			rtn = void_ptr_list_pop_end(&p->free_pointers);
 			assert(rtn);
 			return rtn;
 		}
 		/*  No recently freed objects, check if we need to allocate another memory block */
 		if(p->objects_allocated == p->next_allocation){
 			/*  Allocate a new block of size 2^n, where n increases by one each time we do this */
-			void_ptr_list_add(&p->block_pointers, malloc(p->object_size * p->objects_to_allocate));
+			void_ptr_list_add_end(&p->block_pointers, malloc(p->object_size * p->objects_to_allocate));
 			p->next_allocation += p->objects_to_allocate;
 			p->objects_to_allocate *= 2;
 		}
@@ -97,7 +98,7 @@ void memory_pooler_free(struct memory_pooler * p, void * ptr){
 		if(ptr){
 			assert(p->objects_allocated);
 			p->objects_allocated = p->objects_allocated - 1;
-			void_ptr_list_add(&p->free_pointers, ptr);
+			void_ptr_list_add_end(&p->free_pointers, ptr);
 		}
 	}else{
 		free(ptr);
@@ -126,15 +127,16 @@ struct memory_pooler * memory_pooler_collection_get_pool(struct memory_pooler_co
 	unsigned int num_pools = struct_memory_pooler_ptr_list_size(&collection->pools);
 	unsigned int i;
 	struct memory_pooler * new_pool;
+	assert(size);
 	for(i = 0; i < num_pools; i++){
 		if(size == unsigned_int_list_get(&collection->sizes, i)){
 			return struct_memory_pooler_ptr_list_get(&collection->pools, i);
 		}
 	}
 	/*  Need to create another pool for this size object */
-	new_pool = malloc(sizeof(struct memory_pooler));
+	new_pool = (struct memory_pooler *)malloc(sizeof(struct memory_pooler));
 	memory_pooler_create(new_pool, size);
-	struct_memory_pooler_ptr_list_add(&collection->pools, new_pool);
-	unsigned_int_list_add(&collection->sizes, size);
+	struct_memory_pooler_ptr_list_add_end(&collection->pools, new_pool);
+	unsigned_int_list_add_end(&collection->sizes, size);
 	return new_pool;
 }

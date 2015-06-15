@@ -37,6 +37,12 @@ struct switch_frame;
 struct constant_description;
 struct constant_initializer_level;
 struct type_traversal;
+struct macro_parameter;
+struct macro_definition;
+struct struct_c_lexer_token_ptr_list;
+struct if_branch;
+struct struct_unsigned_char_list;
+struct c_lexer_state;
 
 enum parser_operation_type{
 	INCREMENT_NEWLINE_COUNT,
@@ -60,5 +66,29 @@ struct parser_operation{
 	enum parser_operation_type type;
 	unsigned int pad;
 };
+
+#define BITS_PER_BRANCH_DIST  9u
+#define BITS_PER_LITERAL     16u
+#define BITS_PER_OP_CODE      5u
+#define OP_CODE_OFFSET       27u
+#define BITS_PER_REGISTER     9u
+#define ra_OFFSET            18u
+#define rb_OFFSET            (ra_OFFSET - BITS_PER_REGISTER)
+#define rc_OFFSET            (rb_OFFSET - BITS_PER_REGISTER)
+
+#define UNSHIFTED_OP_CODE_MASK   (0xFFFFFFFF >> (32u - BITS_PER_OP_CODE))
+#define OP_CODE_MASK             (UNSHIFTED_OP_CODE_MASK << OP_CODE_OFFSET)
+#define UNSHIFTED_REGISTER_MASK  (0xFFFFFFFF >> (32u - BITS_PER_REGISTER))
+#define ra_MASK                  (UNSHIFTED_REGISTER_MASK << ra_OFFSET)
+#define rb_MASK                  (UNSHIFTED_REGISTER_MASK << rb_OFFSET)
+#define rc_MASK                  (UNSHIFTED_REGISTER_MASK << rc_OFFSET)
+#define LITERAL_MASK             (0xFFFFFFFF >> (32u - BITS_PER_LITERAL))
+#define BRANCH_DISTANCE_MASK     (0xFFFFFFFF >> (32u - BITS_PER_BRANCH_DIST))
+
+#define BRANCH_DISTANCE_SIGN_BIT 0x100
+
+#define MAX_LL_CONSTANT 0xFFFF
+#define MAX_BRANCH_POS 255
+#define MAX_BRANCH_NEG 256
 
 #endif

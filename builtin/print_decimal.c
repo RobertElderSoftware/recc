@@ -12,9 +12,9 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-void print_decimal(int);
+#include <stdio.h>
 
-int putchar(int);
+void print_decimal(int);
 
 void print_decimal(int d){
 	unsigned int leading_zero = 1;

@@ -14,7 +14,7 @@
 */
 
 /*
-  A linux compatible interface for running .l1 files in the op-cpu emulator.  Takes care
+  A linux compatible interface for running .l0.c files in the op-cpu emulator.  Takes care
 of non-standard terminal input, and output.
 
 */

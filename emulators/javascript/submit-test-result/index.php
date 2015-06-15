@@ -21,7 +21,7 @@ if(isset($_REQUEST['test_name']) && isset($_REQUEST['test_result'])){
 	$test_name = $_REQUEST['test_name'];
 
         //  TODO:  this should be safer if the endpoint is ever on a server
-	$result = file_put_contents(realpath(dirname(__FILE__))."/../../../test/{$test_name}.jsoutput",$_REQUEST['test_result']);
+	$result = file_put_contents(realpath(dirname(__FILE__))."/../../../test/{$test_name}.jsoutput",urldecode($_REQUEST['test_result']));
 
         if($result === false){
 		$response_object['error'] = "Failed to submit test case $test_name.  Are the permissions set on the 'test' directory?";

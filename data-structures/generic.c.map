@@ -13,29 +13,29 @@
 	use of this software.
 */
 
-#include "GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map.h"
+#include "T0_IDENTIFIER_to_T1_IDENTIFIER_map.h"
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_create(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map, int (*f)(GENERIC_TYPE0_LITERAL, GENERIC_TYPE0_LITERAL)){
-	binary_exponential_buffer_create(&map->key_value_pairs, sizeof(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair));
+void T0_IDENTIFIER_to_T1_IDENTIFIER_map_create(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map, int (*f)(T0_LITERAL, T0_LITERAL)){
+	binary_exponential_buffer_create(&map->key_value_pairs, sizeof(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair));
 	map->compare = f;
 }
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_destroy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map){
+void T0_IDENTIFIER_to_T1_IDENTIFIER_map_destroy(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map){
 	binary_exponential_buffer_destroy(&map->key_value_pairs);
 }
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_put(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map, GENERIC_TYPE0_LITERAL key, GENERIC_TYPE1_LITERAL value){
-	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair kvp;
+void T0_IDENTIFIER_to_T1_IDENTIFIER_map_put(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map, T0_LITERAL key, T1_LITERAL value){
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair kvp;
 	kvp.key = key;
 	kvp.value = value;
 	binary_exponential_buffer_increment(&map->key_value_pairs, 1);
-	((struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs))[binary_exponential_buffer_size(&map->key_value_pairs) -1] = kvp;
+	((struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs))[binary_exponential_buffer_size(&map->key_value_pairs) -1] = kvp;
 }
 
-GENERIC_TYPE1_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_get(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map, GENERIC_TYPE0_LITERAL key){
+T1_LITERAL T0_IDENTIFIER_to_T1_IDENTIFIER_map_get(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map, T0_LITERAL key){
 	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
 	unsigned int i;
-	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair * data = binary_exponential_buffer_data(&map->key_value_pairs);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);
 	for(i = 0; i < size; i++){
 		if(!map->compare(key, data[i].key)){
 			return data[i].value;
@@ -44,37 +44,47 @@ GENERIC_TYPE1_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIF
 	return 0;
 }
 
+struct T0_IDENTIFIER_to_T1_IDENTIFIER_map T0_IDENTIFIER_to_T1_IDENTIFIER_map_copy(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map){
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_map copy;
+	copy.key_value_pairs = binary_exponential_buffer_copy(&map->key_value_pairs);
+	copy.compare = map->compare;
+	return copy;
+}
 
-struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_keys(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map){
-	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list rtn;
+struct T0_IDENTIFIER_list T0_IDENTIFIER_to_T1_IDENTIFIER_map_keys(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map){
+	struct T0_IDENTIFIER_list rtn;
 	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
 	unsigned int i;
-	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair * data = binary_exponential_buffer_data(&map->key_value_pairs);
-	GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_create(&rtn);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);
+	T0_IDENTIFIER_list_create(&rtn);
 	for(i = 0; i < size; i++){
-		GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_add(&rtn, data[i].key);
+		T0_IDENTIFIER_list_add_end(&rtn, data[i].key);
 	}
 	return rtn;
 }
 
-struct GENERIC_TYPE1_IDENTIFIER_FRIENDLY_list GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_values(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map){
-	struct GENERIC_TYPE1_IDENTIFIER_FRIENDLY_list rtn;
+struct T1_IDENTIFIER_list T0_IDENTIFIER_to_T1_IDENTIFIER_map_values(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map){
+	struct T1_IDENTIFIER_list rtn;
 	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
 	unsigned int i;
-	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair * data = binary_exponential_buffer_data(&map->key_value_pairs);
-	GENERIC_TYPE1_IDENTIFIER_FRIENDLY_list_create(&rtn);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);
+	T1_IDENTIFIER_list_create(&rtn);
 	for(i = 0; i < size; i++){
-		GENERIC_TYPE1_IDENTIFIER_FRIENDLY_list_add(&rtn, data[i].value);
+		T1_IDENTIFIER_list_add_end(&rtn, data[i].value);
 	}
 	return rtn;
 }
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map_remove(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_map * map, GENERIC_TYPE0_LITERAL key){
+unsigned int T0_IDENTIFIER_to_T1_IDENTIFIER_map_size(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map){
+	return binary_exponential_buffer_size(&map->key_value_pairs);
+}
+
+void T0_IDENTIFIER_to_T1_IDENTIFIER_map_remove(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map, T0_LITERAL key){
 	/* Remove key value pair with key item from map */
 	unsigned int i = 0;
 	unsigned int old_i = 0;
 	unsigned int new_i = 0;
-	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_to_GENERIC_TYPE1_IDENTIFIER_FRIENDLY_key_value_pair * data = binary_exponential_buffer_data(&map->key_value_pairs);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);
 
 	for(i = 0; i < binary_exponential_buffer_size(&map->key_value_pairs); i++){
 		if(map->compare(key, data[i].key)){

@@ -20,28 +20,17 @@ unsigned int num_clock_ticks = 0;
 unsigned int saved_uart1_out_ready = 0;
 unsigned int saved_uart1_in_ready = 0;
 
-struct task_queue * ready_queue_p0_ptr;
-struct task_queue * ready_queue_p1_ptr;
-struct task_queue * ready_queue_p2_ptr;
-struct task_queue * ready_queue_ptr;
-struct task_queue * zombie_queue_ptr;
-struct task_queue * blocked_on_clock_tick_queue_ptr;
-struct task_queue * blocked_on_uart1_out_ready_queue_ptr;
-struct task_queue * blocked_on_uart1_in_ready_queue_ptr;
-
-struct process_control_block * pcb_ptrs[MAX_NUM_PROCESSES];
-
 void schedule_next_task(void){
 	struct process_control_block * next_task;
 	/*  Get the next task */
-	if(task_queue_current_count(ready_queue_p0_ptr)){
-		next_task = task_queue_pop_start(ready_queue_p0_ptr); 
-	}else if(task_queue_current_count(ready_queue_p1_ptr)){
-		next_task = task_queue_pop_start(ready_queue_p1_ptr); 
-	}else if(task_queue_current_count(ready_queue_p2_ptr)){
-		next_task = task_queue_pop_start(ready_queue_p2_ptr); 
+	if(task_queue_current_count(&ready_queue_p0)){
+		next_task = task_queue_pop_start(&ready_queue_p0); 
+	}else if(task_queue_current_count(&ready_queue_p1)){
+		next_task = task_queue_pop_start(&ready_queue_p1); 
+	}else if(task_queue_current_count(&ready_queue_p2)){
+		next_task = task_queue_pop_start(&ready_queue_p2); 
 	}else{
-		next_task = task_queue_pop_start(ready_queue_ptr); 
+		next_task = task_queue_pop_start(&ready_queue); 
 	}
 	next_task->state = ACTIVE;
 	/*  Set its stack pointer */
@@ -53,30 +42,30 @@ void unblock_tasks_for_event(enum kernel_event event){
 	switch (event){
 		case CLOCK_TICK_EVENT:{
 			struct process_control_block * unblocked_task;
-			if(task_queue_current_count(blocked_on_clock_tick_queue_ptr)){
-				unblocked_task = task_queue_pop_start(blocked_on_clock_tick_queue_ptr); 
+			if(task_queue_current_count(&blocked_on_clock_tick_queue)){
+				unblocked_task = task_queue_pop_start(&blocked_on_clock_tick_queue); 
 				add_task_to_ready_queue(unblocked_task);
 			}
 			break;
 		}case UART1_OUT_READY:{
 			struct process_control_block * unblocked_task;
-			if(task_queue_current_count(blocked_on_uart1_out_ready_queue_ptr) == 0){
+			if(task_queue_current_count(&blocked_on_uart1_out_ready_queue) == 0){
 				/*  Nothing has blocked on this event yet so save the signal */
 				assert(!saved_uart1_out_ready, "There should be no previous saved uart signal.  Expect output problems.");
 				saved_uart1_out_ready = 1;
 			}else{
-				unblocked_task = task_queue_pop_start(blocked_on_uart1_out_ready_queue_ptr); 
+				unblocked_task = task_queue_pop_start(&blocked_on_uart1_out_ready_queue); 
 				add_task_to_ready_queue(unblocked_task);
 			}
 			break;
 		}case UART1_IN_READY:{
 			struct process_control_block * unblocked_task;
-			if(task_queue_current_count(blocked_on_uart1_in_ready_queue_ptr) == 0){
+			if(task_queue_current_count(&blocked_on_uart1_in_ready_queue) == 0){
 				/*  Nothing has blocked on this event yet so save the signal */
 				assert(!saved_uart1_in_ready, "There should be no previous saved uart signal.  Expect input problems.");
 				saved_uart1_in_ready = 1;
 			}else{
-				unblocked_task = task_queue_pop_start(blocked_on_uart1_in_ready_queue_ptr); 
+				unblocked_task = task_queue_pop_start(&blocked_on_uart1_in_ready_queue); 
 				add_task_to_ready_queue(unblocked_task);
 			}
 			break;
@@ -92,33 +81,33 @@ void add_task_to_ready_queue(struct process_control_block * pcb){
 	pcb->state = READY;
 	switch(pcb->priority){
 		case 0:{
-			task_queue_push_end(ready_queue_p0_ptr, pcb); 
+			task_queue_push_end(&ready_queue_p0, pcb); 
 			break;
 		}case 1:{
-			task_queue_push_end(ready_queue_p1_ptr, pcb); 
+			task_queue_push_end(&ready_queue_p1, pcb); 
 			break;
 		}case 2:{
-			task_queue_push_end(ready_queue_p2_ptr, pcb); 
+			task_queue_push_end(&ready_queue_p2, pcb); 
 			break;
 		}default:{
-			task_queue_push_end(ready_queue_ptr, pcb); 
+			task_queue_push_end(&ready_queue, pcb); 
 		}
 	}
 }
 
 void save_current_task_as_ready(void){
 	/*  Save the stack pointer of the current task */
-	pcb_ptrs[current_task_id]->stack_pointer = g_current_sp;
+	pcbs[current_task_id].stack_pointer = g_current_sp;
 	/*  Put current task back on ready queue */
-	add_task_to_ready_queue(pcb_ptrs[current_task_id]);
+	add_task_to_ready_queue(&pcbs[current_task_id]);
 }
 
 void save_current_task(struct task_queue * queue, enum process_state state){
 	/*  Save the stack pointer of the current task */
-	pcb_ptrs[current_task_id]->stack_pointer = g_current_sp;
+	pcbs[current_task_id].stack_pointer = g_current_sp;
 	/*  Put current task back on queue */
-	pcb_ptrs[current_task_id]->state = state;
-	task_queue_push_end(queue, pcb_ptrs[current_task_id]); 
+	pcbs[current_task_id].state = state;
+	task_queue_push_end(queue, &pcbs[current_task_id]); 
 }
 
 unsigned int scheduler(void){
@@ -128,7 +117,7 @@ unsigned int scheduler(void){
 }
 
 void k_task_exit(void){
-	save_current_task(zombie_queue_ptr, ZOMBIE);
+	save_current_task(&zombie_queue, ZOMBIE);
 	schedule_next_task();
 }
 
@@ -139,7 +128,7 @@ unsigned int k_release_processor(void){
 void k_block_on_event(enum kernel_event event){
 	switch(event){
 		case CLOCK_TICK_EVENT:{
-			save_current_task(blocked_on_clock_tick_queue_ptr, BLOCKED_ON_CLOCK_TICK);
+			save_current_task(&blocked_on_clock_tick_queue, BLOCKED_ON_CLOCK_TICK);
 			schedule_next_task();
 			break;
 		}case UART1_OUT_READY:{
@@ -147,7 +136,7 @@ void k_block_on_event(enum kernel_event event){
 				/*  Use up the saved signal, and don't block the task. */
 				saved_uart1_out_ready = 0;
 			}else{
-				save_current_task(blocked_on_uart1_out_ready_queue_ptr, BLOCKED_ON_UART1_OUT_READY);
+				save_current_task(&blocked_on_uart1_out_ready_queue, BLOCKED_ON_UART1_OUT_READY);
 				schedule_next_task();
 			}
 			break;
@@ -156,7 +145,7 @@ void k_block_on_event(enum kernel_event event){
 				/*  Use up the saved signal, and don't block the task. */
 				saved_uart1_in_ready = 0;
 			}else{
-				save_current_task(blocked_on_uart1_in_ready_queue_ptr, BLOCKED_ON_UART1_IN_READY);
+				save_current_task(&blocked_on_uart1_in_ready_queue, BLOCKED_ON_UART1_IN_READY);
 				schedule_next_task();
 			}
 			break;
@@ -187,41 +176,41 @@ void k_irq_handler(unsigned int interrupt_id){
 
 void k_send_message(struct kernel_message * message, unsigned int destination_pid, struct kernel_message * reply){
 	/*  Remember where to store the reply */
-	pcb_ptrs[current_task_id]->reply_message = reply;
+	pcbs[current_task_id].reply_message = reply;
 	message->source_id = current_task_id;
-	if(pcb_ptrs[destination_pid]->state == BLOCKED_ON_SEND){
+	if(pcbs[destination_pid].state == BLOCKED_ON_SEND){
 		/*  The destination is already blocked on our message send */
-		pcb_ptrs[current_task_id]->state = BLOCKED_ON_RECEIVE;
-		add_task_to_ready_queue(pcb_ptrs[destination_pid]);
-		*(pcb_ptrs[destination_pid]->recieve_message) = *message;
+		pcbs[current_task_id].state = BLOCKED_ON_RECEIVE;
+		add_task_to_ready_queue(&pcbs[destination_pid]);
+		*(pcbs[destination_pid].recieve_message) = *message;
 	}else{
 		/*  The destination has not asked for the message yet */
-		message_queue_push_end(pcb_ptrs[destination_pid]->messages_ptr, *message); 
-		pcb_ptrs[current_task_id]->state = BLOCKED_ON_REPLY;
+		message_queue_push_end(&pcbs[destination_pid].messages, *message); 
+		pcbs[current_task_id].state = BLOCKED_ON_REPLY;
 	}
-	pcb_ptrs[current_task_id]->stack_pointer = g_current_sp;
+	pcbs[current_task_id].stack_pointer = g_current_sp;
 	schedule_next_task();
 }
 
 void k_receive_message(struct kernel_message * message){
-	if(message_queue_current_count(pcb_ptrs[current_task_id]->messages_ptr) == 0){
-		pcb_ptrs[current_task_id]->state = BLOCKED_ON_SEND;
-		pcb_ptrs[current_task_id]->stack_pointer = g_current_sp;
-		pcb_ptrs[current_task_id]->recieve_message = message;
+	if(message_queue_current_count(&pcbs[current_task_id].messages) == 0){
+		pcbs[current_task_id].state = BLOCKED_ON_SEND;
+		pcbs[current_task_id].stack_pointer = g_current_sp;
+		pcbs[current_task_id].recieve_message = message;
 	}else{
 		struct kernel_message m;
-		m = message_queue_pop_start(pcb_ptrs[current_task_id]->messages_ptr);
+		m = message_queue_pop_start(&pcbs[current_task_id].messages);
 		*message = m;
-		pcb_ptrs[message->source_id]->state = BLOCKED_ON_REPLY;
+		pcbs[message->source_id].state = BLOCKED_ON_REPLY;
 		save_current_task_as_ready();
 	}
 	schedule_next_task();
 }
 
 void k_reply_message(struct kernel_message * message, unsigned int destination_pid){
-	*(pcb_ptrs[destination_pid]->reply_message) = *message;
+	*(pcbs[destination_pid].reply_message) = *message;
 	/*  Unblock the destination task */
-	add_task_to_ready_queue(pcb_ptrs[destination_pid]);
+	add_task_to_ready_queue(&pcbs[destination_pid]);
 	/*  Save current task and continue */
 	save_current_task_as_ready();
 	schedule_next_task();
@@ -229,32 +218,45 @@ void k_reply_message(struct kernel_message * message, unsigned int destination_p
 
 void k_kernel_exit(void){
 	/*  Don't need to save any state because we're exiting kernel */
-	struct process_control_block * next_task = pcb_ptrs[0]; /* Main entry SP is stored in PCB 0 */
+	struct process_control_block * next_task = &pcbs[0]; /* Main entry SP is stored in PCB 0 */
 	g_current_sp = next_task->stack_pointer;
+}
+
+void set_irq_handler(void (*irq_handler_fcn)(void)){
+	void (**irq_handler_fcn_location)(void) = (void (**)(void))0x300020;
+	*irq_handler_fcn_location = irq_handler_fcn;
+}
+
+void set_timer_period(unsigned int period){
+	unsigned int * period_location = (unsigned int *)0x300030;
+	*period_location = period;
+}
+
+unsigned int timer_interrupt_enable(void){
+	or_into_flags_register(0x8);
+}
+
+unsigned int uart1_out_interrupt_enable(void){
+	or_into_flags_register(0x20);
+}
+
+unsigned int uart1_in_interrupt_enable(void){
+	or_into_flags_register(0x80);
 }
 
 void k_kernel_init(void){
 	unsigned int i;
 	/*  Set up some globals for putchar function */
 	putchar_init();
-	/*  Optimization, due to the fact that the compiler is not very smart */
-	ready_queue_p0_ptr = &ready_queue_p0;
-	ready_queue_p1_ptr = &ready_queue_p1;
-	ready_queue_p2_ptr = &ready_queue_p2;
-	ready_queue_ptr = &ready_queue;
-	zombie_queue_ptr = &zombie_queue;
-	blocked_on_clock_tick_queue_ptr = &blocked_on_clock_tick_queue;
-	blocked_on_uart1_out_ready_queue_ptr = &blocked_on_uart1_out_ready_queue;
-	blocked_on_uart1_in_ready_queue_ptr = &blocked_on_uart1_in_ready_queue;
 
-	task_queue_init(ready_queue_p0_ptr, MAX_NUM_PROCESSES);
-	task_queue_init(ready_queue_p1_ptr, MAX_NUM_PROCESSES);
-	task_queue_init(ready_queue_p2_ptr, MAX_NUM_PROCESSES);
-	task_queue_init(ready_queue_ptr, MAX_NUM_PROCESSES);
-	task_queue_init(zombie_queue_ptr, MAX_NUM_PROCESSES);
-	task_queue_init(blocked_on_clock_tick_queue_ptr, MAX_NUM_PROCESSES);
-	task_queue_init(blocked_on_uart1_out_ready_queue_ptr, MAX_NUM_PROCESSES);
-	task_queue_init(blocked_on_uart1_in_ready_queue_ptr, MAX_NUM_PROCESSES);
+	task_queue_init(&ready_queue_p0, MAX_NUM_PROCESSES);
+	task_queue_init(&ready_queue_p1, MAX_NUM_PROCESSES);
+	task_queue_init(&ready_queue_p2, MAX_NUM_PROCESSES);
+	task_queue_init(&ready_queue, MAX_NUM_PROCESSES);
+	task_queue_init(&zombie_queue, MAX_NUM_PROCESSES);
+	task_queue_init(&blocked_on_clock_tick_queue, MAX_NUM_PROCESSES);
+	task_queue_init(&blocked_on_uart1_out_ready_queue, MAX_NUM_PROCESSES);
+	task_queue_init(&blocked_on_uart1_in_ready_queue, MAX_NUM_PROCESSES);
 
 	pcbs[0].state = ACTIVE; /*  Task 0 is not really a task, is the 'int main' that we might want to return to later for graceful exit. */
 
@@ -273,26 +275,18 @@ void k_kernel_init(void){
 	pcbs[9].priority = 3;
 
 	pcbs[0].stack_pointer = g_current_sp; /*  Save SP from entering this method so we can exit kernel gracefully */
-	pcbs[1].stack_pointer = (unsigned int)&user_proc_1_stack_start;
-	pcbs[2].stack_pointer = (unsigned int)&user_proc_2_stack_start;
-	pcbs[3].stack_pointer = (unsigned int)&user_proc_3_stack_start;
-	pcbs[4].stack_pointer = (unsigned int)&user_proc_4_stack_start;
-	pcbs[5].stack_pointer = (unsigned int)&user_proc_5_stack_start;
-	pcbs[6].stack_pointer = (unsigned int)&user_proc_6_stack_start;
-	pcbs[7].stack_pointer = (unsigned int)&user_proc_7_stack_start;
-	pcbs[8].stack_pointer = (unsigned int)&user_proc_8_stack_start;
-	pcbs[9].stack_pointer = (unsigned int)&user_proc_9_stack_start;
-
-	/*  Optimization, due to the fact that the compiler is not very smart */
-	for(i = 0; i < MAX_NUM_PROCESSES; i++)
-		pcb_ptrs[i] = &pcbs[i];
-
-	/*  Optimization, due to the fact that the compiler is not very smart */
-	for(i = 0; i < MAX_NUM_PROCESSES; i++)
-		pcb_ptrs[i]->messages_ptr = &pcb_ptrs[i]->messages;
+	pcbs[1].stack_pointer = (unsigned int *)&user_proc_1_stack_start;
+	pcbs[2].stack_pointer = (unsigned int *)&user_proc_2_stack_start;
+	pcbs[3].stack_pointer = (unsigned int *)&user_proc_3_stack_start;
+	pcbs[4].stack_pointer = (unsigned int *)&user_proc_4_stack_start;
+	pcbs[5].stack_pointer = (unsigned int *)&user_proc_5_stack_start;
+	pcbs[6].stack_pointer = (unsigned int *)&user_proc_6_stack_start;
+	pcbs[7].stack_pointer = (unsigned int *)&user_proc_7_stack_start;
+	pcbs[8].stack_pointer = (unsigned int *)&user_proc_8_stack_start;
+	pcbs[9].stack_pointer = (unsigned int *)&user_proc_9_stack_start;
 
 	for(i = 0; i < MAX_NUM_PROCESSES; i++)
-		message_queue_init(&pcb_ptrs[i]->messages, MAX_NUM_PROCESSES);
+		message_queue_init(&pcbs[i].messages, MAX_NUM_PROCESSES);
 
 	for(i = 1; i < MAX_NUM_PROCESSES; i++)
 		add_task_to_ready_queue(&pcbs[i]);
@@ -309,6 +303,7 @@ void k_kernel_init(void){
 	init_task_stack(&(pcbs[9].stack_pointer), command_server);
 
 	set_irq_handler(irq_handler);
+	set_timer_period(0xA0000);
 	timer_interrupt_enable();
 	uart1_out_interrupt_enable();
 	uart1_in_interrupt_enable();

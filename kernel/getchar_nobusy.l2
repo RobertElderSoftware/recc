@@ -4,7 +4,11 @@ getchar_nobusy:
 ;  The bit mask for UART1_IN ready
 ll r3 0x400;
 ;  The address of UART1_IN
-ll r5 0x300010;
+ll r5 0x3000;
+shl r5 WR;    0x30000
+shl r5 WR;    0x300000
+ll r2 0x10;
+add r5 r2 r5; 0x300010
 ;  Get the byte
 loa r2 r5;
 ;  Create a mask to unset the UART1_IN ready bit

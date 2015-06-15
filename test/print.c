@@ -19,15 +19,11 @@ extern unsigned int global_1;
 extern unsigned int global_2;
 extern unsigned int test_arr[3];
 
-int putchar(int);
-
 unsigned int asdf;
 unsigned int asdf2 = 4;
 
 unsigned int get_random(void);
 unsigned int get_input_space_partitioned_random(void);
-
-int printf(const char *, ...);
 
 void print_decimal(int);
 
@@ -153,7 +149,7 @@ int main(void){
 		printf("%s", constant_strings[k]);
 	}
 
-	for(k = 0; k < 5; k++){
+	for(k = 0; k < 2; k++){
 		b = 0;
 		b += get_input_space_partitioned_random();
 		b += get_input_space_partitioned_random();
@@ -198,14 +194,54 @@ int main(void){
 			(int)b == (int)c,
 			(int)b >= (int)c,
 			(int)b > (int)c,
-			(int)b <= (int)c,
-			(int)b < (int)c,
+			(int)b <= (int)c, (int)b < (int)c,
 			(int)b != (int)c
 		);
 
 		if(c != 0){
 			printf("%d %d\n", (int)b % (int)c, (int)b / (int)c);
 		}
+	}
+
+	for(k = 0; k < 2; k++){
+		b = 0;
+		b += get_input_space_partitioned_random();
+		b += get_input_space_partitioned_random();
+
+		c = 0;
+		c += get_input_space_partitioned_random();
+		c += get_input_space_partitioned_random();
+
+		printf("%X\n", b *= c);
+		printf("%X\n", b += c);
+		printf("%X\n", b -= c);
+		printf("%X\n", b &= c);
+		printf("%X\n", b |= c);
+		printf("%X\n", b ^= c);
+		printf("%X\n", b >>= c);
+		printf("%X\n", b <<= c);
+
+		if(c != 0){
+			printf("%X\n", b %= c);
+			printf("%X\n", b /= c);
+		}
+
+		/*
+		TODO:  This generates compiler warnings
+		printf("%d\n", b *= (int)c);
+		printf("%d\n", b += (int)c);
+		printf("%d\n", b -= (int)c);
+		printf("%d\n", b &= (int)c);
+		printf("%d\n", b |= (int)c);
+		printf("%d\n", b ^= (int)c);
+		printf("%d\n", b >>= (int)c);
+		printf("%d\n", b <<= (int)c);
+
+		if(c != 0){
+			printf("%d\n", b /= (int)c);
+			printf("%d\n", b %= (int)c);
+		}
+		*/
 	}
 
 	printf("%d %d\n", ((int)-97) / ((int)97), (int)-97);

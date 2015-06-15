@@ -19,6 +19,7 @@ void free_symbol_map(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *)
 unsigned int set_post_linking_offsets(struct linker_object * linker_object);
 unsigned int get_instruction_size(struct asm_instruction *);
 unsigned int parse_hexidecimal_string(struct asm_lexer_token *);
+unsigned int parse_decimal_string(struct asm_lexer_token *);
 unsigned int get_linker_object_size(struct linker_object *);
 
 void reorder_linker_objects(struct struct_linker_object_ptr_list *, struct struct_linker_object_ptr_list *, unsigned int);
@@ -56,15 +57,14 @@ void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_object
 	for(i = 0; i < struct_linker_object_ptr_list_size(linker_objects); i++){
 		struct linker_object * obj = struct_linker_object_ptr_list_get(linker_objects, i);
 		if(obj->is_relocatable){
-			struct_linker_object_ptr_list_add(&relocatable_linker_objects, obj);
+			struct_linker_object_ptr_list_add_end(&relocatable_linker_objects, obj);
 		}else{
-			struct_linker_object_ptr_list_add(&non_relocatable_linker_objects, obj);
+			struct_linker_object_ptr_list_add_end(&non_relocatable_linker_objects, obj);
 		}
 	}
 
 	/*  Pre-condition: non relocatable linker objects must be ordered in non decreasing order */
 	while(!is_non_descending_order(&non_relocatable_linker_objects)){
-		unsigned int i;
 		struct linker_object * prev = 0;
 		/* Bubble sort for now because it is easy, change for a better algorithm later. */
 		for(i = 0; i < struct_linker_object_ptr_list_size(&non_relocatable_linker_objects); i++){
@@ -108,7 +108,7 @@ void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_object
 				unsigned int relocatable_size = get_linker_object_size(relocatable);
 				if(previous_linker_object_end + relocatable_size <= current_linker_object_start){
 					previous_linker_object_end = previous_linker_object_end + relocatable_size;
-					struct_linker_object_ptr_list_add(reordered_linker_objects, relocatable);
+					struct_linker_object_ptr_list_add_end(reordered_linker_objects, relocatable);
 					/* Don't try to add this one multiple times */
 					struct_linker_object_ptr_list_remove_all(&relocatable_linker_objects, relocatable);
 					break; /* List size changed, do iteration again. */
@@ -120,7 +120,7 @@ void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_object
 			}
 		}
 		/*  No more of the relocatable objects will fit, put the non relocatable object after them */
-		struct_linker_object_ptr_list_add(reordered_linker_objects, non_relocatable);
+		struct_linker_object_ptr_list_add_end(reordered_linker_objects, non_relocatable);
 		/*  Next object needs to know where it can start from */
 		previous_linker_object_end = previous_linker_object_end + get_linker_object_size(non_relocatable);
 	}
@@ -128,12 +128,30 @@ void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_object
 	/*  Add all the leftover relocatable linker objects at the end */
 	for(i = 0; i < struct_linker_object_ptr_list_size(&relocatable_linker_objects); i++){
 		struct linker_object * relocatable = struct_linker_object_ptr_list_get(&relocatable_linker_objects, i);
-		struct_linker_object_ptr_list_add(reordered_linker_objects, relocatable);
+		struct_linker_object_ptr_list_add_end(reordered_linker_objects, relocatable);
 	}
 	/*  Now all the linker objects are guaranteed to fit. */
 
 	struct_linker_object_ptr_list_destroy(&relocatable_linker_objects);
 	struct_linker_object_ptr_list_destroy(&non_relocatable_linker_objects);
+}
+
+unsigned int parse_decimal_string(struct asm_lexer_token * token){
+	unsigned int i = 0;
+	unsigned int base = 1;
+	unsigned char * c = token->last_byte;
+	do{
+		unsigned int n;
+		if(*c >= '0' && *c <= '9'){
+			n = *c - '0';
+		}else{
+			printf("%c\n", *c);
+			assert(0 && "Unknown decimal character.");
+		}
+		i += (n * base);
+		base *= 10;
+	}while(c-- != token->first_byte);
+	return i;
 }
 
 unsigned int parse_hexidecimal_string(struct asm_lexer_token * token){
@@ -231,7 +249,7 @@ void add_linker_symbol(struct linker_object * linker_object, struct asm_lexer_to
 		free(identifier_str);
 		return;
 	}
-	new_symbol = malloc(sizeof(struct linker_symbol));
+	new_symbol = (struct linker_symbol *)malloc(sizeof(struct linker_symbol));
 	new_symbol->is_implemented = is_implemented;
 	new_symbol->is_required = is_required;
 	new_symbol->is_external = is_external;
@@ -239,7 +257,7 @@ void add_linker_symbol(struct linker_object * linker_object, struct asm_lexer_to
 }
 
 struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state){
-	struct linker_object * linker_object = malloc(sizeof(struct linker_object));
+	struct linker_object * linker_object = (struct linker_object *)malloc(sizeof(struct linker_object));
 	unsigned int num_tokens = struct_asm_lexer_token_ptr_list_size(&asm_lexer_state->tokens);
 	struct asm_lexer_token ** tokens =  struct_asm_lexer_token_ptr_list_data(&asm_lexer_state->tokens);
 	unsigned int i = 0;
@@ -250,8 +268,8 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_object->symbols, unsigned_strcmp);
 	struct_asm_instruction_ptr_list_create(&linker_object->instructions);
 	while(i < num_tokens){
-		if(tokens[i]->type == A_ADD || tokens[i]->type == A_SUB || tokens[i]->type == A_MUL || tokens[i]->type == A_AND || tokens[i]->type == A_OR){
-			struct asm_instruction * new_instruction = malloc(sizeof(struct asm_instruction));
+		if(tokens[i]->type == A_ADD || tokens[i]->type == A_SUB || tokens[i]->type == A_MUL || tokens[i]->type == A_AND || tokens[i]->type == A_OR || tokens[i]->type == A_DIV){
+			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -269,7 +287,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 								if(tokens[i]->type == A_REGISTER){
 									new_instruction->rz_token = tokens[i];
 									i++;
-									struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+									struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 								}else{ assert(0 && "Expected register."); }
 							}else{ assert(0 && "Expected space."); }
 						}else{ assert(0 && "Expected register."); }
@@ -277,7 +295,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 				}else{ assert(0 && "Expected register."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_LOA || tokens[i]->type == A_STO || tokens[i]->type == A_NOT || tokens[i]->type == A_SHR || tokens[i]->type == A_SHL){
-			struct asm_instruction * new_instruction = malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -290,13 +308,13 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 						if(tokens[i]->type == A_REGISTER){
 							new_instruction->ry_token = tokens[i];
 							i++;
-							struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+							struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 						}else{ assert(0 && "Expected register."); }
 					}else{ assert(0 && "Expected space."); }
 				}else{ assert(0 && "Expected register."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_LL){
-			struct asm_instruction * new_instruction = malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -311,19 +329,19 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 							new_instruction->number_token = tokens[i];
 							new_instruction->identifier_token = 0;
 							i++;
-							struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+							struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 						}else if(tokens[i]->type == A_IDENTIFIER){
 							new_instruction->identifier_token = tokens[i];
 							new_instruction->number_token = 0;
 							verify_symbol_declaration(linker_object, tokens[i]);
-							struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+							struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 							i++;
 						}else{ assert(0 && "Expected identifier or hexidecimal constant."); }
 					}else{ assert(0 && "Expected space."); }
 				}else{ assert(0 && "Expected register."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_DW || tokens[i]->type == A_SW){
-			struct asm_instruction * new_instruction = malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -333,50 +351,17 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 					new_instruction->number_token = tokens[i];
 					new_instruction->identifier_token = 0;
 					i++;
-					struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+					struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 				}else if(tokens[i]->type == A_IDENTIFIER){
 					new_instruction->identifier_token = tokens[i];
 					new_instruction->number_token = 0;
 					verify_symbol_declaration(linker_object, tokens[i]);
-					struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+					struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 					i++;
 				}else{ printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename);  assert(0 && "Expected identifier or hexidecimal constant."); }
 			}else{ assert(0 && "Expected space."); }
-		}else if(tokens[i]->type == A_DIV){
-			struct asm_instruction * new_instruction = malloc(sizeof(struct asm_instruction));
-			new_instruction->op_token = tokens[i];
-			i++;
-			if(tokens[i]->type == A_SPACE){
-				i++;
-				if(tokens[i]->type == A_REGISTER){
-					new_instruction->rx_token = tokens[i];
-					i++;
-					if(tokens[i]->type == A_SPACE){
-						i++;
-						if(tokens[i]->type == A_REGISTER){
-							new_instruction->ry_token = tokens[i];
-							i++;
-							if(tokens[i]->type == A_SPACE){
-								i++;
-								if(tokens[i]->type == A_REGISTER){
-									new_instruction->rz_token = tokens[i];
-									i++;
-									if(tokens[i]->type == A_SPACE){
-										i++;
-										if(tokens[i]->type == A_REGISTER){
-											new_instruction->rw_token = tokens[i];
-											i++;
-											struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
-										}else{ assert(0 && "Expected register."); }
-									}else{ assert(0 && "Expected space."); }
-								}else{ assert(0 && "Expected register."); }
-							}else{ assert(0 && "Expected space."); }
-						}else{ assert(0 && "Expected register."); }
-					}else{ assert(0 && "Expected space."); }
-				}else{ assert(0 && "Expected register."); }
-			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_BEQ || tokens[i]->type == A_BLT){
-			struct asm_instruction * new_instruction = malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -396,7 +381,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 									new_instruction->number_token = 0;
 									new_instruction->number_token_is_negative = 0;
 									verify_symbol_declaration(linker_object, tokens[i]);
-									struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+									struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 									i++;
 
 								}else if(tokens[i]->type == A_MINUS_CHAR){
@@ -406,14 +391,14 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 										new_instruction->identifier_token = 0;
 										new_instruction->number_token_is_negative = 1;
 										i++;
-										struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+										struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 									}else{ assert(0 && "Expected number."); }
 								}else if(tokens[i]->type == A_CONSTANT_DECIMAL){
 									new_instruction->number_token = tokens[i];
 									new_instruction->identifier_token = 0;
 									new_instruction->number_token_is_negative = 0;
 									i++;
-									struct_asm_instruction_ptr_list_add(&linker_object->instructions, new_instruction);
+									struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 								}else{ assert(0 && "Expected number or identifier."); }
 							}else{ assert(0 && "Expected space."); }
 						}else{ assert(0 && "Expected register."); }
@@ -614,7 +599,7 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 		struct asm_instruction * instruction = data[i];
 		enum asm_token_type type = instruction->op_token->type;
 
-		if (type == A_ADD || type == A_SUB || type == A_MUL || type == A_AND || type == A_OR){
+		if (type == A_ADD || type == A_SUB || type == A_MUL || type == A_AND || type == A_OR || type == A_DIV){
 			buffered_token_output(file_output, instruction->op_token);
 			buffered_printf(file_output, " ");
 			buffered_token_output(file_output, instruction->rx_token);
@@ -629,17 +614,6 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 			buffered_token_output(file_output, instruction->rx_token);
 			buffered_printf(file_output, " ");
 			buffered_token_output(file_output, instruction->ry_token);
-			buffered_printf(file_output, "\n");
-		}else if (type == A_DIV){
-			buffered_token_output(file_output, instruction->op_token);
-			buffered_printf(file_output, " ");
-			buffered_token_output(file_output, instruction->rx_token);
-			buffered_printf(file_output, " ");
-			buffered_token_output(file_output, instruction->ry_token);
-			buffered_printf(file_output, " ");
-			buffered_token_output(file_output, instruction->rz_token);
-			buffered_printf(file_output, " ");
-			buffered_token_output(file_output, instruction->rw_token);
 			buffered_printf(file_output, "\n");
 		}else if(type == A_LL){
 			if(instruction->identifier_token){
@@ -661,11 +635,16 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 				buffered_printf(file_output, "add SP SP WR\n");
 				free(target_register);
 			}else{
+				unsigned int hex_value = parse_hexidecimal_string(instruction->number_token);
 				buffered_token_output(file_output, instruction->op_token);
 				buffered_printf(file_output, " ");
 				buffered_token_output(file_output, instruction->rx_token);
 				buffered_printf(file_output, " ");
-				buffered_token_output(file_output, instruction->number_token);
+				if(!(hex_value <= MAX_LL_CONSTANT)){
+					printf("LL constant too large: %X on line %d in file %s\n", hex_value, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
+					assert(0);
+				}
+				buffered_printf(file_output, "0x%X", hex_value);
 				buffered_printf(file_output, "\n");
 			}
 		}else if(type == A_BEQ || type == A_BLT){
@@ -685,6 +664,7 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 				buffered_printf(file_output, "loa PC PC\n");
 				buffered_printf(file_output, "dw 0x%X\n", absolute_offset * 4);
 			}else{
+				unsigned int constant_value = parse_decimal_string(instruction->number_token);
 				buffered_token_output(file_output, instruction->op_token);
 				buffered_printf(file_output, " ");
 				buffered_token_output(file_output, instruction->rx_token);
@@ -694,7 +674,8 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 				if(instruction->number_token_is_negative){
 					buffered_printf(file_output, "-");
 				}
-				buffered_token_output(file_output, instruction->number_token);
+				assert(constant_value <= MAX_BRANCH_POS || (instruction->number_token_is_negative && constant_value <= MAX_BRANCH_NEG));
+				buffered_printf(file_output, "%i", constant_value);
 				buffered_printf(file_output, "\n");
 			}
 		}else if(type == A_DW){
@@ -776,8 +757,8 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 
 	/*  Load and parser all the linker objects */
 	for(i = 0; i < unsigned_char_ptr_list_size(in_files); i++){
-		struct unsigned_char_list * file_input = malloc(sizeof(struct unsigned_char_list));
-		struct asm_lexer_state * asm_lexer_state = malloc(sizeof(struct asm_lexer_state));
+		struct unsigned_char_list * file_input = (struct unsigned_char_list *)malloc(sizeof(struct unsigned_char_list));
+		struct asm_lexer_state * asm_lexer_state = (struct asm_lexer_state *)malloc(sizeof(struct asm_lexer_state));
 		struct linker_object * linker_object;
 		unsigned_char_list_create(file_input);
 		add_file_to_buffer(file_input, (char*)unsigned_char_ptr_list_get(in_files, i));
@@ -788,9 +769,9 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 		lex_asm(asm_lexer_state, unsigned_char_ptr_list_get(in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
 		linker_object = process_assembly(asm_lexer_state);
 
-		struct_unsigned_char_list_ptr_list_add(&input_file_buffers, file_input);
-		struct_linker_object_ptr_list_add(&linker_objects, linker_object);
-		struct_asm_lexer_state_ptr_list_add(&lexer_states, asm_lexer_state);
+		struct_unsigned_char_list_ptr_list_add_end(&input_file_buffers, file_input);
+		struct_linker_object_ptr_list_add_end(&linker_objects, linker_object);
+		struct_asm_lexer_state_ptr_list_add_end(&lexer_states, asm_lexer_state);
 	}
 
 	/*  Re-order them to give priority to the placement of fixed offset objects */

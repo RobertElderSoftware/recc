@@ -34,6 +34,4 @@ int putchar_nobusy(int);
 int getchar_nobusy(void);
 void putchar_init(void);
 
-extern struct process_control_block * pcb_ptrs[MAX_NUM_PROCESSES];
-
 #endif

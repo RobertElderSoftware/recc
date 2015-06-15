@@ -20,4 +20,4 @@ data-structures/memory_pooler.o: data-structures/memory_pooler.h data-structures
 	@$(HOSTCC) -c data-structures/memory_pooler.c -o data-structures/memory_pooler.o $(CUSTOM_FLAGS)
 
 clean-data-structures: clean-generated-files
-	@rm -f data-structures/*.o data-structures/libgenerated-data-structures.a
+	@rm -f data-structures/*.o data-structures/libgenerated-data-structures.a data-structures/bootstrap-datatypes

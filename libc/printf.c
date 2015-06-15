@@ -12,6 +12,10 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
+
+#include <assert.h>
+#include <stdarg.h>
+
 int putchar(int);
 
 int printf(const char *, ...);
@@ -84,13 +88,18 @@ int printf(const char * fmt, ...){
 	while(fmt[i]){
 		if(fmt[i] == '%'){
 			if(fmt[i+1] == 'c'){
-				putchar(va_arg(v, int));
+				putchar(va_arg(v, unsigned int));
 				i++;
 			}else if(fmt[i+1] == 's'){
-				print_string(va_arg(v, const char *));
+				print_string(va_arg(v, unsigned int));
 				i++;
 			}else if((fmt[i+1] == 'd') || (fmt[i+1] == 'i')){
-				print_decimal(va_arg(v, int));
+				print_decimal(va_arg(v, unsigned int));
+				i++;
+			}else if((fmt[i+1] == 'p') || (fmt[i+1] == 'P')){
+				putchar('0');
+				putchar('x');
+				print_hexadecimal(va_arg(v, unsigned int));
 				i++;
 			}else if((fmt[i+1] == 'x') || (fmt[i+1] == 'X')){
 				print_hexadecimal(va_arg(v, unsigned int));
@@ -108,4 +117,11 @@ int printf(const char * fmt, ...){
 		i++;
 	}
 	va_end(v);
+}
+
+int vsprintf(char * buf, const char * fmt, va_list va){
+	assert(0);
+	(void)buf;
+	(void)fmt;
+	(void)va;
 }

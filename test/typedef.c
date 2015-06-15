@@ -13,7 +13,7 @@
 	use of this software.
 */
 
-int putchar(int);
+#include <stdio.h>
 
 typedef enum {en1, en2} t_enum;
 

@@ -21,30 +21,49 @@ This implementation assumes that sizeof(unsigned int) == 4
 
 */
 
-static unsigned int LITERAL22BITMASK = 0x003FFFFF;
-static unsigned int UART1_OUT        = 0x00300000;
-static unsigned int UART1_IN         = 0x00300010;
-static unsigned int IRQ_HANDLER      = 0x00300020;
-static unsigned int TIMER_PERIOD     = 0x00300030;
+#define BITS_PER_BRANCH_DIST  9u
+#define BITS_PER_LITERAL     16u
+#define BITS_PER_OP_CODE      5u
+#define OP_CODE_OFFSET       27u
+#define BITS_PER_REGISTER     9u
+#define ra_OFFSET            18u
+#define rb_OFFSET            (ra_OFFSET - BITS_PER_REGISTER)
+#define rc_OFFSET            (rb_OFFSET - BITS_PER_REGISTER)
 
-static unsigned int PC_index = 0;
-static unsigned int SP_index = 1;
-static unsigned int FR_index = 4;
-static unsigned int WR_index = 5;
+#define UNSHIFTED_OP_CODE_MASK   (0xFFFFFFFF >> (32u - BITS_PER_OP_CODE))
+#define OP_CODE_MASK             (UNSHIFTED_OP_CODE_MASK << OP_CODE_OFFSET)
+#define UNSHIFTED_REGISTER_MASK  (0xFFFFFFFF >> (32u - BITS_PER_REGISTER))
+#define ra_MASK                  (UNSHIFTED_REGISTER_MASK << ra_OFFSET)
+#define rb_MASK                  (UNSHIFTED_REGISTER_MASK << rb_OFFSET)
+#define rc_MASK                  (UNSHIFTED_REGISTER_MASK << rc_OFFSET)
+#define LITERAL_MASK             (0xFFFFFFFF >> (32u - BITS_PER_LITERAL))
+#define BRANCH_DISTANCE_MASK     (0xFFFFFFFF >> (32u - BITS_PER_BRANCH_DIST))
 
-static unsigned int HALTED_BIT                  = 1 << 0;
-static unsigned int GLOBAL_INTERRUPT_ENABLE_BIT = 1 << 1;
-static unsigned int RTE_BIT                     = 1 << 2;
-static unsigned int TIMER1_ENABLE_BIT           = 1 << 3;
-static unsigned int TIMER1_ASSERTED_BIT         = 1 << 4;
-static unsigned int UART1_OUT_ENABLE_BIT        = 1 << 5;
-static unsigned int UART1_OUT_ASSERTED_BIT      = 1 << 6;
-static unsigned int UART1_IN_ENABLE_BIT         = 1 << 7;
-static unsigned int UART1_IN_ASSERTED_BIT       = 1 << 8;
-static unsigned int UART1_OUT_READY_BIT         = 1 << 9;
-static unsigned int UART1_IN_READY_BIT          = 1 << 10;
+#define BRANCH_DISTANCE_SIGN_BIT 0x100
 
-static unsigned int num_instruction_types = 14;
+#define UART1_OUT        0x00300000
+#define UART1_IN         0x00300010
+#define IRQ_HANDLER      0x00300020
+#define TIMER_PERIOD     0x00300030
+
+#define PC_index 0
+#define SP_index 1
+#define FR_index 4
+#define WR_index 5
+
+#define HALTED_BIT                  (1 << 0)
+#define GLOBAL_INTERRUPT_ENABLE_BIT (1 << 1)
+#define RTE_BIT                     (1 << 2)
+#define TIMER1_ENABLE_BIT           (1 << 3)
+#define TIMER1_ASSERTED_BIT         (1 << 4)
+#define UART1_OUT_ENABLE_BIT        (1 << 5)
+#define UART1_OUT_ASSERTED_BIT      (1 << 6)
+#define UART1_IN_ENABLE_BIT         (1 << 7)
+#define UART1_IN_ASSERTED_BIT       (1 << 8)
+#define UART1_OUT_READY_BIT         (1 << 9)
+#define UART1_IN_READY_BIT          (1 << 10)
+
+#define NUM_INSTRUCTION_TYPES 14
 
 enum instruction_type {
 	ADD_INSTRUCTION,
@@ -71,21 +90,21 @@ struct virtual_machine {
 	unsigned int * registeruint32;
 };
 
-static unsigned int instruction_op_codes [14][2] = {
-	{ADD_INSTRUCTION, 0x00000000 },
-	{SUB_INSTRUCTION, 0x10000000 },
-	{MUL_INSTRUCTION, 0x20000000 },
-	{DIV_INSTRUCTION, 0x30000000 },
-	{BEQ_INSTRUCTION, 0x40000000 },
-	{BLT_INSTRUCTION, 0x50000000 },
-	{LOA_INSTRUCTION, 0x60000000 },
-	{STO_INSTRUCTION, 0x70000000 },
-	{LL_INSTRUCTION,  0x80000000 },
-	{AND_INSTRUCTION, 0x90000000 },
-	{OR_INSTRUCTION,  0xA0000000 },
-	{NOT_INSTRUCTION, 0xB0000000 },
-	{SHR_INSTRUCTION, 0xC0000000 },
-	{SHL_INSTRUCTION, 0xD0000000 }
+static unsigned int instruction_op_codes [NUM_INSTRUCTION_TYPES][2] = {
+	{ADD_INSTRUCTION, 0u  << OP_CODE_OFFSET },
+	{SUB_INSTRUCTION, 1u  << OP_CODE_OFFSET },
+	{MUL_INSTRUCTION, 2u  << OP_CODE_OFFSET },
+	{DIV_INSTRUCTION, 3u  << OP_CODE_OFFSET },
+	{AND_INSTRUCTION, 4u  << OP_CODE_OFFSET },
+	{OR_INSTRUCTION , 5u  << OP_CODE_OFFSET },
+	{NOT_INSTRUCTION, 6u  << OP_CODE_OFFSET },
+	{LOA_INSTRUCTION, 7u  << OP_CODE_OFFSET },
+	{STO_INSTRUCTION, 8u  << OP_CODE_OFFSET },
+	{SHR_INSTRUCTION, 9u  << OP_CODE_OFFSET },
+	{SHL_INSTRUCTION, 10u << OP_CODE_OFFSET },
+	{BEQ_INSTRUCTION, 11u << OP_CODE_OFFSET },
+	{BLT_INSTRUCTION, 12u << OP_CODE_OFFSET },
+	{LL_INSTRUCTION , 13u << OP_CODE_OFFSET }
 };
 
 static enum instruction_type lookup_instruction_op_code(unsigned int);
@@ -95,7 +114,7 @@ void setup_virtual_machine(struct virtual_machine *);
 
 static enum instruction_type lookup_instruction_op_code(unsigned int op_code){
 	unsigned int i;
-	for(i = 0; i < num_instruction_types; i++){
+	for(i = 0; i < NUM_INSTRUCTION_TYPES; i++){
 		if(instruction_op_codes[i][1] == op_code){
 			return instruction_op_codes[i][0];
 		}
@@ -114,13 +133,13 @@ static void do_interrupt(struct virtual_machine * vm){
 
 static void fetch_decode_execute(struct virtual_machine * vm){
 	unsigned int current_inst = vm->memoryuint32[vm->registeruint32[PC_index] / sizeof(unsigned int)];
-	int branch_dist = current_inst & 0x8000 ? -((0xFFFF & ~(current_inst & 0xFFFF)) + 1) : (current_inst & 0xFFFF);
-	unsigned int literal22bit = LITERAL22BITMASK & current_inst;
-	unsigned int ra = (0x0FC00000 & current_inst) / 0x400000;
-	unsigned int rb = (0x003F0000 & current_inst) / 0x10000;
-	unsigned int rc = (0x0000FC00 & current_inst) / 0x400;
-	unsigned int rd = (0x000003F0 & current_inst) / 0x10;
-	enum instruction_type op_type = lookup_instruction_op_code(current_inst & 0xF0000000);
+	int branch_dist = current_inst & BRANCH_DISTANCE_SIGN_BIT ? -((BRANCH_DISTANCE_MASK & ~(current_inst & BRANCH_DISTANCE_MASK)) + 1) : (current_inst & BRANCH_DISTANCE_MASK);
+	unsigned int literal = LITERAL_MASK & current_inst;
+	unsigned int ra = (ra_MASK & current_inst) / (1u << ra_OFFSET);
+	unsigned int rb = (rb_MASK & current_inst) / (1u << rb_OFFSET);
+	unsigned int rc = (rc_MASK & current_inst) / (1u << rc_OFFSET);
+
+	enum instruction_type op_type = lookup_instruction_op_code(current_inst & OP_CODE_MASK);
 	vm->registeruint32[PC_index] += sizeof(unsigned int);
 
 	assert(vm->registeruint32[PC_index] / sizeof(unsigned int) < vm->num_memory_words);
@@ -136,10 +155,7 @@ static void fetch_decode_execute(struct virtual_machine * vm){
 			vm->registeruint32[ra] = vm->registeruint32[rb] * vm->registeruint32[rc];
 			break;
 		}case DIV_INSTRUCTION:{
-			unsigned int c = vm->registeruint32[rc];
-			unsigned int d = vm->registeruint32[rd];
-			vm->registeruint32[ra] = c / d;
-			vm->registeruint32[rb] = c % d;
+			vm->registeruint32[ra] = vm->registeruint32[rb] / vm->registeruint32[rc];
 			break;
 		}case BEQ_INSTRUCTION:{
 			if(vm->registeruint32[ra] == vm->registeruint32[rb]){
@@ -160,7 +176,7 @@ static void fetch_decode_execute(struct virtual_machine * vm){
 			vm->memoryuint32[vm->registeruint32[ra]/sizeof(unsigned int)] = vm->registeruint32[rb];
 			break;
 		}case LL_INSTRUCTION:{
-			vm->registeruint32[ra] = literal22bit;
+			vm->registeruint32[ra] = literal;
 			break;
 		}case AND_INSTRUCTION:{
 			vm->registeruint32[ra] = vm->registeruint32[rb] & vm->registeruint32[rc];
@@ -267,7 +283,7 @@ struct virtual_machine * vm_create(unsigned char start[4], unsigned char end[4],
 
 	vm->cycles_executed = 0;
 	vm->num_memory_words = (end_addr - start_addr) / sizeof(unsigned int);
-	vm->num_registers = 64;
+	vm->num_registers = 1u << BITS_PER_REGISTER;
 	vm->memoryuint32 = malloc(vm->num_memory_words * sizeof(unsigned int));
 	vm->registeruint32 = malloc(vm->num_registers * sizeof(unsigned int));
 

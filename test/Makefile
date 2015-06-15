@@ -5,6 +5,7 @@
 # File names
 SOURCES = $(wildcard test/*.c)
 BUILTIN_SOURCES= $(wildcard builtin/*.c)
+OTHER_OBJECTS= io.o lexer.o data-structures/binary_exponential_buffer.o data-structures/memory_pooler.o data-structures/libgenerated-data-structures.a 
 BUILTIN_OBJECTS= $(BUILTIN_SOURCES:.c=.o)
 PREPROCESSED= $(SOURCES:.c=.i)
 ASSEMBLY= $(SOURCES:.c=.l2)
@@ -29,16 +30,16 @@ run-build-script: $(SOURCES) $(CUSTOM_CC) build-builtins build-stdlib
 $(CLEAN_ASSEMBLY): run-build-script
 
 %.l0.js: %.l1 preloader
-	@$(CUSTOM_PRELOADER) jsonpCallback $< $@ jsonp
+	@$(VALGRIND) $(CUSTOM_PRELOADER) jsonpCallback $< $@ jsonp
 
 # To obtain gcc objects of executables
 %.o: %.c
 	@$(HOSTCC) -c $< -o $@ $(CUSTOM_FLAGS)
 
-$(GCC_EXECUTABLES): $(BUILTIN_OBJECTS)
+$(GCC_EXECUTABLES): $(BUILTIN_OBJECTS) $(OTHER_OBJECTS)
 
 %.gcc: %.o
-	@$(HOSTCC) $< $(BUILTIN_OBJECTS) -o $@ $(CUSTOM_FLAGS)
+	@$(HOSTCC) $< $(BUILTIN_OBJECTS) $(OTHER_OBJECTS) -o $@ $(CUSTOM_FLAGS)
 
 # To obtain gcc output
 %.gccoutput: %.gcc recc
@@ -57,4 +58,4 @@ $(JS_OUTPUT): js-output
 
 # To remove generated files
 clean-tests:
-	@rm -f test/*.o $(PREPROCESSED) $(ASSEMBLY) $(CLEAN_ASSEMBLY) $(GCC_EXECUTABLES) $(GCC_OUTPUT) $(JS_PRELOADER) $(JS_OUTPUT) $(OUTPUT_DIFFS)
+	@rm -f test/*.l2 test/*.i test/*.o $(PREPROCESSED) $(ASSEMBLY) $(CLEAN_ASSEMBLY) $(GCC_EXECUTABLES) $(GCC_OUTPUT) $(JS_PRELOADER) $(JS_OUTPUT) $(OUTPUT_DIFFS)

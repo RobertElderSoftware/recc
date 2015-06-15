@@ -12,25 +12,25 @@
 
                                                      One-Page CPU
 
-+-----------------+<-------+-----32-bits----------------->+--------------------------------------------------+
-|                 |<4-bits>|<----------28-bits----------->|                                                  |
-|    Assembly     |  Ctrl  |          Data Layout         |                  Description                     |
-+-----------------+--------+------------------------------+--------------------------------------------------+
-| add rX rY rZ    |  0000  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY + rZ (32-bit unsigned)                   |
-| sub rX rY rZ    |  0001  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY - rZ (32-bit unsigned)                   |
-| mul rX rY rZ    |  0010  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY * rZ (32-bit unsigned)                   |
-| div rX rY rZ rW |  0011  | XXXXXXYYYYYYZZZZZZWWWWWW---- | rX = rZ / rW; rY = rZ % rW (32-bit unsigned)     |
-| beq rX rY i     |  0100  | XXXXXXYYYYYYiiiiiiiiiiiiiiii | PC = PC + i * 4 if rX == rY (i is 16-bit signed) |
-| blt rX rY i     |  0101  | XXXXXXYYYYYYiiiiiiiiiiiiiiii | PC = PC + i * 4 if rX < rY (i is 16-bit signed)  |
-| loa rX rY       |  0110  | XXXXXXYYYYYY---------------- | Load contents of memory location rY into rX      |
-| sto rX rY       |  0111  | XXXXXXYYYYYY---------------- | Store contents of rY at memory location in rX    |
-| ll rX 0xN       |  1000  | XXXXXXNNNNNNNNNNNNNNNNNNNNNN | load literal (22 bit) value into rX              |
-| and rX rY rZ    |  1001  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY & rZ (bitwise logical and)               |
-| or rX rY rZ     |  1010  | XXXXXXYYYYYYZZZZZZ---------- | rX = rY | rZ (bitwise logical or)                |
-| not rX rY       |  1011  | XXXXXXYYYYYY---------------- | rX = ~rY (bitwise logical not)                   |
-| shr rX rY       |  1100  | XXXXXXYYYYYY---------------- | rX = (rX logical shift rY bits to the right)     |
-| shl rX rY       |  1101  | XXXXXXYYYYYY---------------- | rX = (rX logical shift rY bits to the left)      |
-+-----------------+--------+------------------------------+--------------------------------------------------+
++-----------------+<--------+----32-bits----------------->+--------------------------------------------------+
+|                 |<5-bits >|<----------27-bits---------->|                                                  |
+|    Assembly     |  Ctrl   |          Data Layout        |                  Description                     |
++-----------------+---------+-----------------------------+--------------------------------------------------+
+| add rX rY rZ    |  00000  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY + rZ (32-bit unsigned)                   |
+| sub rX rY rZ    |  00001  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY - rZ (32-bit unsigned)                   |
+| mul rX rY rZ    |  00010  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY * rZ (32-bit unsigned)                   |
+| div rX rY rZ    |  00011  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY / rZ (32-bit unsigned)                   |
+| and rX rY rZ    |  00100  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY & rZ (bitwise logical and)               |
+| or rX rY rZ     |  00101  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY | rZ (bitwise logical or)                |
+| not rX rY       |  00110  | XXXXXXXXXYYYYYYYYY--------- | rX = ~rY (bitwise logical not)                   |
+| loa rX rY       |  00111  | XXXXXXXXXYYYYYYYYY--------- | Load contents of memory location rY into rX      |
+| sto rX rY       |  01000  | XXXXXXXXXYYYYYYYYY--------- | Store contents of rY at memory location in rX    |
+| shr rX rY       |  01001  | XXXXXXXXXYYYYYYYYY--------- | rX = (rX logical shift rY bits to the right)     |
+| shl rX rY       |  01010  | XXXXXXXXXYYYYYYYYY--------- | rX = (rX logical shift rY bits to the left)      |
+| beq rX rY i     |  01011  | XXXXXXXXXYYYYYYYYYiiiiiiiii | PC = PC + i * 4 if rX == rY (i is 9-bit signed)  |
+| blt rX rY i     |  01100  | XXXXXXXXXYYYYYYYYYiiiiiiiii | PC = PC + i * 4 if rX < rY (i is 9-bit signed)   |
+| ll rX 0xN       |  01101  | XXXXXXXXX--NNNNNNNNNNNNNNNN | load literal (16 bit) value into rX              |
++-----------------+---------+-----------------------------+--------------------------------------------------+
 
 At CPU startup, WR = 0x4, FR = 0x200.  All other registers are initialized to 0.
 
@@ -38,7 +38,7 @@ At CPU startup, WR = 0x4, FR = 0x200.  All other registers are initialized to 0.
 #1)  SP (Stack Pointer)    Points to the top item on the stack.  #4)  FR (Flags Register)  Special CPU flags.
 #2)  FP (Frame Pointer)    Points to previous frame pointer.     #5)  WR (Word Register)   Initialized to 4.
 
-Special registers #0 to #5 are named PC, SP, FP, ZR, FR, WR.  General registers #6 to #63 are named r1 to r58.
+Special registers #0 to #5 are PC, SP, FP, ZR, FR, WR.  General registers #6 to #512 are named r1 to r506.
 
 Flags Register (FR) Description
 
@@ -72,4 +72,4 @@ An interrupt is initiated (branches to IRQ_HANDLER) only when all 3 of the follo
 A CPU initiated interrupt atomically sets bit 1 of FR to 0, SP to SP - WR and [SP] to PC, then PC to
 IRQ_HANDLER.  At least one cycle occurs between a branch due to bit 2 being set, and a branch to IRQ_Handler.
 
-The sha1sum of the lines above is 9bbc40186e7cec2dd6308ffee3beea3606b5fd3d
+The sha1sum of the lines above is 53126dc609895cfb1afdf712f5450e923016b147

@@ -12,11 +12,25 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __STDLIB_H_DEFINED__
-#define __STDLIB_H_DEFINED__
-typedef int size_t;
-void * malloc(size_t);
-void * realloc(void *, size_t);
-void * calloc(size_t, size_t);
-void free(void*);
-#endif
+
+#include "string.h"
+
+size_t strlen(const char * c){
+	unsigned int i = 0;
+	while(c[i]){
+		i++;
+	}
+	return i;
+}
+
+int strcmp (const char * s1, const char * s2){
+	unsigned int i = 0;
+	while(s1[i] && s2[i]){
+		char c = s1[i] - s2[i];
+		if(c){
+			return c;
+		}
+		i++;
+	}
+	return s1[i] - s2[i];
+}

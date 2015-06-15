@@ -12,23 +12,23 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack__H__DEFINED__
-#define __GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack__H__DEFINED__
+#ifndef __T0_IDENTIFIER_stack__H__DEFINED__
+#define __T0_IDENTIFIER_stack__H__DEFINED__
 
 #include <assert.h>
 #include <stdlib.h>
 #include "binary_exponential_buffer.h"
 #include "../core_data_types.h"
 
-struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack{
+struct T0_IDENTIFIER_stack{
 	struct binary_exponential_buffer buffer;
 };
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_push(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack *, GENERIC_TYPE0_LITERAL);
-GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_pop(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack *);
-unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_size(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack *);
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_destroy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack *);
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_create(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack *);
-struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack_copy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_stack *);
+void T0_IDENTIFIER_stack_push(struct T0_IDENTIFIER_stack *, T0_LITERAL);
+T0_LITERAL T0_IDENTIFIER_stack_pop(struct T0_IDENTIFIER_stack *);
+unsigned int T0_IDENTIFIER_stack_size(struct T0_IDENTIFIER_stack *);
+void T0_IDENTIFIER_stack_destroy(struct T0_IDENTIFIER_stack *);
+void T0_IDENTIFIER_stack_create(struct T0_IDENTIFIER_stack *);
+struct T0_IDENTIFIER_stack T0_IDENTIFIER_stack_copy(struct T0_IDENTIFIER_stack *);
 
 #endif

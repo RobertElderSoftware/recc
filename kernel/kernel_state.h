@@ -19,11 +19,10 @@
 
 struct process_control_block{
 	enum process_state state;
-	unsigned int stack_pointer;
+	unsigned int * stack_pointer;
 	unsigned int pid;
 	unsigned int priority;
 	struct message_queue messages;
-	struct message_queue * messages_ptr;
 	struct kernel_message * reply_message;
 	struct kernel_message * recieve_message;
 };
@@ -37,9 +36,9 @@ extern struct task_queue blocked_on_clock_tick_queue;
 extern struct task_queue blocked_on_uart1_out_ready_queue;
 extern struct task_queue blocked_on_uart1_in_ready_queue;
 
-extern unsigned int g_kernel_sp;
-extern unsigned int g_current_sp;
-extern unsigned int kernel_stack_start;
+extern unsigned int * g_kernel_sp;
+extern unsigned int * g_current_sp;
+extern unsigned int * kernel_stack_start;
 extern struct process_control_block pcbs[MAX_NUM_PROCESSES];
 extern unsigned int user_proc_1_stack_start;
 extern unsigned int user_proc_2_stack_start;

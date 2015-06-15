@@ -12,27 +12,28 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list__H__DEFINED__
-#define __GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list__H__DEFINED__
+#ifndef __T0_IDENTIFIER_list__H__DEFINED__
+#define __T0_IDENTIFIER_list__H__DEFINED__
 
 #include <assert.h>
 #include <stdlib.h>
 #include "binary_exponential_buffer.h"
 #include "../core_data_types.h"
 
-struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list{
+struct T0_IDENTIFIER_list{
 	struct binary_exponential_buffer buffer;
 };
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_add(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *, GENERIC_TYPE0_LITERAL);
-GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_pop(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_remove_all(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *, GENERIC_TYPE0_LITERAL);
-unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_occurrences(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *, GENERIC_TYPE0_LITERAL);
-unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_size(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
-GENERIC_TYPE0_LITERAL * GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_data(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
-GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_get(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *, unsigned int);
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_destroy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_create(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
-struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_copy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list *);
+void T0_IDENTIFIER_list_add_end(struct T0_IDENTIFIER_list *, T0_LITERAL);
+T0_LITERAL T0_IDENTIFIER_list_pop_end(struct T0_IDENTIFIER_list *);
+void T0_IDENTIFIER_list_remove_all(struct T0_IDENTIFIER_list *, T0_LITERAL);
+unsigned int T0_IDENTIFIER_list_occurrences(struct T0_IDENTIFIER_list *, T0_LITERAL);
+unsigned int T0_IDENTIFIER_list_size(struct T0_IDENTIFIER_list *);
+T0_LITERAL * T0_IDENTIFIER_list_data(struct T0_IDENTIFIER_list *);
+T0_LITERAL T0_IDENTIFIER_list_get(struct T0_IDENTIFIER_list *, unsigned int);
+void T0_IDENTIFIER_list_destroy(struct T0_IDENTIFIER_list *);
+void T0_IDENTIFIER_list_create(struct T0_IDENTIFIER_list *);
+struct T0_IDENTIFIER_list T0_IDENTIFIER_list_copy(struct T0_IDENTIFIER_list *);
+void T0_IDENTIFIER_list_reverse(struct T0_IDENTIFIER_list *);
 
 #endif

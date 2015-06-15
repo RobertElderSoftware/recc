@@ -12,6 +12,9 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
+
+#include <stdio.h>
+
 struct k {
 int i;
 };
@@ -82,8 +85,6 @@ struct foo1{
 int no_param_names(int, int, int);
 int some_param_names(int a, int b, int);
 int all_param_names(int a, int b, int c);
-
-int putchar(int);
 
 enum en1 {num1};
 

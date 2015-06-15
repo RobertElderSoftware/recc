@@ -41,15 +41,13 @@ void user_proc_2(void){
 
 void clock_tick_notifier(void){
 	struct kernel_message clock_server_message;
-	struct kernel_message * clock_server_message_ptr = &clock_server_message;
 	struct kernel_message clock_server_reply;
-	struct kernel_message * clock_server_reply_ptr = &clock_server_reply;
-	clock_server_message_ptr->message_type = CLOCK_TICK_NOTIFY;
-	clock_server_message_ptr->data = 1;
+	clock_server_message.message_type = CLOCK_TICK_NOTIFY;
+	clock_server_message.data = 1;
 	while(1){
 		block_on_event(CLOCK_TICK_EVENT);
-		send_message(clock_server_message_ptr, 4, clock_server_reply_ptr);
-		switch(clock_server_reply_ptr->message_type){
+		send_message(&clock_server_message, 4, &clock_server_reply);
+		switch(clock_server_reply.message_type){
 			case MESSAGE_ACKNOWLEDGED:{
 				break;
 			}default:{
@@ -81,15 +79,13 @@ void clock_server(void){
 
 void uart1_out_ready_notifier(void){
 	struct kernel_message output_server_message;
-	struct kernel_message * output_server_message_ptr = &output_server_message;
 	struct kernel_message output_server_reply;
-	struct kernel_message * output_server_reply_ptr = &output_server_reply;
-	output_server_message_ptr->message_type = UART1_OUT_READY_NOTIFY;
-	output_server_message_ptr->data = 1;
+	output_server_message.message_type = UART1_OUT_READY_NOTIFY;
+	output_server_message.data = 1;
 	while(1){
 		block_on_event(UART1_OUT_READY);
-		send_message(output_server_message_ptr, 6, output_server_reply_ptr);
-		switch(output_server_reply_ptr->message_type){
+		send_message(&output_server_message, 6, &output_server_reply);
+		switch(output_server_reply.message_type){
 			case MESSAGE_ACKNOWLEDGED:{
 				break;
 			}default:{
@@ -101,37 +97,33 @@ void uart1_out_ready_notifier(void){
 
 void uart1_out_server(void){
 	struct message_queue output_requests;
-	struct message_queue * output_requests_ptr = &output_requests;
 	struct kernel_message message_to_reply;
-	struct kernel_message * message_to_reply_ptr = &message_to_reply;
 	struct kernel_message received_message;
-	struct kernel_message * received_message_ptr = &received_message;
 	struct kernel_message poped_message;
-	struct kernel_message * poped_message_ptr = &poped_message;
 	unsigned int can_output = 1; /* Initially, it is ok to send a character when the CPU starts, because we haven't got an interrupt yet */
 	message_to_reply.message_type = MESSAGE_ACKNOWLEDGED;
-	message_queue_init(output_requests_ptr, MAX_NUM_PROCESSES);
+	message_queue_init(&output_requests, MAX_NUM_PROCESSES);
 	while(1){
-		receive_message(received_message_ptr);
-		switch(received_message_ptr->message_type){
+		receive_message(&received_message);
+		switch(received_message.message_type){
 			case UART1_OUT_READY_NOTIFY:{
-				if(message_queue_current_count(output_requests_ptr)){
-					poped_message = message_queue_pop_start(output_requests_ptr);
-					putchar_nobusy(poped_message_ptr->data);
+				if(message_queue_current_count(&output_requests)){
+					poped_message = message_queue_pop_start(&output_requests);
+					putchar_nobusy(poped_message.data);
 					can_output = 0;
-					reply_message(message_to_reply_ptr, poped_message_ptr->source_id);
+					reply_message(&message_to_reply, poped_message.source_id);
 				}else{
 					can_output = 1;
 				}
-				reply_message(message_to_reply_ptr, received_message_ptr->source_id);
+				reply_message(&message_to_reply, received_message.source_id);
 				break;
 			}case OUTPUT_CHARACTER:{
 				if(can_output){
-					putchar_nobusy(received_message_ptr->data);
-					reply_message(message_to_reply_ptr, received_message_ptr->source_id);
+					putchar_nobusy(received_message.data);
+					reply_message(&message_to_reply, received_message.source_id);
 					can_output = 0;
 				}else{
-					message_queue_push_end(output_requests_ptr, *received_message_ptr);
+					message_queue_push_end(&output_requests, received_message);
 				}
 				break;
 			}default:{
@@ -143,15 +135,13 @@ void uart1_out_server(void){
 
 void uart1_in_ready_notifier(void){
 	struct kernel_message input_server_message;
-	struct kernel_message * input_server_message_ptr = &input_server_message;
 	struct kernel_message input_server_reply;
-	struct kernel_message * input_server_reply_ptr = &input_server_reply;
-	input_server_message_ptr->message_type = UART1_IN_READY_NOTIFY;
-	input_server_message_ptr->data = 1;
+	input_server_message.message_type = UART1_IN_READY_NOTIFY;
+	input_server_message.data = 1;
 	while(1){
 		block_on_event(UART1_IN_READY);
-		send_message(input_server_message_ptr, 8, input_server_reply_ptr);
-		switch(input_server_reply_ptr->message_type){
+		send_message(&input_server_message, 8, &input_server_reply);
+		switch(input_server_reply.message_type){
 			case MESSAGE_ACKNOWLEDGED:{
 				break;
 			}default:{
@@ -163,23 +153,19 @@ void uart1_in_ready_notifier(void){
 
 void uart1_in_server(void){
 	struct kernel_message message_to_reply;
-	struct kernel_message * message_to_reply_ptr = &message_to_reply;
 	struct kernel_message received_message;
-	struct kernel_message * received_message_ptr = &received_message;
 	struct kernel_message output_server_message;
-	struct kernel_message * output_server_message_ptr = &output_server_message;
 	struct kernel_message output_server_reply;
-	struct kernel_message * output_server_reply_ptr = &output_server_reply;
-	message_to_reply_ptr->message_type = MESSAGE_ACKNOWLEDGED;
-	output_server_message_ptr->message_type = OUTPUT_CHARACTER;
+	message_to_reply.message_type = MESSAGE_ACKNOWLEDGED;
+	output_server_message.message_type = OUTPUT_CHARACTER;
 	while(1){
-		receive_message(received_message_ptr);
-		switch(received_message_ptr->message_type){
+		receive_message(&received_message);
+		switch(received_message.message_type){
 			case UART1_IN_READY_NOTIFY:{
-				output_server_message_ptr->data = getchar_nobusy();
+				output_server_message.data = getchar_nobusy();
 				/*  Send the character to output */
-				send_message(output_server_message_ptr, 6, output_server_reply_ptr);
-				switch(output_server_reply_ptr->message_type){
+				send_message(&output_server_message, 6, &output_server_reply);
+				switch(output_server_reply.message_type){
 					case MESSAGE_ACKNOWLEDGED:{
 						break;
 					}default:{
@@ -187,15 +173,15 @@ void uart1_in_server(void){
 					}
 				}
 				/*  Let the command server know what is being typed */
-				send_message(output_server_message_ptr, 9, output_server_reply_ptr);
-				switch(output_server_reply_ptr->message_type){
+				send_message(&output_server_message, 9, &output_server_reply);
+				switch(output_server_reply.message_type){
 					case MESSAGE_ACKNOWLEDGED:{
 						break;
 					}default:{
 						assert(0, "Unknown message type.\n");
 					}
 				}
-				reply_message(message_to_reply_ptr, received_message_ptr->source_id);
+				reply_message(&message_to_reply, received_message.source_id);
 				break;
 			}default:{
 				assert(0, "Unknown message type.\n");
@@ -204,18 +190,15 @@ void uart1_in_server(void){
 	}
 }
 
-
 void command_server(void){
 	struct kernel_message received_message;
-	struct kernel_message * received_message_ptr = &received_message;
 	struct kernel_message input_server_reply;
-	struct kernel_message * input_server_reply_ptr = &input_server_reply;
-	input_server_reply_ptr->message_type = MESSAGE_ACKNOWLEDGED;
+	input_server_reply.message_type = MESSAGE_ACKNOWLEDGED;
 	while(1){
-		receive_message(received_message_ptr);
-		switch(received_message_ptr->message_type){
+		receive_message(&received_message);
+		switch(received_message.message_type){
 			case OUTPUT_CHARACTER:{
-				switch(received_message_ptr->data){
+				switch(received_message.data){
 					case 116:{/* letter 't' */
 						printf("\n%d\n", num_ticks);
 						break;
@@ -223,14 +206,14 @@ void command_server(void){
 						unsigned int i;
 						printf("\n");
 						for(i = 0; i < 9; i++){
-							printf("Task %d SP: 0x%X\n", i, pcb_ptrs[i]->stack_pointer);
+							printf("Task %d SP: 0x%X\n", i, pcbs[i].stack_pointer);
 						}
 						break;
 					}case 112:{/* letter 'p' */
 						unsigned int i;
 						printf("\n");
 						for(i = 0; i < 9; i++){
-							printf("Task %d Priority: %d\n", i, pcb_ptrs[i]->priority);
+							printf("Task %d Priority: %d\n", i, pcbs[i].priority);
 						}
 						break;
 					}case 113:{/* letter 'q' */
@@ -246,6 +229,6 @@ void command_server(void){
 				assert(0, "Unknown message type.\n");
 			}
 		}
-		reply_message(input_server_reply_ptr, received_message_ptr->source_id);
+		reply_message(&input_server_reply, received_message.source_id);
 	}
 }

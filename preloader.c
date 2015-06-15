@@ -21,9 +21,9 @@ A 'Preloader' for producing programming language specific instructions for loadi
 */
 
 
-
 static unsigned int java_max_items_per_method = 1000;
 static unsigned int num_instruction_types = 16;
+static unsigned int instruction_template_length = 4;
 
 enum instruction_type {
 	ADD_INSTRUCTION,
@@ -49,17 +49,19 @@ struct instruction_register{
 };
 
 struct instruction{
+	struct instruction_register ** r;
 	enum instruction_type type;
 	unsigned int constant_is_negative;
 	unsigned int constant;
-	struct instruction_register ** r;
+	unsigned int pad;
 };
 
 struct l1_file{
+	struct instruction ** instructions;
 	unsigned int is_relocatable;
 	unsigned int offset;
 	unsigned int num_instructions;
-	struct instruction ** instructions;
+	unsigned int pad;
 };
 
 struct parser_state{
@@ -67,6 +69,7 @@ struct parser_state{
 	unsigned int size_buffer;
 	unsigned int input_size;
 	unsigned int buffer_position;
+	unsigned int pad;
 };
 
 struct preloader_state {
@@ -81,40 +84,40 @@ enum instruction_part_type{
 	NOTHING
 };
 
-static unsigned int instruction_templates [16][5] = {
-	{ADD_INSTRUCTION, REGISTER, REGISTER, REGISTER, NOTHING},
-	{SUB_INSTRUCTION, REGISTER, REGISTER, REGISTER, NOTHING},
-	{MUL_INSTRUCTION, REGISTER, REGISTER, REGISTER, NOTHING},
-	{DIV_INSTRUCTION, REGISTER, REGISTER, REGISTER, REGISTER},
-	{BEQ_INSTRUCTION, REGISTER, REGISTER, DECIMAL_CONSTANT, NOTHING},
-	{BLT_INSTRUCTION, REGISTER, REGISTER, DECIMAL_CONSTANT, NOTHING},
-	{LOA_INSTRUCTION, REGISTER, REGISTER, NOTHING, NOTHING},
-	{STO_INSTRUCTION, REGISTER, REGISTER, NOTHING, NOTHING},
-	{LL_INSTRUCTION, REGISTER, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING},
-	{AND_INSTRUCTION, REGISTER, REGISTER, REGISTER, NOTHING},
-	{OR_INSTRUCTION, REGISTER, REGISTER, REGISTER, NOTHING},
-	{NOT_INSTRUCTION, REGISTER, REGISTER, NOTHING, NOTHING},
-	{SHR_INSTRUCTION, REGISTER, REGISTER, NOTHING, NOTHING},
-	{SHL_INSTRUCTION, REGISTER, REGISTER, NOTHING, NOTHING},
-	{DW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING, NOTHING},
-	{SW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING, NOTHING}
+static unsigned int instruction_templates [16][4] = {
+	{ADD_INSTRUCTION, REGISTER, REGISTER, REGISTER},
+	{SUB_INSTRUCTION, REGISTER, REGISTER, REGISTER},
+	{MUL_INSTRUCTION, REGISTER, REGISTER, REGISTER},
+	{DIV_INSTRUCTION, REGISTER, REGISTER, REGISTER},
+	{BEQ_INSTRUCTION, REGISTER, REGISTER, DECIMAL_CONSTANT},
+	{BLT_INSTRUCTION, REGISTER, REGISTER, DECIMAL_CONSTANT},
+	{LOA_INSTRUCTION, REGISTER, REGISTER, NOTHING},
+	{STO_INSTRUCTION, REGISTER, REGISTER, NOTHING},
+	{LL_INSTRUCTION, REGISTER, HEXIDECIMAL_CONSTANT, NOTHING},
+	{AND_INSTRUCTION, REGISTER, REGISTER, REGISTER},
+	{OR_INSTRUCTION, REGISTER, REGISTER, REGISTER},
+	{NOT_INSTRUCTION, REGISTER, REGISTER, NOTHING},
+	{SHR_INSTRUCTION, REGISTER, REGISTER, NOTHING},
+	{SHL_INSTRUCTION, REGISTER, REGISTER, NOTHING},
+	{DW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING},
+	{SW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING}
 };
 
 static unsigned int instruction_op_codes [14][2] = {
-	{ADD_INSTRUCTION, 0x00000000 },
-	{SUB_INSTRUCTION, 0x10000000 },
-	{MUL_INSTRUCTION, 0x20000000 },
-	{DIV_INSTRUCTION, 0x30000000 },
-	{BEQ_INSTRUCTION, 0x40000000 },
-	{BLT_INSTRUCTION, 0x50000000 },
-	{LOA_INSTRUCTION, 0x60000000 },
-	{STO_INSTRUCTION, 0x70000000 },
-	{LL_INSTRUCTION,  0x80000000 },
-	{AND_INSTRUCTION, 0x90000000 },
-	{OR_INSTRUCTION,  0xA0000000 },
-	{NOT_INSTRUCTION, 0xB0000000 },
-	{SHR_INSTRUCTION, 0xC0000000 },
-	{SHL_INSTRUCTION, 0xD0000000 }
+	{ADD_INSTRUCTION, 0u  << OP_CODE_OFFSET },
+	{SUB_INSTRUCTION, 1u  << OP_CODE_OFFSET },
+	{MUL_INSTRUCTION, 2u  << OP_CODE_OFFSET },
+	{DIV_INSTRUCTION, 3u  << OP_CODE_OFFSET },
+	{AND_INSTRUCTION, 4u  << OP_CODE_OFFSET },
+	{OR_INSTRUCTION , 5u  << OP_CODE_OFFSET },
+	{NOT_INSTRUCTION, 6u  << OP_CODE_OFFSET },
+	{LOA_INSTRUCTION, 7u  << OP_CODE_OFFSET },
+	{STO_INSTRUCTION, 8u  << OP_CODE_OFFSET },
+	{SHR_INSTRUCTION, 9u  << OP_CODE_OFFSET },
+	{SHL_INSTRUCTION, 10u << OP_CODE_OFFSET },
+	{BEQ_INSTRUCTION, 11u << OP_CODE_OFFSET },
+	{BLT_INSTRUCTION, 12u << OP_CODE_OFFSET },
+	{LL_INSTRUCTION , 13u << OP_CODE_OFFSET }
 };
 
 struct first_and_last_byte{
@@ -129,7 +132,7 @@ static unsigned int parse_decimal_string(struct first_and_last_byte *);
 static unsigned int parse_hexidecimal_string(struct first_and_last_byte *);
 static unsigned int accept_decimal_digit(struct parser_state *);
 static unsigned int accept_hexidecimal_digit(struct parser_state *);
-static struct first_and_last_byte * accept_word(char *, struct parser_state *);
+static struct first_and_last_byte * accept_word(const char *, struct parser_state *);
 static unsigned int accept_newline(struct parser_state *);
 static struct first_and_last_byte * accept_decimal_constant(struct parser_state *);
 static struct first_and_last_byte * accept_hexidecimal_constant(struct parser_state *);
@@ -157,7 +160,7 @@ static int load_file(struct parser_state * state, char * in_file){
 			state->in_bytes = (char*)realloc(state->in_bytes, state->size_buffer * 2);
 			state->size_buffer = state->size_buffer * 2;
 		}
-		(state->in_bytes)[state->input_size] = c;
+		(state->in_bytes)[state->input_size] = (char)c;
 		state->input_size += 1;
 	}
 	fclose(f);
@@ -187,7 +190,7 @@ static unsigned int parse_decimal_string(struct first_and_last_byte * flb){
 	unsigned int base = 1;
 	char * c = flb->last_byte;
 	do{
-		i += ((*c - '0') * base);
+		i += (((unsigned int)*c - (unsigned int)'0') * base);
 		base *= 10;
 	}while(c-- != flb->first_byte);
 	return i;
@@ -200,11 +203,10 @@ static unsigned int parse_hexidecimal_string(struct first_and_last_byte * flb){
 	do{
 		unsigned int n;
 		if(*c >= '0' && *c <= '9'){
-			n = *c - '0';
+			n = (unsigned int)*c - (unsigned int)'0';
 		}else if(*c >= 'A' && *c <= 'F'){
-			n = (*c - 'A') + 10;
+			n = ((unsigned int)*c - (unsigned int)'A') + (unsigned int)10;
 		}else{
-			printf("%c\n", n);
 			assert(0 && "Unknown hex character.");
 		}
 		i += (n * base);
@@ -240,10 +242,10 @@ static unsigned int accept_hexidecimal_digit(struct parser_state * state){
 	);
 }
 
-static struct first_and_last_byte * accept_word(char * str, struct parser_state * state){
-	unsigned int length = len(str);
+static struct first_and_last_byte * accept_word(const char * str, struct parser_state * state){
+	unsigned int length = len((char*)str);
 	unsigned int i;
-	struct first_and_last_byte * flb = malloc(sizeof(struct first_and_last_byte));
+	struct first_and_last_byte * flb = (struct first_and_last_byte *)malloc(sizeof(struct first_and_last_byte));
 	unsigned int checkpoint = state->buffer_position;
 	flb->first_byte = &state->in_bytes[state->buffer_position];
 	for(i = 0; i < length; i++){
@@ -270,7 +272,7 @@ static unsigned int accept_newline(struct parser_state * state){
 }
 
 static struct first_and_last_byte * accept_decimal_constant(struct parser_state * state){
-	struct first_and_last_byte * flb = malloc(sizeof(struct first_and_last_byte));
+	struct first_and_last_byte * flb = (struct first_and_last_byte *)malloc(sizeof(struct first_and_last_byte));
 	flb->first_byte = &state->in_bytes[state->buffer_position];
 	while(state->buffer_position < state->input_size && accept_decimal_digit(state)){
 	}
@@ -279,7 +281,7 @@ static struct first_and_last_byte * accept_decimal_constant(struct parser_state 
 }
 
 static struct first_and_last_byte * accept_hexidecimal_constant(struct parser_state * state){
-	struct first_and_last_byte * flb = malloc(sizeof(struct first_and_last_byte));
+	struct first_and_last_byte * flb = (struct first_and_last_byte *)malloc(sizeof(struct first_and_last_byte));
 	flb->first_byte = &state->in_bytes[state->buffer_position];
 	if(!accept_character('0', state)){
 		free(flb);
@@ -304,7 +306,7 @@ static struct first_and_last_byte * accept_hexidecimal_constant(struct parser_st
 }
 
 static struct instruction_register * accept_register(struct parser_state * state){
-	struct instruction_register * instruction_register = malloc(sizeof(struct instruction_register));
+	struct instruction_register * instruction_register = (struct instruction_register *)malloc(sizeof(struct instruction_register));
 	struct first_and_last_byte * flb;
 	if((flb = accept_word("PC", state))){
 		instruction_register->register_number = 0;
@@ -356,11 +358,11 @@ static unsigned int * get_instruction_template(enum instruction_type type){
 }
 
 static struct instruction * accept_instruction(struct parser_state * state){
-	struct instruction * instruction = malloc(sizeof(struct instruction));
+	struct instruction * instruction = (struct instruction *)malloc(sizeof(struct instruction));
 	struct first_and_last_byte * flb;
 	unsigned int * instruction_template;
 	unsigned int i;
-	instruction->r = malloc(sizeof(struct instruction_register *) * 4);
+	instruction->r = (struct instruction_register **)malloc(sizeof(struct instruction_register *) * 4);
 	instruction->r[0] = 0;
 	instruction->r[1] = 0;
 	instruction->r[2] = 0;
@@ -407,28 +409,28 @@ static struct instruction * accept_instruction(struct parser_state * state){
 
 	instruction_template = get_instruction_template(instruction->type);
 
-	for(i = 1; i < 5; i++){
+	for(i = 1; i < instruction_template_length; i++){
 		if(instruction_template[i] == REGISTER){
 			accept_character(' ', state);
 			instruction->r[i-1] = accept_register(state);
 		}else if(instruction_template[i] == DECIMAL_CONSTANT){
-			struct first_and_last_byte * flb;
+			struct first_and_last_byte * flb_dc;
 			accept_character(' ', state);
 			if(accept_character('-', state)){
 				instruction->constant_is_negative = 1; 
 			}else{
 				instruction->constant_is_negative = 0; 
 			}
-			flb = accept_decimal_constant(state);
-			instruction->constant = parse_decimal_string(flb);
-			free(flb);
+			flb_dc = accept_decimal_constant(state);
+			instruction->constant = parse_decimal_string(flb_dc);
+			free(flb_dc);
 		}else if(instruction_template[i] == HEXIDECIMAL_CONSTANT){
-			struct first_and_last_byte * flb;
+			struct first_and_last_byte * flb_hc;
 			accept_character(' ', state);
-			flb = accept_hexidecimal_constant(state);
-			instruction->constant = parse_hexidecimal_string(flb);
+			flb_hc = accept_hexidecimal_constant(state);
+			instruction->constant = parse_hexidecimal_string(flb_hc);
 			instruction->constant_is_negative = 0; 
-			free(flb);
+			free(flb_hc);
 		}else if(instruction_template[i] == NOTHING){
 			/* Do nothing */
 		}else{
@@ -440,7 +442,7 @@ static struct instruction * accept_instruction(struct parser_state * state){
 }
 
 static struct l1_file * l1_file(struct parser_state * state){
-	struct l1_file * l1_f = malloc(sizeof(struct l1_file));
+	struct l1_file * l1_f = (struct l1_file *)malloc(sizeof(struct l1_file));
 	struct first_and_last_byte * offset_word;
 	l1_f->num_instructions = 0;
 	l1_f->instructions = 0;
@@ -453,7 +455,7 @@ static struct l1_file * l1_file(struct parser_state * state){
 					struct instruction * instruction;
 					if((instruction = accept_instruction(state))){
 						l1_f->num_instructions = l1_f->num_instructions + 1;
-						l1_f->instructions = realloc(l1_f->instructions, l1_f->num_instructions * sizeof(struct instruction));
+						l1_f->instructions = (struct instruction **)realloc(l1_f->instructions, l1_f->num_instructions * sizeof(struct instruction *));
 						l1_f->instructions[l1_f->num_instructions -1] = instruction;
 					}
 				}
@@ -501,7 +503,7 @@ void output_start_end(unsigned int start, unsigned int end, char * variable_name
 			fprintf(out, "%s({\"data_start\" : 0x%08X, \"data_end\" : 0x%08X,\n", variable_name, start, end);
 			break;
 		}case PYTHON_LANGUAGE_TYPE:{
-			fprintf(out, "class %s(object):\n    def __init__(self):\n        self.data_start = 0x%08X\n        self.data_end = 0x%08X\n", variable_name, start, end);
+			fprintf(out, "class %s(object):\n    def __init__(self):\n        self.data_start = 0x%08XL\n        self.data_end = 0x%08XL\n", variable_name, start, end);
 			break;
 		}case JAVA_LANGUAGE_TYPE:{
 			fprintf(out, "package OpCPU;\n\nclass %s implements OpCPUDataInterface {\n    private static final long dataStart = 0x%08XL;\n    private static final long dataEnd = 0x%08XL;\n", variable_name, start, end);
@@ -566,7 +568,7 @@ void output_data_item(unsigned int type, unsigned int v, FILE * out, enum langua
 			fprintf(out, "[0x%02X, 0x%08X]", type, v);
 			break;
 		}case PYTHON_LANGUAGE_TYPE:{
-			fprintf(out, "            [0x%02X, 0x%08X]", type, v);
+			fprintf(out, "            [0x%02XL, 0x%08XL]", type, v);
 			break;
 		}case JAVA_LANGUAGE_TYPE:{
 			if(index % java_max_items_per_method == 0){
@@ -663,13 +665,13 @@ static void setup_preloader_state(struct preloader_state * preloader_state, char
 			unsigned int k;
 			ins += get_instruction_op_code(preloader_state->l1_f->instructions[i]->type);
 			current_template = get_instruction_template(preloader_state->l1_f->instructions[i]->type);
-			for(k = 1; k < 5; k++){
+			for(k = 1; k < instruction_template_length; k++){
 				if(current_template[k] == REGISTER){
-					ins += (0x400000 / do_exponent(0x40, k -1)) * preloader_state->l1_f->instructions[i]->r[k-1]->register_number;
+					ins += ((1L << ra_OFFSET) / do_exponent(1u << BITS_PER_REGISTER, k -1)) * preloader_state->l1_f->instructions[i]->r[k-1]->register_number;
 				}else if(current_template[k] == DECIMAL_CONSTANT || current_template[k] == HEXIDECIMAL_CONSTANT){
 					/* It was a dw, an ll, a beq or a blt */
 					if(preloader_state->l1_f->instructions[i]->constant_is_negative){
-						ins += ((0xFFFF - preloader_state->l1_f->instructions[i]->constant) + 1);
+						ins += ((BRANCH_DISTANCE_MASK - preloader_state->l1_f->instructions[i]->constant) + 1);
 					}else{
 						ins += preloader_state->l1_f->instructions[i]->constant;
 					}
@@ -694,12 +696,13 @@ static void setup_preloader_state(struct preloader_state * preloader_state, char
 		}
 	}
 	output_data_close(out, language);
+	fclose(out);
 }
 
 struct preloader_state * preloader_state_create(char * variable_name, char * in_file, char * out_file, enum language_type language){
-	struct preloader_state * preloader_state = malloc(sizeof(struct preloader_state));
-	preloader_state->state = malloc(sizeof(struct parser_state));
-	preloader_state->state->in_bytes = malloc(1);
+	struct preloader_state * preloader_state = (struct preloader_state *)malloc(sizeof(struct preloader_state));
+	preloader_state->state = (struct parser_state *)malloc(sizeof(struct parser_state));
+	preloader_state->state->in_bytes = (char *)malloc(1);
 	preloader_state->state->input_size = 0;
 	preloader_state->state->size_buffer = 1;
 	preloader_state->state->buffer_position = 0;

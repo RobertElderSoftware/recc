@@ -14,32 +14,31 @@
 */
 #include "parser.h"
 
-const char * g_extern_string = "extern";
-const char * g_static_string = "static";
-const char * g_auto_string = "auto";
-const char * g_typedef_string = "typedef";
-const char * g_volatile_string = "volatile";
-const char * g_void_string = "void";
-const char * g_char_string = "char";
-const char * g_short_string = "short";
-const char * g_int_string = "int";
-const char * g_long_string = "long";
-const char * g_float_string = "float";
-const char * g_double_string = "double";
-const char * g_register_string = "register";
-const char * g_const_string = "const";
-const char * g_signed_string = "signed";
-const char * g_unsigned_string = "unsigned";
-const char * g_ptr_string = "*";
-const char * g_open_paren_string = "(";
-const char * g_close_paren_string = ")";
-const char * g_open_square_bracket_string = "[";
-const char * g_close_square_bracket_string = "]";
+static const char * g_extern_string = "extern";
+static const char * g_static_string = "static";
+static const char * g_auto_string = "auto";
+static const char * g_typedef_string = "typedef";
+static const char * g_volatile_string = "volatile";
+static const char * g_void_string = "void";
+static const char * g_char_string = "char";
+static const char * g_short_string = "short";
+static const char * g_int_string = "int";
+static const char * g_long_string = "long";
+static const char * g_float_string = "float";
+static const char * g_double_string = "double";
+static const char * g_const_string = "const";
+static const char * g_signed_string = "signed";
+static const char * g_unsigned_string = "unsigned";
+static const char * g_ptr_string = "*";
+static const char * g_open_paren_string = "(";
+static const char * g_close_paren_string = ")";
+static const char * g_open_square_bracket_string = "[";
+static const char * g_close_square_bracket_string = "]";
 
-struct memory_pooler * g_parser_node_pool;
-struct memory_pooler * g_c_lexer_token_pool;
+static struct memory_pooler * g_parser_node_pool;
+static struct memory_pooler * g_c_lexer_token_pool;
 
-const char * node_type_names[91] = {
+static const char * node_type_names[91] = {
 	"TERMINAL",
 	"EPSILON",
 	"PRIMARY_EXPRESSION",
@@ -267,7 +266,7 @@ struct parser_node * create_abstract_declarator_from_declarator(struct parser_no
 struct parser_node * convert_declarator_to_abstract_declarator(struct parser_node *);
 struct parser_node * convert_declarator_to_abstract_declarator_h(struct parser_node *);
 unsigned char * convert_character_constant(unsigned char *, unsigned char *);
-unsigned char * convert_string_literal(unsigned char *);
+unsigned int * convert_string_literal(unsigned char *);
 int is_function_variadic(struct parser_node *);
 int is_function_k_and_r_c_style(struct parser_node *);
 int is_parameter_type_list_variadic(struct parser_node *);
@@ -366,9 +365,11 @@ void print_error_with_type(struct c_lexer_state * state, struct type_description
 	struct unsigned_char_list l;
 	unsigned_char_list_create(&l);
 	buffered_printf(&l,"\n%s\n", msg);
-	buffered_printf(&l,"Type #1:\n");
-	print_normalized_declaration_declarator_and_specifiers(&l, t1->declarator, t1->specifiers, 0, 0);
-	unsigned_char_list_add(&l, 0);
+	if(t1){
+		buffered_printf(&l,"Type #1:\n");
+		print_normalized_declaration_declarator_and_specifiers(&l, t1->declarator, t1->specifiers, 0, 0);
+	}
+	unsigned_char_list_add_end(&l, 0);
 	printf("%s\n", unsigned_char_list_data(&l));
 	print_node_context(state, context);
 	unsigned_char_list_destroy(&l);
@@ -382,7 +383,7 @@ void print_error_with_types(struct c_lexer_state * state, struct type_descriptio
 	print_normalized_declaration_declarator_and_specifiers(&l, t1->declarator, t1->specifiers, 0, 0);
 	buffered_printf(&l,"Type #2:\n");
 	print_normalized_declaration_declarator_and_specifiers(&l, t2->declarator, t2->specifiers, 0, 0);
-	unsigned_char_list_add(&l, 0);
+	unsigned_char_list_add_end(&l, 0);
 	printf("%s\n", unsigned_char_list_data(&l));
 	print_node_context(state, context);
 	unsigned_char_list_destroy(&l);
@@ -517,8 +518,8 @@ int is_type_description_a_function_pointer(struct type_description * t){
 }
 
 struct type_description * create_type_description_from_type_name(struct parser_state * state, struct parser_node * n){
-	struct type_description * rtn = malloc(sizeof(struct type_description));
-	struct normalized_declarator * normalized_declarator = malloc(sizeof(struct normalized_declarator));
+	struct type_description * rtn = (struct type_description *)malloc(sizeof(struct type_description));
+	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 	struct scope_level * scope = state->top_scope;
 	descend_scope(&scope, state->current_scope_depth);
 	assert(n->type == TYPE_NAME);
@@ -526,21 +527,21 @@ struct type_description * create_type_description_from_type_name(struct parser_s
 	if(n->first_child->next && n->first_child->next->type == ABSTRACT_DECLARATOR){
 		normalized_declarator->declarator = copy_parser_node_children_only(n->first_child->next);
 	}else{
-		normalized_declarator->declarator = 0;
+		normalized_declarator->declarator = (struct parser_node *)0;
 	}
 	rtn->specifiers = get_normalized_specifier_list(n->first_child);
 	rtn->declarator = normalized_declarator;
 	rtn->source_scope_level = scope;
 	rtn->context = n;
-	rtn->value_type = RVALUE;
+	rtn->value_type = WORD_ALIGNED_RVALUE;
 	rtn->source_element = (struct normalized_declaration_element *)0;
 	return rtn;
 }
 
 struct type_description * get_current_function_return_type_description(struct type_description * t){
 	/*  Should be a plain function type with no levels of indirection */
-	struct type_description * return_type_description = 0;
-	struct normalized_declarator * normalized_declarator_return = malloc(sizeof(struct normalized_declarator));
+	struct type_description * return_type_description = (struct type_description *)0;
+	struct normalized_declarator * normalized_declarator_return = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 
 	struct parser_node * abstract = create_abstract_declarator_from_normalized_declarator(t->declarator);
 	struct parser_node * fcn_type = convert_abstract_declarator_to_function_type(abstract);
@@ -555,8 +556,8 @@ struct type_description * get_current_function_return_type_description(struct ty
 struct type_description * create_dereferenced_array_type_description_from_type_description(struct type_description * a){
 	/* Take a type description as input and return a type description of the pointer type (do the [] operator on an array or pointer) */
 	struct type_description * rtn;
-	struct normalized_declarator * normalized_declarator = malloc(sizeof(struct normalized_declarator));
-	struct parser_node * temp = 0;
+	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
+	struct parser_node * temp = (struct parser_node *)0;
 	temp = create_abstract_declarator_from_normalized_declarator(a->declarator);
 	if(is_array(temp)){
 		normalized_declarator->declarator = convert_abstract_declarator_to_array_type(temp);
@@ -567,7 +568,7 @@ struct type_description * create_dereferenced_array_type_description_from_type_d
 		unsigned_char_list_create(&l);
 		buffered_printf(&l, "Type is:\n");
 		print_normalized_declaration_declarator_and_specifiers(&l, a->declarator, a->specifiers, 0, 0);
-		unsigned_char_list_add(&l, 0);
+		unsigned_char_list_add_end(&l, 0);
 		printf("%s\n", unsigned_char_list_data(&l));
 		assert(0 && "Trying to perform [] operator on something that is not an array or pointer.");
 	}
@@ -581,8 +582,8 @@ struct type_description * create_dereferenced_array_type_description_from_type_d
 struct type_description * create_dereferenced_pointer_type_description_from_type_description(struct type_description * a){
 	/* Take a type description as input and return a type description of the pointer type (do the * (value pointed to by) operator on a pointer) */
 	struct type_description * rtn;
-	struct normalized_declarator * normalized_declarator = malloc(sizeof(struct normalized_declarator));
-	struct parser_node * temp = 0;
+	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
+	struct parser_node * temp = (struct parser_node *)0;
 	temp = create_abstract_declarator_from_normalized_declarator(a->declarator);
 	normalized_declarator->declarator = convert_abstract_declarator_to_pointer_type(temp);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
@@ -639,9 +640,9 @@ struct parser_node * insert_abstract_declarator(struct parser_node * outer, stru
 		struct parser_node * outer_pointer = outer->first_child->type == POINTER ? outer->first_child : (struct parser_node *)0;
 		struct parser_node * inner_pointer = inner->first_child->type == POINTER ? inner->first_child : (struct parser_node *)0;
 
-		struct parser_node * new_direct_abstract_declarator = 0;
-		struct parser_node * new_pointer = 0;
-		struct parser_node * unmerged_inner_pointer = 0;
+		struct parser_node * new_direct_abstract_declarator = (struct parser_node *)0;
+		struct parser_node * new_pointer = (struct parser_node *)0;
+		struct parser_node * unmerged_inner_pointer = (struct parser_node *)0;
 		if(outer_direct_abstract_declarator){
 			if(outer_direct_abstract_declarator->first_child->next->type == ABSTRACT_DECLARATOR){ /*  If we're at a '(' abstract_declarator ')' */
 				struct parser_node * close_paren = outer_direct_abstract_declarator->first_child->next->next;
@@ -680,22 +681,22 @@ struct parser_node * insert_abstract_declarator(struct parser_node * outer, stru
 		/*  Check if we need to add ( ) around any pointers */
 		if(inner_pointer && (new_direct_abstract_declarator && new_direct_abstract_declarator->first_child->next->type != ABSTRACT_DECLARATOR)){
 			/*  create a new direct abstract declarator, put the pointer in it, then push the new_direct_abstract_declarator into a _rest  */
-			struct parser_node * artificial_direct_abstract_declarator = memory_pooler_malloc(g_parser_node_pool);
-			struct parser_node * inserted_open_paren = memory_pooler_malloc(g_parser_node_pool);
-			struct parser_node * inserted_close_paren = memory_pooler_malloc(g_parser_node_pool);
-			struct c_lexer_token * open_paren_token = memory_pooler_malloc(g_c_lexer_token_pool);
-			struct c_lexer_token * close_paren_token = memory_pooler_malloc(g_c_lexer_token_pool);
-			struct parser_node * abstract_declarator_to_insert = memory_pooler_malloc(g_parser_node_pool);
+			struct parser_node * artificial_direct_abstract_declarator = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+			struct parser_node * inserted_open_paren = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+			struct parser_node * inserted_close_paren = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+			struct c_lexer_token * open_paren_token = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
+			struct c_lexer_token * close_paren_token = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
+			struct parser_node * abstract_declarator_to_insert = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
 			struct parser_node * surrounded_pointer = unmerged_inner_pointer ? unmerged_inner_pointer : new_pointer;
 
 			if(!unmerged_inner_pointer){ /* We only put the new_pointer in the () if there is no unmerged inner pointer */
-				new_pointer = 0; /*  Prevent this pointer from showing up before the direct abstract declarator we're creating */
+				new_pointer = (struct parser_node *)0; /*  Prevent this pointer from showing up before the direct abstract declarator we're creating */
 			}
 
 			artificial_direct_abstract_declarator->type = DIRECT_ABSTRACT_DECLARATOR;
-			artificial_direct_abstract_declarator->next = 0;
+			artificial_direct_abstract_declarator->next = (struct parser_node *)0;
 			artificial_direct_abstract_declarator->first_child = inserted_open_paren;
-			artificial_direct_abstract_declarator->c_lexer_token = 0;
+			artificial_direct_abstract_declarator->c_lexer_token = (struct c_lexer_token *)0;
 			
 			open_paren_token->type = OPEN_PAREN_CHAR;
 			open_paren_token->first_byte = (unsigned char *)g_open_paren_string;
@@ -704,14 +705,14 @@ struct parser_node * insert_abstract_declarator(struct parser_node * outer, stru
 			inserted_open_paren->type = TERMINAL;
 			inserted_open_paren->c_lexer_token = open_paren_token;
 			inserted_open_paren->next = abstract_declarator_to_insert;
-			inserted_open_paren->first_child = 0;
+			inserted_open_paren->first_child = (struct parser_node *)0;
 
 			abstract_declarator_to_insert->type = ABSTRACT_DECLARATOR;
 			abstract_declarator_to_insert->next = inserted_close_paren;
 			abstract_declarator_to_insert->first_child = surrounded_pointer;
-			abstract_declarator_to_insert->c_lexer_token = 0;
+			abstract_declarator_to_insert->c_lexer_token = (struct c_lexer_token *)0;
 			/*  surrounded_pointer would have been the inner pointer that was copied.  Because we're putting '(' ')' around it, the direct_abstract_declarator is no longer next */
-			surrounded_pointer->next = 0;
+			surrounded_pointer->next = (struct parser_node *)0;
 
 			close_paren_token->type = CLOSE_PAREN_CHAR;
 			close_paren_token->first_byte = (unsigned char *)g_close_paren_string;
@@ -720,7 +721,7 @@ struct parser_node * insert_abstract_declarator(struct parser_node * outer, stru
 			inserted_close_paren->type = TERMINAL;
 			inserted_close_paren->c_lexer_token = close_paren_token;
 			inserted_close_paren->next = new_direct_abstract_declarator;
-			inserted_close_paren->first_child = 0;
+			inserted_close_paren->first_child = (struct parser_node *)0;
 
 			/*  The thing that was going to become the new direct abstract declarator will now become a direct_abstract_declarator_rest 
 			    This is ok because we make this direct_abstract_declarator doesn't have an abstract_declarator in it  */
@@ -769,11 +770,11 @@ void convert_to_untypedefed_type_description(struct type_description * t){
 					num_original_specifiers = struct_normalized_specifier_ptr_list_size(typedefed_type->specifiers);
 					for(j = 0; j < num_original_specifiers; j++){
 						struct normalized_specifier * src_normalized_specifier = struct_normalized_specifier_ptr_list_get(typedefed_type->specifiers, j);
-						struct normalized_specifier * dst_normalized_specifier = malloc(sizeof(struct normalized_specifier));
+						struct normalized_specifier * dst_normalized_specifier = (struct normalized_specifier *)malloc(sizeof(struct normalized_specifier));
 						struct parser_node * specifiers_copy = copy_parser_node_children_only(src_normalized_specifier->specifier);
 						dst_normalized_specifier->specifier = specifiers_copy;
 						dst_normalized_specifier->type = src_normalized_specifier->type;
-						struct_normalized_specifier_ptr_list_add(t->specifiers, dst_normalized_specifier);
+						struct_normalized_specifier_ptr_list_add_end(t->specifiers, dst_normalized_specifier);
 					}
 
 					/*  Force the typedef's declarator to be abstract so we can insert into it with target type's declarator */
@@ -783,7 +784,7 @@ void convert_to_untypedefed_type_description(struct type_description * t){
 					abstract_t = create_abstract_declarator_from_normalized_declarator(t->declarator);
 
 					if(t->declarator->declarator){
-						t->declarator->declarator->next = 0;
+						t->declarator->declarator->next = (struct parser_node *)0;
 						destroy_parser_node_tree_and_c_lexer_tokens(t->declarator->declarator);
 					}
 					/*  Insert the target type abstract declarator into the typedefed type. */
@@ -808,8 +809,8 @@ void convert_to_untypedefed_type_description(struct type_description * t){
 struct type_description * create_address_type_description_from_type_description(struct type_description * a){
 	/* Take a type description as input and return a type description of the address type (do the & operator) */
 	struct type_description * rtn;
-	struct normalized_declarator * normalized_declarator = malloc(sizeof(struct normalized_declarator));
-	struct parser_node * temp = 0;
+	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
+	struct parser_node * temp = (struct parser_node *)0;
 	temp = create_abstract_declarator_from_normalized_declarator(a->declarator);
 	normalized_declarator->declarator = convert_abstract_declarator_to_address_type(temp);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
@@ -864,8 +865,8 @@ int type_description_cmp(struct type_description * a, struct type_description * 
 										struct normalized_declaration_set * declaration_set_b = create_normalized_declaration_set_from_parser_node(parameter_declaration_b, 0);
 										int rtn;
 
-										struct type_description * param_type_a = malloc(sizeof(struct type_description));
-										struct type_description * param_type_b = malloc(sizeof(struct type_description));
+										struct type_description * param_type_a = (struct type_description *)malloc(sizeof(struct type_description));
+										struct type_description * param_type_b = (struct type_description *)malloc(sizeof(struct type_description));
 										param_type_a->specifiers = declaration_set_a->normalized_specifiers;
 										param_type_b->specifiers = declaration_set_b->normalized_specifiers;
 										assert(struct_normalized_declarator_ptr_list_size(declaration_set_a->normalized_declarators) <= 1);
@@ -873,12 +874,12 @@ int type_description_cmp(struct type_description * a, struct type_description * 
 										if(struct_normalized_declarator_ptr_list_size(declaration_set_a->normalized_declarators)){
 											param_type_a->declarator = struct_normalized_declarator_ptr_list_get(declaration_set_a->normalized_declarators, 0);
 										}else{
-											param_type_a->declarator = 0;
+											param_type_a->declarator = (struct normalized_declarator *)0;
 										}
 										if(struct_normalized_declarator_ptr_list_size(declaration_set_b->normalized_declarators)){
 											param_type_b->declarator = struct_normalized_declarator_ptr_list_get(declaration_set_b->normalized_declarators, 0);
 										}else{
-											param_type_b->declarator = 0;
+											param_type_b->declarator = (struct normalized_declarator *)0;
 										}
 										rtn = type_description_cmp(param_type_a, param_type_b);
 										destroy_normalized_declaration_element_list(create_normalized_declaration_element_list(declaration_set_a));
@@ -929,9 +930,9 @@ int type_description_cmp(struct type_description * a, struct type_description * 
 struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct normalized_declarator * normalized_declarator, struct struct_normalized_specifier_ptr_list * specifiers, struct parser_node * context, struct scope_level * source_scope_level, enum value_type value_type, struct normalized_declaration_element * source_element){
 	/* Take a normalized declarator and specifiers, change any declarator it has into an abstract one, and copy all parser nodes */
 	/* Make copies of everything so we can manage memory more consistently */
-	struct struct_normalized_specifier_ptr_list * normalized_specifiers_copy = malloc(sizeof(struct struct_normalized_specifier_ptr_list));
-	struct normalized_declarator * normalized_declarator_copy = malloc(sizeof(struct normalized_declarator));
-	struct type_description * new_description = malloc(sizeof(struct type_description));
+	struct struct_normalized_specifier_ptr_list * normalized_specifiers_copy = (struct struct_normalized_specifier_ptr_list *)malloc(sizeof(struct struct_normalized_specifier_ptr_list));
+	struct normalized_declarator * normalized_declarator_copy = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
+	struct type_description * new_description = (struct type_description *)malloc(sizeof(struct type_description));
 	unsigned int num_specifiers = struct_normalized_specifier_ptr_list_size(specifiers);
 	unsigned int i;
 	normalized_declarator_copy->declarator = create_abstract_declarator_from_normalized_declarator(normalized_declarator);
@@ -945,11 +946,11 @@ struct type_description * create_type_description_from_normalized_declarator_and
 	struct_normalized_specifier_ptr_list_create(normalized_specifiers_copy);
 	for(i = 0; i < num_specifiers; i++){
 		struct normalized_specifier * src_normalized_specifier = struct_normalized_specifier_ptr_list_get(specifiers, i);
-		struct normalized_specifier * dst_normalized_specifier = malloc(sizeof(struct normalized_specifier));
+		struct normalized_specifier * dst_normalized_specifier = (struct normalized_specifier *)malloc(sizeof(struct normalized_specifier));
 		struct parser_node * specifiers_copy = copy_parser_node_children_only(src_normalized_specifier->specifier);
 		dst_normalized_specifier->specifier = specifiers_copy;
 		dst_normalized_specifier->type = src_normalized_specifier->type;
-		struct_normalized_specifier_ptr_list_add(normalized_specifiers_copy, dst_normalized_specifier);
+		struct_normalized_specifier_ptr_list_add_end(normalized_specifiers_copy, dst_normalized_specifier);
 	}
 	return new_description;
 }
@@ -1262,17 +1263,17 @@ int is_array(struct parser_node * n){
 struct parser_node * copy_parser_node_tree_and_c_lexer_tokens(struct parser_node * n){
 	/*  Create a copy of every node we can reach from n */
 	if(n){
-		struct parser_node * new_node = memory_pooler_malloc(g_parser_node_pool);
+		struct parser_node * new_node = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
 		new_node->type = n->type;
 		new_node->first_child = copy_parser_node_tree_and_c_lexer_tokens(n->first_child);
 		new_node->next = copy_parser_node_tree_and_c_lexer_tokens(n->next);
 		if(n->c_lexer_token){
-			new_node->c_lexer_token = memory_pooler_malloc(g_c_lexer_token_pool);
+			new_node->c_lexer_token = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
 			new_node->c_lexer_token->type = n->c_lexer_token->type;
 			new_node->c_lexer_token->first_byte = n->c_lexer_token->first_byte;
 			new_node->c_lexer_token->last_byte = n->c_lexer_token->last_byte;
 		}else{
-			new_node->c_lexer_token = 0;
+			new_node->c_lexer_token = (struct c_lexer_token *)0;
 		}
 		return new_node;
 	}else{
@@ -1283,17 +1284,17 @@ struct parser_node * copy_parser_node_tree_and_c_lexer_tokens(struct parser_node
 struct parser_node * copy_parser_node_children_only(struct parser_node * n){
 	/*  Create a copy of only the children of n.  Often, we don't want to copy the node's sibilings */
 	if(n){
-		struct parser_node * new_node = memory_pooler_malloc(g_parser_node_pool);
+		struct parser_node * new_node = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
 		new_node->type = n->type;
 		new_node->first_child = copy_parser_node_tree_and_c_lexer_tokens(n->first_child);
-		new_node->next = 0;
+		new_node->next = (struct parser_node *)0;
 		if(n->c_lexer_token){
-			new_node->c_lexer_token = memory_pooler_malloc(g_c_lexer_token_pool);
+			new_node->c_lexer_token = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
 			new_node->c_lexer_token->type = n->c_lexer_token->type;
 			new_node->c_lexer_token->first_byte = n->c_lexer_token->first_byte;
 			new_node->c_lexer_token->last_byte = n->c_lexer_token->last_byte;
 		}else{
-			new_node->c_lexer_token = 0;
+			new_node->c_lexer_token = (struct c_lexer_token *)0;
 		}
 		return new_node;
 	}else{
@@ -1329,19 +1330,19 @@ struct parser_node * remove_one_pointer_level(struct parser_node * n){
 }
 
 struct parser_node * create_pointer_node(void){
-	struct c_lexer_token * ptr_token = memory_pooler_malloc(g_c_lexer_token_pool);
-	struct parser_node * terminal = memory_pooler_malloc(g_parser_node_pool);
-	struct parser_node * pointer = memory_pooler_malloc(g_parser_node_pool);
+	struct c_lexer_token * ptr_token = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
+	struct parser_node * terminal = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * pointer = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
 	ptr_token->type = MULTIPLY_CHAR;
 	ptr_token->first_byte = (unsigned char *)g_ptr_string;
 	ptr_token->last_byte = (unsigned char *)(g_ptr_string + (strlen(g_ptr_string) -1));
 	terminal->c_lexer_token = ptr_token;
-	terminal->first_child = 0;
-	terminal->next = 0;
+	terminal->first_child = (struct parser_node *)0;
+	terminal->next = (struct parser_node *)0;
 	terminal->type = TERMINAL;
 	pointer->first_child = terminal;
-	pointer->c_lexer_token = 0;
-	pointer->next = 0;
+	pointer->c_lexer_token = (struct c_lexer_token *)0;
+	pointer->next = (struct parser_node *)0;
 	pointer->type = POINTER;
 	return pointer;
 }
@@ -1381,13 +1382,13 @@ struct parser_node * convert_abstract_declarator_to_address_type_h(struct parser
 				return n;
 			}else{
 				struct parser_node * pointer = create_pointer_node();
-				struct parser_node * abstract_declarator = memory_pooler_malloc(g_parser_node_pool);
+				struct parser_node * abstract_declarator = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
 				struct parser_node * current_first_child = n->first_child;
-				struct parser_node * open_paren = memory_pooler_malloc(g_parser_node_pool);
-				struct parser_node * close_paren = memory_pooler_malloc(g_parser_node_pool);
-				struct parser_node * direct_abstract_declarator_rest = memory_pooler_malloc(g_parser_node_pool);
-				struct c_lexer_token * open_paren_token = memory_pooler_malloc(g_c_lexer_token_pool);
-				struct c_lexer_token * close_paren_token = memory_pooler_malloc(g_c_lexer_token_pool);
+				struct parser_node * open_paren = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+				struct parser_node * close_paren = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+				struct parser_node * direct_abstract_declarator_rest = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+				struct c_lexer_token * open_paren_token = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
+				struct c_lexer_token * close_paren_token = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
 				n->first_child = open_paren;
 				/* Set up the '(' token */
 				open_paren_token->type = OPEN_PAREN_CHAR;
@@ -1396,10 +1397,10 @@ struct parser_node * convert_abstract_declarator_to_address_type_h(struct parser
 				/* Set up the TERMINAL for '(' token */
 				open_paren->c_lexer_token = open_paren_token;
 				open_paren->next = abstract_declarator;
-				open_paren->first_child = 0;
+				open_paren->first_child = (struct parser_node *)0;
 				open_paren->type = TERMINAL;
 				/* Set up the abstract declarator */
-				abstract_declarator->c_lexer_token = 0;
+				abstract_declarator->c_lexer_token = (struct c_lexer_token *)0;
 				abstract_declarator->next = close_paren;
 				abstract_declarator->first_child = pointer;
 				abstract_declarator->type = ABSTRACT_DECLARATOR;
@@ -1410,11 +1411,11 @@ struct parser_node * convert_abstract_declarator_to_address_type_h(struct parser
 				/* Set up the TERMINAL for ')' token */
 				close_paren->c_lexer_token = close_paren_token;
 				close_paren->next = direct_abstract_declarator_rest;
-				close_paren->first_child = 0;
+				close_paren->first_child = (struct parser_node *)0;
 				close_paren->type = TERMINAL;
 				/* Move what was here into the new direct_abstract_declarator_rest */
-				direct_abstract_declarator_rest->c_lexer_token = 0;
-				direct_abstract_declarator_rest->next = 0;
+				direct_abstract_declarator_rest->c_lexer_token = (struct c_lexer_token *)0;
+				direct_abstract_declarator_rest->next = (struct parser_node *)0;
 				direct_abstract_declarator_rest->first_child = current_first_child;
 				direct_abstract_declarator_rest->type = DIRECT_ABSTRACT_DECLARATOR_REST;
 				return n;
@@ -1429,10 +1430,10 @@ struct parser_node * convert_abstract_declarator_to_address_type_h(struct parser
 struct parser_node * convert_abstract_declarator_to_address_type(struct parser_node * n){
 	assert(!n || n->type == ABSTRACT_DECLARATOR);
 	if(!n){
-		struct parser_node * abstract_declarator = memory_pooler_malloc(g_parser_node_pool);
+		struct parser_node * abstract_declarator = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
 		abstract_declarator->first_child = create_pointer_node();
-		abstract_declarator->c_lexer_token = 0;
-		abstract_declarator->next = 0;
+		abstract_declarator->c_lexer_token = (struct c_lexer_token *)0;
+		abstract_declarator->next = (struct parser_node *)0;
 		abstract_declarator->type = ABSTRACT_DECLARATOR;
 		return abstract_declarator;
 	}
@@ -1448,7 +1449,7 @@ struct parser_node * convert_abstract_declarator_to_pointer_type(struct parser_n
 	switch(n->type){
 		case DIRECT_ABSTRACT_DECLARATOR:{
 			n->first_child = convert_abstract_declarator_to_pointer_type(n->first_child);
-			n->next = 0;
+			n->next = (struct parser_node *)0;
 			if(n->first_child){
 				return n;
 			}else{
@@ -1536,7 +1537,7 @@ struct parser_node * convert_abstract_declarator_to_array_type(struct parser_nod
 	switch(n->type){
 		case DIRECT_ABSTRACT_DECLARATOR:{
 			n->first_child = convert_abstract_declarator_to_array_type(n->first_child);
-			n->next = 0;
+			n->next = (struct parser_node *)0;
 			if(n->first_child){
 				return n;
 			}else{
@@ -1663,7 +1664,7 @@ struct parser_node * convert_abstract_declarator_to_function_type(struct parser_
 	switch(n->type){
 		case DIRECT_ABSTRACT_DECLARATOR:{
 			n->first_child = convert_abstract_declarator_to_function_type(n->first_child);
-			n->next = 0;
+			n->next = (struct parser_node *)0;
 			if(n->first_child){
 				return n;
 			}else{
@@ -1885,7 +1886,7 @@ struct parser_node * convert_declarator_to_abstract_declarator_h(struct parser_n
 		}case IDENTIFIER_LIST:{
 			/* identifier lists don't exist in abstract declarators */
 			struct parser_node * next = n->next;
-			n->next = 0;
+			n->next = (struct parser_node *)0;
 			destroy_parser_node_tree_and_c_lexer_tokens(n);
 			return convert_declarator_to_abstract_declarator_h(next);
 		}case EPSILON:{
@@ -2193,8 +2194,8 @@ void print_normalized_declaration_declarator_and_specifiers(struct unsigned_char
 	struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(normalized_specifiers);
 	if(struct_or_union_or_enum_specifier){
 		struct c_lexer_token * token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
-		struct parser_node * declaration_list = 0;
-		struct parser_node * enumerator_list = 0;
+		struct parser_node * declaration_list = (struct parser_node *)0;
+		struct parser_node * enumerator_list = (struct parser_node *)0;
 		int its_a_struct = is_struct(struct_or_union_or_enum_specifier);
 		int its_a_union = is_union(struct_or_union_or_enum_specifier);
 		int its_a_enum = is_enum(struct_or_union_or_enum_specifier);
@@ -2346,27 +2347,27 @@ struct first_and_last_namespace_object manage_generic_declaration(struct parser_
 }
 
 struct struct_normalized_declaration_element_ptr_list * create_normalized_declaration_element_list(struct normalized_declaration_set * declaration_set){
-	struct struct_normalized_declaration_element_ptr_list * list = malloc(sizeof(struct struct_normalized_declaration_element_ptr_list));
+	struct struct_normalized_declaration_element_ptr_list * list = (struct struct_normalized_declaration_element_ptr_list *)malloc(sizeof(struct struct_normalized_declaration_element_ptr_list));
 	unsigned int num_declarators = struct_normalized_declarator_ptr_list_size(declaration_set->normalized_declarators);
 	unsigned int i;
 	struct_normalized_declaration_element_ptr_list_create(list);
 
 	if(num_declarators == 0){
 		/*  If there are no declarators, we still want the declaration specifiers because they can describe structs */
-		struct normalized_declaration_element * new_element = malloc(sizeof(struct normalized_declaration_element));
-		new_element->normalized_specifiers = malloc(sizeof(struct struct_normalized_specifier_ptr_list));
+		struct normalized_declaration_element * new_element = (struct normalized_declaration_element *)malloc(sizeof(struct normalized_declaration_element));
+		new_element->normalized_specifiers = (struct struct_normalized_specifier_ptr_list *)malloc(sizeof(struct struct_normalized_specifier_ptr_list));
 		*(new_element->normalized_specifiers) = struct_normalized_specifier_ptr_list_copy(declaration_set->normalized_specifiers);
-		new_element->normalized_declarator = 0;
+		new_element->normalized_declarator = (struct normalized_declarator *)0;
 		new_element->normalized_declaration_set = declaration_set;
-		struct_normalized_declaration_element_ptr_list_add(list, new_element);
+		struct_normalized_declaration_element_ptr_list_add_end(list, new_element);
 	}else{
 		for(i = 0; i < num_declarators; i++){
-			struct normalized_declaration_element * new_element = malloc(sizeof(struct normalized_declaration_element));
-			new_element->normalized_specifiers = malloc(sizeof(struct struct_normalized_specifier_ptr_list));
+			struct normalized_declaration_element * new_element = (struct normalized_declaration_element *)malloc(sizeof(struct normalized_declaration_element));
+			new_element->normalized_specifiers = (struct struct_normalized_specifier_ptr_list *)malloc(sizeof(struct struct_normalized_specifier_ptr_list));
 			*(new_element->normalized_specifiers) = struct_normalized_specifier_ptr_list_copy(declaration_set->normalized_specifiers);
 			new_element->normalized_declarator = struct_normalized_declarator_ptr_list_get(declaration_set->normalized_declarators,i);
 			new_element->normalized_declaration_set = declaration_set;
-			struct_normalized_declaration_element_ptr_list_add(list, new_element);
+			struct_normalized_declaration_element_ptr_list_add_end(list, new_element);
 		}
 	}
 
@@ -2424,8 +2425,8 @@ void destroy_normalized_declaration_element_list(struct struct_normalized_declar
 
 struct normalized_declaration_set * create_normalized_declaration_set_from_parser_node(struct parser_node * n, struct normalized_declaration_set * parent_set){
 	/*  This function gives us a single list of specifiers that modify each element of a list of declarators */
-	struct parser_node * specifier_list = 0;
-	struct normalized_declaration_set * declaration_set = malloc(sizeof(struct normalized_declaration_set));
+	struct parser_node * specifier_list = (struct parser_node *)0;
+	struct normalized_declaration_set * declaration_set = (struct normalized_declaration_set *)malloc(sizeof(struct normalized_declaration_set));
 
 	if(n->type == EXTERNAL_DECLARATION){
 		declaration_set->set = n->first_child;
@@ -2483,7 +2484,7 @@ void add_normalized_specifier_to_list(struct parser_node * n, struct struct_norm
 		n->type == TYPE_QUALIFIER_LIST_REST
 	);
 
-	new_p = malloc(sizeof(struct normalized_specifier));
+	new_p = (struct normalized_specifier *)malloc(sizeof(struct normalized_specifier));
 	new_p->specifier = copy_parser_node_children_only(first);
 
 	switch(first->type){
@@ -2501,7 +2502,7 @@ void add_normalized_specifier_to_list(struct parser_node * n, struct struct_norm
 		}
 	}
 
-	struct_normalized_specifier_ptr_list_add(list, new_p);
+	struct_normalized_specifier_ptr_list_add_end(list, new_p);
 
 	if( /*  Use recursion to add the rest of the specifiers to the list, if there are more */
 		second && (
@@ -2547,7 +2548,7 @@ struct struct_normalized_specifier_ptr_list * get_normalized_specifier_list(stru
 		;
 	These all get flattened out to a list of [ storage_class_specifier | type_specifier | type_qualifier ]
 	*/
-	struct struct_normalized_specifier_ptr_list * rtn = malloc(sizeof(struct struct_normalized_specifier_ptr_list));
+	struct struct_normalized_specifier_ptr_list * rtn = (struct struct_normalized_specifier_ptr_list *)malloc(sizeof(struct struct_normalized_specifier_ptr_list));
 	struct_normalized_specifier_ptr_list_create(rtn);
 	add_normalized_specifier_to_list(n, rtn);
 	return rtn;
@@ -2560,43 +2561,43 @@ void add_normalized_declarator_to_list(struct parser_node * n, struct struct_nor
 		return;
 	}
 
-	new_p = malloc(sizeof(struct normalized_declarator));
+	new_p = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 
 	switch(n->type){
 		case ENUMERATOR_LIST:{
 			new_p->type = NORMALIZED_ENUMERATOR;
 			new_p->declarator = copy_parser_node_children_only(n->first_child);
-			struct_normalized_declarator_ptr_list_add(list, new_p);
+			struct_normalized_declarator_ptr_list_add_end(list, new_p);
 			add_normalized_declarator_to_list(n->first_child->next, list);
 			break;
 		}case ENUMERATOR_LIST_REST:{
 			new_p->type = NORMALIZED_ENUMERATOR;
 			new_p->declarator = copy_parser_node_children_only(n->first_child->next);
-			struct_normalized_declarator_ptr_list_add(list, new_p);
+			struct_normalized_declarator_ptr_list_add_end(list, new_p);
 			add_normalized_declarator_to_list(n->first_child->next->next, list);
 			break;
 		}case INIT_DECLARATOR_LIST:{
 			new_p->type = NORMALIZED_INIT_DECLARATOR;
 			new_p->declarator = copy_parser_node_children_only(n->first_child);
-			struct_normalized_declarator_ptr_list_add(list, new_p);
+			struct_normalized_declarator_ptr_list_add_end(list, new_p);
 			add_normalized_declarator_to_list(n->first_child->next, list);
 			break;
 		}case INIT_DECLARATOR_LIST_REST:{
 			new_p->type = NORMALIZED_INIT_DECLARATOR;
 			new_p->declarator = copy_parser_node_children_only(n->first_child->next);
-			struct_normalized_declarator_ptr_list_add(list, new_p);
+			struct_normalized_declarator_ptr_list_add_end(list, new_p);
 			add_normalized_declarator_to_list(n->first_child->next->next, list);
 			break;
 		}case STRUCT_DECLARATOR_LIST:{
 			new_p->type = NORMALIZED_STRUCT_DECLARATOR;
 			new_p->declarator = copy_parser_node_children_only(n->first_child);
-			struct_normalized_declarator_ptr_list_add(list, new_p);
+			struct_normalized_declarator_ptr_list_add_end(list, new_p);
 			add_normalized_declarator_to_list(n->first_child->next, list);
 			break;
 		}case STRUCT_DECLARATOR_LIST_REST:{
 			new_p->type = NORMALIZED_STRUCT_DECLARATOR;
 			new_p->declarator = copy_parser_node_children_only(n->first_child->next);
-			struct_normalized_declarator_ptr_list_add(list, new_p);
+			struct_normalized_declarator_ptr_list_add_end(list, new_p);
 			add_normalized_declarator_to_list(n->first_child->next->next, list);
 			break;
 		}case PARAMETER_DECLARATION:{
@@ -2614,7 +2615,7 @@ void add_normalized_declarator_to_list(struct parser_node * n, struct struct_nor
 				}
 				new_p->declarator = copy_parser_node_children_only(n->first_child->next);
 				assert(new_p->declarator->type == DECLARATOR || new_p->declarator->type == ABSTRACT_DECLARATOR);
-				struct_normalized_declarator_ptr_list_add(list, new_p);
+				struct_normalized_declarator_ptr_list_add_end(list, new_p);
 			}else{
 				free(new_p); /*  No declarator */
 			}
@@ -2629,7 +2630,7 @@ void add_normalized_declarator_to_list(struct parser_node * n, struct struct_nor
 				assert(0 && "Unknown function definition.");
 			}
 			assert(new_p->declarator->type == DECLARATOR);
-			struct_normalized_declarator_ptr_list_add(list, new_p);
+			struct_normalized_declarator_ptr_list_add_end(list, new_p);
 			break;
 		}case DECLARATION:{
 			free(new_p); /*  The declarator (if there is one) is deeper in the recursion */
@@ -2686,7 +2687,7 @@ struct struct_normalized_declarator_ptr_list * get_normalized_declarator_list(st
 
 	These all get flattened out to a list of [ declarator | abstract_declarator | struct_declarator | ... ]
 	*/
-	struct struct_normalized_declarator_ptr_list * rtn = malloc(sizeof(struct struct_normalized_declarator_ptr_list));
+	struct struct_normalized_declarator_ptr_list * rtn = (struct struct_normalized_declarator_ptr_list *)malloc(sizeof(struct struct_normalized_declarator_ptr_list));
 	struct_normalized_declarator_ptr_list_create(rtn);
 	add_normalized_declarator_to_list(n, rtn);
 	return rtn;
@@ -2718,11 +2719,11 @@ void parser_progress(const char* format, ...){
 
 
 struct scope_level * create_empty_scope(struct scope_level * parent){
-	struct scope_level * s = malloc(sizeof(struct scope_level));
+	struct scope_level * s = (struct scope_level *)malloc(sizeof(struct scope_level));
 	s->num_sub_scopes = 0;
-	s->scopes = 0;
-	s->current_function = 0;
-	s->first_local_object = 0;
+	s->scopes = (struct scope_level **)0;
+	s->current_function = (struct namespace_object *)0;
+	s->first_local_object = (struct namespace_object *)0;
 	s->parent_scope = parent;
 	struct_namespace_object_ptr_list_create(&s->tag_namespace);
 	struct_namespace_object_ptr_list_create(&s->label_namespace);
@@ -2744,7 +2745,7 @@ void destroy_empty_scope(struct scope_level * s){
 void add_scope(struct scope_level * scope){
 	unsigned int old_num_scopes = scope->num_sub_scopes;
 	unsigned int new_num_scopes = old_num_scopes + 1;
-	scope->scopes = realloc(scope->scopes, sizeof(struct scope_level *) * new_num_scopes);
+	scope->scopes = (struct scope_level **)realloc(scope->scopes, sizeof(struct scope_level *) * new_num_scopes);
 	scope->scopes[old_num_scopes] = create_empty_scope(scope);
 	scope->num_sub_scopes = new_num_scopes;
 }
@@ -2754,7 +2755,7 @@ void remove_scope(struct scope_level * scope){
 	unsigned int new_num_scopes = old_num_scopes - 1;
 	assert(scope->num_sub_scopes);
 	destroy_empty_scope(scope->scopes[new_num_scopes]);
-	scope->scopes = realloc(scope->scopes, sizeof(struct scope_level *) * new_num_scopes);
+	scope->scopes = (struct scope_level **)realloc(scope->scopes, sizeof(struct scope_level *) * new_num_scopes);
 	scope->num_sub_scopes = new_num_scopes;
 }
 
@@ -2875,7 +2876,7 @@ void descend_scope(struct scope_level ** scope, unsigned int levels_to_go){
 }
 
 struct namespace_modification * create_namespace_modification(struct scope_level * scope, struct struct_namespace_object_ptr_list * name, struct normalized_declaration_element * element, enum object_location object_location, struct namespace_object * obj){
-	struct namespace_modification * modification = malloc(sizeof(struct namespace_modification));
+	struct namespace_modification * modification = (struct namespace_modification *)malloc(sizeof(struct namespace_modification));
 	modification->new_element = element;
 	modification->object = obj;
 	modification->object_location = object_location;
@@ -2888,21 +2889,21 @@ struct namespace_object * do_namespace_modification(struct namespace_modificatio
 	struct struct_namespace_object_ptr_list * name = modification->scope_namespace;
 	struct namespace_object * parent_obj = modification->object;
 	if(!parent_obj){
-		parent_obj = malloc(sizeof(struct namespace_object));
+		parent_obj = (struct namespace_object *)malloc(sizeof(struct namespace_object));
 		parent_obj->object_location = modification->object_location;
 		parent_obj->scope_level = modification->scope_level;
 		parent_obj->offset = 0;
 		parent_obj->first_load = 1;
-		parent_obj->previous = 0;
-		parent_obj->next = 0;
-		parent_obj->children = malloc(sizeof(struct struct_namespace_object_ptr_list));
+		parent_obj->previous = (struct namespace_object *)0;
+		parent_obj->next = (struct namespace_object *)0;
+		parent_obj->children = (struct struct_namespace_object_ptr_list *)malloc(sizeof(struct struct_namespace_object_ptr_list));
 		struct_namespace_object_ptr_list_create(parent_obj->children);
-		struct_namespace_object_ptr_list_add(name, parent_obj);
+		struct_namespace_object_ptr_list_add_end(name, parent_obj);
 		struct_normalized_declaration_element_ptr_list_create(&parent_obj->elements);
 	}
 	modification->object = parent_obj;
 	/*  Remember which object we added it to, so we can remove that element when we destroy the state */
-	struct_normalized_declaration_element_ptr_list_add(&parent_obj->elements, modification->new_element);
+	struct_normalized_declaration_element_ptr_list_add_end(&parent_obj->elements, modification->new_element);
 
 	return parent_obj;
 }
@@ -2912,10 +2913,10 @@ void undo_namespace_modification(struct namespace_modification * modification){
 	struct struct_normalized_declaration_element_ptr_list * elements = &modification->object->elements;
 	assert(struct_normalized_declaration_element_ptr_list_size(elements));
 	/*  Always remove one element */
-	struct_normalized_declaration_element_ptr_list_pop(elements);
+	struct_normalized_declaration_element_ptr_list_pop_end(elements);
 	if(struct_normalized_declaration_element_ptr_list_size(elements) == 0){
 		/*  If that was the last element for that namespace object, delete the namespace object */
-		struct namespace_object * o = struct_namespace_object_ptr_list_pop(name);
+		struct namespace_object * o = struct_namespace_object_ptr_list_pop_end(name);
 		assert(o == modification->object); /*  The function should work as long as this assumption is correct. */
 		struct_normalized_declaration_element_ptr_list_destroy(elements);
 		struct_namespace_object_ptr_list_destroy(o->children);
@@ -2965,12 +2966,12 @@ struct namespace_object * manage_declaration_element(struct parser_state * state
 			name = &scope->tag_namespace;
 			break;
 		}case LABEL_NAMESPACE:{
-			identifier_string = 0;
+			identifier_string = (unsigned char *)0;
 			name = &scope->label_namespace;
 			break;
 		}default:{
 			assert(0);
-			identifier_string = 0;
+			identifier_string = (unsigned char *)0;
 		}
 	}
 
@@ -2991,8 +2992,8 @@ struct first_and_last_namespace_object manage_declaration_elements(struct parser
         */
 	unsigned int i;
 	struct first_and_last_namespace_object fl;
-	fl.first = 0;
-	fl.last = 0;
+	fl.first = (struct namespace_object *)0;
+	fl.last = (struct namespace_object *)0;
 	for(i = 0; i < struct_normalized_declaration_element_ptr_list_size(elements); i++){
 		struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(elements, i);
 		struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(element->normalized_specifiers);
@@ -3000,14 +3001,14 @@ struct first_and_last_namespace_object manage_declaration_elements(struct parser
 			/*  We can only add something to the scope if it has an identifier */
 			struct namespace_object * next = manage_declaration_element(state, element, IDENTIFIER_NAMESPACE, object_location, forced_namespace);
 			if(previous_obj){
-				struct namespace_object_change * change_next = malloc(sizeof(struct namespace_object_change));
+				struct namespace_object_change * change_next = (struct namespace_object_change *)malloc(sizeof(struct namespace_object_change));
 				change_next->target = previous_obj;
 				change_next->old_obj = previous_obj->next;
 				change_next->new_obj = next;
 				push_operation(state, SET_NEXT_NAMESPACE_OBJECT, change_next);
 			}
 			if(next){
-				struct namespace_object_change * change_previous = malloc(sizeof(struct namespace_object_change));
+				struct namespace_object_change * change_previous = (struct namespace_object_change *)malloc(sizeof(struct namespace_object_change));
 				change_previous->target = next;
 				change_previous->old_obj = next->previous;
 				change_previous->new_obj = previous_obj;
@@ -3015,7 +3016,7 @@ struct first_and_last_namespace_object manage_declaration_elements(struct parser
 				previous_obj = next;
 				fl.last = next;
 			}
-			if(fl.first == 0){
+			if(fl.first == (struct namespace_object *)0){
 				fl.first = next;
 			}
 		}
@@ -3070,9 +3071,11 @@ unsigned int convert_hexadecimal_constant(unsigned char * str){
 	unsigned int i = len;
 	unsigned int base = 1;
 	while(i > 2){
-		unsigned int digit = get_hex_digit_value(str[i-1]);
-		rtn += digit * base;
-		base = base * 16;
+		if(!(str[i-1] == 'u' || str[i-1] == 'U' || str[i-1] == 'l' || str[i-1] == 'L')){
+			unsigned int digit = get_hex_digit_value(str[i-1]);
+			rtn += digit * base;
+			base = base * 16;
+		}
 		i--;
 	}
 	return rtn;
@@ -3084,9 +3087,11 @@ unsigned int convert_decimal_constant(unsigned char * str){
 	unsigned int i = len;
 	unsigned int base = 1;
 	while(i){
-		unsigned int digit = (str[i-1] - '0');
-		rtn += digit * base;
-		base = base * 10;
+		if(!(str[i-1] == 'u' || str[i-1] == 'U' || str[i-1] == 'l' || str[i-1] == 'L')){
+			unsigned int digit = (str[i-1] - '0');
+			rtn += digit * base;
+			base = base * 10;
+		}
 		i--;
 	}
 	return rtn;
@@ -3123,14 +3128,15 @@ unsigned char * convert_character_constant(unsigned char * str, unsigned char * 
 }
 
 
-unsigned char * convert_string_literal(unsigned char * str){
+unsigned int * convert_string_literal(unsigned char * str){
 	unsigned int max_len = ((unsigned int)strlen((char *)str) + 1) > 3 ? ((unsigned int)strlen((char *)str) + 1) : 4;
-	unsigned char * max_buffer = calloc(max_len, 1); /* Always larger than or equal to the necessary size */
+	/* TODO:  Much bigger than it needs to be */
+	unsigned int * max_buffer = (unsigned int *)calloc(max_len * sizeof(unsigned int), 1); /* Always larger than or equal to the necessary size */
 	unsigned char * next_char = str;
 	unsigned int chars_converted = 0;
 	unsigned char * last_quote = &str[max_len -2]; /* The last double quote */
 	while(last_quote != next_char){
-		next_char = convert_character_constant(next_char, &max_buffer[chars_converted]);
+		next_char = convert_character_constant(next_char, &((unsigned char *)max_buffer)[chars_converted]);
 		chars_converted++;
 	}
 	max_buffer[chars_converted] = 0; /* Null termination */
@@ -3138,15 +3144,15 @@ unsigned char * convert_string_literal(unsigned char * str){
 }
 
 struct normalized_declarator * make_array_brackets(void){
-	struct normalized_declarator * normalized_declarator = malloc(sizeof(struct normalized_declarator));
-	struct parser_node * abstract_declarator = memory_pooler_malloc(g_parser_node_pool);
-	struct parser_node * direct_abstract_declarator = memory_pooler_malloc(g_parser_node_pool);
-	struct parser_node * direct_abstract_declarator_rest = memory_pooler_malloc(g_parser_node_pool);
-	struct parser_node * epsilon = memory_pooler_malloc(g_parser_node_pool);
-	struct parser_node * terminal_1 = memory_pooler_malloc(g_parser_node_pool);
-	struct parser_node * terminal_2 = memory_pooler_malloc(g_parser_node_pool);
-	struct c_lexer_token * open = memory_pooler_malloc(g_c_lexer_token_pool);
-	struct c_lexer_token * close = memory_pooler_malloc(g_c_lexer_token_pool);
+	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
+	struct parser_node * abstract_declarator = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * direct_abstract_declarator = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * direct_abstract_declarator_rest = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * epsilon = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * terminal_1 = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * terminal_2 = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct c_lexer_token * open = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
+	struct c_lexer_token * close = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
 
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
 	normalized_declarator->declarator = abstract_declarator;
@@ -3198,26 +3204,59 @@ struct normalized_declarator * make_array_brackets(void){
 	return normalized_declarator;
 }
 
+struct type_description * get_type_description_from_suffix(unsigned char * str){
+	unsigned int num_u = 0;
+	unsigned int num_l = 0;
+	while(*str){
+		switch(*str){
+			case 'u':{
+				num_u++;
+				break;
+			}case 'U':{
+				num_u++;
+				break;
+			}case 'l':{
+				num_l++;
+				break;
+			}case 'L':{
+				num_l++;
+				break;
+			}default:{
+			}
+		}
+		str++;
+	}
+
+	if(num_u == 0 && num_l == 0){
+		return add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+	}else if(num_u == 1 && num_l == 0){
+		return add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+	}else{
+		printf("num u: %d, num l: %d\n", num_u, num_l);
+		assert(0 && "Not implemented.");
+	}
+}
+
 void manage_constant(struct parser_state * state, struct parser_node * n, enum add_or_remove add_or_remove){
 	unsigned char * constant_string_representation = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte);
 	if(add_or_remove == ADD){
 		struct constant_description * previous_description = unsigned_char_ptr_to_struct_constant_description_ptr_map_get(&state->constant_map, constant_string_representation);
-		struct constant_description * new_description = 0;
+		struct constant_description * new_description = (struct constant_description *)0;
 		if(previous_description){
 			previous_description->num_references = previous_description->num_references + 1;
 			free(constant_string_representation);
 			return;
 		}/* else, constant does not already exist so create it */
-		new_description = malloc(sizeof(struct constant_description));
+		new_description = (struct constant_description *)malloc(sizeof(struct constant_description));
 		new_description->num_references = 1;
 		new_description->type = n->c_lexer_token->type;
 		new_description->str = constant_string_representation;
 		switch(n->c_lexer_token->type){
 			case CONSTANT_HEX:{
-				new_description->native_data = calloc(4,1);
+				new_description->native_data = (unsigned int *)calloc(4,1);
 				*(new_description->native_data) = convert_hexadecimal_constant(new_description->str);
-				new_description->type_description = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
-				new_description->type_description->value_type = RVALUE;
+				new_description->type_description = get_type_description_from_suffix(new_description->str);
+				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
 				break;
 			}case CONSTANT_EXPONENT:{
 				assert(0 && "constant exponent conversion not implemented.");
@@ -3229,21 +3268,28 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 				assert(0 && "constant float large conversion not implemented.");
 				break;
 			}case CONSTANT_DECIMAL:{
-				new_description->native_data = calloc(4,1);
-				*(new_description->native_data) = convert_decimal_constant(new_description->str);
-				new_description->type_description = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
-				new_description->type_description->value_type = RVALUE;
+				unsigned int value = convert_decimal_constant(new_description->str);
+				new_description->native_data = (unsigned int *)calloc(4,1);
+				*(new_description->native_data) = value;
+				/*  Assumes 32 bit integers */
+				if(value & 0x80000000){
+					/*  Cannot fit in signed integer */
+					new_description->type_description = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
+				}else{
+					new_description->type_description = add_specifier(create_empty_type_description(), INT);
+				}
+				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
 				break;
 			}case CONSTANT_CHARACTER:{
-				new_description->native_data = calloc(4,1);
+				new_description->native_data = (unsigned int *)calloc(4,1);
 				convert_character_constant(&new_description->str[1], (unsigned char *)(&new_description->native_data[0]));
 				new_description->type_description = add_specifier(add_specifier(create_empty_type_description(), CONST), CHAR);
-				new_description->type_description->value_type = RVALUE;
+				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
 				break;
 			}case STRING_LITERAL:{
 				struct type_description * type_description;
 				/* TODO:  This will not work properly for character constants with multiple embeded string literals because of the strlen */
-				new_description->native_data = (void *)convert_string_literal(&new_description->str[1]); /* offset 1 to jump over the first quote */
+				new_description->native_data = convert_string_literal(&new_description->str[1]); /* offset 1 to jump over the first quote */
 				type_description = add_specifier(add_specifier(create_empty_type_description(), CONST), CHAR);
 				type_description->declarator = make_array_brackets();
 				type_description->value_type = LVALUE;
@@ -3303,7 +3349,7 @@ void * push_operation(struct parser_state * parser_state, enum parser_operation_
 			parser_state->current_scope_depth = parser_state->current_scope_depth - 1;
 			return (void *)0;
 		}case PROCESS_CONSTANT:{
-			manage_constant(parser_state, data, ADD);
+			manage_constant(parser_state, (struct parser_node *)data, ADD);
 			return (void *)0;
 		}case SAVE_DECLARATION_ELEMENTS:{
 			return (void *)0;
@@ -3361,7 +3407,7 @@ void pop_operation(struct parser_state * parser_state){
 			parser_state->current_scope_depth = parser_state->current_scope_depth + 1;
 			break;
 		}case PROCESS_CONSTANT:{
-			manage_constant(parser_state, poped_operation.data, REMOVE);
+			manage_constant(parser_state, (struct parser_node *)poped_operation.data, REMOVE);
 			break;
 		}case SAVE_DECLARATION_ELEMENTS:{
 			destroy_normalized_declaration_element_list((struct struct_normalized_declaration_element_ptr_list *)(poped_operation.data));
@@ -3408,7 +3454,7 @@ struct parser_node * create_parser_node(struct parser_state * parser_state, stru
 	new_node.first_child = f;
 	new_node.c_lexer_token = l;
 	new_node.type = t;
-	return push_operation(parser_state, ADVANCE_PARSER_POSITION, &new_node);
+	return (struct parser_node *)push_operation(parser_state, ADVANCE_PARSER_POSITION, &new_node);
 }
 
 unsigned int count_newlines_in_comment(struct c_lexer_token * t){
@@ -3701,12 +3747,10 @@ struct parser_node * unary_expression(struct parser_state * parser_state){
 			return (struct parser_node *)0;
 		}
 	}else if((n1 = p_accept(SIZEOF, parser_state))){
-		if((n1->next = unary_expression(parser_state))){
-			return create_parser_node(parser_state, 0, n1, 0, UNARY_EXPRESSION);
-		}else if((n1->next = p_accept(OPEN_PAREN_CHAR, parser_state))){
+		if((n1->next = p_accept(OPEN_PAREN_CHAR, parser_state))){
 			if((n1->next->next = type_name(parser_state))){
 				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-					return create_parser_node(parser_state, 0, n1, 0, UNARY_EXPRESSION);
+					return (struct parser_node *)create_parser_node(parser_state, 0, n1, 0, UNARY_EXPRESSION);
 				}else{
 					assert(0 && "Expected CLOSE_PAREN_CHAR.\n");
 					return (struct parser_node *)0;
@@ -3715,7 +3759,9 @@ struct parser_node * unary_expression(struct parser_state * parser_state){
 				assert(0 && "Expected IDENTIFIER.\n");
 				return (struct parser_node *)0;
 			}
-		}else{
+		}else if((n1->next = unary_expression(parser_state))){
+			return create_parser_node(parser_state, 0, n1, 0, UNARY_EXPRESSION);
+		}else {
 			assert(0 && "Expected OPEN_PAREN_CHAR or uary expression.\n");
 			return (struct parser_node *)0;
 		}
@@ -4341,7 +4387,7 @@ struct parser_node * compound_statement(struct parser_state * parser_state, stru
 				if(parameter_type_list){
 					struct parser_node * parameter_declaration = (struct parser_node *)0;
 					unsigned int param_index = 0;
-					struct namespace_object * prev_obj = 0;
+					struct namespace_object * prev_obj = (struct namespace_object *)0;
 					while((parameter_declaration = get_nth_parameter_declaration_from_parameter_type_list(parameter_type_list, param_index))){
 						struct first_and_last_namespace_object fl;
 						fl = manage_generic_declaration(parser_state, parameter_declaration, 0, 0, PARAMETER, prev_obj, 0);
@@ -4572,7 +4618,7 @@ struct parser_node * type_specifier(struct parser_state * parser_state){
 		struct namespace_object * obj;
 		struct scope_level * scope;
 		struct normalized_declaration_element * element;
-		struct type_description * type_description = 0;
+		struct type_description * type_description = (struct type_description *)0;
 		scope = parser_state->top_scope;
 		descend_scope(&scope, parser_state->current_scope_depth);
 		obj = get_namespace_object_from_closest_namespace(ident, IDENTIFIER_NAMESPACE, scope, 0);
@@ -4701,12 +4747,12 @@ struct parser_node * declaration_list_rest(struct parser_state * parser_state, s
 	if((n1 = declaration(parser_state))){
 		struct first_and_last_namespace_object fl_rest; /*  First and last object of all later declarations */
 		struct first_and_last_namespace_object fl_current = manage_generic_declaration(parser_state, n1, 0, 0, LOCAL, previous_object, 0); /*  First and last object of current declaration */
-		fl_rest.first = 0;
-		fl_rest.last = 0;
+		fl_rest.first = (struct namespace_object *)0;
+		fl_rest.last = (struct namespace_object *)0;
 		if((n1->next = declaration_list_rest(parser_state, fl_current.last, &fl_rest))){
 			if(fl_current.last && fl_rest.last){
 				/* The point of this exercise it to be able to point to the next one */
-				struct namespace_object_change * c = malloc(sizeof(struct namespace_object_change));
+				struct namespace_object_change * c = (struct namespace_object_change *)malloc(sizeof(struct namespace_object_change));
 				c->target = fl_current.last;
 				c->old_obj = fl_current.last->next;
 				c->new_obj = fl_rest.first;
@@ -4735,15 +4781,15 @@ struct parser_node * declaration_list(struct parser_state * parser_state, struct
 		struct scope_level * scope;
 		struct first_and_last_namespace_object fl_rest; /*  First and last object of all later declarations */
 		struct first_and_last_namespace_object fl_current = manage_generic_declaration(parser_state, n1, 0, 0, LOCAL, previous_object, 0); /*  First and last object of current declaration */
-		fl_rest.first = 0;
-		fl_rest.last = 0;
+		fl_rest.first = (struct namespace_object *)0;
+		fl_rest.last = (struct namespace_object *)0;
 		scope = parser_state->top_scope;
 		descend_scope(&scope, parser_state->current_scope_depth);
 		if((n1->next = declaration_list_rest(parser_state, fl_current.last, &fl_rest))){
 			scope->first_local_object = fl_current.first ? fl_current.first : fl_rest.first; /*  This block scope will need to keep track of the first local it has */
 			if(fl_current.last && fl_rest.last){
 				/* The point of this exercise it to be able to point to the next one */
-				struct namespace_object_change * c = malloc(sizeof(struct namespace_object_change));
+				struct namespace_object_change * c = (struct namespace_object_change *)malloc(sizeof(struct namespace_object_change));
 				c->target = fl_current.last;
 				c->old_obj = fl_current.last->next;
 				c->new_obj = fl_rest.first;
@@ -5846,7 +5892,7 @@ struct parser_node * translation_unit_rest(struct parser_state * parser_state){
 		struct first_and_last_namespace_object fl = manage_generic_declaration(parser_state, n1, 0, 0, GLOBAL, 0, 0);
 		if(fl.first && get_most_recently_added_declaration_element_from_object(fl.first)->normalized_declaration_set->set->type == FUNCTION_DEFINITION){
 			struct scope_level * scope = get_last_function_namespace_scope(parser_state);
-			struct current_function_change * change = malloc(sizeof(struct current_function_change));
+			struct current_function_change * change = (struct current_function_change *)malloc(sizeof(struct current_function_change));
 			change->target = scope;
 			change->old_obj = scope->current_function;
 			change->new_obj = fl.first;
@@ -5873,7 +5919,7 @@ struct parser_node * translation_unit(struct parser_state * parser_state){
 		struct first_and_last_namespace_object fl = manage_generic_declaration(parser_state, n1, 0, 0, GLOBAL, 0, 0);
 		if(fl.first && get_most_recently_added_declaration_element_from_object(fl.first)->normalized_declaration_set->set->type == FUNCTION_DEFINITION){
 			struct scope_level * scope = get_last_function_namespace_scope(parser_state);
-			struct current_function_change * change = malloc(sizeof(struct current_function_change));
+			struct current_function_change * change = (struct current_function_change *)malloc(sizeof(struct current_function_change));
 			change->target = scope;
 			change->old_obj = scope->current_function;
 			change->new_obj = fl.first;
@@ -5900,7 +5946,7 @@ void print_parser_node_tree(struct unsigned_char_list * buffer, struct parser_no
 		if(parent){
 			parent_str = (char *)get_node_type_names()[parent->type];
 		}else{
-			parent_str = "Root";
+			parent_str = (char *)"Root";
 		}
 		if(n->type == TERMINAL){
 			buffered_printf(buffer, ";Tree level %d, %s -> %s %s\n", level, parent_str, get_node_type_names()[n->type], get_c_token_type_names()[n->c_lexer_token->type]);
@@ -6035,11 +6081,11 @@ enum normalized_specifier_type get_normalized_specifier_type(enum c_token_type t
 }
 
 struct type_description * create_empty_type_description(void){
-	struct type_description * new_type = malloc(sizeof(struct type_description));
-	struct struct_normalized_specifier_ptr_list * specifiers = malloc(sizeof(struct struct_normalized_specifier_ptr_list));
+	struct type_description * new_type = (struct type_description *)malloc(sizeof(struct type_description));
+	struct struct_normalized_specifier_ptr_list * specifiers = (struct struct_normalized_specifier_ptr_list *)malloc(sizeof(struct struct_normalized_specifier_ptr_list));
 	struct_normalized_specifier_ptr_list_create(specifiers);
 	new_type->specifiers = specifiers;
-	new_type->declarator = 0;
+	new_type->declarator = (struct normalized_declarator *)0;
 	return new_type;
 }
 
@@ -6055,16 +6101,11 @@ int parse(struct c_lexer_state * c_lexer_state, struct parser_state * parser_sta
 	parser_state->tokens_position = 0;
 	parser_state->current_scope_depth = 0;
 	parser_state->top_scope = create_empty_scope(0);
-
-	parser_state->unsigned_int_description = add_specifier(add_specifier(create_empty_type_description(), UNSIGNED), INT);
-	parser_state->unsigned_int_description->value_type = RVALUE;
 	struct_parser_operation_stack_create(&parser_state->operation_stack);
 	g_format_buffer_use();
 
 	parser_state->buff = buffer;
-
 	unsigned_char_ptr_to_struct_constant_description_ptr_map_create(&parser_state->constant_map, unsigned_strcmp);
-
 	parser_state->top_node = translation_unit(parser_state);
 
 	if(parser_state->tokens_position != struct_c_lexer_token_ptr_list_size(&parser_state->c_lexer_state->tokens)){
@@ -6082,7 +6123,6 @@ void destroy_parser_state(struct parser_state * parser_state){
 	backtrack(parser_state, 0);
 	destroy_empty_scope(parser_state->top_scope);
 	struct_parser_operation_stack_destroy(&parser_state->operation_stack);
-	destroy_type_description(parser_state->unsigned_int_description);
 	unsigned_char_ptr_to_struct_constant_description_ptr_map_destroy(&parser_state->constant_map);
 	g_format_buffer_release();
 }
@@ -6125,28 +6165,28 @@ struct type_description * ensure_unsigned(struct type_description * t){
 
 struct type_description * add_specifier(struct type_description * description, enum c_token_type t){
 	unsigned char * string = get_specifier_string(t);
-	struct c_lexer_token * new_token = memory_pooler_malloc(g_c_lexer_token_pool);
-	struct parser_node * terminal = memory_pooler_malloc(g_parser_node_pool);
-	struct parser_node * specifier = memory_pooler_malloc(g_parser_node_pool);
-	struct normalized_specifier * normalized_specifier = malloc(sizeof(struct normalized_specifier));
+	struct c_lexer_token * new_token = (struct c_lexer_token *)memory_pooler_malloc(g_c_lexer_token_pool);
+	struct parser_node * terminal = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct parser_node * specifier = (struct parser_node *)memory_pooler_malloc(g_parser_node_pool);
+	struct normalized_specifier * normalized_specifier = (struct normalized_specifier *)malloc(sizeof(struct normalized_specifier));
 
 	new_token->first_byte = string;
 	new_token->last_byte = string + (strlen((char*)string) -1);
 	new_token->type = t;
 
 	terminal->c_lexer_token = new_token;
-	terminal->first_child = 0;
-	terminal->next = 0;
+	terminal->first_child = (struct parser_node *)0;
+	terminal->next = (struct parser_node *)0;
 	terminal->type = TERMINAL;
 
 	specifier->first_child = terminal;
-	specifier->c_lexer_token = 0;
-	specifier->next = 0;
+	specifier->c_lexer_token = (struct c_lexer_token *)0;
+	specifier->next = (struct parser_node *)0;
 	specifier->type = get_specifier_parser_node_type(t);
 
 	normalized_specifier->specifier = specifier;
 	normalized_specifier->type = get_normalized_specifier_type(t);
-	struct_normalized_specifier_ptr_list_add(description->specifiers, normalized_specifier);
+	struct_normalized_specifier_ptr_list_add_end(description->specifiers, normalized_specifier);
 	return description;
 }
 
@@ -6159,7 +6199,7 @@ void remove_specifier(struct type_description * description, unsigned int n, enu
 		struct normalized_specifier * normalized_specifier = struct_normalized_specifier_ptr_list_get(description->specifiers, k);
 		if(normalized_specifier->specifier->first_child->type == TERMINAL && normalized_specifier->specifier->first_child->c_lexer_token->type == t){
 			if(count == n){
-				normalized_specifier->specifier->next = 0;
+				normalized_specifier->specifier->next = (struct parser_node *)0;
 				destroy_parser_node_tree_and_c_lexer_tokens(normalized_specifier->specifier);
 				free(normalized_specifier);
 				struct_normalized_specifier_ptr_list_remove_all(description->specifiers, normalized_specifier);
@@ -6176,7 +6216,7 @@ void remove_enum(struct type_description * description){
 	for(k = 0; k < struct_normalized_specifier_ptr_list_size(description->specifiers); k++){
 		struct normalized_specifier * normalized_specifier = struct_normalized_specifier_ptr_list_get(description->specifiers, k);
 		if(normalized_specifier->specifier->type == TYPE_SPECIFIER && normalized_specifier->specifier->first_child->type == ENUM_SPECIFIER){
-			normalized_specifier->specifier->next = 0;
+			normalized_specifier->specifier->next = (struct parser_node *)0;
 			destroy_parser_node_tree_and_c_lexer_tokens(normalized_specifier->specifier);
 			free(normalized_specifier);
 			struct_normalized_specifier_ptr_list_remove_all(description->specifiers, normalized_specifier);
@@ -6312,15 +6352,17 @@ unsigned int arithmetic_type_size(struct type_description * t, enum value_type t
 			struct unsigned_char_list l;
 			unsigned_char_list_create(&l);
 			print_normalized_declaration_declarator_and_specifiers(&l, t->declarator, t->specifiers, 0, 0);
-			unsigned_char_list_add(&l, 0);
+			unsigned_char_list_add_end(&l, 0);
 			printf("%s\n", unsigned_char_list_data(&l));
 			assert(0 && "Unknown arithmetic type.");
 		}
 	}
 
 	switch (tsc){
-		case RVALUE:{
+		case WORD_ALIGNED_RVALUE:{
 			return get_ceil_modulo(data_bits, 32) / 8;
+		}case MINIMAL_RVALUE:{
+			return data_bits / 8;
 		}case LVALUE:{
 			return 4;
 		}default:{
@@ -6334,7 +6376,9 @@ unsigned int void_type_size(enum value_type tsc){
 	/*  Void isn't supposed to have a size, but for now it gets returned from void 
             functions as if were and int.  This makes certain things easier.  */
 	switch (tsc){
-		case RVALUE:{
+		case WORD_ALIGNED_RVALUE:{
+			return 4;
+		}case MINIMAL_RVALUE:{
 			return 4;
 		}case LVALUE:{
 			return 4;
@@ -6348,7 +6392,9 @@ unsigned int void_type_size(enum value_type tsc){
 unsigned int enum_type_size(struct type_description * t, enum value_type tsc){
 	(void)t;
 	switch (tsc){
-		case RVALUE:{
+		case WORD_ALIGNED_RVALUE:{
+			return 4;
+		}case MINIMAL_RVALUE:{
 			return 4;
 		}case LVALUE:{
 			return 4;
@@ -6362,7 +6408,9 @@ unsigned int enum_type_size(struct type_description * t, enum value_type tsc){
 unsigned int pointer_type_size(struct type_description * t, enum value_type tsc){
 	(void)t;
 	switch (tsc){
-		case RVALUE:{
+		case WORD_ALIGNED_RVALUE:{
+			return 4;
+		}case MINIMAL_RVALUE:{
 			return 4;
 		}case LVALUE:{
 			return 4;

@@ -13,26 +13,26 @@
 	use of this software.
 */
 
-#include "GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list.h"
+#include "T0_IDENTIFIER_list.h"
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_add(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list, GENERIC_TYPE0_LITERAL item){
+void T0_IDENTIFIER_list_add_end(struct T0_IDENTIFIER_list * list, T0_LITERAL item){
 	binary_exponential_buffer_increment(&list->buffer, 1);
-	((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_data(&list->buffer))[binary_exponential_buffer_size(&list->buffer) -1] = item;
+	((T0_LITERAL *)binary_exponential_buffer_data(&list->buffer))[binary_exponential_buffer_size(&list->buffer) -1] = item;
 }
 
-GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_pop(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list){
-	GENERIC_TYPE0_LITERAL rtn = *((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_get(&list->buffer, binary_exponential_buffer_size(&list->buffer) -1));
+T0_LITERAL T0_IDENTIFIER_list_pop_end(struct T0_IDENTIFIER_list * list){
+	T0_LITERAL rtn = *((T0_LITERAL *)binary_exponential_buffer_get(&list->buffer, binary_exponential_buffer_size(&list->buffer) -1));
 	binary_exponential_buffer_decrement(&list->buffer, 1);
 	return rtn;
 }
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_remove_all(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list, GENERIC_TYPE0_LITERAL item){
+void T0_IDENTIFIER_list_remove_all(struct T0_IDENTIFIER_list * list, T0_LITERAL item){
 	/* Remove all instances of item from the list */
 	unsigned int i = 0;
 	unsigned int old_i = 0;
 	unsigned int new_i = 0;
-	unsigned int oc = GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_occurrences(list, item);
-	GENERIC_TYPE0_LITERAL * data = binary_exponential_buffer_data(&list->buffer);
+	unsigned int oc = T0_IDENTIFIER_list_occurrences(list, item);
+	T0_LITERAL * data = (T0_LITERAL *)binary_exponential_buffer_data(&list->buffer);
 
 	for(i = 0; i < binary_exponential_buffer_size(&list->buffer); i++){
 		if(data[i] != item){
@@ -46,40 +46,58 @@ void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_remove_all(struct GENERIC_TYPE0_IDEN
 	assert(oc == (old_i - new_i));
 }
 
-unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_occurrences(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list, GENERIC_TYPE0_LITERAL item){
+unsigned int T0_IDENTIFIER_list_occurrences(struct T0_IDENTIFIER_list * list, T0_LITERAL item){
 	unsigned int i;
 	unsigned int occurrences = 0;
 	for(i = 0; i < binary_exponential_buffer_size(&list->buffer); i++){
-		if((*((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_get(&list->buffer, i))) == item){
+		if((*((T0_LITERAL *)binary_exponential_buffer_get(&list->buffer, i))) == item){
 			occurrences++;
 		}
 	}
 	return occurrences;
 }
 
-GENERIC_TYPE0_LITERAL GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_get(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list, unsigned int i){
+T0_LITERAL T0_IDENTIFIER_list_get(struct T0_IDENTIFIER_list * list, unsigned int i){
 	assert(i < binary_exponential_buffer_size(&list->buffer));
-	return *((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_get(&list->buffer, i));
+	return *((T0_LITERAL *)binary_exponential_buffer_get(&list->buffer, i));
 }
 
-unsigned int GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_size(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list){
+unsigned int T0_IDENTIFIER_list_size(struct T0_IDENTIFIER_list * list){
 	return binary_exponential_buffer_size(&list->buffer);
 }
 
-GENERIC_TYPE0_LITERAL * GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_data(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list){
-	return ((GENERIC_TYPE0_LITERAL *)binary_exponential_buffer_data(&list->buffer));
+T0_LITERAL * T0_IDENTIFIER_list_data(struct T0_IDENTIFIER_list * list){
+	return ((T0_LITERAL *)binary_exponential_buffer_data(&list->buffer));
 }
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_destroy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list){
+void T0_IDENTIFIER_list_destroy(struct T0_IDENTIFIER_list * list){
 	binary_exponential_buffer_destroy(&list->buffer);
 }
 
-void GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_create(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list){
-	binary_exponential_buffer_create(&list->buffer, sizeof(GENERIC_TYPE0_LITERAL));
+void T0_IDENTIFIER_list_create(struct T0_IDENTIFIER_list * list){
+	binary_exponential_buffer_create(&list->buffer, sizeof(T0_LITERAL));
 }
 
-struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list_copy(struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list * list){
-	struct GENERIC_TYPE0_IDENTIFIER_FRIENDLY_list copy;
+struct T0_IDENTIFIER_list T0_IDENTIFIER_list_copy(struct T0_IDENTIFIER_list * list){
+	struct T0_IDENTIFIER_list copy;
 	copy.buffer = binary_exponential_buffer_copy(&list->buffer);
 	return copy;
+}
+
+void T0_IDENTIFIER_list_reverse(struct T0_IDENTIFIER_list * list){
+	struct binary_exponential_buffer new_buffer;
+	unsigned int i = 0;
+	unsigned int current_size = binary_exponential_buffer_size(&list->buffer);
+	T0_LITERAL * data_src;
+	T0_LITERAL * data_dst;
+	binary_exponential_buffer_create(&new_buffer, sizeof(T0_LITERAL));
+	binary_exponential_buffer_increment(&new_buffer, current_size);
+	data_src = (T0_LITERAL *)binary_exponential_buffer_data(&list->buffer);
+	data_dst = (T0_LITERAL *)binary_exponential_buffer_data(&new_buffer);
+
+	for(i = 0; i < current_size; i++){
+		data_dst[i] = data_src[(current_size - 1) -i];
+	}
+	binary_exponential_buffer_destroy(&list->buffer);
+	list->buffer = new_buffer;
 }

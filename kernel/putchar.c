@@ -19,14 +19,12 @@ int putchar(int);
 int putchar_nobusy(int);
 
 struct kernel_message putchar_m;
-struct kernel_message * putchar_m_ptr;
 struct kernel_message putchar_reply;
-struct kernel_message * putchar_reply_ptr;
 
 int putchar(int c){
-	putchar_m_ptr->data = c;
-	send_message(putchar_m_ptr, 6, putchar_reply_ptr);
-	switch(putchar_reply_ptr->message_type){
+	putchar_m.data = c;
+	send_message(&putchar_m, 6, &putchar_reply);
+	switch(putchar_reply.message_type){
 		case MESSAGE_ACKNOWLEDGED:{
 			break;
 		}default:{
@@ -37,7 +35,5 @@ int putchar(int c){
 
 void putchar_init(void){
 	/*  Set up once, and not for every character */
-	putchar_m_ptr = &putchar_m;
-	putchar_m_ptr->message_type = OUTPUT_CHARACTER;
-	putchar_reply_ptr = &putchar_reply;
+	putchar_m.message_type = OUTPUT_CHARACTER;
 }

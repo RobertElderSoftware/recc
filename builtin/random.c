@@ -28,8 +28,8 @@ unsigned int get_random(void){
 }
 
 unsigned int get_input_space_partitioned_random(void){
-	unsigned int class = get_random() % (unsigned int)5;
-	switch (class){
+	unsigned int cl = get_random() % (unsigned int)5;
+	switch (cl){
 		case 0:{
 			return get_random();
 		}case 1:{
@@ -44,4 +44,5 @@ unsigned int get_input_space_partitioned_random(void){
 			return 0;
 		}
 	}
+	return 0;
 }

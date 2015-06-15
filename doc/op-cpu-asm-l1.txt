@@ -66,7 +66,7 @@ statement" is defined as one of the following:
   11.3.  "mul", "space", "aggregate register", "space", "aggregate register",
 "space", "aggregate register"
   11.4.  "div", "space", "aggregate register", "space", "aggregate register",
-"space", "aggregate register", "space", "aggregate register"
+"space", "aggregate register"
   11.5.  "beq", "space", "aggregate register", "space", "aggregate register",
 "space", "decimal constant"
   11.6.  "blt", "space", "aggregate register", "space", "aggregate register",
@@ -97,4 +97,4 @@ offset declaration, followed by zero or more of the following:
 and finally, an optional additional newline can be the last character in the
 file.
 
-The sha1sum of the lines above is 72885e6fe3e1991510d4bd209998860cdef5a54e
+The sha1sum of the lines above is ced83ca65ffa528716aac7b2ab689b1bdf61d92b

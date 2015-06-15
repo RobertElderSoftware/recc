@@ -53,6 +53,10 @@ unsigned int binary_exponential_buffer_size(struct binary_exponential_buffer * b
 	return b->size;
 }
 
+unsigned int binary_exponential_buffer_element_size(struct binary_exponential_buffer * b){
+	return b->element_size;
+}
+
 void * binary_exponential_buffer_data(struct binary_exponential_buffer * b){
 	return b->data;
 }
@@ -64,7 +68,7 @@ void * binary_exponential_buffer_get(struct binary_exponential_buffer * b, unsig
 
 void binary_exponential_buffer_destroy(struct binary_exponential_buffer * b){
 	free(b->data);
-	b->data = 0;
+	b->data = (void *)0;
 	b->size = 0;
 	b->element_size = 0;
 	b->next_threshold_size = 1;

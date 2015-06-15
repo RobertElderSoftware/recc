@@ -22,6 +22,7 @@
 #include "data-structures/unsigned_int_stack.h"
 #include "data-structures/struct_type_description_ptr_list.h"
 #include "data-structures/unsigned_char_list.h"
+#include "data-structures/unsigned_int_ptr_list.h"
 #include "data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
 #include "data-structures/struct_switch_frame_ptr_list.h"
 #include "data-structures/unsigned_int_stack.h"
@@ -49,6 +50,7 @@ struct type_traversal{
 	unsigned char * parent_tag_name; /* structs, enums, unions */
 	unsigned char * member_name; /* for structs, enums */
 	enum type_class type_class;
+	unsigned int pad;
 };
 
 struct switch_frame{
@@ -85,13 +87,8 @@ struct code_gen_state{
 int generate_code(struct parser_state *, struct code_gen_state *);
 int do_code_generation(struct memory_pooler_collection *, unsigned char *, unsigned char *);
 int destroy_code_gen_state(struct code_gen_state *);
-struct compile_time_constant * evaluate_constant_expression_h2(struct code_gen_state *, struct parser_node *);
-struct compile_time_constant * evaluate_constant_expression_h1(struct code_gen_state *, struct parser_node *);
 struct compile_time_constant * evaluate_constant_constant_expression(struct code_gen_state *, struct parser_node *);
-void perform_integral_promotion(struct type_description **);
 unsigned int type_size(struct code_gen_state *, struct type_description *, enum value_type, unsigned int, struct scope_level *);
 unsigned int struct_type_size(struct code_gen_state *, struct type_description *, enum value_type, struct scope_level *);
-
-#define LITERAL22BITMASK 0x003FFFFF
 
 #endif

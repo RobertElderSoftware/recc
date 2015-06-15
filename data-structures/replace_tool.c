@@ -37,7 +37,7 @@ void validate_replacement_strings(struct binary_exponential_buffer * searches, s
 }
 
 void reset_candidates(struct binary_exponential_buffer * candidates){
-	unsigned int * p = binary_exponential_buffer_data(candidates);
+	unsigned int * p = (unsigned int *)binary_exponential_buffer_data(candidates);
 	unsigned int num_candidates = binary_exponential_buffer_size(candidates);
 	unsigned int i;
 	for(i = 0; i < num_candidates; i++){
@@ -46,7 +46,7 @@ void reset_candidates(struct binary_exponential_buffer * candidates){
 }
 
 unsigned int count_candidates(struct binary_exponential_buffer * candidates){
-	unsigned int * p = binary_exponential_buffer_data(candidates);
+	unsigned int * p = (unsigned int *)binary_exponential_buffer_data(candidates);
 	unsigned int num_candidates = binary_exponential_buffer_size(candidates);
 	unsigned int i;
 	unsigned int num_active = 0;
@@ -68,8 +68,8 @@ unsigned int get_length(unsigned char * c){
 }
 
 unsigned int set_lengths(struct binary_exponential_buffer * lengths, struct binary_exponential_buffer * searches){
-	unsigned char ** search_strs = binary_exponential_buffer_data(searches);
-	unsigned int * p = binary_exponential_buffer_data(lengths);
+	unsigned char ** search_strs = (unsigned char **)binary_exponential_buffer_data(searches);
+	unsigned int * p = (unsigned int *)binary_exponential_buffer_data(lengths);
 	unsigned int num_lengths = binary_exponential_buffer_size(lengths);
 	unsigned int i;
 	unsigned int longest = 0;

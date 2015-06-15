@@ -16,8 +16,8 @@ import sys
 import select
 import time
 import sys, tty, termios
-from python_op_cpu_package.python_l0_module import OpCPUData
-from python_op_cpu_package.python_op_cpu_module import OpCPU
+from op_cpu_package.python_l0_module import OpCPUData
+from op_cpu_package.op_cpu_module import OpCPU
 
 #  A Linux interface to using the python implementation of the One Page CPU emulator
 

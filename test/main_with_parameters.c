@@ -12,7 +12,14 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __STRING_H_DEFINED__
-#define __STRING_H_DEFINED__
-size_t strlen(const char *);
-#endif
+
+#include <stdio.h>
+
+int main(int argc, char * argv[]){
+	if(argc > 0){
+		printf("%s", argv[0]);
+	}else{
+		printf("No args.");
+	}
+	return 0;
+}

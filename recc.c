@@ -45,13 +45,13 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 				if(tokens[i]->type == B_FILENAME){
 					struct unsigned_char_ptr_list in_files;
 					unsigned_char_ptr_list_create(&in_files);
-					unsigned_char_ptr_list_add(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte));
+					unsigned_char_ptr_list_add_end(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte));
 					i++;
 					while(tokens[i]->type != B_SPACE || tokens[i]->type != B_COMMA_CHAR || tokens[i]->type != B_FILENAME){
 						if(tokens[i]->type == B_COMMA_CHAR || tokens[i]->type == B_SPACE){
 							i++;
 						} else if(tokens[i]->type == B_FILENAME){
-							unsigned_char_ptr_list_add(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte));
+							unsigned_char_ptr_list_add_end(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte));
 							i++;
 						} else if(tokens[i]->type == B_TO){
 							break;
@@ -135,8 +135,8 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 										unsigned int charsf1 = (unsigned int)(filename1->last_byte - filename1->first_byte) + 1;
 										unsigned int charsf2 = (unsigned int)(filename2->last_byte - filename2->first_byte) + 1;
 										unsigned int j;
-										unsigned char * f1 = malloc(charsf1 + 1);
-										unsigned char * f2 = malloc(charsf2 + 1);
+										unsigned char * f1 = (unsigned char *)malloc(charsf1 + 1);
+										unsigned char * f2 = (unsigned char *)malloc(charsf2 + 1);
 										for(j = 0; j < charsf1; j++){
 											f1[j] = filename1->first_byte[j];
 										}
@@ -176,8 +176,8 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 										unsigned int charsf1 = (unsigned int)(filename1->last_byte - filename1->first_byte) + 1;
 										unsigned int charsf2 = (unsigned int)(filename2->last_byte - filename2->first_byte) + 1;
 										unsigned int j;
-										unsigned char * f1 = malloc(charsf1 + 1);
-										unsigned char * f2 = malloc(charsf2 + 1);
+										unsigned char * f1 = (unsigned char *)malloc(charsf1 + 1);
+										unsigned char * f2 = (unsigned char *)malloc(charsf2 + 1);
 										for(j = 0; j < charsf1; j++){
 											f1[j] = filename1->first_byte[j];
 										}
