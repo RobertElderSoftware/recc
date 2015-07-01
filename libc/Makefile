@@ -8,4 +8,4 @@ libc/filesystem.o: libc/filesystem.c libc/filesystem.h
 	@$(HOSTCC) -c libc/filesystem.c -o libc/filesystem.o $(CUSTOM_FLAGS)
 
 clean-stdlib:
-	@rm -f libc/filesystem.l2 libc/filesystem.i libc/malloc.l2 libc/malloc.i libc/printf.i libc/printf.l2 libc/*.o
+	@rm -f libc/filesystem.l2 libc/filesystem.i libc/malloc.l2 libc/malloc.i libc/printf.i libc/printf.l2 libc/*.o libc/*.i libc/*.l2

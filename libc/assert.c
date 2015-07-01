@@ -15,8 +15,4 @@
 
 #include <stdio.h>
 
-void assert(int a){
-	if(!a){
-		printf("Assertion failure.\n");
-	}
-}
+/*  See header for macro definition of assert */

@@ -1,11 +1,11 @@
 CUSTOM_CC=./recc
 CUSTOM_PRELOADER=./preloader
-HOSTCC=gcc
-CLANG_FLAGS=-g -ferror-limit=3 -W -Wextra -Wall -Werror -Weverything -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral
+HOSTCC=clang
+CLANG_FLAGS=-g -ferror-limit=10 -W -Wextra -Wall -Werror -Weverything -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral -Wno-loop-analysis
 GCC_FLAGS=-g -std=c89 -W -Wextra -Wall -Werror -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 GPP_FLAGS=-g -W -Wextra -Wall -Werror -pedantic
-CUSTOM_FLAGS=$(GCC_FLAGS)
-VALGRIND=#valgrind -q --leak-check=full --show-reachable=yes --track-origins=yes
+CUSTOM_FLAGS=$(CLANG_FLAGS)
+VALGRIND=#valgrind -q --leak-check=full --show-reachable=yes --track-origins=yes --log-file=out
 
 test: run-tests
 
@@ -18,11 +18,13 @@ recc.o: recc.c parser.h lexer.h linker.h preprocessor.h code_generator.h
 	@$(HOSTCC) -c recc.c $(CUSTOM_FLAGS)
 
 lexer.h: bootstrap-datatypes io.h
+	@touch lexer.h
 
 lexer.o: lexer.h lexer.c
 	@$(HOSTCC) -c lexer.c $(CUSTOM_FLAGS)
 
 parser.h: bootstrap-datatypes io.h core_data_types.h lexer.h
+	@touch parser.h
 
 parser.o: parser.h parser.c
 	@$(HOSTCC) -c parser.c $(CUSTOM_FLAGS)
@@ -31,13 +33,16 @@ code_generator.o: code_generator.h code_generator.c
 	@$(HOSTCC) -c code_generator.c $(CUSTOM_FLAGS)
 
 code_generator.h: bootstrap-datatypes parser.h linker.h lexer.h
+	@touch code_generator.h
 
 linker.h: bootstrap-datatypes core_data_types.h io.h lexer.h parser.h
+	@touch linker.h
 
 linker.o: linker.c linker.h
 	@$(HOSTCC) -c linker.c $(CUSTOM_FLAGS)
 
 io.h: bootstrap-datatypes
+	@touch io.h
 
 io.o: io.c io.h data-structures/unsigned_char_list.o
 	@$(HOSTCC) -c io.c $(CUSTOM_FLAGS)

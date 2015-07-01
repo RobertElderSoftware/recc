@@ -1,3 +1,5 @@
+#ifndef __ASSERT_H_DEFINED__
+#define __ASSERT_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,7 +14,15 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __ASSERT_H_DEFINED__
-#define __ASSERT_H_DEFINED__
-void assert (int);
+
+
+#ifndef __STDIO_H_DEFINED__
+#include <stdio.h>
+#endif
+
+#define assert_stringify_indirect(a) #a
+#define assert_stringify(a) assert_stringify_indirect(a)
+
+#define assert(a) if(!(a)){printf("Assertion failure of expression '"assert_stringify_indirect(a)"' in file "assert_stringify(__FILE__)" on line "assert_stringify(__LINE__)".\n");}
+
 #endif

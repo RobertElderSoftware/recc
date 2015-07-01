@@ -16,19 +16,19 @@
 #include <assert.h>
 #include <stdarg.h>
 
+char printfbuffer[1048576];
+
 int putchar(int);
 
 int printf(const char *, ...);
 
-void print_decimal(int);
+void print_hexadecimal(char **, unsigned int);
 
-void print_hexadecimal(unsigned int);
+void print_decimal(char **, int);
 
-void print_decimal(int);
+void print_string(char **, const char *);
 
-void print_string(const char *);
-
-void print_hexadecimal(unsigned int d){
+void print_hexadecimal(char ** buf, unsigned int d){
 	unsigned int leading_zero = 1;
 	unsigned int base = 0x10000000;
 	unsigned int current;
@@ -52,18 +52,21 @@ void print_hexadecimal(unsigned int d){
 	digits[14] = 'E';
 	digits[15] = 'F';
 	if(d == 0){
-		putchar('0');
+		(*(*buf)) = '0';
+		(*buf) = (*buf) + 1;
 	}
 
 	current = d;
 	while(base){
 		digit = current / base;
 		if(digit){
-			putchar(digits[digit]);
+			(*(*buf)) = (char)digits[digit];
+			(*buf) = (*buf) + 1;
 			leading_zero = 0;
 		}else{
 			if(!leading_zero){
-				putchar(digits[digit]);
+				(*(*buf)) = (char)digits[digit];
+				(*buf) = (*buf) + 1;
 			}
 		}
 		a = base * digit;
@@ -72,56 +75,77 @@ void print_hexadecimal(unsigned int d){
 	}
 }
 
-void print_string(const char * c){
+void print_string(char ** buf, const char * c){
 	while(*c){
-		putchar(*c);
-		c = c + 1;
+		(*(*buf)) = *c;
+		c++;
+		(*buf) = (*buf) + 1;
 	}
 }
 
 int printf(const char * fmt, ...){
-	va_list v;
-	unsigned int i = 0;
-
-	va_start(v, fmt);
-
-	while(fmt[i]){
-		if(fmt[i] == '%'){
-			if(fmt[i+1] == 'c'){
-				putchar(va_arg(v, unsigned int));
-				i++;
-			}else if(fmt[i+1] == 's'){
-				print_string(va_arg(v, unsigned int));
-				i++;
-			}else if((fmt[i+1] == 'd') || (fmt[i+1] == 'i')){
-				print_decimal(va_arg(v, unsigned int));
-				i++;
-			}else if((fmt[i+1] == 'p') || (fmt[i+1] == 'P')){
-				putchar('0');
-				putchar('x');
-				print_hexadecimal(va_arg(v, unsigned int));
-				i++;
-			}else if((fmt[i+1] == 'x') || (fmt[i+1] == 'X')){
-				print_hexadecimal(va_arg(v, unsigned int));
-				i++;
-			}else if(fmt[i+1] == '\0'){
-				putchar('%');
-				i++;
-			}else{
-				putchar((unsigned int)fmt[i+1]);
-				i++;
-			}
-		}else{
-			putchar(fmt[i]);
-		}
-		i++;
+	va_list arglist;
+	char *result = &printfbuffer[0];
+	int rtn;
+	va_start(arglist, fmt);
+	rtn = vsprintf(&printfbuffer[0], fmt, arglist);
+	va_end( arglist );
+	while(*result) {
+		putchar(*result);
+		result++;
 	}
-	va_end(v);
+	return rtn;
 }
 
 int vsprintf(char * buf, const char * fmt, va_list va){
-	assert(0);
-	(void)buf;
-	(void)fmt;
-	(void)va;
+	unsigned int i = 0;
+	while(fmt[i]){
+		if(fmt[i] == '%'){
+			if(fmt[i+1] == 'c'){
+				*buf = (char)va_arg(va, unsigned int);
+				buf++;
+				i++;
+			}else if(fmt[i+1] == 's'){
+				print_string(&buf, va_arg(va, unsigned int));
+				i++;
+			}else if((fmt[i+1] == 'd') || (fmt[i+1] == 'i')){
+				print_decimal(&buf, va_arg(va, unsigned int));
+				i++;
+			}else if((fmt[i+1] == 'p') || (fmt[i+1] == 'P')){
+				*buf = '0';
+				buf++;
+				*buf = 'x';
+				buf++;
+				print_hexadecimal(&buf, va_arg(va, unsigned int));
+				i++;
+			}else if((fmt[i+1] == 'x') || (fmt[i+1] == 'X')){
+				print_hexadecimal(&buf, va_arg(va, unsigned int));
+				i++;
+			}else if(fmt[i+1] == '\0'){
+				*buf = '%';
+				buf++;
+				i++;
+			}else{
+				*buf = (char)fmt[i+1];
+				buf++;
+				i++;
+			}
+		}else{
+			*buf = (char)fmt[i];
+			buf++;
+		}
+		i++;
+	}
+	*buf = '\0';
+	buf++;
+	return 0;
+}
+
+int sprintf(char * buf, const char * fmt, ...){
+	va_list arglist;
+	int rtn;
+	va_start(arglist, fmt);
+	rtn = vsprintf(buf, fmt, arglist);
+	va_end(arglist);
+	return rtn;
 }

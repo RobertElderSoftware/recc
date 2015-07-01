@@ -1,3 +1,5 @@
+#ifndef __PRELOADER_H__
+#define __PRELOADER_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,14 +14,22 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __PRELOADER_H__
-#define __PRELOADER_H__
 
+#ifndef __IO_H__
 #include "io.h"
+#endif
+#ifndef __CORE_DATA_TYPES__H__DEFINED__
 #include "core_data_types.h"
+#endif
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __STDLIB_H_DEFINED__
 #include <stdlib.h>
+#endif
+#ifndef __ASSERT_H_DEFINED__
 #include <assert.h>
+#endif
 
 struct preloader_state;
 

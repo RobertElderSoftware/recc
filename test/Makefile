@@ -5,7 +5,7 @@
 # File names
 SOURCES = $(wildcard test/*.c)
 BUILTIN_SOURCES= $(wildcard builtin/*.c)
-OTHER_OBJECTS= io.o lexer.o data-structures/binary_exponential_buffer.o data-structures/memory_pooler.o data-structures/libgenerated-data-structures.a 
+OTHER_OBJECTS=code_generator.o preprocessor.o parser.o io.o lexer.o data-structures/binary_exponential_buffer.o data-structures/memory_pooler.o data-structures/libgenerated-data-structures.a 
 BUILTIN_OBJECTS= $(BUILTIN_SOURCES:.c=.o)
 PREPROCESSED= $(SOURCES:.c=.i)
 ASSEMBLY= $(SOURCES:.c=.l2)
@@ -23,8 +23,7 @@ run-tests: $(OUTPUT_DIFFS)
 remove-old-js-and-diffs:
 	@rm -f $(JS_OUTPUT) $(OUTPUT_DIFFS)
 
-# To obtain l1 files
-run-build-script: $(SOURCES) $(CUSTOM_CC) build-builtins build-stdlib
+run-build-script: $(GCC_OUTPUT) $(SOURCES) $(CUSTOM_CC) build-builtins build-stdlib
 	$(VALGRIND) $(CUSTOM_CC) test/build-script
 
 $(CLEAN_ASSEMBLY): run-build-script
@@ -53,7 +52,7 @@ js-output: $(CLEAN_ASSEMBLY) $(JS_PRELOADER)
 $(JS_OUTPUT): js-output
 
 # To obtain js vm output
-%.diff: %.jsoutput %.gccoutput
+%.diff: %.gccoutput %.jsoutput
 	@diff $< $(word 2,$^) > $@ || echo "\033[0;31mTest Failure for "$<" \033[0m"
 
 # To remove generated files

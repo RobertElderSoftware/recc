@@ -14,18 +14,18 @@
 */
 #include <stdarg.h>
 #include <stdio.h>
+#include "../data-structures/unsigned_int_merge_sort.h"
+#include "../data-structures/unsigned_int_binary_search.h"
 
 extern unsigned int global_1;
 extern unsigned int global_2;
 extern unsigned int test_arr[3];
 
-unsigned int asdf;
-unsigned int asdf2 = 4;
+static unsigned int asdf;
+static unsigned int asdf2 = 4;
 
 unsigned int get_random(void);
 unsigned int get_input_space_partitioned_random(void);
-
-void print_decimal(int);
 
 int return_signed_int(void);
 unsigned int return_unsigned_int(void);
@@ -62,7 +62,19 @@ int many_math(void){
 
 enum foo {type1, type2};
 
-const char * constant_strings[3] = {"asdf", "fdsa", "lol"};
+static const char * constant_strings[3] = {"asdf", "fdsa", "lol"};
+
+int cmp_fcn(unsigned int *, unsigned int *);
+
+int cmp_fcn(unsigned int * a, unsigned int *b){
+	if(*a > *b){
+		return 1;
+	}else if(*a < *b){
+		return -1;
+	}else{
+		return 0;
+	}
+}
 
 int main(void){
 	unsigned int i;
@@ -72,6 +84,8 @@ int main(void){
 	unsigned int c;
 	unsigned int array1[26];
 	unsigned int array2[26];
+	unsigned int num_sort = 100;
+	unsigned int * sort_array = malloc(num_sort * sizeof(unsigned int));
 	test_arr[1] = 7;
 	putchar('0' + (int)test_arr[1]);
 	asdf = 4;
@@ -270,22 +284,22 @@ int main(void){
 	printf("%i\n", 1234);
 	printf("%i\n", -1234);
 
-	print_decimal(1234);
+	printf("%d", 1234);
 	printf("\n");
 
-	print_decimal(-1234);
+	printf("%d", -1234);
 	printf("\n");
-	print_decimal(1 * 4);
+	printf("%d", 1 * 4);
 	printf("\n");
-	print_decimal(1 * 0x99);
+	printf("%d", 1 * 0x99);
 	printf("\n");
-	print_decimal(1 * (int)0xFFFFFFFF);
+	printf("%d", 1 * (int)0xFFFFFFFF);
 	printf("\n");
-	print_decimal(0xFFFFFFFF * 0xFFFFFFFF);
+	printf("%d", 0xFFFFFFFF * 0xFFFFFFFF);
 	printf("\n");
-	print_decimal(0xFFFFFFFE * 0xFFFFFFFF);
+	printf("%d", 0xFFFFFFFE * 0xFFFFFFFF);
 	printf("\n");
-	print_decimal(0xFFFFFFFE * 0xFFFFFFFE);
+	printf("%d", 0xFFFFFFFE * 0xFFFFFFFE);
 	printf("\n");
 
 	{
@@ -299,5 +313,31 @@ int main(void){
 	}
 	#include "../builtin/includetest1.h"
 
+	for(k = 0; k < num_sort; k++){
+		sort_array[k] = get_input_space_partitioned_random();
+		printf("%X\n", sort_array[k]);
+	}
+	unsigned_int_merge_sort(sort_array, num_sort, cmp_fcn);
+	for(k = 0; k < num_sort; k++){
+		printf("%X\n", sort_array[k]);
+	}
+	printf("Go through sorts:\n");
+	for(k = 0; k < num_sort; k++){
+		int index = unsigned_int_binary_search(sort_array, sort_array[k], (int)num_sort, cmp_fcn);
+		if(index != -1){
+			printf("%X\n", sort_array[index]);
+		}else{
+			printf("not found\n");
+		}
+	}
+	printf("Done\n");
+	free(sort_array);
+	{
+		char cc = 'a';
+		char dd = 'b';
+		char ii = cc - dd;
+		int iii = ii;
+		printf("%d", iii);
+	}
 	return 0;
 }

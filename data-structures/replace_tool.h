@@ -1,3 +1,5 @@
+#ifndef __REPLACE_TOOL__H__DEFINED__
+#define __REPLACE_TOOL__H__DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,8 +14,6 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __REPLACE_TOOL__H__DEFINED__
-#define __REPLACE_TOOL__H__DEFINED__
 
 #include "binary_exponential_buffer.h"
 

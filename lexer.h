@@ -1,3 +1,5 @@
+#ifndef __LEXER_H__
+#define __LEXER_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,17 +14,31 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __LEXER_H__
-#define __LEXER_H__
 
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __STDLIB_H_DEFINED__
 #include <stdlib.h>
+#endif
+#ifndef __IO_H__
 #include "io.h"
+#endif
+#ifndef __struct_c_lexer_token_ptr_list__H__DEFINED__
 #include "data-structures/struct_c_lexer_token_ptr_list.h"
+#endif
+#ifndef __struct_build_script_lexer_token_ptr_list__H__DEFINED__
 #include "data-structures/struct_build_script_lexer_token_ptr_list.h"
+#endif
+#ifndef __struct_asm_lexer_token_ptr_list__H__DEFINED__
 #include "data-structures/struct_asm_lexer_token_ptr_list.h"
+#endif
+#ifndef __unsigned_char_list__H__DEFINED__
 #include "data-structures/unsigned_char_list.h"
+#endif
+#ifndef __MEMORY_POOLER__H__DEFINED__
 #include "data-structures/memory_pooler.h"
+#endif
 
 enum c_token_type {
 	SPACE,
@@ -221,5 +237,6 @@ void destroy_asm_lexer_state(struct asm_lexer_state *);
 const char ** get_c_token_type_names(void);
 const char ** get_build_script_token_type_names(void);
 const char ** get_asm_token_type_names(void);
+unsigned int count_newlines_in_comment(struct c_lexer_token *);
 
 #endif

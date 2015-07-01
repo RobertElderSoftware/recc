@@ -234,8 +234,6 @@ struct parser_node * external_declaration(struct parser_state *);
 struct parser_node * translation_unit_rest(struct parser_state *);
 struct parser_node * translation_unit(struct parser_state *);
 
-
-unsigned int count_newlines_in_comment(struct c_lexer_token *);
 void stack_operation(const char*, ...);
 void parser_progress(const char*, ...);
 void manage_new_scope(struct scope_level *, unsigned int, enum add_or_remove);
@@ -265,8 +263,8 @@ struct parser_node * get_function_definition(struct normalized_declaration_set *
 struct parser_node * create_abstract_declarator_from_declarator(struct parser_node *);
 struct parser_node * convert_declarator_to_abstract_declarator(struct parser_node *);
 struct parser_node * convert_declarator_to_abstract_declarator_h(struct parser_node *);
-unsigned char * convert_character_constant(unsigned char *, unsigned char *);
-unsigned int * convert_string_literal(unsigned char *);
+unsigned int convert_character_constant(unsigned char *, unsigned int *);
+unsigned int * convert_string_literal(unsigned char *, unsigned int *);
 int is_function_variadic(struct parser_node *);
 int is_function_k_and_r_c_style(struct parser_node *);
 int is_parameter_type_list_variadic(struct parser_node *);
@@ -3049,7 +3047,7 @@ struct first_and_last_namespace_object manage_declaration_elements(struct parser
 }
 
 struct constant_description * find_constant(struct parser_state * state, unsigned char * str){
-	return unsigned_char_ptr_to_struct_constant_description_ptr_map_get(&state->constant_map, str);
+	return unsigned_char_ptr_to_struct_constant_description_ptr_map_exists(&state->constant_map, str) ? unsigned_char_ptr_to_struct_constant_description_ptr_map_get(&state->constant_map, str) : (struct constant_description *)0;
 }
 
 unsigned int get_hex_digit_value(unsigned char c){
@@ -3097,50 +3095,94 @@ unsigned int convert_decimal_constant(unsigned char * str){
 	return rtn;
 }
 
-unsigned char * convert_character_constant(unsigned char * str, unsigned char * result){
-	/*  Return the address of the start of the next character, and put the current char in result */
+unsigned int convert_character_constant(unsigned char * str, unsigned int * result){
+	/*  Return the number of characters consumed from the input */
 	if(str[0] == '\\'){
 		switch(str[1]){
-			/*  TODO:  This does not cover all character escape codes. */
 			case '\\':{
 				*result = '\\';
-				return &str[2];
+				return 2;
 			}case 'n':{
 				*result = '\n';
-				return &str[2];
+				return 2;
+			}case 'r':{
+				*result = '\r';
+				return 2;
 			}case 't':{
 				*result = '\t';
-				return &str[2];
+				return 2;
 			}case '\'':{
 				*result = '\'';
-				return &str[2];
+				return 2;
+			}case '"':{
+				*result = '"';
+				return 2;
+			}case 'x':{
+				struct unsigned_char_list hex_chars;
+				unsigned int chars_consumed = 2;
+				str += 2;
+				unsigned_char_list_create(&hex_chars);
+				unsigned_char_list_add_end(&hex_chars, '0');
+				unsigned_char_list_add_end(&hex_chars, 'x');
+				while(*str && ((*str >= '0' && *str <= '9') || (*str >= 'a' && *str <= 'f') || (*str >= 'A' && *str <= 'F'))){
+					unsigned_char_list_add_end(&hex_chars, *str);
+					chars_consumed++;
+					str++;
+				}
+				unsigned_char_list_add_end(&hex_chars, '\0');
+				*result = convert_hexadecimal_constant(unsigned_char_list_data(&hex_chars));
+				unsigned_char_list_destroy(&hex_chars);
+				return chars_consumed;
 			}case '0':{
 				*result = '\0';
-				return &str[2];
+				return 2;
 			}default:{
 				assert(0 && "Unknown character constant.");
-				return (unsigned char *)0;
+				return 0;
 			}
 		}
 	}
 	*result = str[0];
-	return &str[1];
+	return 1;
 }
 
-
-unsigned int * convert_string_literal(unsigned char * str){
-	unsigned int max_len = ((unsigned int)strlen((char *)str) + 1) > 3 ? ((unsigned int)strlen((char *)str) + 1) : 4;
-	/* TODO:  Much bigger than it needs to be */
-	unsigned int * max_buffer = (unsigned int *)calloc(max_len * sizeof(unsigned int), 1); /* Always larger than or equal to the necessary size */
-	unsigned char * next_char = str;
-	unsigned int chars_converted = 0;
-	unsigned char * last_quote = &str[max_len -2]; /* The last double quote */
-	while(last_quote != next_char){
-		next_char = convert_character_constant(next_char, &((unsigned char *)max_buffer)[chars_converted]);
-		chars_converted++;
+unsigned int * convert_string_literal(unsigned char * str, unsigned int *size_in_bytes){
+	struct unsigned_char_list converted_chars;
+	unsigned_char_list_create(&converted_chars);
+	while(*str){
+		unsigned char * begin;
+		str++; /* Jump over opening " */
+		/*  This assumes that the STRING_LITERAL is a well formed token as described in the lexer */
+		while(*str != '"'){ /* Any unescaped " is an end of string */
+			unsigned int c;
+			str += convert_character_constant(str, &c);
+			assert(*str);
+			unsigned_char_list_add_end(&converted_chars, (unsigned char)c);
+		}
+		str++; /*  Consume the closing '"' */
+		do{
+			begin = str; /* For detecting consumption of whitespace and comments */
+			/*  Consume newlines and whitespace */
+			while(*str == '\n' || *str == ' ' || *str == '\t'){ /* Skip spaces and newlines */
+				str++;
+			}
+			/*  Consume comments */
+			if(str[0] && str[1] && (str[0] == '/' && str[1] == '*')){
+				str += 2; /* skip '/''*' */
+				while(!(str[0] == '*' && str[1] == '/')){
+					str++;
+				}
+				str += 2; /* skip '*''/' */
+			}
+		} while(begin != str);
 	}
-	max_buffer[chars_converted] = 0; /* Null termination */
-	return max_buffer;
+	unsigned_char_list_add_end(&converted_chars, '\0'); /*  Null termination. */
+	while((unsigned_char_list_size(&converted_chars) % sizeof(unsigned int)) != 0){
+		unsigned_char_list_add_end(&converted_chars, '\0'); /*  Ensure int alignment at end of string */
+	}
+	*size_in_bytes = unsigned_char_list_size(&converted_chars);
+	/*  Don't destroy char list, return data buffer as raw converted data with padded nulls at end */
+	return (unsigned int *)(void*)unsigned_char_list_data(&converted_chars);
 }
 
 struct normalized_declarator * make_array_brackets(void){
@@ -3240,7 +3282,7 @@ struct type_description * get_type_description_from_suffix(unsigned char * str){
 void manage_constant(struct parser_state * state, struct parser_node * n, enum add_or_remove add_or_remove){
 	unsigned char * constant_string_representation = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte);
 	if(add_or_remove == ADD){
-		struct constant_description * previous_description = unsigned_char_ptr_to_struct_constant_description_ptr_map_get(&state->constant_map, constant_string_representation);
+		struct constant_description * previous_description = unsigned_char_ptr_to_struct_constant_description_ptr_map_exists(&state->constant_map, constant_string_representation) ? unsigned_char_ptr_to_struct_constant_description_ptr_map_get(&state->constant_map, constant_string_representation) : (struct constant_description *)0;
 		struct constant_description * new_description = (struct constant_description *)0;
 		if(previous_description){
 			previous_description->num_references = previous_description->num_references + 1;
@@ -3253,7 +3295,7 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 		new_description->str = constant_string_representation;
 		switch(n->c_lexer_token->type){
 			case CONSTANT_HEX:{
-				new_description->native_data = (unsigned int *)calloc(4,1);
+				new_description->native_data = (unsigned int *)malloc(sizeof(unsigned int));
 				*(new_description->native_data) = convert_hexadecimal_constant(new_description->str);
 				new_description->type_description = get_type_description_from_suffix(new_description->str);
 				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
@@ -3269,7 +3311,7 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 				break;
 			}case CONSTANT_DECIMAL:{
 				unsigned int value = convert_decimal_constant(new_description->str);
-				new_description->native_data = (unsigned int *)calloc(4,1);
+				new_description->native_data = (unsigned int *)malloc(sizeof(unsigned int));
 				*(new_description->native_data) = value;
 				/*  Assumes 32 bit integers */
 				if(value & 0x80000000){
@@ -3281,15 +3323,17 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
 				break;
 			}case CONSTANT_CHARACTER:{
-				new_description->native_data = (unsigned int *)calloc(4,1);
-				convert_character_constant(&new_description->str[1], (unsigned char *)(&new_description->native_data[0]));
+				unsigned int c;
+				new_description->native_data = (unsigned int *)malloc(sizeof(unsigned int));
+				*((unsigned int *)new_description->native_data) = 0;
+				convert_character_constant(&new_description->str[1], &c);
+				*((unsigned char *)&new_description->native_data[0]) = (unsigned char)c;
 				new_description->type_description = add_specifier(add_specifier(create_empty_type_description(), CONST), CHAR);
 				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
 				break;
 			}case STRING_LITERAL:{
 				struct type_description * type_description;
-				/* TODO:  This will not work properly for character constants with multiple embeded string literals because of the strlen */
-				new_description->native_data = convert_string_literal(&new_description->str[1]); /* offset 1 to jump over the first quote */
+				new_description->native_data = convert_string_literal(new_description->str, &new_description->size_in_bytes);
 				type_description = add_specifier(add_specifier(create_empty_type_description(), CONST), CHAR);
 				type_description->declarator = make_array_brackets();
 				type_description->value_type = LVALUE;
@@ -3455,18 +3499,6 @@ struct parser_node * create_parser_node(struct parser_state * parser_state, stru
 	new_node.c_lexer_token = l;
 	new_node.type = t;
 	return (struct parser_node *)push_operation(parser_state, ADVANCE_PARSER_POSITION, &new_node);
-}
-
-unsigned int count_newlines_in_comment(struct c_lexer_token * t){
-	unsigned int count = 0;
-	unsigned char * c = t->first_byte;
-	while(c != t->last_byte){
-		if(*c == '\n'){
-			count++;
-		}
-		c++;
-	}
-	return count;
 }
 
 struct parser_node * p_accept(enum c_token_type t, struct parser_state * parser_state){
@@ -4423,6 +4455,7 @@ struct parser_node * compound_statement(struct parser_state * parser_state, stru
 					return (struct parser_node *)0;
 				}
 			}else{
+				printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement list or }.\n");
 				return (struct parser_node *)0;
 			}
@@ -4910,6 +4943,7 @@ struct parser_node * direct_declarator_rest(struct parser_state * parser_state){
 				return (struct parser_node *)0;
 			}
 		}else{
+			printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected a CLOSE_PAREN.\n");
 			return (struct parser_node *)0;
 		}
@@ -5629,6 +5663,7 @@ struct parser_node * selection_statement(struct parser_state * parser_state){
 						return (struct parser_node *)0;
 					}
 				}else{
+					printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_PAREN_CHAR.\n");
 					return (struct parser_node *)0;
 				}
@@ -6094,6 +6129,7 @@ struct type_description * copy_type_description(struct type_description * type){
 }
 
 int parse(struct c_lexer_state * c_lexer_state, struct parser_state * parser_state, unsigned char * buffer){
+	unsigned int print_scope_active = 0;
 	g_parser_node_pool = memory_pooler_collection_get_pool(parser_state->memory_pooler_collection, sizeof(struct parser_node));
 	g_c_lexer_token_pool = memory_pooler_collection_get_pool(parser_state->memory_pooler_collection, sizeof(struct c_lexer_token));
 	parser_state->c_lexer_state = c_lexer_state;
@@ -6105,7 +6141,7 @@ int parse(struct c_lexer_state * c_lexer_state, struct parser_state * parser_sta
 	g_format_buffer_use();
 
 	parser_state->buff = buffer;
-	unsigned_char_ptr_to_struct_constant_description_ptr_map_create(&parser_state->constant_map, unsigned_strcmp);
+	unsigned_char_ptr_to_struct_constant_description_ptr_map_create(&parser_state->constant_map);
 	parser_state->top_node = translation_unit(parser_state);
 
 	if(parser_state->tokens_position != struct_c_lexer_token_ptr_list_size(&parser_state->c_lexer_state->tokens)){
@@ -6114,7 +6150,9 @@ int parse(struct c_lexer_state * c_lexer_state, struct parser_state * parser_sta
 	}
 
 	assert(parser_state->top_node && "Parsing FAILED.\n");
-	print_scope_level(parser_state, parser_state->top_scope, 0);
+	if(print_scope_active){
+		print_scope_level(parser_state, parser_state->top_scope, 0);
+	}
 	return 0;
 }
 

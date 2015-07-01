@@ -15,7 +15,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "filesystem.h"
+
+#define BUFFER_LEN 1000
 
 FILE * fopen(const char * filepath, const char * mode){
 	FILE * f = malloc(sizeof(FILE));
@@ -23,9 +26,39 @@ FILE * fopen(const char * filepath, const char * mode){
 	unsigned int parent_directory_inode;
 	unsigned int existing_file_inode;
 	unsigned char * file_name;
+	struct unsigned_char_list full_path_char_list;
+	unsigned int i;
+	char cwd[BUFFER_LEN];
+	unsigned_char_list_create(&full_path_char_list);
 	(void)mode; /*  TODO: inspect mode */
+
+	assert(filepath);
+
+	if(*filepath != '/'){ /*  If the file was not an absolute path */
+		/*  Get current working directory. */
+		getcwd(cwd, BUFFER_LEN);
+
+		/*  Add current working directory to target file path */
+		for(i = 0; ; i++){
+			if(!cwd[i]){
+				break;
+			}
+			unsigned_char_list_add_end(&full_path_char_list, cwd[i]);
+		}
+		if(unsigned_char_list_get(&full_path_char_list, unsigned_char_list_size(&full_path_char_list) -1) != '/'){
+			unsigned_char_list_add_end(&full_path_char_list, '/');
+		}
+	}
+
+	while(*filepath){
+		unsigned_char_list_add_end(&full_path_char_list, *filepath);
+		filepath++;
+	}
+
+	unsigned_char_list_add_end(&full_path_char_list, 0); /* Null terminator */
+
 	unsigned_char_ptr_list_create(&components);
-	resolve_path_components((unsigned char *)filepath, &components);
+	resolve_path_components((unsigned char *)unsigned_char_list_data(&full_path_char_list), &components);
 	file_name = unsigned_char_ptr_list_get(&components, unsigned_char_ptr_list_size(&components) -1);
 	unsigned_char_ptr_list_remove_all(&components, file_name);
 	parent_directory_inode = get_directory_inode_from_path_parts(&components);
@@ -35,6 +68,7 @@ FILE * fopen(const char * filepath, const char * mode){
 	assert(inodes[f->inode_index].first_block_initialized);
 	f->current_block_index = inodes[f->inode_index].first_block;
 	unsigned_char_ptr_list_destroy(&components);
+	unsigned_char_list_destroy(&full_path_char_list);
 	return f;
 }
 

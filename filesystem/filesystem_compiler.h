@@ -1,3 +1,5 @@
+#ifndef __FILESYSTEM_COMPILER_H__
+#define __FILESYSTEM_COMPILER_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,15 +14,25 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __FILESYSTEM_COMPILER_H__
-#define __FILESYSTEM_COMPILER_H__
 
+#ifndef __ASSERT_H_DEFINED__
 #include <assert.h>
+#endif
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __STDLIB_FILESYSTEM_H__
 #include "../libc/filesystem.h"
+#endif
+#ifndef __unsigned_char_ptr_to_unsigned_char_ptr_map__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
+#endif
+#ifndef __unsigned_char_list__H__DEFINED__
 #include "../data-structures/unsigned_char_list.h"
+#endif
+#ifndef __IO_H__
 #include "../io.h"
+#endif
 
 void output_filesystem_impl(void);
 void create_directories(struct unsigned_char_ptr_list *);

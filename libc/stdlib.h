@@ -1,3 +1,5 @@
+#ifndef __STDLIB_H_DEFINED__
+#define __STDLIB_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,9 +14,9 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __STDLIB_H_DEFINED__
-#define __STDLIB_H_DEFINED__
+#ifndef __SIZE_T_H_DEFINED__
 #include "size_t.h"
+#endif
 void * malloc(size_t);
 void * realloc(void *, size_t);
 void * calloc(size_t, size_t);

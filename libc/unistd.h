@@ -1,3 +1,5 @@
+#ifndef __UNISTD_H_DEFINED__
+#define __UNISTD_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,10 +14,10 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __UNISTD_H_DEFINED__
-#define __UNISTD_H_DEFINED__
 
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
 
 char *getcwd(char *, size_t);
 

@@ -9,6 +9,8 @@
 /putchar.i
 /main.l2
 /main.i
+/filesystem.l2
+/filesystem.i
 /assert.l2
 /assert.i
 /queue.l2

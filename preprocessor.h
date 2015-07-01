@@ -1,3 +1,5 @@
+#ifndef __PREPROCESSOR_H__
+#define __PREPROCESSOR_H__ 
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,40 +14,84 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __PREPROCESSOR_H__
-#define __PREPROCESSOR_H__ 
 
+#ifndef __ASSERT_H_DEFINED__
 #include <assert.h>
+#endif
+#ifndef __LEXER_H__
 #include "lexer.h"
+#endif
+#ifndef __STRING_H_DEFINED__
 #include <string.h>
+#endif
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __STDLIB_H_DEFINED__
 #include <stdlib.h>
-#include <assert.h>
-#include "lexer.h"
+#endif
+#ifndef __IO_H__
 #include "io.h"
+#endif
+#ifndef __unsigned_char_list__H__DEFINED__
 #include "data-structures/unsigned_char_list.h"
+#endif
+#ifndef __struct_if_branch_ptr_list__H__DEFINED__
 #include "data-structures/struct_if_branch_ptr_list.h"
+#endif
+#ifndef __struct_c_lexer_token_ptr_list__H__DEFINED__
 #include "data-structures/struct_c_lexer_token_ptr_list.h"
+#endif
+#ifndef __struct_struct_c_lexer_token_ptr_list_ptr_list__H__DEFINED__
 #include "data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h"
+#endif
+#ifndef __unsigned_char_ptr_to_unsigned_char_ptr_map__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
+#endif
+#ifndef __unsigned_char_ptr_to_struct_macro_parameter_ptr_map__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_to_struct_macro_parameter_ptr_map.h"
+#endif
+#ifndef __unsigned_char_ptr_to_struct_macro_definition_ptr_map__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h"
+#endif
+#ifndef __unsigned_char_ptr_to_struct_special_macro_definition_ptr_map__H__DEFINED__
+#include "data-structures/unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h"
+#endif
+#ifndef __struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map__H__DEFINED__
 #include "data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"
+#endif
+#ifndef __struct_c_lexer_token_ptr_to_unsigned_char_ptr_map__H__DEFINED__
 #include "data-structures/struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h"
+#endif
+#ifndef __struct_unsigned_char_list_ptr_list__H__DEFINED__
 #include "data-structures/struct_unsigned_char_list_ptr_list.h"
+#endif
+#ifndef __struct_c_lexer_state_ptr_list__H__DEFINED__
 #include "data-structures/struct_c_lexer_state_ptr_list.h"
+#endif
+#ifndef __struct_preprocessor_file_context_ptr_list__H__DEFINED__
+#include "data-structures/struct_preprocessor_file_context_ptr_list.h"
+#endif
 
 struct if_branch{
 	unsigned int active;
 };
 
+struct preprocessor_file_context{
+	unsigned char * filename;
+	unsigned int current_line;
+	unsigned int pad;
+};
+
 struct preprocessor_state{
 	struct struct_unsigned_char_list_ptr_list tokenizable_input_buffers;  /*  The characters underlying all of our tokens */
 	struct struct_if_branch_ptr_list if_branches;
-	struct unsigned_char_ptr_list full_filenames;
+	struct struct_preprocessor_file_context_ptr_list file_contexts;
 	struct memory_pooler_collection * memory_pooler_collection;
 	struct struct_c_lexer_state_ptr_list c_lexer_states;
 	struct c_lexer_token * comma_token;
+	struct struct_c_lexer_token_ptr_list created_tokens;
+	struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_map special_macros;
 };
 
 enum macro_definition_type{
@@ -63,6 +109,15 @@ struct macro_definition{
 	struct unsigned_char_ptr_to_struct_macro_parameter_ptr_map function_macro_parameters;
 	enum macro_definition_type type;
 	unsigned int pad;
+};
+
+enum special_macro_type{
+	__LINE__MACRO,
+	__FILE__MACRO
+};
+
+struct special_macro_definition{
+	enum special_macro_type type;
 };
 
 enum search_state{
@@ -86,7 +141,8 @@ enum directive_type{
 
 void process_tokens(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *, enum search_state, unsigned int);
 void process_line_continuators(struct unsigned_char_list *, struct unsigned_char_list *);
-void free_define_map(struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *);
+void free_macro_definition_map(struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *);
+void free_special_macro_definition_map(struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_map *);
 int get_preprocessed_output_from_file(struct preprocessor_state *, unsigned char *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
 
 struct c_lexer_token * read_until_next_token(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *);
@@ -113,5 +169,18 @@ struct unsigned_char_list * add_tokenizable_input_buffer(struct preprocessor_sta
 struct c_lexer_state * add_c_lexer_state(struct preprocessor_state *);
 unsigned char * get_current_file(struct preprocessor_state *);
 int do_preprocess(struct memory_pooler_collection *, unsigned char *, unsigned char *);
+struct c_lexer_token * make_stringified_token(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *);
+void add_stringified_character(struct unsigned_char_list *, unsigned int *, unsigned char);
+void make_trimmed_arg_list(struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *);
+void add_special_macros(struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_map *);
+void evaluate_special_macro(struct preprocessor_state *, struct special_macro_definition *, struct struct_c_lexer_token_ptr_list *);
+void destroy_preprocessor_file_context(struct preprocessor_file_context *);
+struct preprocessor_file_context * make_preprocessor_file_context(unsigned char *);
+void increment_current_line(struct preprocessor_state *);
+unsigned int get_current_file_line(struct preprocessor_state *);
+unsigned char * make_current_file_line_string(struct preprocessor_state *);
+unsigned char * make_current_file_string(struct preprocessor_state *);
+int c_lexer_token_cmp(struct c_lexer_token *, struct c_lexer_token *);
+void print_file_stack(struct preprocessor_state *);
 
 #endif

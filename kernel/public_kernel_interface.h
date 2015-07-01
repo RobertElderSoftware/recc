@@ -1,3 +1,5 @@
+#ifndef __PUBLIC_KERNEL_INTERFACE_H__
+#define __PUBLIC_KERNEL_INTERFACE_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,11 +14,13 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __PUBLIC_KERNEL_INTERFACE_H__
-#define __PUBLIC_KERNEL_INTERFACE_H__
 
+#ifndef __KERNEL_STATE_H__
 #include "kernel_state.h"
+#endif
+#ifndef __QUEUE_H_DEFINED__
 #include "queue.h"
+#endif
 
 unsigned int release_processor(void);
 void task_exit(void);

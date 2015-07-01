@@ -13,7 +13,7 @@
 	use of this software.
 */
 #include "private_kernel_interface.h"
-#include "assert.h"
+#include <assert.h>
 
 unsigned int current_task_id = 0;
 unsigned int num_clock_ticks = 0;
@@ -51,7 +51,7 @@ void unblock_tasks_for_event(enum kernel_event event){
 			struct process_control_block * unblocked_task;
 			if(task_queue_current_count(&blocked_on_uart1_out_ready_queue) == 0){
 				/*  Nothing has blocked on this event yet so save the signal */
-				assert(!saved_uart1_out_ready, "There should be no previous saved uart signal.  Expect output problems.");
+				assert(!saved_uart1_out_ready && "There should be no previous saved uart signal.  Expect output problems.");
 				saved_uart1_out_ready = 1;
 			}else{
 				unblocked_task = task_queue_pop_start(&blocked_on_uart1_out_ready_queue); 
@@ -62,7 +62,7 @@ void unblock_tasks_for_event(enum kernel_event event){
 			struct process_control_block * unblocked_task;
 			if(task_queue_current_count(&blocked_on_uart1_in_ready_queue) == 0){
 				/*  Nothing has blocked on this event yet so save the signal */
-				assert(!saved_uart1_in_ready, "There should be no previous saved uart signal.  Expect input problems.");
+				assert(!saved_uart1_in_ready && "There should be no previous saved uart signal.  Expect input problems.");
 				saved_uart1_in_ready = 1;
 			}else{
 				unblocked_task = task_queue_pop_start(&blocked_on_uart1_in_ready_queue); 
@@ -70,7 +70,7 @@ void unblock_tasks_for_event(enum kernel_event event){
 			}
 			break;
 		}default:{
-			assert(0, "Unhandled unblock event.\n");
+			assert(0 && "Unhandled unblock event.\n");
 			break;
 		}
 	}
@@ -150,7 +150,7 @@ void k_block_on_event(enum kernel_event event){
 			}
 			break;
 		}default:{
-			assert(0, "Blocking on unknown event.\n");
+			assert(0 && "Blocking on unknown event.\n");
 		}
 	}
 }
@@ -293,7 +293,7 @@ void k_kernel_init(void){
 
 	/*  We need to set up our tasks so that the stack has the correct PC and FP value for the first time it is scheduled*/
 	init_task_stack(&(pcbs[1].stack_pointer), user_proc_1);
-	init_task_stack(&(pcbs[2].stack_pointer), user_proc_2);
+	init_task_stack(&(pcbs[2].stack_pointer), do_compile);
 	init_task_stack(&(pcbs[3].stack_pointer), clock_tick_notifier);
 	init_task_stack(&(pcbs[4].stack_pointer), clock_server);
 	init_task_stack(&(pcbs[5].stack_pointer), uart1_out_ready_notifier);

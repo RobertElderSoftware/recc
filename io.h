@@ -1,3 +1,5 @@
+#ifndef __IO_H__
+#define __IO_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,17 +14,28 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __IO_H__
-#define __IO_H__
 
+#ifndef __STDLIB_H_DEFINED__
 #include <stdlib.h>
+#endif
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __STDARG_H_DEFINED__
 #include <stdarg.h>
+#endif
+#ifndef __ASSERT_H_DEFINED__
 #include <assert.h>
+#endif
+#ifndef __STRING_H_DEFINED__
 #include <string.h>
+#endif
+#ifndef __unsigned_char_list__H__DEFINED__
 #include "data-structures/unsigned_char_list.h"
+#endif
+#ifndef __unsigned_char_ptr_list__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_list.h"
-
+#endif
 
 extern unsigned char * g_format_buffer;  /* TODO: get rid of this.  This is a hack that must exist until snprintf can be implemented */
 extern unsigned int g_format_buffer_uses;

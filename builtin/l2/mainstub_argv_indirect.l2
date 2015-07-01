@@ -12,6 +12,7 @@ __g_entry:
 ll SP 0x2000;    Arbitarily initialize the stack pointer to 0x200000
 shl SP WR;       Shift to 0x20000
 shl SP WR;       Shift to 0x200000
+sub SP SP WR;    Adjust position of stack to just before 0x200000
 sub SP SP WR;    Space for return value (int)
 ll r1 exitmain;  Load the address of the exit routine.
 sto SP r1;       Store the return address on the stack.

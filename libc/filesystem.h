@@ -1,3 +1,5 @@
+#ifndef __STDLIB_FILESYSTEM_H__
+#define __STDLIB_FILESYSTEM_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,18 +14,27 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __STDLIB_FILESYSTEM_H__
-#define __STDLIB_FILESYSTEM_H__
 
 #define DATA_WORDS_PER_BLOCK 1024
 #define NUM_INODES 1024
 #define NUM_BLOCKS 1024
 #define TIMES_4 4096 /*  TODO: get rid of this when multiplicative constants are implemented */
 
+#ifndef __unsigned_char_ptr_to_unsigned_char_ptr_map__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
+#endif
+#ifndef __unsigned_char_list__H__DEFINED__
 #include "../data-structures/unsigned_char_list.h"
+#endif
+#ifndef __IO_H__
 #include "../io.h"
+#endif
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __STDLIB_H_DEFINED__
+#include <stdlib.h>
+#endif
 
 
 struct directory_entry{

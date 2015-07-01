@@ -15,12 +15,13 @@
 
 #include <stdio.h>
 
-const char * a = "a";
+static const char * a = "a";
 
 int main(void){
 	putchar('a');
 	printf("%s", "boo");
 	printf("%i", 0xFFFFFFFFu);
 	printf("%i", 0xFFFFFFFFU);
+	printf("%s", a);
 	return 0;
 }

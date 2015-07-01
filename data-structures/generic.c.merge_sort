@@ -1,0 +1,60 @@
+/*
+	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
+
+	This software is not currently available under any license, and unauthorized use
+	or copying is not permitted.
+
+	This software will likely be available under a common open source license in the
+	near future.  Licensing is currently pending feedback from a lawyer.  If you have
+	an opinion on this subject you can send it to recc [at] robertelder.org.
+
+	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
+	Software Inc. be liable for incidental or consequential damages in connection with
+	use of this software.
+*/
+#include "T0_IDENTIFIER_merge_sort.h"
+
+void T0_IDENTIFIER_split_and_merge(T0_LITERAL *, unsigned int, unsigned int, T0_LITERAL *, int (*)(T0_LITERAL *, T0_LITERAL *));
+void T0_IDENTIFIER_do_merge(T0_LITERAL *, unsigned int, unsigned int, unsigned int, T0_LITERAL *, int (*)(T0_LITERAL *, T0_LITERAL *));
+void T0_IDENTIFIER_copy_items(T0_LITERAL *, unsigned int, unsigned int, T0_LITERAL *);
+
+void T0_IDENTIFIER_merge_sort(T0_LITERAL * a, unsigned int size, int (*cmp_fcn)(T0_LITERAL *, T0_LITERAL *)){
+	T0_LITERAL * b = (T0_LITERAL *)malloc(size * sizeof(T0_LITERAL));
+	T0_IDENTIFIER_split_and_merge(a, 0, size, b, cmp_fcn);
+	free(b);
+}
+
+void T0_IDENTIFIER_split_and_merge(T0_LITERAL * a, unsigned int first_index, unsigned int last_index_plus_one, T0_LITERAL * b, int (*cmp_fcn)(T0_LITERAL *, T0_LITERAL *)){
+	unsigned int middle;
+	if(last_index_plus_one - first_index < 2){
+        	return;
+	}
+	middle = (last_index_plus_one + first_index) / 2;
+	T0_IDENTIFIER_split_and_merge(a, first_index, middle, b, cmp_fcn);
+	T0_IDENTIFIER_split_and_merge(a, middle, last_index_plus_one, b, cmp_fcn);
+	T0_IDENTIFIER_do_merge(a, first_index, middle, last_index_plus_one, b, cmp_fcn);
+	T0_IDENTIFIER_copy_items(b, first_index, last_index_plus_one, a);
+}
+
+void T0_IDENTIFIER_do_merge(T0_LITERAL * a, unsigned int first_index, unsigned int middle, unsigned int last_index_plus_one, T0_LITERAL * b, int (*cmp_fcn)(T0_LITERAL *, T0_LITERAL *)){
+	unsigned int j;
+	unsigned int list1_head = first_index;
+	unsigned int list2_head = middle;
+    
+	for(j = first_index; j < last_index_plus_one; j++){
+		if(list1_head < middle && (list2_head >= last_index_plus_one || (cmp_fcn(&a[list1_head], &a[list2_head]) < 0))){
+			b[j] = a[list1_head];
+			list1_head++;
+		}else{
+			b[j] = a[list2_head];
+			list2_head++;
+		}
+	}
+}
+
+void T0_IDENTIFIER_copy_items(T0_LITERAL * b, unsigned int first_index, unsigned int last_index_plus_one, T0_LITERAL * a){
+	unsigned int k;
+	for(k = first_index; k < last_index_plus_one; k++){
+		a[k] = b[k];
+	}
+}

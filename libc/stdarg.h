@@ -1,3 +1,5 @@
+#ifndef __STDARG_H_DEFINED__
+#define __STDARG_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,8 +14,6 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __STDARG_H_DEFINED__
-#define __STDARG_H_DEFINED__
 #define va_list unsigned int *
 #define va_start(a,b) a = (unsigned int*)&b
 #define va_arg(a,b) *((b*)(a=(unsigned int *)((unsigned int)a - sizeof(unsigned int))))

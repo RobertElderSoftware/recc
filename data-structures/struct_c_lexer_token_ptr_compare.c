@@ -1,5 +1,3 @@
-#ifndef __STRING_H_DEFINED__
-#define __STRING_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -14,9 +12,16 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __SIZE_T_H_DEFINED__
-#include "size_t.h"
+#ifndef __struct_c_lexer_token_ptr_compare__H__DEFINED__
+#include "struct_c_lexer_token_ptr_compare.h"
 #endif
-size_t strlen(const char *);
-int strcmp(const char *, const char *);
-#endif
+
+int struct_c_lexer_token_ptr_compare(struct c_lexer_token ** a, struct c_lexer_token ** b){
+	if(*a > *b){
+		return 1;
+	}else if(*a < *b){
+		return -1;
+	}else{
+		return 0;
+	}
+}

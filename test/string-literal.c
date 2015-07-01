@@ -20,6 +20,15 @@ int output(void);
 int output(void){
 	unsigned int i = 0;
 	const char * str = "Hello World!";
+	const char * a = "Hello World!\0foo!\0boo!\0cfjksdafloo!\0fkfsdajkoo!\0fofdasjko!\0foofkds!\0foofds!\0foofdjk!\0foo!\0foo!\0foo!\0foo!\0";
+	const char * b = "\x61\x62\t\n\r";
+	const char * c = "a""b";
+	const char * d = "a" "b";
+	const char * e = "a" /* foo */ "b";
+	const char * f = "a"/* foo */ "b";
+	const char * g = "a" /* foo */"b";
+	const char * h = "a"
+	"b";
 	while(i < 12){
 		putchar(str[i]);
 		i++;
@@ -29,6 +38,20 @@ int output(void){
 	putchar("foo"[1]);
 	putchar("fun"[2]);
 	putchar("dedfun"[0]);
+	printf("%s", a);
+	printf("%s", &a[10]);
+	printf("%s", &a[20]);
+	printf("%s\n", &a[30]);
+	printf("%s\n", &a[40]);
+	printf("%s\n", &a[50]);
+	printf("%s\n", b);
+	printf("%s\n", c);
+	printf("%s\n", d);
+	printf("%s\n", e);
+	printf("%s\n", f);
+	printf("%s\n", g);
+	printf("%s\n", h);
+	printf("foo '""used_flags[index] = (num_blocks - i)""' in file ""\"libc/malloc.c\"""  on line ""120"".\n");
 	return 0;
 }
 

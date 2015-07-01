@@ -12,6 +12,12 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
+
+extern unsigned int global_1;
+extern unsigned int global_2;
+
+extern unsigned int test_arr[3];
+
 unsigned int global_1;
 unsigned int global_2 = 3;
 
@@ -20,4 +26,8 @@ unsigned int test_arr[3];
 struct bootest{
 	unsigned int arr[4];
 	unsigned int k;	
-} global_struct_test;
+};
+
+extern struct bootest global_struct_test;
+
+struct bootest global_struct_test;

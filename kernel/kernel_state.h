@@ -1,3 +1,5 @@
+#ifndef __KERNEL_STATE_H__
+#define __KERNEL_STATE_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,10 +14,10 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __KERNEL_STATE_H__
-#define __KERNEL_STATE_H__
 
+#ifndef __QUEUE_H_DEFINED__
 #include "queue.h"
+#endif
 
 struct process_control_block{
 	enum process_state state;

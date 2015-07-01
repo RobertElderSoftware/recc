@@ -14,13 +14,40 @@
 */
 #include <stdio.h>
 
+extern int globe;
+int globe;
+
 int output(void);
+
+char get_a(void);
+char get_b(void);
+void * get_ptr(void);
+
+char get_a(void){
+	return 'a';
+}
+
+char get_b(void){
+	return 'b';
+}
+
+void * get_ptr(void){
+	return &globe;
+}
+
+enum enum1 {en_1, en_2};
 
 int output(void){
 	int c = 115;
 	int z = 0;
 	int one = 1;
 	int two = 2;
+	int changes1 = 1;
+	int changes2 = 1;
+	int changes3 = 1;
+	enum enum1 en1_ex = en_1;
+	void * test;
+	void * test1 = &c;
 	putchar(49 << 1); /* b */
 	putchar(396 >> 2); /* c */
 	putchar('3' - 1);
@@ -30,12 +57,21 @@ int output(void){
 	putchar('3' + (1 | 1) + (0 | 1) + (1 | 0) + (0 | 0) + (1 | 1));
 	putchar('3' + 8 - 33 + 67 - 22);
 	putchar('3' + (1 & 1) + (0 & 1) + (1 & 0) + (0 & 0) + (1 & 1));
-	if(one & 0){
+	if(one & z){
 		putchar('a');
 	}else{
 		putchar('b');
 	}
 
+	test = en1_ex == en_1 ? get_ptr() : test1;
+	if(test == (void *)&globe){
+		putchar('d');
+	}
+
+	putchar(z ? get_a() : get_b());
+	putchar(one ? get_a() : get_b());
+	putchar(z ? 'a' : 'b');
+	putchar(z ? 'a' : 'b');
 	putchar(z ? 'a' : 'b');
 	putchar(one ? 'a' : 'b');
 
@@ -142,6 +178,8 @@ int output(void){
 		putchar('b');
 	}
 
+	putchar('\n');
+
 	if(z || 0){
 		putchar('a');
 	}else{
@@ -166,6 +204,8 @@ int output(void){
 		putchar('b');
 	}
 
+	putchar('\n');
+
 	if(z && z){
 		putchar('a');
 	}else{
@@ -184,7 +224,7 @@ int output(void){
 		putchar('b');
 	}
 
-	if(1 && 1 && z){
+	if(one && one && z){
 		putchar('a');
 	}else{
 		putchar('b');
@@ -192,6 +232,146 @@ int output(void){
 
 	putchar(c += 3);
 	putchar(c -= 3);
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) || (changes2 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) || (changes2 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) || (changes2 = z) || (changes3 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) || (changes2 = z) || (changes3 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) || (changes2 = one) || (changes3 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) || (changes2 = one) || (changes3 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) || (changes2 = z) || (changes3 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) || (changes2 = z) || (changes3 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) || (changes2 = one) || (changes3 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) || (changes2 = one) || (changes3 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) && (changes2 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) && (changes2 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) && (changes2 = z) && (changes3 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) && (changes2 = z) && (changes3 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) && (changes2 = one) && (changes3 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = z) && (changes2 = one) && (changes3 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) && (changes2 = z) && (changes3 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) && (changes2 = z) && (changes3 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) && (changes2 = one) && (changes3 = z)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
+
+	/* Test short circuit evaluation */
+	if((changes1 = one) && (changes2 = one) && (changes3 = one)){
+		putchar('a' + changes1);
+		putchar('a' + changes2);
+		putchar('a' + changes3);
+	}
 
 	return 0;
 }

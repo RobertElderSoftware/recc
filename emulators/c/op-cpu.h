@@ -1,3 +1,5 @@
+#ifndef __OP_CPU_H__
+#define __OP_CPU_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,8 +14,6 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __OP_CPU_H__
-#define __OP_CPU_H__
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,3 +1,5 @@
+#ifndef __includetest2__h_
+#define __includetest2__h_
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,10 +14,6 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-
-#ifndef __includetest2__h_
-
-#define __includetest2__h_
 
 putchar('a');
 putchar('c');

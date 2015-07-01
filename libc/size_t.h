@@ -1,3 +1,5 @@
+#ifndef __SIZE_T_H_DEFINED__
+#define __SIZE_T_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,7 +14,5 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __SIZE_T_H_DEFINED__
-#define __SIZE_T_H_DEFINED__
 typedef int size_t;
 #endif

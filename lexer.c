@@ -181,11 +181,24 @@ unsigned int t_constant_exponent(struct common_lexer_state *, unsigned int);
 unsigned int t_constant_float_small(struct common_lexer_state *, unsigned int);
 unsigned int t_constant_float_large(struct common_lexer_state *, unsigned int);
 unsigned int t_constant_character(struct common_lexer_state *, unsigned int);
+unsigned int t_constant_string_part(struct common_lexer_state *, unsigned int);
 unsigned int t_constant_string(struct common_lexer_state *, unsigned int);
 unsigned int t_newline(struct common_lexer_state *, unsigned int);
 unsigned int t_space(struct common_lexer_state *, unsigned int);
 unsigned int t_filename(struct common_lexer_state *, unsigned int);
 void show_lexer_token(struct unsigned_char_list *, const char *, unsigned char *, unsigned char *, unsigned int);
+
+unsigned int count_newlines_in_comment(struct c_lexer_token * t){
+	unsigned int count = 0;
+	unsigned char * c = t->first_byte;
+	while(c != t->last_byte){
+		if(*c == '\n'){
+			count++;
+		}
+		c++;
+	}
+	return count;
+}
 
 unsigned int accept_range(unsigned char lo, unsigned char hi, struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
 	if(tentative_position < common_lexer_state->buffer_size && common_lexer_state->buf[tentative_position] >= lo && common_lexer_state->buf[tentative_position] <= hi){
@@ -297,6 +310,7 @@ unsigned int t_asm_comment(struct common_lexer_state * common_lexer_state, unsig
 				break;
 			}
 			if(count_before == count){
+				printf("Char is 0x%X\n", common_lexer_state->buf[tentative_position + count]);
 				assert(0 && "Bad character in asm comment.");
 			}
 		}
@@ -551,41 +565,49 @@ unsigned int t_constant_character(struct common_lexer_state * common_lexer_state
 	return 0;
 }
 
-unsigned int t_constant_string(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
+unsigned int t_constant_string_part(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
 	if(accept('"', common_lexer_state, tentative_position)){
 		unsigned int count = 1;
-		if(accept('\\', common_lexer_state, tentative_position + count)){
-			accept_range(1,255, common_lexer_state, tentative_position + count);
-			count +=2;
-		}else{
-			if(accept('"', common_lexer_state, tentative_position + count)){
-				count++;
-				return count;
-			}
-			if(accept(0, common_lexer_state, tentative_position + count)){
-				buffered_printf(common_lexer_state->buffered_output, "Unexpected end of file in constant expression.");
-				return 0;
-			}
-			accept_range(1,255, common_lexer_state, tentative_position + count);
-			count++;
-		}
 		while(!accept('"', common_lexer_state, tentative_position + count)){
 			if(accept('\\', common_lexer_state, tentative_position + count)){
 				accept_range(1,255, common_lexer_state, tentative_position + count);
 				count +=2;
 			}else{
-				if(accept(0, common_lexer_state, tentative_position + count)){
+				if(accept_range(1,255, common_lexer_state, tentative_position + count)){
+					count++;
+				}else{
 					buffered_printf(common_lexer_state->buffered_output, "Unexpected end of file in constant expression.");
-					return 0;
+					assert(0);
 				}
-				accept_range(1,255, common_lexer_state, tentative_position + count);
-				count++;
 			}
 		}
 		count++;
 		return count;
 	}
 	return 0;
+}
+
+unsigned int t_constant_string(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
+	unsigned int total_count = 0;
+	unsigned int current_count;
+	if((current_count = t_constant_string_part(common_lexer_state, tentative_position))){
+		total_count += current_count;
+		while(current_count){ /*  While we're taking in string constant parts */
+			unsigned int total_whitespace_count = 0;
+			while(
+				(current_count = t_space(common_lexer_state, tentative_position + total_count + total_whitespace_count)) ||
+				(current_count = t_newline(common_lexer_state, tentative_position + total_count + total_whitespace_count)) ||
+				(current_count = t_comment(common_lexer_state, tentative_position + total_count + total_whitespace_count, &common_lexer_state->current_line))
+			){
+				total_whitespace_count += current_count;
+			}
+			if((current_count = t_constant_string_part(common_lexer_state, tentative_position + total_count + total_whitespace_count))){
+				/*  Accept the whitespace, and the last string part */
+				total_count += (total_whitespace_count + current_count);
+			}
+		}
+	}
+	return total_count;
 }
 
 unsigned int t_newline(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
@@ -830,7 +852,6 @@ int lex_c(struct c_lexer_state * c_lexer_state, unsigned char * filename, unsign
 			g_format_buffer_release();
 			return 1;
 		}
-
 
 		new_token = (struct c_lexer_token *)memory_pooler_malloc(c_lexer_token_pool);
 		new_token->type = type;

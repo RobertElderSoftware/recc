@@ -13,7 +13,7 @@
 	use of this software.
 */
 
-#include <stdio.h>
+#include "../libc/putchar.h"
 
 int main(void){
 	putchar('a');

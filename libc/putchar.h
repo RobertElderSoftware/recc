@@ -1,5 +1,5 @@
-#ifndef __STRING_H_DEFINED__
-#define __STRING_H_DEFINED__
+#ifndef __PUTCHAR_H_DEFINED__
+#define __PUTCHAR_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -14,9 +14,5 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __SIZE_T_H_DEFINED__
-#include "size_t.h"
-#endif
-size_t strlen(const char *);
-int strcmp(const char *, const char *);
+int putchar(int);
 #endif

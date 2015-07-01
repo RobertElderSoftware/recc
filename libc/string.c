@@ -25,12 +25,17 @@ size_t strlen(const char * c){
 
 int strcmp (const char * s1, const char * s2){
 	unsigned int i = 0;
+	int rtn;
+	char abc;
 	while(s1[i] && s2[i]){
 		char c = s1[i] - s2[i];
 		if(c){
-			return c;
+			rtn = c;
+			return rtn;
 		}
 		i++;
 	}
-	return s1[i] - s2[i];
+	abc = s1[i] - s2[i];
+	rtn = abc;
+	return rtn;
 }

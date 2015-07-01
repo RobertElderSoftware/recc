@@ -21,7 +21,7 @@ void fun(void){
 	return;
 }
 
-int arr[3][3] = {
+static int arr[3][3] = {
 	{98,99,100},
 	{101,102,103},
 	{104,105,106}

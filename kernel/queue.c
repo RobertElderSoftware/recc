@@ -13,7 +13,7 @@
 	use of this software.
 */
 #include "queue.h"
-#include "assert.h"
+#include <assert.h>
 
 void task_queue_init(struct task_queue * queue, unsigned int size) {
 	queue->start = 0;
@@ -24,7 +24,7 @@ void task_queue_init(struct task_queue * queue, unsigned int size) {
 
 void task_queue_push_end(struct task_queue * queue, void * item) {
 	if ((queue->end + 1) % queue->size == queue->start) {
-		assert(0, "Task queue is full.\n");
+		assert(0 && "Task queue is full.\n");
 	}
 	
 	queue->items[queue->end] = item;
@@ -35,7 +35,7 @@ void task_queue_push_end(struct task_queue * queue, void * item) {
 void * task_queue_pop_start(struct task_queue * queue) {
 	void * item;
 	if (queue->start == queue->end) {
-		assert(0, "Task queue is empty.\n");
+		assert(0 && "Task queue is empty.\n");
 		return (void *)0;
 	}
 
@@ -59,7 +59,7 @@ void message_queue_init(struct message_queue * queue, unsigned int size){
 
 void message_queue_push_end(struct message_queue * queue, struct kernel_message item){
 	if ((queue->end + 1) % queue->size == queue->start) {
-		assert(0, "Message queue is full.\n");
+		assert(0 && "Message queue is full.\n");
 	}
 	
 	queue->items[queue->end] = item;
@@ -70,7 +70,7 @@ void message_queue_push_end(struct message_queue * queue, struct kernel_message 
 struct kernel_message message_queue_pop_start(struct message_queue * queue){
 	struct kernel_message item;
 	if (queue->start == queue->end) {
-		assert(0, "Message queue is empty.\n");
+		assert(0 && "Message queue is empty.\n");
 		return item;
 	}
 

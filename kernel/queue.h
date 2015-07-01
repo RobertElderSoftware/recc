@@ -1,3 +1,5 @@
+#ifndef __QUEUE_H_DEFINED__
+#define __QUEUE_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,11 +14,13 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __QUEUE_H_DEFINED__
-#define __QUEUE_H_DEFINED__
 
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __CORE_DATA_TYPES_H
 #include "core_data_types.h"
+#endif
 
 struct task_queue {
 	unsigned int start;

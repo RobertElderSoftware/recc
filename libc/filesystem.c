@@ -81,6 +81,7 @@ unsigned int get_directory_entry_inode(unsigned char * entry_name, unsigned int 
 		}
 		return rtn_inode;
 	}else{
+		printf("Failed to find %s\n", entry_name);
 		assert(0 && "Did not find entry.");
 		return 0;
 	}

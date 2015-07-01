@@ -1,3 +1,5 @@
+#ifndef __STDIO_H_DEFINED__
+#define __STDIO_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,17 +14,21 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __STDIO_H_DEFINED__
-#define __STDIO_H_DEFINED__
 
+#ifndef __COMMON_H_DEFINED__
 #include "common.h"
+#endif
+#ifndef __STDARG_H_DEFINED__
 #include <stdarg.h>
+#endif
+#ifndef __PUTCHAR_H_DEFINED__
+#include <putchar.h>
+#endif
 
 #define EOF 255   /*  TODO: shouldn't be -1*/
 
 int vsprintf (char *, const char *, va_list);
 int printf(const char *, ...);
-int putchar(int);
 
 struct file_descriptor{
 	unsigned int position;
@@ -37,6 +43,8 @@ int fclose(FILE *);
 int getc(FILE *);
 int fputc(int, FILE *);
 
+#ifndef __STDLIB_FILESYSTEM_H__
 #include "filesystem.h"
+#endif
 
 #endif

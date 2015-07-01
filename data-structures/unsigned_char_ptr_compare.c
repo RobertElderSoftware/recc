@@ -12,22 +12,10 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
+#ifndef __unsigned_char_ptr_compare__H__DEFINED__
+#include "unsigned_char_ptr_compare.h"
+#endif
 
-#include "assert.h"
-
-void assert(unsigned int i, const char * str){
-	unsigned char * c = (unsigned char *)str;
-	const char * msg = "ASSERTION FAILURE!!! :  ";
-	unsigned char * d = (unsigned char *)msg;
-	if(!i){
-		while(*d){
-			putchar_nobusy(*d);
-			d = d + 1;
-		}
-		while(*c){
-			putchar_nobusy(*c);
-			c = c + 1;
-		}
-		while(1){ /*Hang forever*/ }
-	}
+int unsigned_char_ptr_compare(unsigned char ** a, unsigned char ** b){
+	return strcmp((char*)*a, (char*)*b);
 }

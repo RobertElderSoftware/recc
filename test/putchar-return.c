@@ -57,7 +57,8 @@ struct mystruct {
 	struct mouse{
 		int ch;
 	}mou;
-} g;
+};
+static struct mystruct g;
 
 struct mystruct;
 
@@ -98,6 +99,7 @@ int main(void){
 	struct coolstruct * ttt;
 	struct coolstruct cools[4];
 	struct mystruct new_s;
+	(void)g;
 	cc.h = '5';
 	ppp = &s;
 	pnt = &cc;

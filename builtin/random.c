@@ -14,7 +14,7 @@
 */
 /*  A very simple linear congruential generator */
 
-unsigned int x_i = 7;
+static unsigned int x_i = 7;
 
 unsigned int get_random(void);
 unsigned int get_input_space_partitioned_random(void);
@@ -44,5 +44,4 @@ unsigned int get_input_space_partitioned_random(void){
 			return 0;
 		}
 	}
-	return 0;
 }

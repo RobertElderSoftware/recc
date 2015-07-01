@@ -21,6 +21,7 @@ unsigned int get_instruction_size(struct asm_instruction *);
 unsigned int parse_hexidecimal_string(struct asm_lexer_token *);
 unsigned int parse_decimal_string(struct asm_lexer_token *);
 unsigned int get_linker_object_size(struct linker_object *);
+int struct_linker_object_ptr_cmp(struct linker_object **, struct linker_object **);
 
 void reorder_linker_objects(struct struct_linker_object_ptr_list *, struct struct_linker_object_ptr_list *, unsigned int);
 
@@ -38,6 +39,16 @@ unsigned int is_non_descending_order(struct struct_linker_object_ptr_list * link
 		prev = struct_linker_object_ptr_list_get(linker_objects, i);
 	}
 	return 1;
+}
+
+int struct_linker_object_ptr_cmp(struct linker_object ** a, struct linker_object ** b){
+	if((*a)->linker_object_post_linking_offset < (*b)->linker_object_post_linking_offset){
+		return -1;
+	}else if((*a)->linker_object_post_linking_offset > (*b)->linker_object_post_linking_offset){
+		return 1;
+	}else{
+		return 0;
+	}
 }
 
 void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_objects, struct struct_linker_object_ptr_list * reordered_linker_objects, unsigned int starting_offset){
@@ -62,28 +73,8 @@ void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_object
 			struct_linker_object_ptr_list_add_end(&non_relocatable_linker_objects, obj);
 		}
 	}
-
-	/*  Pre-condition: non relocatable linker objects must be ordered in non decreasing order */
-	while(!is_non_descending_order(&non_relocatable_linker_objects)){
-		struct linker_object * prev = 0;
-		/* Bubble sort for now because it is easy, change for a better algorithm later. */
-		for(i = 0; i < struct_linker_object_ptr_list_size(&non_relocatable_linker_objects); i++){
-			if(i != 0){
-				if(struct_linker_object_ptr_list_get(&non_relocatable_linker_objects, i)->linker_object_post_linking_offset < prev->linker_object_post_linking_offset){
-					/* Out of order, switch them */
-					struct linker_object ** data = struct_linker_object_ptr_list_data(&non_relocatable_linker_objects);
-					struct linker_object * tmp = data[i];
-					data[i] = data[i-1];
-					data[i-1] = tmp;
-					break;
-				}
-			}
-			prev = struct_linker_object_ptr_list_get(&non_relocatable_linker_objects, i);
-		}
-		if(i == struct_linker_object_ptr_list_size(&non_relocatable_linker_objects)){
-			break; /* sort finished */
-		}
-	}
+	
+	struct_linker_object_ptr_merge_sort(struct_linker_object_ptr_list_data(&non_relocatable_linker_objects), struct_linker_object_ptr_list_size(&non_relocatable_linker_objects), struct_linker_object_ptr_cmp);
 	/*  Make sure there is no conflict between non-relocatable linker objects */
 	{
 		struct linker_object * prev = 0;
@@ -215,48 +206,94 @@ unsigned int set_post_linking_offsets(struct linker_object * linker_object){
 	return current_offset;
 }
 
-void set_symbol_instruction_index(struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int index){
+void set_symbol_instruction_index(struct linker_state * linker_state, struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int index){
 	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
-	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_object->symbols, identifier_str);
-	if(existing_symbol){
-		existing_symbol->instruction_index = index;
+	struct linker_symbol * internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_object->internal_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_object->internal_symbols, identifier_str) : (struct linker_symbol *)0;
+	if(internal_symbol){
+		if(internal_symbol->observed_as_implemented){
+			printf("Internal label %s re-declared on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
+			assert(0 && "Trying to re-declare label in this linker object.");
+		}else{
+			internal_symbol->instruction_index = index;
+			internal_symbol->observed_as_implemented = 1; /*  Observed a label for this symbol in the file */
+		}
 	}else{
-		printf("Undeclared dentifier %s on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
-		assert(0 && "Trying to set offset of unknown symbol.");
+		struct linker_symbol * external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_state->external_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_state->external_symbols, identifier_str) : (struct linker_symbol *)0;
+		if(external_symbol){
+			if(external_symbol->observed_as_implemented){
+				printf("Internal label %s re-declared on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
+				assert(0 && "Trying to re-declare label in this linker object.");
+			}else{
+				external_symbol->instruction_index = index;
+				external_symbol->observed_as_implemented = 1; /*  Observed a label for this symbol in the file */
+			}
+		}else{
+			printf("Undeclared identifier %s on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
+			assert(0 && "Trying to set offset of unknown symbol.");
+		}
 	}
 	free(identifier_str);
 }
 
-void verify_symbol_declaration(struct linker_object * linker_object, struct asm_lexer_token * token){
+void verify_symbol_declaration(struct linker_state * linker_state, struct linker_object * linker_object, struct asm_lexer_token * token){
+	/*  Make sure that a symbol has been declared before it is implemented */
 	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
-	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_object->symbols, identifier_str);
-	if(!existing_symbol){
-		printf("Undeclared dentifier %s on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
+	unsigned int internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_object->internal_symbols, identifier_str);
+	unsigned int external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_state->external_symbols, identifier_str);
+	if(!(internal_symbol || external_symbol)){
+		printf("Undeclared identifier %s on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
 		assert(0 && "Found symbol without forward declaration.");
 	}
 	free(identifier_str);
 }
 
-void add_linker_symbol(struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int is_external, unsigned int is_required, unsigned int is_implemented){
+void add_internal_linker_symbol(struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int is_required, unsigned int is_implemented){
 	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
 	struct linker_symbol * new_symbol;
-	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_object->symbols, identifier_str);
+	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_object->internal_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_object->internal_symbols, identifier_str) : (struct linker_symbol *)0;
 	if(existing_symbol){
-		assert(existing_symbol->is_external == is_external && "Symbol type can't change between internal and external.");
+		assert(!(existing_symbol->is_implemented && is_implemented && "Cannot implement internal symbol multiple times."));
 		existing_symbol->is_implemented = existing_symbol->is_implemented ? existing_symbol->is_implemented : is_implemented;
 		existing_symbol->is_required = existing_symbol->is_required ? existing_symbol->is_required : is_required;
-		existing_symbol->is_external = is_external;
+		existing_symbol->is_external = 0;
 		free(identifier_str);
 		return;
 	}
 	new_symbol = (struct linker_symbol *)malloc(sizeof(struct linker_symbol));
 	new_symbol->is_implemented = is_implemented;
 	new_symbol->is_required = is_required;
-	new_symbol->is_external = is_external;
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_put(&linker_object->symbols, identifier_str, new_symbol);
+	new_symbol->is_external = 0;
+	new_symbol->observed_as_implemented = 0; /*  We haven't see a lable for this symbol yet */
+	new_symbol->parent_linker_object = linker_object;
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_put(&linker_object->internal_symbols, identifier_str, new_symbol);
 }
 
-struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state){
+void add_external_linker_symbol(struct linker_state * linker_state, struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int is_required, unsigned int is_implemented){
+	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
+	struct linker_symbol * new_symbol;
+	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_state->external_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_state->external_symbols, identifier_str) : (struct linker_symbol *)0;
+	if(existing_symbol){
+		if(existing_symbol->is_implemented && is_implemented){
+			printf("Detected duplicate external symbol %s re-implemented on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
+			assert(0 && "Cannot implement external symbol multiple times.");
+		}
+		existing_symbol->is_implemented = existing_symbol->is_implemented ? existing_symbol->is_implemented : is_implemented;
+		existing_symbol->is_required = existing_symbol->is_required ? existing_symbol->is_required : is_required;
+		existing_symbol->is_external = 1;
+		existing_symbol->parent_linker_object = is_implemented ? linker_object : existing_symbol->parent_linker_object;
+		free(identifier_str);
+		return;
+	}
+	new_symbol = (struct linker_symbol *)malloc(sizeof(struct linker_symbol));
+	new_symbol->is_implemented = is_implemented;
+	new_symbol->is_required = is_required;
+	new_symbol->is_external = 1;
+	new_symbol->observed_as_implemented = 0; /*  We haven't see a lable for this symbol yet */
+	new_symbol->parent_linker_object = is_implemented ? linker_object : (struct linker_object *)0;
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_put(&linker_state->external_symbols, identifier_str, new_symbol);
+}
+
+struct linker_object * process_assembly(struct linker_state * linker_state, struct asm_lexer_state * asm_lexer_state){
 	struct linker_object * linker_object = (struct linker_object *)malloc(sizeof(struct linker_object));
 	unsigned int num_tokens = struct_asm_lexer_token_ptr_list_size(&asm_lexer_state->tokens);
 	struct asm_lexer_token ** tokens =  struct_asm_lexer_token_ptr_list_data(&asm_lexer_state->tokens);
@@ -265,7 +302,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 	linker_object->is_relocatable = 0; /* Assume false */
 	linker_object->current_line = 1;
 	linker_object->asm_lexer_state = asm_lexer_state;
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_object->symbols, unsigned_strcmp);
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_object->internal_symbols);
 	struct_asm_instruction_ptr_list_create(&linker_object->instructions);
 	while(i < num_tokens){
 		if(tokens[i]->type == A_ADD || tokens[i]->type == A_SUB || tokens[i]->type == A_MUL || tokens[i]->type == A_AND || tokens[i]->type == A_OR || tokens[i]->type == A_DIV){
@@ -333,7 +370,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 						}else if(tokens[i]->type == A_IDENTIFIER){
 							new_instruction->identifier_token = tokens[i];
 							new_instruction->number_token = 0;
-							verify_symbol_declaration(linker_object, tokens[i]);
+							verify_symbol_declaration(linker_state, linker_object, tokens[i]);
 							struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 							i++;
 						}else{ assert(0 && "Expected identifier or hexidecimal constant."); }
@@ -355,7 +392,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 				}else if(tokens[i]->type == A_IDENTIFIER){
 					new_instruction->identifier_token = tokens[i];
 					new_instruction->number_token = 0;
-					verify_symbol_declaration(linker_object, tokens[i]);
+					verify_symbol_declaration(linker_state, linker_object, tokens[i]);
 					struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 					i++;
 				}else{ printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename);  assert(0 && "Expected identifier or hexidecimal constant."); }
@@ -380,7 +417,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 									new_instruction->identifier_token = tokens[i];
 									new_instruction->number_token = 0;
 									new_instruction->number_token_is_negative = 0;
-									verify_symbol_declaration(linker_object, tokens[i]);
+									verify_symbol_declaration(linker_state, linker_object, tokens[i]);
 									struct_asm_instruction_ptr_list_add_end(&linker_object->instructions, new_instruction);
 									i++;
 
@@ -438,7 +475,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 								if(tokens[i]->type == A_SPACE){
 									i++;
 									if(tokens[i]->type == A_IDENTIFIER){
-										add_linker_symbol(linker_object, tokens[i], 0, 1, 1);
+										add_internal_linker_symbol(linker_object, tokens[i], 1, 1);
 										i++;
 									}else{ assert(0 && "Expected identifier."); }
 								}else{ assert(0 && "Expected space."); }
@@ -447,7 +484,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 								if(tokens[i]->type == A_SPACE){
 									i++;
 									if(tokens[i]->type == A_IDENTIFIER){
-										add_linker_symbol(linker_object, tokens[i], 1, 1, 1);
+										add_external_linker_symbol(linker_state, linker_object, tokens[i], 1, 1);
 										i++;
 									}else{ assert(0 && "Expected identifier."); }
 								}else{ assert(0 && "Expected space."); }
@@ -463,7 +500,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 					if(tokens[i]->type == A_SPACE){
 						i++;
 						if(tokens[i]->type == A_IDENTIFIER){
-							add_linker_symbol(linker_object, tokens[i], 0, 1, 0);
+							add_internal_linker_symbol(linker_object, tokens[i], 1, 0);
 							i++;
 						}
 					}else{ assert(0 && "Expected space."); }
@@ -472,7 +509,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 					if(tokens[i]->type == A_SPACE){
 						i++;
 						if(tokens[i]->type == A_IDENTIFIER){
-							add_linker_symbol(linker_object, tokens[i], 1, 1, 0);
+							add_external_linker_symbol(linker_state, linker_object, tokens[i], 1, 0);
 							i++;
 						}
 					}else{ assert(0 && "Expected space."); }
@@ -493,7 +530,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 								if(tokens[i]->type == A_SPACE){
 									i++;
 									if(tokens[i]->type == A_IDENTIFIER){
-										add_linker_symbol(linker_object, tokens[i], 0, 1, 1);
+										add_internal_linker_symbol(linker_object, tokens[i], 1, 1);
 										i++;
 									}
 								}else{ assert(0 && "Expected space."); }
@@ -502,7 +539,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 								if(tokens[i]->type == A_SPACE){
 									i++;
 									if(tokens[i]->type == A_IDENTIFIER){
-										add_linker_symbol(linker_object, tokens[i], 1, 1, 1);
+										add_external_linker_symbol(linker_state, linker_object, tokens[i], 1, 1);
 										i++;
 									}
 								}else{ assert(0 && "Expected space."); }
@@ -517,7 +554,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 					if(tokens[i]->type == A_SPACE){
 						i++;
 						if(tokens[i]->type == A_IDENTIFIER){
-							add_linker_symbol(linker_object, tokens[i], 0, 0, 1);
+							add_internal_linker_symbol(linker_object, tokens[i], 0, 1);
 							i++;
 						}
 					}else{ assert(0 && "Expected space."); }
@@ -526,7 +563,7 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 					if(tokens[i]->type == A_SPACE){
 						i++;
 						if(tokens[i]->type == A_IDENTIFIER){
-							add_linker_symbol(linker_object, tokens[i], 1, 0, 1);
+							add_external_linker_symbol(linker_state, linker_object, tokens[i], 0, 1);
 							i++;
 						}
 					}else{ assert(0 && "Expected space."); }
@@ -541,11 +578,11 @@ struct linker_object * process_assembly(struct asm_lexer_state * asm_lexer_state
 			struct asm_lexer_token * identifier = tokens[i];
 			i++;
 			if(tokens[i]->type == A_COLON_CHAR){
-				set_symbol_instruction_index(linker_object, identifier, struct_asm_instruction_ptr_list_size(&linker_object->instructions));
+				set_symbol_instruction_index(linker_state, linker_object, identifier, struct_asm_instruction_ptr_list_size(&linker_object->instructions));
 				i++;
 			}else{ printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename); assert(0 && "Expected colon."); }
 		}else{
-			assert(0 && "Unable to process assembly file.");
+			printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename); assert(0 && "Unable to process assembly file.");
 		}
 	}
 
@@ -564,25 +601,40 @@ void buffered_token_output(struct unsigned_char_list * buffer, struct asm_lexer_
 	buffered_printf(buffer, "%c", *c);
 }
 
-unsigned int get_absolute_symbol_offset(unsigned char * identifier, struct linker_object * current_linker_object, struct struct_linker_object_ptr_list * all_linker_objects){
-	struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&current_linker_object->symbols, identifier);
-	if(symbol && symbol->is_implemented){
-		return struct_asm_instruction_ptr_list_get(&current_linker_object->instructions, symbol->instruction_index)->post_linking_offset + current_linker_object->linker_object_post_linking_offset;
+unsigned int get_relative_symbol_offset(struct linker_object * linker_object, struct linker_symbol * symbol){
+	assert(symbol->observed_as_implemented && "Can't get symbol offset because it doesn't have a label in this linker object.");
+
+	if(symbol->instruction_index < struct_asm_instruction_ptr_list_size(&linker_object->instructions)){
+		/*  Label with instruction after it */
+		return struct_asm_instruction_ptr_list_get(&linker_object->instructions, symbol->instruction_index)->post_linking_offset;
 	}else{
-		unsigned int i;
-		for(i = 0; i < struct_linker_object_ptr_list_size(all_linker_objects); i++){
-			struct linker_object * obj = struct_linker_object_ptr_list_get(all_linker_objects, i);
-			struct linker_symbol * external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&obj->symbols, identifier);
-			if(external_symbol && external_symbol->is_external && external_symbol->is_implemented){
-				return struct_asm_instruction_ptr_list_get(&obj->instructions, external_symbol->instruction_index)->post_linking_offset + obj->linker_object_post_linking_offset;
-			}
+		if(struct_asm_instruction_ptr_list_size(&linker_object->instructions)){
+			/*  Label with no instruction after it */
+			unsigned int size_minus_one = struct_asm_instruction_ptr_list_size(&linker_object->instructions) -1;
+			struct asm_instruction * instruction = struct_asm_instruction_ptr_list_get(&linker_object->instructions, size_minus_one);
+			/*  Offset is the offset of the previous instruction plus the size of that instruction */
+			return instruction->post_linking_offset + get_instruction_size(instruction);
+		}else{
+			return 0; /*  This file consists of only a label*/
+		}
+	}
+}
+
+unsigned int get_absolute_symbol_offset(struct linker_state * linker_state, unsigned char * identifier, struct linker_object * current_linker_object){
+	struct linker_symbol * internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&current_linker_object->internal_symbols, identifier) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&current_linker_object->internal_symbols, identifier) : (struct linker_symbol *)0;
+	if(internal_symbol && internal_symbol->is_implemented){
+		return get_relative_symbol_offset(current_linker_object, internal_symbol) + current_linker_object->linker_object_post_linking_offset;
+	}else{
+		struct linker_symbol * external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_state->external_symbols, identifier) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_state->external_symbols, identifier) : (struct linker_symbol *)0;
+		if(external_symbol && external_symbol->is_external && external_symbol->is_implemented){
+			return get_relative_symbol_offset(external_symbol->parent_linker_object, external_symbol) + external_symbol->parent_linker_object->linker_object_post_linking_offset;
 		}
 		printf("Symbol %s was not found in any linker object.  Symbol referenced in file %s.\n", identifier, current_linker_object->asm_lexer_state->c.filename);
 		assert(0 && "Symbol was not found in any linker object.");
 	}
 }
 
-void output_artifacts(struct unsigned_char_list * file_output, struct linker_object * linker_object, struct struct_linker_object_ptr_list * all_linker_objects, struct unsigned_char_list * symbol_file){
+void output_artifacts(struct linker_state * linker_state, struct unsigned_char_list * file_output, struct linker_object * linker_object, struct unsigned_char_list * symbol_buffer, unsigned char * symbol_file){
 	struct struct_asm_instruction_ptr_list * instructions = &linker_object->instructions;
 	unsigned int size = struct_asm_instruction_ptr_list_size(instructions);
 	struct asm_instruction ** data = struct_asm_instruction_ptr_list_data(instructions);
@@ -620,7 +672,7 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 				/*  ll instruction cannot load all 32 bit addresses directoy, so re-writing identifier based ll statements to handle this case  */
 				unsigned int possibly_uses_r2 = instruction->rx_token->first_byte[1] == '2';
 				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
-				unsigned int absolute_offset = get_absolute_symbol_offset(ident, linker_object, all_linker_objects);
+				unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, ident, linker_object);
 				unsigned char * target_register = copy_string(instruction->rx_token->first_byte, instruction->rx_token->last_byte);
 				unsigned char * temp_register = possibly_uses_r2 ? (unsigned char *)"r1" : (unsigned char *)"r2";
 				free(ident);
@@ -650,7 +702,7 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 		}else if(type == A_BEQ || type == A_BLT){
 			if(instruction->identifier_token){
 				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
-				unsigned int absolute_offset = get_absolute_symbol_offset(ident, linker_object, all_linker_objects);
+				unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, ident, linker_object);
 				free(ident);
 				buffered_token_output(file_output, instruction->op_token);
 				buffered_printf(file_output, " ");
@@ -683,7 +735,7 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 			buffered_printf(file_output, " ");
 			if(instruction->identifier_token){
 				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
-				unsigned int absolute_offset = get_absolute_symbol_offset(ident, linker_object, all_linker_objects);
+				unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, ident, linker_object);
 				buffered_printf(file_output, "0x%X", absolute_offset * 4);
 				free(ident);
 			}else{
@@ -705,14 +757,14 @@ void output_artifacts(struct unsigned_char_list * file_output, struct linker_obj
 	}
 
 	if(symbol_file){
-		struct unsigned_char_ptr_list keys = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_keys(&linker_object->symbols);
+		struct unsigned_char_ptr_list keys = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_keys(&linker_object->internal_symbols);
 		unsigned int keys_size = unsigned_char_ptr_list_size(&keys);
 		unsigned int g;
-		buffered_printf(symbol_file, "Symbols for file %s:\n", linker_object->asm_lexer_state->c.filename);
+		buffered_printf(symbol_buffer, "Symbols for file %s:\n", linker_object->asm_lexer_state->c.filename);
 		for(g = 0; g < keys_size; g++){
 			unsigned char * id = unsigned_char_ptr_list_get(&keys, g);
-			unsigned int absolute_offset = get_absolute_symbol_offset(id, linker_object, all_linker_objects);
-			buffered_printf(symbol_file, "0x%08X %s\n", absolute_offset * 4, id);
+			unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, id, linker_object);
+			buffered_printf(symbol_buffer, "0x%08X %s\n", absolute_offset * 4, id);
 		}
 		unsigned_char_ptr_list_destroy(&keys);
 	}
@@ -744,8 +796,11 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 	unsigned int i;
 	unsigned int starting_offset = 0;
 	unsigned int next_linker_object_post_linking_offset = starting_offset;
+	struct linker_state linker_state;
 
 	g_format_buffer_use();
+
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_state.external_symbols);
 
 	unsigned_char_list_create(&file_output);
 	unsigned_char_list_create(&symbol_output);
@@ -767,7 +822,7 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 		asm_lexer_state->c.buffered_output = &asm_lexer_output;
 
 		lex_asm(asm_lexer_state, unsigned_char_ptr_list_get(in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
-		linker_object = process_assembly(asm_lexer_state);
+		linker_object = process_assembly(&linker_state, asm_lexer_state);
 
 		struct_unsigned_char_list_ptr_list_add_end(&input_file_buffers, file_input);
 		struct_linker_object_ptr_list_add_end(&linker_objects, linker_object);
@@ -810,7 +865,7 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 			}
 			next_linker_object_post_linking_offset = obj->linker_object_post_linking_offset + get_linker_object_size(obj); 
 		}
-		output_artifacts(&file_output, obj, &reordered_linker_objects, &symbol_output);
+		output_artifacts(&linker_state, &file_output, obj, &symbol_output, symbol_file);
 	}
 
 	/*  Clean up all the resources */
@@ -822,7 +877,7 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 		unsigned_char_list_destroy(file_input);
 		free(file_input);
 
-		free_symbol_map(&linker_object->symbols);
+		free_symbol_map(&linker_object->internal_symbols);
 
 		for(j = 0; j < struct_asm_instruction_ptr_list_size(&linker_object->instructions); j++){
 			free(struct_asm_instruction_ptr_list_get(&linker_object->instructions, j));
@@ -833,6 +888,8 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 		destroy_asm_lexer_state(asm_lexer_state);
 		free(asm_lexer_state);
 	}
+
+	free_symbol_map(&linker_state.external_symbols);
 
 	/*  Output to a file our final product with all objects linked together */
 	output_buffer_to_file(&file_output, (char*)out_file);

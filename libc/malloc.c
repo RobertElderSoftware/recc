@@ -16,7 +16,7 @@
 #include "stdio.h"
 
 #define WORD_SIZE sizeof(unsigned int)
-#define WORDS_MEMORY_AVAILABLE 0x100000  /*  Change this value to increase or decrease the amount of memory available */
+#define WORDS_MEMORY_AVAILABLE 0x1000000  /*  Change this value to increase or decrease the amount of memory available */
 #define BYTES_MEMORY_AVAILABLE (WORDS_MEMORY_AVAILABLE * WORD_SIZE)
 #define BYTES_PER_BLOCK 0x4000
 
@@ -29,6 +29,14 @@ unsigned int * first_block_addr;
 unsigned int * used_flags;
 
 void * malloc(size_t);
+
+unsigned int get_block_index_from_pointer(void * ptr){
+	if(!((((unsigned int)ptr) - (unsigned int)first_block_addr) % BYTES_PER_BLOCK == 0)){
+		printf("Invalid pointer: %p\n", ptr);
+		assert(0);
+	}
+	return (((unsigned int)ptr) - (unsigned int)first_block_addr) / BYTES_PER_BLOCK;
+}
 
 void malloc_init(void){
 	unsigned int i;
@@ -51,6 +59,7 @@ void * malloc(size_t num_bytes){
 	unsigned int blocks_needed = ((num_bytes % BYTES_PER_BLOCK) == 0 ? 0 : 1) + (num_bytes / BYTES_PER_BLOCK);
 
 	assert(num_bytes);
+	/*printf("malloc size %d, need %d blocks\n", num_bytes, blocks_needed);*/
 
 	if(!malloc_inited){
 		malloc_init();
@@ -65,65 +74,81 @@ void * malloc(size_t num_bytes){
 			if(used_flags[i + j]){
 				/*  There was a block allocated, try again */
 				ok_to_allocate = 0;
+				i+=j; /*  Avoid making this check n^2 */
 				break;
 			}
 		}
 		if(ok_to_allocate){
+			void * rtn;
 			for(j = 0; j < blocks_needed; j++){
 				used_flags[i + j] = blocks_needed - j; /*  Value indicates number of blocks ahead that are allocated */
 			}
-			return (void *)((unsigned int)first_block_addr + (i * BYTES_PER_BLOCK));
+			rtn = (void *)(((unsigned int)first_block_addr) + (i * BYTES_PER_BLOCK));
+			/*printf("finish malloc %p\n", rtn);*/
+			return rtn;
 		}
 	}
 	
-	printf("Out of memory!\n");
+	assert(0 && "Out of memory!\n");
 	return (void*)0;
 }
 
 void * realloc(void * ptr, size_t num_bytes){
-	unsigned int old_index = (((unsigned int)ptr) - (unsigned int)first_block_addr) / BYTES_PER_BLOCK;
-	unsigned int old_num_blocks = used_flags[old_index];
-	assert(old_num_blocks);
+	if(ptr){
+		unsigned int old_index = get_block_index_from_pointer(ptr);
+		unsigned int old_num_blocks = used_flags[old_index];
+		unsigned int old_region_size = old_num_blocks * BYTES_PER_BLOCK;
+		assert(old_num_blocks);
 
-	if(num_bytes > BYTES_PER_BLOCK){
-		void * new_ptr = malloc(num_bytes);
-		unsigned int i;
-		unsigned int * src = (unsigned int *)ptr;
-		unsigned int * dst = (unsigned int *)new_ptr;
-		unsigned int new_index = (((unsigned int)new_ptr) - (unsigned int)first_block_addr) / BYTES_PER_BLOCK;
-		unsigned int new_num_blocks = used_flags[new_index];
-		unsigned int min_num_blocks = old_num_blocks < new_num_blocks ? old_num_blocks : new_num_blocks;
+		/*printf("old used flag value: %d.\n", old_num_blocks);*/
+		/*printf("realloc size %d region (%p) to %d size region.\n", old_region_size, ptr, num_bytes);*/
+		if(num_bytes > old_region_size){
+			void * new_ptr = malloc(num_bytes);
+			unsigned int i;
+			unsigned int * src = (unsigned int *)ptr;
+			unsigned int * dst = (unsigned int *)new_ptr;
+			unsigned int new_index = get_block_index_from_pointer(new_ptr);
+			unsigned int new_num_blocks = used_flags[new_index];
+			unsigned int min_num_blocks = old_num_blocks < new_num_blocks ? old_num_blocks : new_num_blocks;
 
-		for(i = 0; i < ((min_num_blocks * BYTES_PER_BLOCK) / WORD_SIZE); i++){
-			dst[i] = src[i];
+			for(i = 0; i < ((min_num_blocks * BYTES_PER_BLOCK) / WORD_SIZE); i++){
+				dst[i] = src[i];
+			}
+			free(ptr);
+			/*printf("Complete realloc return new ptr %p\n", new_ptr);*/
+			return new_ptr;
+		}else{
+			/*printf("Complete realloc return ptr %p\n", ptr);*/
+			return ptr;
 		}
-		free(ptr);
-		return new_ptr;
 	}else{
-		return ptr;
+		return malloc(num_bytes);
 	}
 }
 
 void free(void * ptr){
-	unsigned int index;
-	if(!malloc_inited){
-		printf("Malloc not inited.\n");
-		return;
-	}
+	if(ptr){
+		unsigned int index;
+		/*printf("Free region %p\n", ptr);*/
+		if(!malloc_inited){
+			printf("Malloc not inited.\n");
+			return;
+		}
 
-	index = (((unsigned int)ptr) - (unsigned int)first_block_addr) / BYTES_PER_BLOCK;
-	if(index < num_blocks){
-		if(used_flags[index]){
-			unsigned int num_blocks = used_flags[index];
-			unsigned int i;
-			for(i = 0; i < num_blocks; i++){
-				assert(used_flags[index] = (num_blocks - i));				
-				used_flags[index] = 0;/*  Deallocate */
+		index = get_block_index_from_pointer(ptr);
+		if(index < num_blocks){
+			if(used_flags[index]){
+				unsigned int num_blocks = used_flags[index];
+				unsigned int i;
+				for(i = 0; i < num_blocks; i++){
+					assert(used_flags[index] = (num_blocks - i));				
+					used_flags[index] = 0;/*  Deallocate */
+				}
+			}else{
+				assert(0 && "Index %d is not allocated.\n", index);
 			}
 		}else{
-			printf("Index %d is not allocated.\n", index);
+			assert(0 && "Unknown index for deallocation: %d\n", index);
 		}
-	}else{
-		printf("Unknown index for deallocation: %d\n", index);
 	}
 }

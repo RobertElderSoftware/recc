@@ -1,3 +1,5 @@
+#ifndef __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
+#define __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,11 +14,13 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
-#define __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
 
+#ifndef __ASSERT_H_DEFINED__
 #include <assert.h>
+#endif
+#ifndef __STDLIB_H_DEFINED__
 #include <stdlib.h>
+#endif
 
 struct binary_exponential_buffer{
 	void * data;

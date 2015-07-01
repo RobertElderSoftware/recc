@@ -29,7 +29,9 @@ struct a {
   } g;
 };
 
-struct ggg {long g;} foo;
+struct ggg {long g;};
+extern struct ggg foo;
+struct ggg foo;
 
 struct c {
 	char i;
@@ -39,17 +41,20 @@ struct c {
 	double m;
 	long k;
 	long n;
-} boo;
+};
 
-char ab[3];
-float ac[3];
-short ad[3];
-int ae[3];
-long af[3];
-long ag[3];
+extern struct c boo;
+struct c boo;
 
-char ****** ah; 
-int ****** ai; 
+extern char ab[3];
+extern float ac[3];
+extern short ad[3];
+extern int ae[3];
+extern long af[3];
+extern long ag[3];
+
+extern char ****** ah; 
+extern int ****** ai; 
 
 int foo1(int);
 int foo1(int foo1param){
@@ -94,8 +99,8 @@ enum {anon2, anon3, anon4};
 
 enum eninit {num9 = 1, num99, num999};
 
-int one;
-int two = 2;
+static int one;
+static int two = 2;
 
 /*int three = 3, c(void), ****const* four = (int ****const*)4;*/
 
@@ -111,6 +116,8 @@ typedef int just_int;
 typedef int (*(*(*(*foo12(void))(void))(void))(void))(short i);
 
 int main(void){
+	(void)one;
+	(void)two;
 	putchar(foo5()()()()('Z'));
 	putchar('a');
 	return 0;

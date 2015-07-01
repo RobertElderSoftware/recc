@@ -1,3 +1,5 @@
+#ifndef __CORE_DATA_TYPES_H
+#define __CORE_DATA_TYPES_H
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,10 +14,8 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __CORE_DATA_TYPES_H
-#define __CORE_DATA_TYPES_H
 
-#define STACK_SIZE 800
+#define STACK_SIZE 100000
 #define MAX_NUM_PROCESSES 10
 
 enum process_state {BLOCKED_ON_SEND, BLOCKED_ON_RECEIVE, BLOCKED_ON_REPLY, BLOCKED_ON_CLOCK_TICK, BLOCKED_ON_UART1_IN_READY, BLOCKED_ON_UART1_OUT_READY, READY, ACTIVE, ZOMBIE};

@@ -14,40 +14,81 @@
 */
 
 #include "T0_IDENTIFIER_to_T1_IDENTIFIER_map.h"
+#include <stdio.h>
 
-void T0_IDENTIFIER_to_T1_IDENTIFIER_map_create(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map, int (*f)(T0_LITERAL, T0_LITERAL)){
-	binary_exponential_buffer_create(&map->key_value_pairs, sizeof(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair));
-	map->compare = f;
+int struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_compare(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** a, struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * *b){
+	return T0_IDENTIFIER_compare(&((*a)->key), &((*b)->key));
+}
+
+void T0_IDENTIFIER_to_T1_IDENTIFIER_map_create(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map){
+	binary_exponential_buffer_create(&map->key_value_pairs, sizeof(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *));
 }
 
 void T0_IDENTIFIER_to_T1_IDENTIFIER_map_destroy(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map){
+	unsigned int i;
+	unsigned int total_size = binary_exponential_buffer_size(&map->key_value_pairs);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&map->key_value_pairs);
+	for(i = 0; i < total_size; i++){
+		free(data[i]);
+	}
 	binary_exponential_buffer_destroy(&map->key_value_pairs);
 }
 
 void T0_IDENTIFIER_to_T1_IDENTIFIER_map_put(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map, T0_LITERAL key, T1_LITERAL value){
-	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair kvp;
-	kvp.key = key;
-	kvp.value = value;
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * kvp = malloc(sizeof(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair));
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** data;
+	kvp->key = key;
+	kvp->value = value;
+	/*  Make sure there is no pre-existing item with that key */
+	assert(-1 == struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_binary_search(binary_exponential_buffer_data(&map->key_value_pairs), kvp, (int)binary_exponential_buffer_size(&map->key_value_pairs), struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_compare));
 	binary_exponential_buffer_increment(&map->key_value_pairs, 1);
-	((struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs))[binary_exponential_buffer_size(&map->key_value_pairs) -1] = kvp;
+	data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&map->key_value_pairs);
+	data[binary_exponential_buffer_size(&map->key_value_pairs) -1] = kvp;
+	struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_merge_sort(data, binary_exponential_buffer_size(&map->key_value_pairs), struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_compare);
 }
 
 T1_LITERAL T0_IDENTIFIER_to_T1_IDENTIFIER_map_get(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map, T0_LITERAL key){
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair search_kvp;
 	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
-	unsigned int i;
-	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);
-	for(i = 0; i < size; i++){
-		if(!map->compare(key, data[i].key)){
-			return data[i].value;
-		}
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&map->key_value_pairs);
+	int found_index;
+	search_kvp.key = key;
+	found_index = struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_binary_search(data, &search_kvp, (int)size, struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_compare);
+	assert(found_index != -1 && "Map item with that key was not found.  Check for exists first.");
+	return data[found_index]->value;
+}
+
+unsigned int T0_IDENTIFIER_to_T1_IDENTIFIER_map_exists(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map, T0_LITERAL key){
+	/*  Returns 1 if an item with that key exists in the map.  0 otherwise. */
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair search_kvp;
+	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&map->key_value_pairs);
+	int found_index;
+	search_kvp.key = key;
+	found_index = struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_binary_search(data, &search_kvp, (int)size, struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_compare);
+	if(found_index == -1){
+		return 0;
+	}else{
+		return 1;
 	}
-	return 0;
 }
 
 struct T0_IDENTIFIER_to_T1_IDENTIFIER_map T0_IDENTIFIER_to_T1_IDENTIFIER_map_copy(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map * map){
 	struct T0_IDENTIFIER_to_T1_IDENTIFIER_map copy;
-	copy.key_value_pairs = binary_exponential_buffer_copy(&map->key_value_pairs);
-	copy.compare = map->compare;
+	unsigned int total_size = binary_exponential_buffer_size(&map->key_value_pairs);
+	unsigned int i;
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** src_data;
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** dst_data;
+	binary_exponential_buffer_create(&copy.key_value_pairs, sizeof(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *));
+	binary_exponential_buffer_increment(&copy.key_value_pairs, total_size);
+	src_data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&map->key_value_pairs);
+	dst_data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&copy.key_value_pairs);
+	for(i = 0; i < total_size; i++){
+		struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * kvp = malloc(sizeof(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair));
+		kvp->key = src_data[i]->key;
+		kvp->value = src_data[i]->value;
+		dst_data[i] = kvp;
+	}
 	return copy;
 }
 
@@ -55,10 +96,10 @@ struct T0_IDENTIFIER_list T0_IDENTIFIER_to_T1_IDENTIFIER_map_keys(struct T0_IDEN
 	struct T0_IDENTIFIER_list rtn;
 	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
 	unsigned int i;
-	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&map->key_value_pairs);
 	T0_IDENTIFIER_list_create(&rtn);
 	for(i = 0; i < size; i++){
-		T0_IDENTIFIER_list_add_end(&rtn, data[i].key);
+		T0_IDENTIFIER_list_add_end(&rtn, data[i]->key);
 	}
 	return rtn;
 }
@@ -67,10 +108,10 @@ struct T1_IDENTIFIER_list T0_IDENTIFIER_to_T1_IDENTIFIER_map_values(struct T0_ID
 	struct T1_IDENTIFIER_list rtn;
 	unsigned int size = binary_exponential_buffer_size(&map->key_value_pairs);
 	unsigned int i;
-	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&map->key_value_pairs);
 	T1_IDENTIFIER_list_create(&rtn);
 	for(i = 0; i < size; i++){
-		T1_IDENTIFIER_list_add_end(&rtn, data[i].value);
+		T1_IDENTIFIER_list_add_end(&rtn, data[i]->value);
 	}
 	return rtn;
 }
@@ -84,12 +125,14 @@ void T0_IDENTIFIER_to_T1_IDENTIFIER_map_remove(struct T0_IDENTIFIER_to_T1_IDENTI
 	unsigned int i = 0;
 	unsigned int old_i = 0;
 	unsigned int new_i = 0;
-	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair * data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);
+	struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair ** data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **)binary_exponential_buffer_data(&map->key_value_pairs);
 
 	for(i = 0; i < binary_exponential_buffer_size(&map->key_value_pairs); i++){
-		if(map->compare(key, data[i].key)){
+		if(T0_IDENTIFIER_compare(&key, &data[i]->key)){
 			data[new_i] = data[old_i];
 			new_i++;
+		}else{
+			free(data[old_i]);
 		}
 		old_i++;
 	}

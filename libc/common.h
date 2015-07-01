@@ -1,3 +1,5 @@
+#ifndef __COMMON_H_DEFINED__
+#define __COMMON_H_DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,8 +14,6 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __STDLIB_H_DEFINED__
-#define __STDLIB_H_DEFINED__
 
 #ifndef NULL
     #define NULL ((void*)0)

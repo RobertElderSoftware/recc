@@ -16,6 +16,7 @@
 
 void user_proc_1(void){
 	while(1){
+		/*
 		printf("You're currently running a very simple microkernel that was built\n");
 		printf("for the purposes of demonstrating the 'One Page CPU' design, and\n");
 		printf("cross compiler collection.  This microkernel implements inter-process\n");
@@ -26,6 +27,7 @@ void user_proc_1(void){
 		printf("s -  Prints the stack pointer values of each task.\n");
 		printf("p -  Prints the priority of each task.\n");
 		printf("q -  Quit.\n");
+		*/
 		task_exit();
 	}
 }
@@ -51,7 +53,7 @@ void clock_tick_notifier(void){
 			case MESSAGE_ACKNOWLEDGED:{
 				break;
 			}default:{
-				assert(0, "Unknown message type.\n");
+				assert(0 && "Unknown message type.\n");
 			}
 		}
 	}
@@ -70,7 +72,7 @@ void clock_server(void){
 				num_ticks++;
 				break;
 			}default:{
-				assert(0, "Unknown message type.\n");
+				assert(0 && "Unknown message type.\n");
 			}
 		}
 		reply_message(&message_to_reply, received_message.source_id);
@@ -89,7 +91,7 @@ void uart1_out_ready_notifier(void){
 			case MESSAGE_ACKNOWLEDGED:{
 				break;
 			}default:{
-				assert(0, "Unknown message type.\n");
+				assert(0 && "Unknown message type.\n");
 			}
 		}
 	}
@@ -127,7 +129,7 @@ void uart1_out_server(void){
 				}
 				break;
 			}default:{
-				assert(0, "Unknown message type.\n");
+				assert(0 && "Unknown message type.\n");
 			}
 		}
 	}
@@ -145,7 +147,7 @@ void uart1_in_ready_notifier(void){
 			case MESSAGE_ACKNOWLEDGED:{
 				break;
 			}default:{
-				assert(0, "Unknown message type.\n");
+				assert(0 && "Unknown message type.\n");
 			}
 		}
 	}
@@ -169,7 +171,7 @@ void uart1_in_server(void){
 					case MESSAGE_ACKNOWLEDGED:{
 						break;
 					}default:{
-						assert(0, "Unknown message type.\n");
+						assert(0 && "Unknown message type.\n");
 					}
 				}
 				/*  Let the command server know what is being typed */
@@ -178,13 +180,13 @@ void uart1_in_server(void){
 					case MESSAGE_ACKNOWLEDGED:{
 						break;
 					}default:{
-						assert(0, "Unknown message type.\n");
+						assert(0 && "Unknown message type.\n");
 					}
 				}
 				reply_message(&message_to_reply, received_message.source_id);
 				break;
 			}default:{
-				assert(0, "Unknown message type.\n");
+				assert(0 && "Unknown message type.\n");
 			}
 		}
 	}
@@ -226,7 +228,7 @@ void command_server(void){
 				}
 				break;
 			}default:{
-				assert(0, "Unknown message type.\n");
+				assert(0 && "Unknown message type.\n");
 			}
 		}
 		reply_message(&input_server_reply, received_message.source_id);

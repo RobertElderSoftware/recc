@@ -1,3 +1,5 @@
+#include "includetest2.h"
+#include "includetest2.h"
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,8 +14,6 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#include "includetest2.h"
-#include "includetest2.h"
 #include "includetest2.h"
 #include "includetest2.h"
 #include "includetest2.h"

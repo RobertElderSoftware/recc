@@ -153,6 +153,7 @@ class OpCPU{
     }
     
     private void fetchDecodeExecute(){
+        assert(this.registerUInt32[PC_index] / OpCPU.sizeofInt < this.numMemoryWords);
         long current_inst = this.memoryUInt32[(int)(this.registerUInt32[PC_index] / OpCPU.sizeofInt)];
         int branch_dist = (int)(((current_inst & BRANCH_DISTANCE_SIGN_BIT) != 0) ? -((BRANCH_DISTANCE_MASK & ~(current_inst & BRANCH_DISTANCE_MASK)) + 1L) : (current_inst & BRANCH_DISTANCE_MASK));
         long literal = OpCPU.LITERAL_MASK & current_inst;
@@ -164,7 +165,6 @@ class OpCPU{
 
         this.registerUInt32[PC_index] += OpCPU.sizeofInt;
     
-        assert(this.registerUInt32[PC_index] / OpCPU.sizeofInt < this.numMemoryWords);
     
         switch(opType){
             case ADD_INSTRUCTION:{

@@ -20,6 +20,20 @@ void T0_IDENTIFIER_list_add_end(struct T0_IDENTIFIER_list * list, T0_LITERAL ite
 	((T0_LITERAL *)binary_exponential_buffer_data(&list->buffer))[binary_exponential_buffer_size(&list->buffer) -1] = item;
 }
 
+void T0_IDENTIFIER_list_add_all_end(struct T0_IDENTIFIER_list * list, struct T0_IDENTIFIER_list * src){
+	unsigned int items_to_add = T0_IDENTIFIER_list_size(src);
+	unsigned int previous_items = T0_IDENTIFIER_list_size(list);
+	unsigned int i;
+	T0_LITERAL * ptr_src;
+	T0_LITERAL * ptr_dst;
+	binary_exponential_buffer_increment(&list->buffer, items_to_add);
+	ptr_src = (T0_LITERAL *)binary_exponential_buffer_data(&src->buffer);
+	ptr_dst = (T0_LITERAL *)binary_exponential_buffer_data(&list->buffer);
+	for(i = 0; i < items_to_add; i++){
+		ptr_dst[previous_items + i] = ptr_src[i];
+	}
+}
+
 T0_LITERAL T0_IDENTIFIER_list_pop_end(struct T0_IDENTIFIER_list * list){
 	T0_LITERAL rtn = *((T0_LITERAL *)binary_exponential_buffer_get(&list->buffer, binary_exponential_buffer_size(&list->buffer) -1));
 	binary_exponential_buffer_decrement(&list->buffer, 1);

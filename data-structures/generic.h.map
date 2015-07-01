@@ -1,3 +1,5 @@
+#ifndef __T0_IDENTIFIER_to_T1_IDENTIFIER_map__H__DEFINED__
+#define __T0_IDENTIFIER_to_T1_IDENTIFIER_map__H__DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,14 +14,31 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __T0_IDENTIFIER_to_T1_IDENTIFIER_map__H__DEFINED__
-#define __T0_IDENTIFIER_to_T1_IDENTIFIER_map__H__DEFINED__
 
+#ifndef __ASSERT_H_DEFINED__
 #include <assert.h>
+#endif
+#ifndef __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
 #include "binary_exponential_buffer.h"
+#endif
+#ifndef __CORE_DATA_TYPES__H__DEFINED__
 #include "../core_data_types.h"
+#endif
+#ifndef __struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_merge_sort__H__DEFINED__
+#include "struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_merge_sort.h"
+#endif
+#ifndef __struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_binary_search__H__DEFINED__
+#include "struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_binary_search.h"
+#endif
+#ifndef __T0_IDENTIFIER_compare__H__DEFINED__
+#include "T0_IDENTIFIER_compare.h"
+#endif
+#ifndef __T0_IDENTIFIER_list__H__DEFINED__
 #include "T0_IDENTIFIER_list.h"
+#endif
+#ifndef __T1_IDENTIFIER_list__H__DEFINED__
 #include "T1_IDENTIFIER_list.h"
+#endif
 
 struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair{
 	T0_LITERAL key;
@@ -32,7 +51,9 @@ struct T0_IDENTIFIER_to_T1_IDENTIFIER_map{
 };
 
 
-void T0_IDENTIFIER_to_T1_IDENTIFIER_map_create(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *, int (*)(T0_LITERAL, T0_LITERAL));
+unsigned int T0_IDENTIFIER_to_T1_IDENTIFIER_map_exists(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *, T0_LITERAL);
+int struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_compare(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **, struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **);
+void T0_IDENTIFIER_to_T1_IDENTIFIER_map_create(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *);
 void T0_IDENTIFIER_to_T1_IDENTIFIER_map_destroy(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *);
 void T0_IDENTIFIER_to_T1_IDENTIFIER_map_put(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *, T0_LITERAL, T1_LITERAL);
 T1_LITERAL T0_IDENTIFIER_to_T1_IDENTIFIER_map_get(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *, T0_LITERAL);

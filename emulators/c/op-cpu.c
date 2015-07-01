@@ -140,9 +140,9 @@ static void fetch_decode_execute(struct virtual_machine * vm){
 	unsigned int rc = (rc_MASK & current_inst) / (1u << rc_OFFSET);
 
 	enum instruction_type op_type = lookup_instruction_op_code(current_inst & OP_CODE_MASK);
+	assert(vm->registeruint32[PC_index] / sizeof(unsigned int) < vm->num_memory_words);
 	vm->registeruint32[PC_index] += sizeof(unsigned int);
 
-	assert(vm->registeruint32[PC_index] / sizeof(unsigned int) < vm->num_memory_words);
 
 	switch(op_type){
 		case ADD_INSTRUCTION:{

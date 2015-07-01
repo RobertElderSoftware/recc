@@ -1,3 +1,5 @@
+#ifndef __PARSER_H__
+#define __PARSER_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,30 +14,67 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __PARSER_H__
-#define __PARSER_H__
 
+#ifndef __IO_H__
 #include "io.h"
+#endif
+#ifndef __CORE_DATA_TYPES__H__DEFINED__
 #include "core_data_types.h"
+#endif
+#ifndef __LEXER_H__
 #include "lexer.h"
+#endif
+#ifndef __unsigned_int_stack__H__DEFINED__
 #include "data-structures/unsigned_int_stack.h"
+#endif
+#ifndef __struct_type_description_ptr_list__H__DEFINED__
 #include "data-structures/struct_type_description_ptr_list.h"
+#endif
+#ifndef __char_ptr_list__H__DEFINED__
 #include "data-structures/char_ptr_list.h"
+#endif
+#ifndef __struct_parser_operation_stack__H__DEFINED__
 #include "data-structures/struct_parser_operation_stack.h"
+#endif
+#ifndef __MEMORY_POOLER__H__DEFINED__
 #include "data-structures/memory_pooler.h"
-#include "data-structures/binary_exponential_buffer.h"
+#endif
+#ifndef __struct_normalized_specifier_ptr_list__H__DEFINED__
 #include "data-structures/struct_normalized_specifier_ptr_list.h"
+#endif
+#ifndef __struct_normalized_declarator_ptr_list__H__DEFINED__
 #include "data-structures/struct_normalized_declarator_ptr_list.h"
+#endif
+#ifndef __struct_normalized_declaration_element_ptr_list__H__DEFINED__
 #include "data-structures/struct_normalized_declaration_element_ptr_list.h"
+#endif
+#ifndef __struct_namespace_object_ptr_list__H__DEFINED__
 #include "data-structures/struct_namespace_object_ptr_list.h"
+#endif
+#ifndef __unsigned_char_list__H__DEFINED__
 #include "data-structures/unsigned_char_list.h"
+#endif
+#ifndef __unsigned_char_ptr_list__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_list.h"
+#endif
+#ifndef __unsigned_char_ptr_to_struct_constant_description_ptr_map__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"
+#endif
+#ifndef __STRING_H_DEFINED__
 #include <string.h>
+#endif
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __STDLIB_H_DEFINED__
 #include <stdlib.h>
+#endif
+#ifndef __ASSERT_H_DEFINED__
 #include <assert.h>
+#endif
+#ifndef __STDARG_H_DEFINED__
 #include <stdarg.h>
+#endif
 
 enum node_type{
 	TERMINAL,

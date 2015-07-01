@@ -1,3 +1,5 @@
+#ifndef __struct_c_lexer_token_ptr_compare__H__DEFINED__
+#define __struct_c_lexer_token_ptr_compare__H__DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,8 +14,11 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __DEFINED_ASSERT_H
-#define __DEFINED_ASSERT_H
-int putchar_nobusy(int);
-void assert(unsigned int, const char *);
+
+#ifndef __CORE_DATA_TYPES__H__DEFINED__
+#include "../core_data_types.h"
+#endif
+
+int struct_c_lexer_token_ptr_compare(struct c_lexer_token **, struct c_lexer_token **);
+
 #endif

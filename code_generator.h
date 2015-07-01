@@ -1,3 +1,5 @@
+#ifndef __GENERATE_CODE__ 
+#define __GENERATE_CODE__ 
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,29 +14,67 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __GENERATE_CODE__ 
-#define __GENERATE_CODE__ 
 
+#ifndef __STDLIB_H_DEFINED__
 #include <stdlib.h>
+#endif
+#ifndef __STRING_H_DEFINED__
 #include <string.h>
+#endif
+#ifndef __PARSER_H__
 #include "parser.h"
+#endif
+#ifndef __unsigned_int_list__H__DEFINED__
 #include "data-structures/unsigned_int_list.h"
+#endif
+#ifndef __unsigned_int_stack__H__DEFINED__
 #include "data-structures/unsigned_int_stack.h"
+#endif
+#ifndef __struct_type_description_ptr_list__H__DEFINED__
 #include "data-structures/struct_type_description_ptr_list.h"
+#endif
+#ifndef __unsigned_char_list__H__DEFINED__
 #include "data-structures/unsigned_char_list.h"
+#endif
+#ifndef __unsigned_int_ptr_list__H__DEFINED__
 #include "data-structures/unsigned_int_ptr_list.h"
+#endif
+#ifndef __unsigned_char_ptr_to_struct_linker_symbol_ptr_map__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
+#endif
+#ifndef __struct_switch_frame_ptr_list__H__DEFINED__
 #include "data-structures/struct_switch_frame_ptr_list.h"
+#endif
+#ifndef __unsigned_int_stack__H__DEFINED__
 #include "data-structures/unsigned_int_stack.h"
+#endif
+#ifndef __struct_type_description_ptr_list__H__DEFINED__
 #include "data-structures/struct_type_description_ptr_list.h"
+#endif
+#ifndef __struct_constant_initializer_level_ptr_list__H__DEFINED__
 #include "data-structures/struct_constant_initializer_level_ptr_list.h"
+#endif
+#ifndef __struct_type_traversal_ptr_list__H__DEFINED__
 #include "data-structures/struct_type_traversal_ptr_list.h"
+#endif
+#ifndef __char_ptr_list__H__DEFINED__
 #include "data-structures/char_ptr_list.h"
+#endif
+#ifndef __LINKER_H__
 #include "linker.h"
+#endif
+#ifndef __LEXER_H__
 #include "lexer.h"
+#endif
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
+#ifndef __ASSERT_H_DEFINED__
 #include <assert.h>
+#endif
+#ifndef __STDARG_H_DEFINED__
 #include <stdarg.h>
+#endif
 
 enum copy_method{
 	ASSIGN_COPY,

@@ -13,7 +13,7 @@
 	use of this software.
 */
 #include "public_kernel_interface.h"
-#include "assert.h"
+#include <assert.h>
 
 int putchar(int);
 int putchar_nobusy(int);
@@ -28,7 +28,7 @@ int putchar(int c){
 		case MESSAGE_ACKNOWLEDGED:{
 			break;
 		}default:{
-			assert(0, "Unknown message type.\n");
+			assert(0 && "Unknown message type.\n");
 		}
 	}
 }

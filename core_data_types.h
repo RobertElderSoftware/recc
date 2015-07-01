@@ -1,3 +1,5 @@
+#ifndef __CORE_DATA_TYPES__H__DEFINED__
+#define __CORE_DATA_TYPES__H__DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,8 +14,6 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __CORE_DATA_TYPES__H__DEFINED__
-#define __CORE_DATA_TYPES__H__DEFINED__
 
 /*  Data types required to be defined/declared by our data structures */
 struct type_description;
@@ -38,11 +38,23 @@ struct constant_description;
 struct constant_initializer_level;
 struct type_traversal;
 struct macro_parameter;
+struct special_macro_definition;
 struct macro_definition;
 struct struct_c_lexer_token_ptr_list;
 struct if_branch;
 struct struct_unsigned_char_list;
 struct c_lexer_state;
+struct preprocessor_file_context;
+
+/*  Required for sorting map keys */
+struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair;
+struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair;
+struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair;
+struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair;
+struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair;
+struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair;
+struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair;
+struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair;
 
 enum parser_operation_type{
 	INCREMENT_NEWLINE_COUNT,

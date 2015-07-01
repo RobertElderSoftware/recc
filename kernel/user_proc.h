@@ -1,3 +1,5 @@
+#ifndef __USER_PROC_H__
+#define __USER_PROC_H__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -12,14 +14,21 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __USER_PROC_H__
-#define __USER_PROC_H__
 
+#ifndef __QUEUE_H_DEFINED__
 #include "queue.h"
+#endif
+#ifndef __PUBLIC_KERNEL_INTERFACE_H__
 #include "public_kernel_interface.h"
-#include "assert.h"
+#endif
+#ifndef __ASSERT_H_DEFINED__
+#include <assert.h>
+#endif
+#ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
+#endif
 
+int do_compile(void);
 void user_proc_1(void);
 void user_proc_2(void);
 void clock_tick_notifier(void);
