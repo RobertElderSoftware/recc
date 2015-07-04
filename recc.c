@@ -238,7 +238,7 @@ int main(int argc, char** argv){
 	struct memory_pooler_collection memory_pooler_collection;
 	memory_pooler_collection_create(&memory_pooler_collection);
 
-	assert(argc == 2 && "Compiler was invoked with the wrong number of arguments.");
+	assert(argc == 2 && "Compiler was invoked with the wrong number of arguments.  Sorry, I haven't had the time to make this more user friendly.");
 
 	process_build_script(&memory_pooler_collection, argv[1]);
 

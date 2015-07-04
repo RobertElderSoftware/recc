@@ -496,8 +496,8 @@ void output_start_end(unsigned int start, unsigned int end, char * variable_name
 			unsigned char e2 = (end & 0xFF0000) >> 16;
 			unsigned char e3 = (end & 0xFF00) >> 8;
 			unsigned char e4 = end & 0xFF;
-			fprintf(out, "unsigned char %s_start[4] = {0x%02X, 0x%02X, 0x%02X, 0x%02X};\n", variable_name, s1, s2, s3, s4);
-			fprintf(out, "unsigned char %s_end[4] = {0x%02X, 0x%02X, 0x%02X, 0x%02X};\n", variable_name, e1, e2, e3, e4);
+			fprintf(out, "extern unsigned char %s_start[4];\nunsigned char %s_start[4] = {0x%02X, 0x%02X, 0x%02X, 0x%02X};\n", variable_name, variable_name, s1, s2, s3, s4);
+			fprintf(out, "extern unsigned char %s_end[4];\nunsigned char %s_end[4] = {0x%02X, 0x%02X, 0x%02X, 0x%02X};\n", variable_name, variable_name, e1, e2, e3, e4);
 			break;
 		}case JSONP_LANGUAGE_TYPE:{
 			fprintf(out, "%s({\"data_start\" : 0x%08X, \"data_end\" : 0x%08X,\n", variable_name, start, end);
@@ -519,6 +519,7 @@ void output_data_open(unsigned int size, char * variable_name, FILE * out, enum 
 void output_data_open(unsigned int size, char * variable_name, FILE * out, enum language_type language){
 	switch(language){
 		case C_LANGUAGE_TYPE:{
+			fprintf(out, "extern unsigned char %s[%d][5];\n", variable_name, size);
 			fprintf(out, "unsigned char %s[%d][5] = {\n", variable_name, size);
 			break;
 		}case JSONP_LANGUAGE_TYPE:{

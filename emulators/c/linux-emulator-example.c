@@ -61,7 +61,7 @@ int main(void){
 
 	while(!is_halted(vm)){
 		if(vm_getc(vm, &output)){
-			putchar(output);
+			putchar((int)output);
 			fflush(stdout);
 		}
 

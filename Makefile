@@ -1,11 +1,23 @@
 CUSTOM_CC=./recc
 CUSTOM_PRELOADER=./preloader
-HOSTCC=clang
+HOSTCC=gcc
 CLANG_FLAGS=-g -ferror-limit=10 -W -Wextra -Wall -Werror -Weverything -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral -Wno-loop-analysis
 GCC_FLAGS=-g -std=c89 -W -Wextra -Wall -Werror -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 GPP_FLAGS=-g -W -Wextra -Wall -Werror -pedantic
-CUSTOM_FLAGS=$(CLANG_FLAGS)
+CUSTOM_FLAGS=$(GCC_FLAGS)
 VALGRIND=#valgrind -q --leak-check=full --show-reachable=yes --track-origins=yes --log-file=out
+
+help:
+	@echo "What would you like to make?"
+	@echo ""
+	@echo "1) make bootstrap-datatypes  - (IMPORTANT) Must be run before anything else in a fresh project to create initial Makefiles."
+	@echo "2) make recc                 - Builds the recc compiler executable."
+	@echo "3) make kernel/kernel.l1     - Builds the kernel image (but doesn't try to run it)."
+	@echo "4) make run-c-emulator       - Attempts to run the kernel in the C emulator.  Must run (3) first"
+	@echo "5) make run-java-emulator    - Attempts to run the kernel in the Java emulator.  Must run (3) first"
+	@echo "6) make run-python-emulator  - Attempts to run the kernel in the Python emulator.  Must run (3) first"
+	@echo "7) make test                 - Attempts to run unit tests in chrome (requires that testing API is set up)."
+	@echo "8) make kernel               - Attempts to run the kernel in chrome (requires that testing API is set up)."
 
 test: run-tests
 

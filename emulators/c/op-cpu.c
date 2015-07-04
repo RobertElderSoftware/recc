@@ -41,29 +41,29 @@ This implementation assumes that sizeof(unsigned int) == 4
 
 #define BRANCH_DISTANCE_SIGN_BIT 0x100
 
-#define UART1_OUT        0x00300000
-#define UART1_IN         0x00300010
-#define IRQ_HANDLER      0x00300020
-#define TIMER_PERIOD     0x00300030
+#define UART1_OUT        0x00300000u
+#define UART1_IN         0x00300010u
+#define IRQ_HANDLER      0x00300020u
+#define TIMER_PERIOD     0x00300030u
 
-#define PC_index 0
-#define SP_index 1
-#define FR_index 4
-#define WR_index 5
+#define PC_index 0u
+#define SP_index 1u
+#define FR_index 4u
+#define WR_index 5u
 
-#define HALTED_BIT                  (1 << 0)
-#define GLOBAL_INTERRUPT_ENABLE_BIT (1 << 1)
-#define RTE_BIT                     (1 << 2)
-#define TIMER1_ENABLE_BIT           (1 << 3)
-#define TIMER1_ASSERTED_BIT         (1 << 4)
-#define UART1_OUT_ENABLE_BIT        (1 << 5)
-#define UART1_OUT_ASSERTED_BIT      (1 << 6)
-#define UART1_IN_ENABLE_BIT         (1 << 7)
-#define UART1_IN_ASSERTED_BIT       (1 << 8)
-#define UART1_OUT_READY_BIT         (1 << 9)
-#define UART1_IN_READY_BIT          (1 << 10)
+#define HALTED_BIT                  (1u << 0u)
+#define GLOBAL_INTERRUPT_ENABLE_BIT (1u << 1u)
+#define RTE_BIT                     (1u << 2u)
+#define TIMER1_ENABLE_BIT           (1u << 3u)
+#define TIMER1_ASSERTED_BIT         (1u << 4u)
+#define UART1_OUT_ENABLE_BIT        (1u << 5u)
+#define UART1_OUT_ASSERTED_BIT      (1u << 6u)
+#define UART1_IN_ENABLE_BIT         (1u << 7u)
+#define UART1_IN_ASSERTED_BIT       (1u << 8u)
+#define UART1_OUT_READY_BIT         (1u << 9u)
+#define UART1_IN_READY_BIT          (1u << 10u)
 
-#define NUM_INSTRUCTION_TYPES 14
+#define NUM_INSTRUCTION_TYPES 14u
 
 enum instruction_type {
 	ADD_INSTRUCTION,
@@ -86,6 +86,7 @@ struct virtual_machine {
 	unsigned int cycles_executed;
 	unsigned int num_memory_words;
 	unsigned int num_registers;
+	unsigned int pad;
 	unsigned int * memoryuint32;
 	unsigned int * registeruint32;
 };
@@ -159,12 +160,12 @@ static void fetch_decode_execute(struct virtual_machine * vm){
 			break;
 		}case BEQ_INSTRUCTION:{
 			if(vm->registeruint32[ra] == vm->registeruint32[rb]){
-				vm->registeruint32[PC_index] += sizeof(unsigned int) * branch_dist;
+				vm->registeruint32[PC_index] = vm->registeruint32[PC_index] + (unsigned int)((int)sizeof(unsigned int) * branch_dist);
 			}
 			break;
 		}case BLT_INSTRUCTION:{
 			if(vm->registeruint32[ra] < vm->registeruint32[rb]){
-				vm->registeruint32[PC_index] += sizeof(unsigned int) * branch_dist;
+				vm->registeruint32[PC_index] = vm->registeruint32[PC_index] + (unsigned int)((int)sizeof(unsigned int) * branch_dist);
 			}
 			break;
 		}case LOA_INSTRUCTION:{
@@ -274,8 +275,8 @@ void step(struct virtual_machine * vm){
 
 struct virtual_machine * vm_create(unsigned char start[4], unsigned char end[4], unsigned char data[1][5]){
 	struct virtual_machine * vm = malloc(sizeof(struct virtual_machine));
-	unsigned int start_addr = (start[0] << 24) + (start[1] << 16) + (start[2] << 8) + start[3];
-	unsigned int end_addr = (end[0] << 24) + (end[1] << 16) + (end[2] << 8) + end[3];
+	unsigned int start_addr = ((unsigned int)start[0] << 24u) + ((unsigned int)start[1] << 16u) + ((unsigned int)start[2] << 8u) + (unsigned int)start[3];
+	unsigned int end_addr = ((unsigned int)end[0] << 24u) + ((unsigned int)end[1] << 16u) + ((unsigned int)end[2] << 8u) + (unsigned int)end[3];
 	unsigned int current_addr = start_addr;
 	unsigned int i = 0;
 	unsigned int memory_index = 0;
@@ -303,7 +304,7 @@ struct virtual_machine * vm_create(unsigned char start[4], unsigned char end[4],
 	i = 0;
 	while(current_addr != end_addr){
 		unsigned int is_sw_directive = data[i][0];
-		unsigned int value = (data[i][1] << 24) + (data[i][2] << 16) + (data[i][3] << 8) + data[i][4];
+		unsigned int value = ((unsigned int)data[i][1u] << 24u) + ((unsigned int)data[i][2u] << 16u) + ((unsigned int)data[i][3u] << 8u) + (unsigned int)data[i][4u];
 		if(is_sw_directive){ /* Skip Word directive */
 			current_addr += sizeof(unsigned int) * value;
 			memory_index += value;
