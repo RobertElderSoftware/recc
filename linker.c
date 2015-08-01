@@ -15,13 +15,14 @@
 #include "linker.h"
 
 void buffered_token_output(struct unsigned_char_list *, struct asm_lexer_token *);
-void free_symbol_map(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *);
+void free_symbol_map(struct linker_state *, struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *);
 unsigned int set_post_linking_offsets(struct linker_object * linker_object);
 unsigned int get_instruction_size(struct asm_instruction *);
 unsigned int parse_hexidecimal_string(struct asm_lexer_token *);
 unsigned int parse_decimal_string(struct asm_lexer_token *);
 unsigned int get_linker_object_size(struct linker_object *);
-int struct_linker_object_ptr_cmp(struct linker_object **, struct linker_object **);
+int struct_linker_object_ptr_cmp_indirect(struct linker_object **, struct linker_object **);
+int struct_linker_object_ptr_cmp(struct linker_object *, struct linker_object *);
 
 void reorder_linker_objects(struct struct_linker_object_ptr_list *, struct struct_linker_object_ptr_list *, unsigned int);
 
@@ -41,10 +42,20 @@ unsigned int is_non_descending_order(struct struct_linker_object_ptr_list * link
 	return 1;
 }
 
-int struct_linker_object_ptr_cmp(struct linker_object ** a, struct linker_object ** b){
+int struct_linker_object_ptr_cmp_indirect(struct linker_object ** a, struct linker_object ** b){
 	if((*a)->linker_object_post_linking_offset < (*b)->linker_object_post_linking_offset){
 		return -1;
 	}else if((*a)->linker_object_post_linking_offset > (*b)->linker_object_post_linking_offset){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
+int struct_linker_object_ptr_cmp(struct linker_object * a, struct linker_object * b){
+	if(a < b){
+		return -1;
+	}else if(a > b){
 		return 1;
 	}else{
 		return 0;
@@ -74,7 +85,7 @@ void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_object
 		}
 	}
 	
-	struct_linker_object_ptr_merge_sort(struct_linker_object_ptr_list_data(&non_relocatable_linker_objects), struct_linker_object_ptr_list_size(&non_relocatable_linker_objects), struct_linker_object_ptr_cmp);
+	struct_linker_object_ptr_merge_sort(struct_linker_object_ptr_list_data(&non_relocatable_linker_objects), struct_linker_object_ptr_list_size(&non_relocatable_linker_objects), struct_linker_object_ptr_cmp_indirect);
 	/*  Make sure there is no conflict between non-relocatable linker objects */
 	{
 		struct linker_object * prev = 0;
@@ -101,7 +112,7 @@ void reorder_linker_objects(struct struct_linker_object_ptr_list * linker_object
 					previous_linker_object_end = previous_linker_object_end + relocatable_size;
 					struct_linker_object_ptr_list_add_end(reordered_linker_objects, relocatable);
 					/* Don't try to add this one multiple times */
-					struct_linker_object_ptr_list_remove_all(&relocatable_linker_objects, relocatable);
+					struct_linker_object_ptr_list_remove_all(&relocatable_linker_objects, relocatable, struct_linker_object_ptr_cmp);
 					break; /* List size changed, do iteration again. */
 				}
 			}
@@ -207,7 +218,7 @@ unsigned int set_post_linking_offsets(struct linker_object * linker_object){
 }
 
 void set_symbol_instruction_index(struct linker_state * linker_state, struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int index){
-	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
+	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte, linker_state->memory_pool_collection);
 	struct linker_symbol * internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_object->internal_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_object->internal_symbols, identifier_str) : (struct linker_symbol *)0;
 	if(internal_symbol){
 		if(internal_symbol->observed_as_implemented){
@@ -232,23 +243,23 @@ void set_symbol_instruction_index(struct linker_state * linker_state, struct lin
 			assert(0 && "Trying to set offset of unknown symbol.");
 		}
 	}
-	free(identifier_str);
+	heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, identifier_str);
 }
 
 void verify_symbol_declaration(struct linker_state * linker_state, struct linker_object * linker_object, struct asm_lexer_token * token){
 	/*  Make sure that a symbol has been declared before it is implemented */
-	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
+	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte, linker_state->memory_pool_collection);
 	unsigned int internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_object->internal_symbols, identifier_str);
 	unsigned int external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_state->external_symbols, identifier_str);
 	if(!(internal_symbol || external_symbol)){
 		printf("Undeclared identifier %s on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
 		assert(0 && "Found symbol without forward declaration.");
 	}
-	free(identifier_str);
+	heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, identifier_str);
 }
 
-void add_internal_linker_symbol(struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int is_required, unsigned int is_implemented){
-	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
+void add_internal_linker_symbol(struct linker_state * linker_state, struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int is_required, unsigned int is_implemented){
+	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte, linker_state->memory_pool_collection);
 	struct linker_symbol * new_symbol;
 	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_object->internal_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_object->internal_symbols, identifier_str) : (struct linker_symbol *)0;
 	if(existing_symbol){
@@ -256,10 +267,10 @@ void add_internal_linker_symbol(struct linker_object * linker_object, struct asm
 		existing_symbol->is_implemented = existing_symbol->is_implemented ? existing_symbol->is_implemented : is_implemented;
 		existing_symbol->is_required = existing_symbol->is_required ? existing_symbol->is_required : is_required;
 		existing_symbol->is_external = 0;
-		free(identifier_str);
+		heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, identifier_str);
 		return;
 	}
-	new_symbol = (struct linker_symbol *)malloc(sizeof(struct linker_symbol));
+	new_symbol = struct_linker_symbol_memory_pool_malloc(linker_state->memory_pool_collection->struct_linker_symbol_pool);
 	new_symbol->is_implemented = is_implemented;
 	new_symbol->is_required = is_required;
 	new_symbol->is_external = 0;
@@ -269,7 +280,7 @@ void add_internal_linker_symbol(struct linker_object * linker_object, struct asm
 }
 
 void add_external_linker_symbol(struct linker_state * linker_state, struct linker_object * linker_object, struct asm_lexer_token * token, unsigned int is_required, unsigned int is_implemented){
-	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte);
+	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte, linker_state->memory_pool_collection);
 	struct linker_symbol * new_symbol;
 	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_state->external_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_state->external_symbols, identifier_str) : (struct linker_symbol *)0;
 	if(existing_symbol){
@@ -281,10 +292,10 @@ void add_external_linker_symbol(struct linker_state * linker_state, struct linke
 		existing_symbol->is_required = existing_symbol->is_required ? existing_symbol->is_required : is_required;
 		existing_symbol->is_external = 1;
 		existing_symbol->parent_linker_object = is_implemented ? linker_object : existing_symbol->parent_linker_object;
-		free(identifier_str);
+		heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, identifier_str);
 		return;
 	}
-	new_symbol = (struct linker_symbol *)malloc(sizeof(struct linker_symbol));
+	new_symbol = struct_linker_symbol_memory_pool_malloc(linker_state->memory_pool_collection->struct_linker_symbol_pool);
 	new_symbol->is_implemented = is_implemented;
 	new_symbol->is_required = is_required;
 	new_symbol->is_external = 1;
@@ -306,7 +317,7 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 	struct_asm_instruction_ptr_list_create(&linker_object->instructions);
 	while(i < num_tokens){
 		if(tokens[i]->type == A_ADD || tokens[i]->type == A_SUB || tokens[i]->type == A_MUL || tokens[i]->type == A_AND || tokens[i]->type == A_OR || tokens[i]->type == A_DIV){
-			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = struct_asm_instruction_memory_pool_malloc(linker_state->memory_pool_collection->struct_asm_instruction_pool);
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -332,7 +343,7 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 				}else{ assert(0 && "Expected register."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_LOA || tokens[i]->type == A_STO || tokens[i]->type == A_NOT || tokens[i]->type == A_SHR || tokens[i]->type == A_SHL){
-			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = struct_asm_instruction_memory_pool_malloc(linker_state->memory_pool_collection->struct_asm_instruction_pool);
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -351,7 +362,7 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 				}else{ assert(0 && "Expected register."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_LL){
-			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = struct_asm_instruction_memory_pool_malloc(linker_state->memory_pool_collection->struct_asm_instruction_pool);
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -378,7 +389,7 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 				}else{ assert(0 && "Expected register."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_DW || tokens[i]->type == A_SW){
-			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = struct_asm_instruction_memory_pool_malloc(linker_state->memory_pool_collection->struct_asm_instruction_pool);
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -398,7 +409,7 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 				}else{ printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename);  assert(0 && "Expected identifier or hexidecimal constant."); }
 			}else{ assert(0 && "Expected space."); }
 		}else if(tokens[i]->type == A_BEQ || tokens[i]->type == A_BLT){
-			struct asm_instruction * new_instruction = (struct asm_instruction *)malloc(sizeof(struct asm_instruction));
+			struct asm_instruction * new_instruction = struct_asm_instruction_memory_pool_malloc(linker_state->memory_pool_collection->struct_asm_instruction_pool);
 			new_instruction->op_token = tokens[i];
 			i++;
 			if(tokens[i]->type == A_SPACE){
@@ -475,9 +486,9 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 								if(tokens[i]->type == A_SPACE){
 									i++;
 									if(tokens[i]->type == A_IDENTIFIER){
-										add_internal_linker_symbol(linker_object, tokens[i], 1, 1);
+										add_internal_linker_symbol(linker_state, linker_object, tokens[i], 1, 1);
 										i++;
-									}else{ assert(0 && "Expected identifier."); }
+									}else{printf("On line %d in file %s\n", linker_object->current_line, asm_lexer_state->c.filename);  assert(0 && "Expected identifier."); }
 								}else{ assert(0 && "Expected space."); }
 							}else if(tokens[i]->type == A_EXTERNAL){
 								i++;
@@ -500,7 +511,7 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 					if(tokens[i]->type == A_SPACE){
 						i++;
 						if(tokens[i]->type == A_IDENTIFIER){
-							add_internal_linker_symbol(linker_object, tokens[i], 1, 0);
+							add_internal_linker_symbol(linker_state, linker_object, tokens[i], 1, 0);
 							i++;
 						}
 					}else{ assert(0 && "Expected space."); }
@@ -530,7 +541,7 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 								if(tokens[i]->type == A_SPACE){
 									i++;
 									if(tokens[i]->type == A_IDENTIFIER){
-										add_internal_linker_symbol(linker_object, tokens[i], 1, 1);
+										add_internal_linker_symbol(linker_state, linker_object, tokens[i], 1, 1);
 										i++;
 									}
 								}else{ assert(0 && "Expected space."); }
@@ -554,7 +565,7 @@ struct linker_object * process_assembly(struct linker_state * linker_state, stru
 					if(tokens[i]->type == A_SPACE){
 						i++;
 						if(tokens[i]->type == A_IDENTIFIER){
-							add_internal_linker_symbol(linker_object, tokens[i], 0, 1);
+							add_internal_linker_symbol(linker_state, linker_object, tokens[i], 0, 1);
 							i++;
 						}
 					}else{ assert(0 && "Expected space."); }
@@ -671,11 +682,12 @@ void output_artifacts(struct linker_state * linker_state, struct unsigned_char_l
 			if(instruction->identifier_token){
 				/*  ll instruction cannot load all 32 bit addresses directoy, so re-writing identifier based ll statements to handle this case  */
 				unsigned int possibly_uses_r2 = instruction->rx_token->first_byte[1] == '2';
-				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
+				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, linker_state->memory_pool_collection);
 				unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, ident, linker_object);
-				unsigned char * target_register = copy_string(instruction->rx_token->first_byte, instruction->rx_token->last_byte);
+				unsigned char * target_register = copy_string(instruction->rx_token->first_byte, instruction->rx_token->last_byte, linker_state->memory_pool_collection);
 				unsigned char * temp_register = possibly_uses_r2 ? (unsigned char *)"r1" : (unsigned char *)"r2";
-				free(ident);
+				(void)(absolute_offset + 1);
+				heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, ident);
 				buffered_printf(file_output, "sub SP SP WR\n");
 				buffered_printf(file_output, "sto SP %s\n", temp_register);
 				buffered_printf(file_output, "ll %s 0x%X\n", target_register, (0xFFFF0000 & (absolute_offset * 4)) >> 16);
@@ -685,7 +697,7 @@ void output_artifacts(struct linker_state * linker_state, struct unsigned_char_l
 				buffered_printf(file_output, "or %s %s %s\n", target_register, target_register, temp_register);
 				buffered_printf(file_output, "loa %s SP\n", temp_register);
 				buffered_printf(file_output, "add SP SP WR\n");
-				free(target_register);
+				heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, target_register);
 			}else{
 				unsigned int hex_value = parse_hexidecimal_string(instruction->number_token);
 				buffered_token_output(file_output, instruction->op_token);
@@ -701,9 +713,9 @@ void output_artifacts(struct linker_state * linker_state, struct unsigned_char_l
 			}
 		}else if(type == A_BEQ || type == A_BLT){
 			if(instruction->identifier_token){
-				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
+				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, linker_state->memory_pool_collection);
 				unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, ident, linker_object);
-				free(ident);
+				heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, ident);
 				buffered_token_output(file_output, instruction->op_token);
 				buffered_printf(file_output, " ");
 				buffered_token_output(file_output, instruction->rx_token);
@@ -734,10 +746,10 @@ void output_artifacts(struct linker_state * linker_state, struct unsigned_char_l
 			buffered_token_output(file_output, instruction->op_token);
 			buffered_printf(file_output, " ");
 			if(instruction->identifier_token){
-				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte);
+				unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, linker_state->memory_pool_collection);
 				unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, ident, linker_object);
 				buffered_printf(file_output, "0x%X", absolute_offset * 4);
-				free(ident);
+				heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, ident);
 			}else{
 				buffered_token_output(file_output, instruction->number_token);
 			}
@@ -757,35 +769,61 @@ void output_artifacts(struct linker_state * linker_state, struct unsigned_char_l
 	}
 
 	if(symbol_file){
-		struct unsigned_char_ptr_list keys = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_keys(&linker_object->internal_symbols);
-		unsigned int keys_size = unsigned_char_ptr_list_size(&keys);
+		struct unsigned_char_ptr_list external_keys = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_keys(&linker_state->external_symbols);
+		struct unsigned_char_ptr_list internal_keys = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_keys(&linker_object->internal_symbols);
+		unsigned int external_keys_size = unsigned_char_ptr_list_size(&external_keys);
+		unsigned int internal_keys_size = unsigned_char_ptr_list_size(&internal_keys);
 		unsigned int g;
-		buffered_printf(symbol_buffer, "Symbols for file %s:\n", linker_object->asm_lexer_state->c.filename);
-		for(g = 0; g < keys_size; g++){
-			unsigned char * id = unsigned_char_ptr_list_get(&keys, g);
+		buffered_printf(symbol_buffer, "Internal symbols for file %s:\n", linker_object->asm_lexer_state->c.filename);
+		for(g = 0; g < internal_keys_size; g++){
+			unsigned char * id = unsigned_char_ptr_list_get(&internal_keys, g);
 			unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, id, linker_object);
 			buffered_printf(symbol_buffer, "0x%08X %s\n", absolute_offset * 4, id);
 		}
-		unsigned_char_ptr_list_destroy(&keys);
+		unsigned_char_ptr_list_destroy(&internal_keys);
+
+		buffered_printf(symbol_buffer, "External symbols for file %s:\n", linker_object->asm_lexer_state->c.filename);
+		for(g = 0; g < external_keys_size; g++){
+			unsigned char * id = unsigned_char_ptr_list_get(&external_keys, g);
+			struct linker_symbol * external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_state->external_symbols, id);
+			/*  Only output external symbols that are used in this file */
+			if(external_symbol->parent_linker_object == linker_object){
+				unsigned int absolute_offset = get_absolute_symbol_offset(linker_state, id, external_symbol->parent_linker_object);
+				buffered_printf(symbol_buffer, "0x%08X %s\n", absolute_offset * 4, id);
+			}
+		}
+		unsigned_char_ptr_list_destroy(&external_keys);
 	}
 }
 
-void free_symbol_map(struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map * map){
+void free_symbol_map(struct linker_state * linker_state, struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map * map){
 	struct unsigned_char_ptr_list keys = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_keys(map);
 	unsigned int size = unsigned_char_ptr_list_size(&keys);
 	unsigned int i;
 	for(i = 0; i < size; i++){
-		free(unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(map, unsigned_char_ptr_list_get(&keys, i)));
+		struct_linker_symbol_memory_pool_free(linker_state->memory_pool_collection->struct_linker_symbol_pool, unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(map, unsigned_char_ptr_list_get(&keys, i)));
 	}
 	/*  Need to do this twice because we're deleting the data under the keys of the map */
 	for(i = 0; i < size; i++){
-		free(unsigned_char_ptr_list_get(&keys, i));
+		heap_memory_pool_free(linker_state->memory_pool_collection->heap_pool, unsigned_char_ptr_list_get(&keys, i));
 	}
 	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_destroy(map);
 	unsigned_char_ptr_list_destroy(&keys);
 }
 
-int do_link(struct memory_pooler_collection * memory_pooler_collection, struct unsigned_char_ptr_list * in_files, unsigned char * out_file, unsigned char * symbol_file){
+void linker_state_create(struct linker_state * linker_state, struct memory_pool_collection * memory_pool_collection, struct unsigned_char_ptr_list * in_files, unsigned char * out_file, unsigned char * symbol_file){
+	linker_state->memory_pool_collection = memory_pool_collection;
+	linker_state->in_files = in_files;
+	linker_state->out_file = out_file;
+	linker_state->symbol_file = symbol_file;
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_state->external_symbols);
+}
+
+void linker_state_destroy(struct linker_state * linker_state){
+	free_symbol_map(linker_state, &linker_state->external_symbols);
+}
+
+int do_link(struct linker_state * linker_state){
 	struct struct_unsigned_char_list_ptr_list input_file_buffers;
 	struct struct_linker_object_ptr_list linker_objects;
 	struct struct_linker_object_ptr_list reordered_linker_objects;
@@ -796,11 +834,8 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 	unsigned int i;
 	unsigned int starting_offset = 0;
 	unsigned int next_linker_object_post_linking_offset = starting_offset;
-	struct linker_state linker_state;
 
 	g_format_buffer_use();
-
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_state.external_symbols);
 
 	unsigned_char_list_create(&file_output);
 	unsigned_char_list_create(&symbol_output);
@@ -811,18 +846,18 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 	struct_linker_object_ptr_list_create(&reordered_linker_objects);
 
 	/*  Load and parser all the linker objects */
-	for(i = 0; i < unsigned_char_ptr_list_size(in_files); i++){
+	for(i = 0; i < unsigned_char_ptr_list_size(linker_state->in_files); i++){
 		struct unsigned_char_list * file_input = (struct unsigned_char_list *)malloc(sizeof(struct unsigned_char_list));
 		struct asm_lexer_state * asm_lexer_state = (struct asm_lexer_state *)malloc(sizeof(struct asm_lexer_state));
 		struct linker_object * linker_object;
 		unsigned_char_list_create(file_input);
-		add_file_to_buffer(file_input, (char*)unsigned_char_ptr_list_get(in_files, i));
+		add_file_to_buffer(file_input, (char*)unsigned_char_ptr_list_get(linker_state->in_files, i));
 
-		asm_lexer_state->c.memory_pooler_collection = memory_pooler_collection;
+		asm_lexer_state->c.memory_pool_collection = linker_state->memory_pool_collection;
 		asm_lexer_state->c.buffered_output = &asm_lexer_output;
 
-		lex_asm(asm_lexer_state, unsigned_char_ptr_list_get(in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
-		linker_object = process_assembly(&linker_state, asm_lexer_state);
+		lex_asm(asm_lexer_state, unsigned_char_ptr_list_get(linker_state->in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
+		linker_object = process_assembly(linker_state, asm_lexer_state);
 
 		struct_unsigned_char_list_ptr_list_add_end(&input_file_buffers, file_input);
 		struct_linker_object_ptr_list_add_end(&linker_objects, linker_object);
@@ -865,11 +900,11 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 			}
 			next_linker_object_post_linking_offset = obj->linker_object_post_linking_offset + get_linker_object_size(obj); 
 		}
-		output_artifacts(&linker_state, &file_output, obj, &symbol_output, symbol_file);
+		output_artifacts(linker_state, &file_output, obj, &symbol_output, linker_state->symbol_file);
 	}
 
 	/*  Clean up all the resources */
-	for(i = 0; i < unsigned_char_ptr_list_size(in_files); i++){
+	for(i = 0; i < unsigned_char_ptr_list_size(linker_state->in_files); i++){
 		unsigned int j;
 		struct unsigned_char_list * file_input = struct_unsigned_char_list_ptr_list_get(&input_file_buffers, i);
 		struct linker_object * linker_object = struct_linker_object_ptr_list_get(&linker_objects, i);
@@ -877,10 +912,10 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 		unsigned_char_list_destroy(file_input);
 		free(file_input);
 
-		free_symbol_map(&linker_object->internal_symbols);
+		free_symbol_map(linker_state, &linker_object->internal_symbols);
 
 		for(j = 0; j < struct_asm_instruction_ptr_list_size(&linker_object->instructions); j++){
-			free(struct_asm_instruction_ptr_list_get(&linker_object->instructions, j));
+			struct_asm_instruction_memory_pool_free(linker_state->memory_pool_collection->struct_asm_instruction_pool, struct_asm_instruction_ptr_list_get(&linker_object->instructions, j));
 		}
 		struct_asm_instruction_ptr_list_destroy(&linker_object->instructions);
 		free(linker_object);
@@ -889,12 +924,11 @@ int do_link(struct memory_pooler_collection * memory_pooler_collection, struct u
 		free(asm_lexer_state);
 	}
 
-	free_symbol_map(&linker_state.external_symbols);
 
 	/*  Output to a file our final product with all objects linked together */
-	output_buffer_to_file(&file_output, (char*)out_file);
-	if(symbol_file){
-		output_buffer_to_file(&symbol_output, (char*)symbol_file);
+	output_buffer_to_file(&file_output, (char*)linker_state->out_file);
+	if(linker_state->symbol_file){
+		output_buffer_to_file(&symbol_output, (char*)linker_state->symbol_file);
 	}
 
 	unsigned_char_list_destroy(&asm_lexer_output);

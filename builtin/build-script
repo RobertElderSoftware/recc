@@ -30,3 +30,6 @@ CODE GENERATE builtin/extern_test.i TO builtin/extern_test.l2
 
 PREPROCESS builtin/main_argv_indirect.c TO builtin/main_argv_indirect.i
 CODE GENERATE builtin/main_argv_indirect.i TO builtin/main_argv_indirect.l2
+
+PREPROCESS builtin/main_div_zero_test.c TO builtin/main_div_zero_test.i
+CODE GENERATE builtin/main_div_zero_test.i TO builtin/main_div_zero_test.l2

@@ -62,6 +62,7 @@ This implementation assumes that sizeof(unsigned int) == 4
 #define UART1_IN_ASSERTED_BIT       (1u << 8u)
 #define UART1_OUT_READY_BIT         (1u << 9u)
 #define UART1_IN_READY_BIT          (1u << 10u)
+#define DIV_ZERO_ASSERTED_BIT       (1u << 11u)
 
 #define NUM_INSTRUCTION_TYPES 14u
 
@@ -156,7 +157,12 @@ static void fetch_decode_execute(struct virtual_machine * vm){
 			vm->registeruint32[ra] = vm->registeruint32[rb] * vm->registeruint32[rc];
 			break;
 		}case DIV_INSTRUCTION:{
-			vm->registeruint32[ra] = vm->registeruint32[rb] / vm->registeruint32[rc];
+			if(vm->registeruint32[rc]){
+				vm->registeruint32[ra] = vm->registeruint32[rb] / vm->registeruint32[rc];
+			}else{
+				/*  Division by zero detected */
+				vm->registeruint32[FR_index] = vm->registeruint32[FR_index] | DIV_ZERO_ASSERTED_BIT;
+			}
 			break;
 		}case BEQ_INSTRUCTION:{
 			if(vm->registeruint32[ra] == vm->registeruint32[rb]){
@@ -260,7 +266,10 @@ void step(struct virtual_machine * vm){
 	}
 
 	if(vm->registeruint32[FR_index] & GLOBAL_INTERRUPT_ENABLE_BIT){
-		if(vm->registeruint32[FR_index] & TIMER1_ENABLE_BIT && (vm->registeruint32[FR_index] & TIMER1_ASSERTED_BIT)){
+		if(vm->registeruint32[FR_index] & DIV_ZERO_ASSERTED_BIT){
+			do_interrupt(vm);
+			return; 
+		}else if(vm->registeruint32[FR_index] & TIMER1_ENABLE_BIT && (vm->registeruint32[FR_index] & TIMER1_ASSERTED_BIT)){
 			do_interrupt(vm);
 			return; 
 		}else if(vm->registeruint32[FR_index] & UART1_OUT_ENABLE_BIT && (vm->registeruint32[FR_index] & UART1_OUT_ASSERTED_BIT)){

@@ -75,6 +75,15 @@
 #ifndef __STDARG_H_DEFINED__
 #include <stdarg.h>
 #endif
+#ifndef __struct_parser_node_memory_pool__H__DEFINED__
+#include "data-structures/struct_parser_node_memory_pool.h"
+#endif
+#ifndef __struct_c_lexer_token_memory_pool__H__DEFINED__
+#include "data-structures/struct_c_lexer_token_memory_pool.h"
+#endif
+#ifndef __struct_linker_symbol_memory_pool__H__DEFINED__
+#include "data-structures/struct_linker_symbol_memory_pool.h"
+#endif
 
 enum copy_method{
 	ASSIGN_COPY,
@@ -111,6 +120,7 @@ struct constant_initializer_level{
 
 struct code_gen_state{
 	struct parser_state * parser_state;
+	struct memory_pool_collection * memory_pool_collection;
 	struct namespace_object * current_function;
 	struct struct_switch_frame_ptr_list switch_frames; /*  Used for keeping track of the case labels under switches */
 	struct unsigned_int_list scope_index_list;
@@ -124,8 +134,9 @@ struct code_gen_state{
 	unsigned int pad;
 };
 
-int generate_code(struct parser_state *, struct code_gen_state *);
-int do_code_generation(struct memory_pooler_collection *, unsigned char *, unsigned char *);
+void create_code_gen_state(struct code_gen_state *, struct parser_state *, struct unsigned_char_list *, struct unsigned_char_list *);
+int generate_code(struct code_gen_state *);
+int do_code_generation(struct memory_pool_collection *, unsigned char *, unsigned char *);
 int destroy_code_gen_state(struct code_gen_state *);
 struct compile_time_constant * evaluate_constant_constant_expression(struct code_gen_state *, struct parser_node *);
 unsigned int type_size(struct code_gen_state *, struct type_description *, enum value_type, unsigned int, struct scope_level *);

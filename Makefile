@@ -23,8 +23,8 @@ test: run-tests
 
 kernel: build-and-test-kernel
 
-recc: data-structures/binary_exponential_buffer.o data-structures/memory_pooler.o recc.o lexer.o parser.o code_generator.o preprocessor.o linker.o io.o data-structures/replace_tool.o data-structures/libgenerated-data-structures.a filesystem/filesystem_impl.l2
-	@$(HOSTCC) -o recc recc.o lexer.o parser.o code_generator.o preprocessor.o linker.o io.o data-structures/binary_exponential_buffer.o data-structures/memory_pooler.o data-structures/replace_tool.o data-structures/libgenerated-data-structures.a $(CUSTOM_FLAGS)
+recc: data-structures/binary_exponential_buffer.o memory_pool_collection.o heap_memory_pool.o recc.o lexer.o parser.o code_generator.o preprocessor.o linker.o io.o data-structures/replace_tool.o data-structures/libgenerated-data-structures.a filesystem/filesystem_impl.l2
+	@$(HOSTCC) -o recc recc.o memory_pool_collection.o heap_memory_pool.o lexer.o parser.o code_generator.o preprocessor.o linker.o io.o data-structures/binary_exponential_buffer.o data-structures/replace_tool.o data-structures/libgenerated-data-structures.a $(CUSTOM_FLAGS)
 
 recc.o: recc.c parser.h lexer.h linker.h preprocessor.h code_generator.h
 	@$(HOSTCC) -c recc.c $(CUSTOM_FLAGS)
@@ -62,14 +62,29 @@ io.o: io.c io.h data-structures/unsigned_char_list.o
 preloader.h: io.h
 	@touch preloader.h
 
-preloader: preloader.c preloader.h
-	@$(HOSTCC) preloader.c -o preloader $(CUSTOM_FLAGS)
+preloader: preloader.o data-structures/binary_exponential_buffer.o heap_memory_pool.o memory_pool_collection.o data-structures/libgenerated-data-structures.a
+	@$(HOSTCC) preloader.o data-structures/binary_exponential_buffer.o heap_memory_pool.o memory_pool_collection.o data-structures/libgenerated-data-structures.a -o preloader $(CUSTOM_FLAGS)
+
+preloader.o: preloader.c preloader.h
+	@$(HOSTCC) -c preloader.c $(CUSTOM_FLAGS)
 
 preprocessor.h: io.h
 	@touch preprocessor.h
 
 preprocessor.o: preprocessor.c preprocessor.h
 	@$(HOSTCC) -c preprocessor.c -o preprocessor.o $(CUSTOM_FLAGS)
+
+memory_pool_collection.h: bootstrap-datatypes
+	@touch memory_pool_collection.h
+
+memory_pool_collection.o: memory_pool_collection.c memory_pool_collection.h
+	@$(HOSTCC) -c memory_pool_collection.c -o memory_pool_collection.o $(CUSTOM_FLAGS)
+
+heap_memory_pool.h: bootstrap-datatypes
+	@touch heap_memory_pool.h
+
+heap_memory_pool.o: heap_memory_pool.c heap_memory_pool.h
+	@$(HOSTCC) -c heap_memory_pool.c -o heap_memory_pool.o $(CUSTOM_FLAGS)
 
 clean: clean-data-structures clean-tests clean-builtins clean-stdlib clean-kernel clean-emulators clean-filesystem
 	@rm -f recc preloader filesystem_compiler *.o

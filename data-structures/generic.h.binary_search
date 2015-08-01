@@ -17,5 +17,12 @@
 #ifndef __CORE_DATA_TYPES__H__DEFINED__
 #include "../core_data_types.h"
 #endif
-int T0_IDENTIFIER_binary_search(T0_LITERAL * a, T0_LITERAL, int, int (*)(T0_LITERAL *, T0_LITERAL *));
+
+enum T0_IDENTIFIER_binary_search_not_found_result_type{
+	T0_IDENTIFIER_BINARY_SEARCH_RETURN_NEG_ONE,
+	T0_IDENTIFIER_BINARY_SEARCH_RETURN_MIN,
+	T0_IDENTIFIER_BINARY_SEARCH_RETURN_MAX
+};
+
+int T0_IDENTIFIER_binary_search(T0_LITERAL * a, T0_LITERAL, int, int (*)(T0_LITERAL *, T0_LITERAL *), enum T0_IDENTIFIER_binary_search_not_found_result_type);
 #endif

@@ -58,6 +58,7 @@ class OpCPU{
     private static long UART1_IN_ASSERTED_BIT       = 0x100L;
     private static long UART1_OUT_READY_BIT         = 0x200L;
     private static long UART1_IN_READY_BIT          = 0x400L;
+    private static long DIV_ZERO_ASSERTED_BIT       = 0x800L;
     
     private static long numRegisters = 1L << OpCPU.BITS_PER_REGISTER;
     private static long sizeofInt = 4L;
@@ -177,7 +178,12 @@ class OpCPU{
                 this.registerUInt32[ra] = (this.registerUInt32[rb] * this.registerUInt32[rc]) & 0xFFFFFFFF;
                 break;
             }case DIV_INSTRUCTION:{
-                this.registerUInt32[ra] = (this.registerUInt32[rb] / this.registerUInt32[rc]) & 0xFFFFFFFF;
+                if(this.registerUInt32[rc] != 0){
+                  this.registerUInt32[ra] = (this.registerUInt32[rb] / this.registerUInt32[rc]) & 0xFFFFFFFF;
+                }else{
+                  /*  Division by zero detected */
+                  this.registerUInt32[FR_index] = this.registerUInt32[FR_index] | DIV_ZERO_ASSERTED_BIT;
+                }
                 break;
             }case BEQ_INSTRUCTION:{
                 if(this.registerUInt32[ra] == this.registerUInt32[rb]){
@@ -279,7 +285,10 @@ class OpCPU{
         }
     
         if((this.registerUInt32[FR_index] & GLOBAL_INTERRUPT_ENABLE_BIT) != 0){
-            if((this.registerUInt32[FR_index] & TIMER1_ENABLE_BIT) != 0 && (this.registerUInt32[FR_index] & TIMER1_ASSERTED_BIT) != 0){
+            if((this.registerUInt32[FR_index] & DIV_ZERO_ASSERTED_BIT) != 0){
+                doInterrupt();
+                return; 
+            }else if((this.registerUInt32[FR_index] & TIMER1_ENABLE_BIT) != 0 && (this.registerUInt32[FR_index] & TIMER1_ASSERTED_BIT) != 0){
                 doInterrupt();
                 return; 
             }else if((this.registerUInt32[FR_index] & UART1_OUT_ENABLE_BIT) != 0 && (this.registerUInt32[FR_index] & UART1_OUT_ASSERTED_BIT) != 0){

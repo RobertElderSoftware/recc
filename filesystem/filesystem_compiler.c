@@ -28,6 +28,18 @@ struct filesystem_inode inodes[NUM_INODES];
 unsigned int free_blocks[NUM_BLOCKS];
 unsigned int free_inodes[NUM_INODES];
 
+static int unsigned_char_ptr_cmp(unsigned char *, unsigned char *);
+
+static int unsigned_char_ptr_cmp(unsigned char * a, unsigned char * b){
+	if(a < b){
+		return -1;
+	}else if(a > b){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
 unsigned char printable_character(unsigned char c);
 unsigned char printable_character(unsigned char c){
 	if(c > 31 && c < 125){
@@ -123,43 +135,43 @@ void load_file_given_new_inode(unsigned int inode, FILE * source_file){
 	}
 }
 
-void load_file(unsigned char * d, FILE * f){
+void load_file(unsigned char * d, FILE * f, struct memory_pool_collection * m){
 	struct unsigned_char_ptr_list components;
 	unsigned int parent_directory_inode;
 	unsigned int new_file_inode;
 	unsigned char * file_name;
 	unsigned int i;
 	unsigned_char_ptr_list_create(&components);
-	resolve_path_components(d, &components);
+	resolve_path_components(d, &components, m);
 	/*  Last path component is file to create */
 	file_name = unsigned_char_ptr_list_get(&components, unsigned_char_ptr_list_size(&components) -1);
-	unsigned_char_ptr_list_remove_all(&components, file_name);
+	unsigned_char_ptr_list_remove_all(&components, file_name, unsigned_char_ptr_cmp);
 	/*  Last component is new file to create */
-	parent_directory_inode = get_directory_inode_from_path_parts(&components);
+	parent_directory_inode = get_directory_inode_from_path_parts(m, &components);
 	printf("Creating file %s with full path %s\n", file_name, d);
 	new_file_inode = create_file_given_parent_inode(parent_directory_inode, file_name, 0);
 	load_file_given_new_inode(new_file_inode, f);
 	for(i = 0; i < unsigned_char_ptr_list_size(&components);i++){
-		free(unsigned_char_ptr_list_get(&components, i));
+		heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_get(&components, i));
 	}
 	unsigned_char_ptr_list_destroy(&components);
-	free(file_name);
+	heap_memory_pool_free(m->heap_pool, file_name);
 }
 
 
 
-void create_directories(struct unsigned_char_ptr_list * directories){
+void create_directories(struct unsigned_char_ptr_list * directories, struct memory_pool_collection * m){
 	unsigned int i;
 	for(i = 0; i < unsigned_char_ptr_list_size(directories); i++){
-		unsigned char * dir = copy_null_terminated_string(unsigned_char_ptr_list_get(directories, i));
+		unsigned char * dir = copy_null_terminated_string(unsigned_char_ptr_list_get(directories, i), m);
 		unsigned char * null_byte = get_null_terminator(dir);
 		assert(*(null_byte -1) == '/' && "Directory should end with '/'.");
-		create_directory(dir);
-		free(dir);
+		create_directory(dir, m);
+		heap_memory_pool_free(m->heap_pool, dir);
 	}
 }
 
-void create_files(struct unsigned_char_ptr_to_unsigned_char_ptr_map * files){
+void create_files(struct unsigned_char_ptr_to_unsigned_char_ptr_map * files, struct memory_pool_collection * m){
 	struct unsigned_char_ptr_list file_keys = unsigned_char_ptr_to_unsigned_char_ptr_map_keys(files);
 	unsigned int i;
 	for(i = 0; i < unsigned_char_ptr_list_size(&file_keys); i++){
@@ -172,13 +184,13 @@ void create_files(struct unsigned_char_ptr_to_unsigned_char_ptr_map * files){
 		}
 		fseek(f, 0L, SEEK_END);
 		printf("Loading file %s with size %i into %s\n", source_file, (unsigned int)ftell(f), destination_file);
-		load_file(destination_file, f);
+		load_file(destination_file, f, m);
 		fclose(f);
 	}
 	unsigned_char_ptr_list_destroy(&file_keys);
 }
 
-#define NUM_FILES 145
+#define NUM_FILES 192
 
 int main(int argc, char ** argv){
 	unsigned char * root_dir;
@@ -186,92 +198,157 @@ int main(int argc, char ** argv){
 	struct unsigned_char_ptr_to_unsigned_char_ptr_map directories;
 	struct unsigned_char_ptr_list directory_keys;
 	struct unsigned_char_list tmp;
+	struct memory_pool_collection mpc;
 
 	const char * filesystem_files[NUM_FILES][2] = {
+		{"./data-structures/void_ptr_compare.h", "/./data-structures/void_ptr_compare.h"},
+		{"./data-structures/void_ptr_memory_pool.h", "/./data-structures/void_ptr_memory_pool.h"},
+		{"./data-structures/generic.h.memory_pool", "/./data-structures/generic.h.memory_pool"},
+		{"./data-structures/void_ptr_to_unsigned_int_map.h", "/./data-structures/void_ptr_to_unsigned_int_map.h"},
+		{"./data-structures/generic.h.binary_search", "/./data-structures/generic.h.binary_search"},
+		{"./data-structures/struct_memory_pool_ptr_list.h", "/./data-structures/struct_memory_pool_ptr_list.h"},
+		{"./data-structures/struct_constant_description_ptr_list.h", "/./data-structures/struct_constant_description_ptr_list.h"},
+		{"./data-structures/struct_type_description_memory_pool.h", "/./data-structures/struct_type_description_memory_pool.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_merge_sort.h"},
+		{"./data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"},
+		{"./data-structures/struct_normalized_declarator_ptr_list.h", "/./data-structures/struct_normalized_declarator_ptr_list.h"},
+		{"./data-structures/struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h", "/./data-structures/struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h"},
+		{"./data-structures/struct_build_script_lexer_token_ptr_list.h", "/./data-structures/struct_build_script_lexer_token_ptr_list.h"},
+		{"./data-structures/struct_macro_definition_ptr_list.h", "/./data-structures/struct_macro_definition_ptr_list.h"},
+		{"./data-structures/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_namespace_object_ptr_list.h", "/./data-structures/struct_namespace_object_ptr_list.h"},
+		{"./data-structures/struct_heap_ptr_index_pair_merge_sort.h", "/./data-structures/struct_heap_ptr_index_pair_merge_sort.h"},
+		{"./data-structures/generic.h.list", "/./data-structures/generic.h.list"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_merge_sort.h"},
+		{"./data-structures/generic.h.map", "/./data-structures/generic.h.map"},
+		{"./data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_macro_parameter_ptr_list.h", "/./data-structures/struct_macro_parameter_ptr_list.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/generic.h.merge_sort", "/./data-structures/generic.h.merge_sort"},
+		{"./data-structures/unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h"},
+		{"./data-structures/struct_constant_initializer_level_ptr_list.h", "/./data-structures/struct_constant_initializer_level_ptr_list.h"},
+		{"./data-structures/struct_unsigned_char_list_ptr_list.h", "/./data-structures/struct_unsigned_char_list_ptr_list.h"},
+		{"./data-structures/struct_normalized_declaration_element_ptr_list.h", "/./data-structures/struct_normalized_declaration_element_ptr_list.h"},
+		{"./data-structures/unsigned_int_list.h", "/./data-structures/unsigned_int_list.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_merge_sort.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_merge_sort.h"},
+		{"./data-structures/replace_tool.h", "/./data-structures/replace_tool.h"},
+		{"./data-structures/struct_preprocessor_file_context_ptr_list.h", "/./data-structures/struct_preprocessor_file_context_ptr_list.h"},
+		{"./data-structures/struct_switch_frame_ptr_list.h", "/./data-structures/struct_switch_frame_ptr_list.h"},
+		{"./data-structures/unsigned_int_binary_search.h", "/./data-structures/unsigned_int_binary_search.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_merge_sort.h"},
+		{"./data-structures/struct_void_ptr_to_unsigned_int_key_value_pair_binary_search.h", "/./data-structures/struct_void_ptr_to_unsigned_int_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_asm_lexer_token_ptr_list.h", "/./data-structures/struct_asm_lexer_token_ptr_list.h"},
+		{"./data-structures/binary_exponential_buffer.h", "/./data-structures/binary_exponential_buffer.h"},
+		{"./data-structures/struct_void_ptr_to_unsigned_int_key_value_pair_merge_sort.h", "/./data-structures/struct_void_ptr_to_unsigned_int_key_value_pair_merge_sort.h"},
+		{"./data-structures/struct_linker_symbol_ptr_list.h", "/./data-structures/struct_linker_symbol_ptr_list.h"},
+		{"./data-structures/unsigned_char_ptr_to_struct_macro_parameter_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_macro_parameter_ptr_map.h"},
+		{"./data-structures/struct_type_traversal_ptr_list.h", "/./data-structures/struct_type_traversal_ptr_list.h"},
+		{"./data-structures/char_list.h", "/./data-structures/char_list.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_scope_level_ptr_list.h", "/./data-structures/struct_scope_level_ptr_list.h"},
+		{"./data-structures/struct_asm_instruction_ptr_list.h", "/./data-structures/struct_asm_instruction_ptr_list.h"},
+		{"./data-structures/struct_c_lexer_state_ptr_list.h", "/./data-structures/struct_c_lexer_state_ptr_list.h"},
+		{"./data-structures/struct_build_script_lexer_token_memory_pool.h", "/./data-structures/struct_build_script_lexer_token_memory_pool.h"},
+		{"./data-structures/struct_struct_unsigned_char_list_ptr_list.h", "/./data-structures/struct_struct_unsigned_char_list_ptr_list.h"},
+		{"./data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_merge_sort.h"},
+		{"./data-structures/struct_asm_lexer_state_ptr_list.h", "/./data-structures/struct_asm_lexer_state_ptr_list.h"},
+		{"./data-structures/unsigned_int_merge_sort.h", "/./data-structures/unsigned_int_merge_sort.h"},
+		{"./data-structures/struct_c_lexer_token_memory_pool.h", "/./data-structures/struct_c_lexer_token_memory_pool.h"},
+		{"./data-structures/struct_heap_ptr_index_pair_list.h", "/./data-structures/struct_heap_ptr_index_pair_list.h"},
+		{"./data-structures/unsigned_char_ptr_list.h", "/./data-structures/unsigned_char_ptr_list.h"},
+		{"./data-structures/struct_parser_node_memory_pool.h", "/./data-structures/struct_parser_node_memory_pool.h"},
+		{"./data-structures/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h"},
+		{"./data-structures/struct_preloader_instruction_list.h", "/./data-structures/struct_preloader_instruction_list.h"},
+		{"./data-structures/struct_normalized_specifier_ptr_list.h", "/./data-structures/struct_normalized_specifier_ptr_list.h"},
+		{"./data-structures/struct_linker_symbol_memory_pool.h", "/./data-structures/struct_linker_symbol_memory_pool.h"},
+		{"./data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_merge_sort.h"},
+		{"./data-structures/unsigned_char_list.h", "/./data-structures/unsigned_char_list.h"},
+		{"./data-structures/struct_asm_lexer_token_memory_pool.h", "/./data-structures/struct_asm_lexer_token_memory_pool.h"},
+		{"./data-structures/struct_linker_object_ptr_merge_sort.h", "/./data-structures/struct_linker_object_ptr_merge_sort.h"},
+		{"./data-structures/struct_special_macro_definition_ptr_list.h", "/./data-structures/struct_special_macro_definition_ptr_list.h"},
+		{"./data-structures/struct_parser_operation_stack.h", "/./data-structures/struct_parser_operation_stack.h"},
+		{"./data-structures/struct_heap_ptr_index_pair_binary_search.h", "/./data-structures/struct_heap_ptr_index_pair_binary_search.h"},
+		{"./data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h", "/./data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h"},
+		{"./data-structures/unsigned_char_ptr_compare.h", "/./data-structures/unsigned_char_ptr_compare.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_merge_sort.h"},
+		{"./data-structures/struct_linker_object_ptr_list.h", "/./data-structures/struct_linker_object_ptr_list.h"},
+		{"./data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_c_lexer_token_ptr_list.h", "/./data-structures/struct_c_lexer_token_ptr_list.h"},
+		{"./data-structures/unsigned_int_stack.h", "/./data-structures/unsigned_int_stack.h"},
+		{"./data-structures/char_ptr_list.h", "/./data-structures/char_ptr_list.h"},
+		{"./data-structures/generic.h.stack", "/./data-structures/generic.h.stack"},
+		{"./data-structures/void_ptr_list.h", "/./data-structures/void_ptr_list.h"},
+		{"./data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_c_lexer_token_ptr_compare.h", "/./data-structures/struct_c_lexer_token_ptr_compare.h"},
+		{"./data-structures/struct_if_branch_ptr_list.h", "/./data-structures/struct_if_branch_ptr_list.h"},
+		{"./data-structures/struct_asm_instruction_memory_pool.h", "/./data-structures/struct_asm_instruction_memory_pool.h"},
+		{"./data-structures/unsigned_int_ptr_list.h", "/./data-structures/unsigned_int_ptr_list.h"},
+		{"./data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h", "/./data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_type_description_ptr_list.h", "/./data-structures/struct_type_description_ptr_list.h"},
+		{"./data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_binary_search.h"},
+		{"./data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_merge_sort.h"},
+		{"./parser.h", "/./parser.h"},
+		{"./linker.h", "/./linker.h"},
+		{"./filesystem/filesystem_compiler.h", "/./filesystem/filesystem_compiler.h"},
+		{"./heap_memory_pool.h", "/./heap_memory_pool.h"},
+		{"./io.h", "/./io.h"},
+		{"./kernel/private_kernel_interface.h", "/./kernel/private_kernel_interface.h"},
+		{"./kernel/user_proc.h", "/./kernel/user_proc.h"},
+		{"./kernel/public_kernel_interface.h", "/./kernel/public_kernel_interface.h"},
+		{"./kernel/kernel_state.h", "/./kernel/kernel_state.h"},
+		{"./kernel/core_data_types.h", "/./kernel/core_data_types.h"},
+		{"./kernel/queue.h", "/./kernel/queue.h"},
+		{"./core_data_types.h", "/./core_data_types.h"},
+		{"./libc/size_t.h", "/./libc/size_t.h"},
+		{"./libc/common.h", "/./libc/common.h"},
+		{"./libc/putchar.h", "/./libc/putchar.h"},
+		{"./libc/stdio.h", "/./libc/stdio.h"},
+		{"./libc/unistd.h", "/./libc/unistd.h"},
+		{"./libc/string.h", "/./libc/string.h"},
+		{"./libc/stdarg.h", "/./libc/stdarg.h"},
+		{"./libc/stdlib.h", "/./libc/stdlib.h"},
+		{"./libc/assert.h", "/./libc/assert.h"},
+		{"./libc/filesystem.h", "/./libc/filesystem.h"},
+		{"./lexer.h", "/./lexer.h"},
+		{"./preloader.h", "/./preloader.h"},
+		{"./memory_pool_collection.h", "/./memory_pool_collection.h"},
+		{"./emulators/javascript/index.html", "/./emulators/javascript/index.html"},
+		{"./emulators/c/op-cpu.h", "/./emulators/c/op-cpu.h"},
+		{"./builtin/includetest2.h", "/./builtin/includetest2.h"},
+		{"./builtin/includetest1.h", "/./builtin/includetest1.h"},
+		{"./preprocessor.h", "/./preprocessor.h"},
+		{"./types/lexer/struct_asm_lexer_token.h", "/./types/lexer/struct_asm_lexer_token.h"},
+		{"./types/lexer/enum_asm_token_type.h", "/./types/lexer/enum_asm_token_type.h"},
+		{"./types/struct_heap_memory_pool.h", "/./types/struct_heap_memory_pool.h"},
+		{"./types/struct_heap_ptr_index_pair.h", "/./types/struct_heap_ptr_index_pair.h"},
+		{"./types/linker/struct_asm_instruction.h", "/./types/linker/struct_asm_instruction.h"},
+		{"./types/linker/struct_linker_symbol.h", "/./types/linker/struct_linker_symbol.h"},
+		{"./types/parser/enum_normalized_declarator_type.h", "/./types/parser/enum_normalized_declarator_type.h"},
+		{"./types/parser/enum_add_or_remove.h", "/./types/parser/enum_add_or_remove.h"},
+		{"./types/parser/enum_normalized_specifier_type.h", "/./types/parser/enum_normalized_specifier_type.h"},
+		{"./types/parser/enum_node_type.h", "/./types/parser/enum_node_type.h"},
+		{"./types/parser/struct_type_description.h", "/./types/parser/struct_type_description.h"},
+		{"./types/parser/enum_declaration_or_definition.h", "/./types/parser/enum_declaration_or_definition.h"},
+		{"./types/parser/enum_type_class.h", "/./types/parser/enum_type_class.h"},
+		{"./types/parser/enum_value_type.h", "/./types/parser/enum_value_type.h"},
+		{"./types/parser/enum_normalized_declaration_type.h", "/./types/parser/enum_normalized_declaration_type.h"},
+		{"./types/parser/enum_scope_type.h", "/./types/parser/enum_scope_type.h"},
+		{"./types/struct_memory_pool_collection.h", "/./types/struct_memory_pool_collection.h"},
+		{"./code_generator.h", "/./code_generator.h"},
 		{"code_generator.c", "/code_generator.c"},
-		{"code_generator.h", "/code_generator.h"},
-		{"core_data_types.h", "/core_data_types.h"},
 		{"io.c", "/io.c"},
-		{"io.h", "/io.h"},
 		{"lexer.c", "/lexer.c"},
-		{"lexer.h", "/lexer.h"},
 		{"linker.c", "/linker.c"},
-		{"linker.h", "/linker.h"},
 		{"parser.c", "/parser.c"},
-		{"parser.h", "/parser.h"},
 		{"preloader.c", "/preloader.c"},
-		{"preloader.h", "/preloader.h"},
 		{"preprocessor.c", "/preprocessor.c"},
-		{"preprocessor.h", "/preprocessor.h"},
 		{"recc.c", "/recc.c"},
-		{"data-structures/binary_exponential_buffer.h", "/data-structures/binary_exponential_buffer.h"},
-		{"data-structures/char_list.h", "/data-structures/char_list.h"},
-		{"data-structures/char_ptr_list.h", "/data-structures/char_ptr_list.h"},
-		{"data-structures/memory_pooler.h", "/data-structures/memory_pooler.h"},
-		{"data-structures/replace_tool.h", "/data-structures/replace_tool.h"},
-		{"data-structures/struct_asm_instruction_ptr_list.h", "/data-structures/struct_asm_instruction_ptr_list.h"},
-		{"data-structures/struct_asm_lexer_state_ptr_list.h", "/data-structures/struct_asm_lexer_state_ptr_list.h"},
-		{"data-structures/struct_asm_lexer_token_ptr_list.h", "/data-structures/struct_asm_lexer_token_ptr_list.h"},
-		{"data-structures/struct_build_script_lexer_token_ptr_list.h", "/data-structures/struct_build_script_lexer_token_ptr_list.h"},
-		{"data-structures/struct_c_lexer_state_ptr_list.h", "/data-structures/struct_c_lexer_state_ptr_list.h"},
-		{"data-structures/struct_c_lexer_token_ptr_compare.h", "/data-structures/struct_c_lexer_token_ptr_compare.h"},
-		{"data-structures/struct_c_lexer_token_ptr_list.h", "/data-structures/struct_c_lexer_token_ptr_list.h"},
-		{"data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h", "/data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"},
-		{"data-structures/struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h", "/data-structures/struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h"},
-		{"data-structures/struct_constant_description_ptr_list.h", "/data-structures/struct_constant_description_ptr_list.h"},
-		{"data-structures/struct_constant_initializer_level_ptr_list.h", "/data-structures/struct_constant_initializer_level_ptr_list.h"},
-		{"data-structures/struct_if_branch_ptr_list.h", "/data-structures/struct_if_branch_ptr_list.h"},
-		{"data-structures/struct_linker_object_ptr_list.h", "/data-structures/struct_linker_object_ptr_list.h"},
-		{"data-structures/struct_linker_object_ptr_merge_sort.h", "/data-structures/struct_linker_object_ptr_merge_sort.h"},
-		{"data-structures/struct_linker_symbol_ptr_list.h", "/data-structures/struct_linker_symbol_ptr_list.h"},
-		{"data-structures/struct_macro_definition_ptr_list.h", "/data-structures/struct_macro_definition_ptr_list.h"},
-		{"data-structures/struct_macro_parameter_ptr_list.h", "/data-structures/struct_macro_parameter_ptr_list.h"},
-		{"data-structures/struct_memory_pooler_ptr_list.h", "/data-structures/struct_memory_pooler_ptr_list.h"},
-		{"data-structures/struct_namespace_object_ptr_list.h", "/data-structures/struct_namespace_object_ptr_list.h"},
-		{"data-structures/struct_normalized_declaration_element_ptr_list.h", "/data-structures/struct_normalized_declaration_element_ptr_list.h"},
-		{"data-structures/struct_normalized_declarator_ptr_list.h", "/data-structures/struct_normalized_declarator_ptr_list.h"},
-		{"data-structures/struct_normalized_specifier_ptr_list.h", "/data-structures/struct_normalized_specifier_ptr_list.h"},
-		{"data-structures/struct_parser_operation_stack.h", "/data-structures/struct_parser_operation_stack.h"},
-		{"data-structures/struct_preprocessor_file_context_ptr_list.h", "/data-structures/struct_preprocessor_file_context_ptr_list.h"},
-		{"data-structures/struct_scope_level_ptr_list.h", "/data-structures/struct_scope_level_ptr_list.h"},
-		{"data-structures/struct_special_macro_definition_ptr_list.h", "/data-structures/struct_special_macro_definition_ptr_list.h"},
-		{"data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h", "/data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h"},
-		{"data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_ptr_binary_search.h", "/data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_ptr_binary_search.h"},
-		{"data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_ptr_merge_sort.h", "/data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_ptr_merge_sort.h"},
-		{"data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_ptr_binary_search.h", "/data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_ptr_binary_search.h"},
-		{"data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_ptr_merge_sort.h", "/data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_ptr_merge_sort.h"},
-		{"data-structures/struct_struct_unsigned_char_list_ptr_list.h", "/data-structures/struct_struct_unsigned_char_list_ptr_list.h"},
-		{"data-structures/struct_switch_frame_ptr_list.h", "/data-structures/struct_switch_frame_ptr_list.h"},
-		{"data-structures/struct_type_description_ptr_list.h", "/data-structures/struct_type_description_ptr_list.h"},
-		{"data-structures/struct_type_traversal_ptr_list.h", "/data-structures/struct_type_traversal_ptr_list.h"},
-		{"data-structures/struct_unsigned_char_list_ptr_list.h", "/data-structures/struct_unsigned_char_list_ptr_list.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_ptr_binary_search.h", "/data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_ptr_binary_search.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_ptr_merge_sort.h", "/data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_ptr_merge_sort.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_ptr_binary_search.h", "/data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_ptr_binary_search.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_ptr_merge_sort.h", "/data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_ptr_merge_sort.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_ptr_binary_search.h", "/data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_ptr_binary_search.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_ptr_merge_sort.h", "/data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_ptr_merge_sort.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_ptr_binary_search.h", "/data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_ptr_binary_search.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_ptr_merge_sort.h", "/data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_ptr_merge_sort.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_ptr_binary_search.h", "/data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_ptr_binary_search.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_ptr_merge_sort.h", "/data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_ptr_merge_sort.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_ptr_binary_search.h", "/data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_ptr_binary_search.h"},
-		{"data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_ptr_merge_sort.h", "/data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_ptr_merge_sort.h"},
-		{"data-structures/unsigned_char_list.h", "/data-structures/unsigned_char_list.h"},
-		{"data-structures/unsigned_char_ptr_compare.h", "/data-structures/unsigned_char_ptr_compare.h"},
-		{"data-structures/unsigned_char_ptr_list.h", "/data-structures/unsigned_char_ptr_list.h"},
-		{"data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h", "/data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"},
-		{"data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h", "/data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"},
-		{"data-structures/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h", "/data-structures/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h"},
-		{"data-structures/unsigned_char_ptr_to_struct_macro_parameter_ptr_map.h", "/data-structures/unsigned_char_ptr_to_struct_macro_parameter_ptr_map.h"},
-		{"data-structures/unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h", "/data-structures/unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h"},
-		{"data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h", "/data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"},
-		{"data-structures/unsigned_int_binary_search.h", "/data-structures/unsigned_int_binary_search.h"},
-		{"data-structures/unsigned_int_list.h", "/data-structures/unsigned_int_list.h"},
-		{"data-structures/unsigned_int_merge_sort.h", "/data-structures/unsigned_int_merge_sort.h"},
-		{"data-structures/unsigned_int_ptr_list.h", "/data-structures/unsigned_int_ptr_list.h"},
-		{"data-structures/unsigned_int_stack.h", "/data-structures/unsigned_int_stack.h"},
-		{"data-structures/void_ptr_list.h", "/data-structures/void_ptr_list.h"},
 		{"test/basic-operations.c", "/test/basic-operations.c"},
 		{"test/basic-putchar-aa.c", "/test/basic-putchar-aa.c"},
 		{"test/basic-putchar-a.c", "/test/basic-putchar-a.c"},
@@ -299,31 +376,15 @@ int main(int argc, char ** argv){
 		{"test/va_list_call.c", "/test/va_list_call.c"},
 		{"test/while-loop.c", "/test/while-loop.c"},
 		{"libc/assert.c", "/libc/assert.c"},
-		{"libc/assert.h", "/libc/assert.h"},
 		{"libc/build-script", "/libc/build-script"},
-		{"libc/common.h", "/libc/common.h"},
 		{"libc/filesystem.c", "/libc/filesystem.c"},
-		{"libc/filesystem.h", "/libc/filesystem.h"},
 		{"libc/fopen.c", "/libc/fopen.c"},
 		{"libc/getcwd.c", "/libc/getcwd.c"},
 		{"libc/Makefile", "/libc/Makefile"},
 		{"libc/malloc.c", "/libc/malloc.c"},
 		{"libc/printf.c", "/libc/printf.c"},
-		{"libc/putchar.h", "/libc/putchar.h"},
 		{"libc/l2/putchar.l2", "/libc/l2/putchar.l2"},
-		{"libc/size_t.h", "/libc/size_t.h"},
-		{"libc/stdarg.h", "/libc/stdarg.h"},
-		{"libc/stdio.h", "/libc/stdio.h"},
-		{"libc/stdlib.h", "/libc/stdlib.h"},
 		{"libc/string.c", "/libc/string.c"},
-		{"libc/string.h", "/libc/string.h"},
-		{"libc/unistd.h", "/libc/unistd.h"},
-		{"kernel/core_data_types.h", "/kernel/core_data_types.h"},
-		{"kernel/kernel_state.h", "/kernel/kernel_state.h"},
-		{"kernel/private_kernel_interface.h", "/kernel/private_kernel_interface.h"},
-		{"kernel/public_kernel_interface.h", "/kernel/public_kernel_interface.h"},
-		{"kernel/queue.h", "/kernel/queue.h"},
-		{"kernel/user_proc.h", "/kernel/user_proc.h"},
 		{"kernel/filesystem.c", "/kernel/filesystem.c"},
 		{"kernel/kernel_impl.c", "/kernel/kernel_impl.c"},
 		{"kernel/kernel_state.c", "/kernel/kernel_state.c"},
@@ -331,10 +392,10 @@ int main(int argc, char ** argv){
 		{"kernel/putchar.c", "/kernel/putchar.c"},
 		{"kernel/queue.c", "/kernel/queue.c"},
 		{"kernel/user_proc.c", "/kernel/user_proc.c"},
-		{"filesystem/filesystem_compiler.c", "/filesystem/filesystem_compiler.c"},
-		{"filesystem/filesystem_compiler.h", "/filesystem/filesystem_compiler.h"}
+		{"filesystem/filesystem_compiler.c", "/filesystem/filesystem_compiler.c"}
 	};
 	unsigned int i;
+	memory_pool_collection_create(&mpc);
 	initialize_filesystem_datastructures();
 	assert(argc == 1 && "Invoked with the wrong number of arguments.");
 	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&files);
@@ -350,9 +411,9 @@ int main(int argc, char ** argv){
 		while(filesystem_files[i][1][j]){
 			unsigned_char_list_add_end(&tmp, (unsigned char)filesystem_files[i][1][j]);
 			if(filesystem_files[i][1][j] == '/'){
-				unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + j);
+				unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + j, &mpc);
 				if(unsigned_char_ptr_to_unsigned_char_ptr_map_exists(&directories, s)){
-					free(s);
+					heap_memory_pool_free(mpc.heap_pool, s);
 				}else{
 					unsigned_char_ptr_to_unsigned_char_ptr_map_put(&directories, s, s);
 				}
@@ -366,19 +427,19 @@ int main(int argc, char ** argv){
 	/*  Remove the root directory because its inode has already been created */
 	root_dir = unsigned_char_ptr_to_unsigned_char_ptr_map_get(&directories, (unsigned char *)"/");
 	unsigned_char_ptr_to_unsigned_char_ptr_map_remove(&directories, (unsigned char *)"/");
-	free(root_dir);
+	heap_memory_pool_free(mpc.heap_pool, root_dir);
 
 	directory_keys = unsigned_char_ptr_to_unsigned_char_ptr_map_keys(&directories);
 
-	create_directories(&directory_keys);
+	create_directories(&directory_keys, &mpc);
 
 	for(i = 0; i < unsigned_char_ptr_list_size(&directory_keys); i++){
 		unsigned char * dir = unsigned_char_ptr_list_get(&directory_keys, i);
 		printf("Unique Directory: %s\n", dir);
-		free(dir);
+		heap_memory_pool_free(mpc.heap_pool, dir);
 	}
 
-	create_files(&files);
+	create_files(&files, &mpc);
 
 	(void)argc;
 	(void)argv;
@@ -386,6 +447,7 @@ int main(int argc, char ** argv){
 	unsigned_char_ptr_list_destroy(&directory_keys);
 	unsigned_char_ptr_to_unsigned_char_ptr_map_destroy(&files);
 	unsigned_char_ptr_to_unsigned_char_ptr_map_destroy(&directories);
+	memory_pool_collection_destroy(&mpc);
 	output_filesystem_impl();  /*  Create l2 file the represents filesystem state */
 	return 0;
 }

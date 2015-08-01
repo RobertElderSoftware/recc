@@ -36,6 +36,12 @@
 #ifndef __unsigned_char_ptr_list__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_list.h"
 #endif
+#ifndef __MEMORY_POOL_COLLECTION_H__
+#include "memory_pool_collection.h"
+#endif
+#ifndef __HEAP_MEMORY_POOL_H__
+#include "heap_memory_pool.h"
+#endif
 
 extern unsigned char * g_format_buffer;  /* TODO: get rid of this.  This is a hack that must exist until snprintf can be implemented */
 extern unsigned int g_format_buffer_uses;
@@ -48,12 +54,12 @@ void buffered_printf(struct unsigned_char_list * list, const char* format, ...);
 void vsprintf_hook(const char*, va_list);
 void sprintf_hook(const char*, ...);
 unsigned char * get_sprintf_buffer(void);
-unsigned char * copy_string(unsigned char *, unsigned char *);
+unsigned char * copy_string(unsigned char *, unsigned char *, struct memory_pool_collection *);
 void copy_string_into_buffer(unsigned char *, unsigned char *, unsigned char *);
 unsigned char * get_null_terminator(unsigned char *);
 void add_string_to_buffer(struct unsigned_char_list *, unsigned char *, unsigned char *);
 int unsigned_strcmp(unsigned char *, unsigned char *);
-unsigned char * copy_null_terminated_string(unsigned char *);
-void resolve_path_components(unsigned char *, struct unsigned_char_ptr_list *);
+unsigned char * copy_null_terminated_string(unsigned char *, struct memory_pool_collection *);
+void resolve_path_components(unsigned char *, struct unsigned_char_ptr_list *, struct memory_pool_collection *);
 
 #endif

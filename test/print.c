@@ -323,7 +323,7 @@ int main(void){
 	}
 	printf("Go through sorts:\n");
 	for(k = 0; k < num_sort; k++){
-		int index = unsigned_int_binary_search(sort_array, sort_array[k], (int)num_sort, cmp_fcn);
+		int index = unsigned_int_binary_search(sort_array, sort_array[k], (int)num_sort, cmp_fcn, unsigned_int_BINARY_SEARCH_RETURN_NEG_ONE);
 		if(index != -1){
 			printf("%X\n", sort_array[index]);
 		}else{

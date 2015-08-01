@@ -18,9 +18,5 @@ data-structures/binary_exponential_buffer.o: data-structures/binary_exponential_
 data-structures/merge_sort.o: data-structures/merge_sort.h data-structures/merge_sort.c
 	@$(HOSTCC) -c data-structures/merge_sort.c -o data-structures/merge_sort.o $(CUSTOM_FLAGS)
 
-data-structures/memory_pooler.h: data-structures/struct_memory_pooler_ptr_list.h
-data-structures/memory_pooler.o: data-structures/memory_pooler.h data-structures/memory_pooler.c
-	@$(HOSTCC) -c data-structures/memory_pooler.c -o data-structures/memory_pooler.o $(CUSTOM_FLAGS)
-
 clean-data-structures: clean-generated-files
 	@rm -f data-structures/*.o data-structures/libgenerated-data-structures.a data-structures/bootstrap-datatypes

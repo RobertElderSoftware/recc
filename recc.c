@@ -21,13 +21,18 @@
 #include "code_generator.h"
 #include "data-structures/struct_build_script_lexer_token_ptr_list.h"
 #include "data-structures/unsigned_char_list.h"
-#include "data-structures/memory_pooler.h"
+#include "data-structures/struct_c_lexer_token_memory_pool.h"
+#include "data-structures/struct_build_script_lexer_token_memory_pool.h"
+#include "data-structures/struct_asm_lexer_token_memory_pool.h"
+#include "data-structures/struct_parser_node_memory_pool.h"
+#include "data-structures/struct_type_description_memory_pool.h"
+#include "memory_pool_collection.h"
 
 
-int process_build_script(struct memory_pooler_collection *, char *);
-int execute_build_script(struct memory_pooler_collection *, struct build_script_lexer_state *);
+int process_build_script(struct memory_pool_collection *, char *);
+int execute_build_script(struct memory_pool_collection *, struct build_script_lexer_state *);
 
-int execute_build_script(struct memory_pooler_collection * memory_pooler_collection, struct build_script_lexer_state * state){
+int execute_build_script(struct memory_pool_collection * memory_pool_collection, struct build_script_lexer_state * state){
 	unsigned int num_tokens = struct_build_script_lexer_token_ptr_list_size(&state->tokens);
 	struct build_script_lexer_token ** tokens =  struct_build_script_lexer_token_ptr_list_data(&state->tokens);
 	struct build_script_lexer_token * filename1;
@@ -45,13 +50,13 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 				if(tokens[i]->type == B_FILENAME){
 					struct unsigned_char_ptr_list in_files;
 					unsigned_char_ptr_list_create(&in_files);
-					unsigned_char_ptr_list_add_end(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte));
+					unsigned_char_ptr_list_add_end(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte, memory_pool_collection));
 					i++;
 					while(tokens[i]->type != B_SPACE || tokens[i]->type != B_COMMA_CHAR || tokens[i]->type != B_FILENAME){
 						if(tokens[i]->type == B_COMMA_CHAR || tokens[i]->type == B_SPACE){
 							i++;
 						} else if(tokens[i]->type == B_FILENAME){
-							unsigned_char_ptr_list_add_end(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte));
+							unsigned_char_ptr_list_add_end(&in_files, copy_string(tokens[i]->first_byte, tokens[i]->last_byte, memory_pool_collection));
 							i++;
 						} else if(tokens[i]->type == B_TO){
 							break;
@@ -79,7 +84,7 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 													if(tokens[i]->type == B_FILENAME){
 														struct build_script_lexer_token * file_token;
 														file_token = tokens[i];
-														symbol_file = copy_string(file_token->first_byte, file_token->last_byte);
+														symbol_file = copy_string(file_token->first_byte, file_token->last_byte, memory_pool_collection);
 														i++;
 													} else {printf("Error: filename.");}
 												} else {printf("Error: no space.");}
@@ -88,8 +93,9 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 									} else {printf("Error: tailing space.");}
 								}/* Optional */
 								{
-									unsigned char * f2 = copy_string(filename2->first_byte, filename2->last_byte);
+									unsigned char * f2 = copy_string(filename2->first_byte, filename2->last_byte, memory_pool_collection);
 									unsigned int j;
+									struct linker_state linker_state;
 									printf("Linking ");
 									for(j = 0; j < unsigned_char_ptr_list_size(&in_files); j++){
 										printf("%s", unsigned_char_ptr_list_get(&in_files, j));
@@ -98,17 +104,19 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 										}
 									}
 									printf(" to %s\n", f2);
-									do_link(memory_pooler_collection, &in_files, f2, symbol_file);
+									linker_state_create(&linker_state, memory_pool_collection, &in_files, f2, symbol_file);
+									do_link(&linker_state);
+									linker_state_destroy(&linker_state);
 									for(j = 0; j < unsigned_char_ptr_list_size(&in_files); j++){
-										free(unsigned_char_ptr_list_get(&in_files, j));
+										heap_memory_pool_free(memory_pool_collection->heap_pool, unsigned_char_ptr_list_get(&in_files, j));
 									}
 									unsigned_char_ptr_list_destroy(&in_files);
-									free(f2);
+									heap_memory_pool_free(memory_pool_collection->heap_pool, f2);
 
 									if(symbol_file){
 										printf("Creating symbol file %s\n", symbol_file);
 									}
-									free(symbol_file);
+									heap_memory_pool_free(memory_pool_collection->heap_pool, symbol_file);
 								}
 							} else {printf("Error: no filename.");}
 						} else {printf("Error: no space.");}
@@ -135,8 +143,8 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 										unsigned int charsf1 = (unsigned int)(filename1->last_byte - filename1->first_byte) + 1;
 										unsigned int charsf2 = (unsigned int)(filename2->last_byte - filename2->first_byte) + 1;
 										unsigned int j;
-										unsigned char * f1 = (unsigned char *)malloc(charsf1 + 1);
-										unsigned char * f2 = (unsigned char *)malloc(charsf2 + 1);
+										unsigned char * f1 = (unsigned char *)heap_memory_pool_malloc(memory_pool_collection->heap_pool, charsf1 + 1);
+										unsigned char * f2 = (unsigned char *)heap_memory_pool_malloc(memory_pool_collection->heap_pool, charsf2 + 1);
 										for(j = 0; j < charsf1; j++){
 											f1[j] = filename1->first_byte[j];
 										}
@@ -146,9 +154,9 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 										f1[charsf1] = 0;
 										f2[charsf2] = 0;
 										printf("Code generating %s to %s\n", f1, f2);
-										do_code_generation(memory_pooler_collection, f1, f2);
-										free(f1);
-										free(f2);
+										do_code_generation(memory_pool_collection, f1, f2);
+										heap_memory_pool_free(memory_pool_collection->heap_pool, f1);
+										heap_memory_pool_free(memory_pool_collection->heap_pool, f2);
 									}
 								} else {printf("Error: no filename.");}
 							} else {printf("Error: no space.");}
@@ -176,8 +184,8 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 										unsigned int charsf1 = (unsigned int)(filename1->last_byte - filename1->first_byte) + 1;
 										unsigned int charsf2 = (unsigned int)(filename2->last_byte - filename2->first_byte) + 1;
 										unsigned int j;
-										unsigned char * f1 = (unsigned char *)malloc(charsf1 + 1);
-										unsigned char * f2 = (unsigned char *)malloc(charsf2 + 1);
+										unsigned char * f1 = (unsigned char *)heap_memory_pool_malloc(memory_pool_collection->heap_pool, charsf1 + 1);
+										unsigned char * f2 = (unsigned char *)heap_memory_pool_malloc(memory_pool_collection->heap_pool, charsf2 + 1);
 										for(j = 0; j < charsf1; j++){
 											f1[j] = filename1->first_byte[j];
 										}
@@ -187,9 +195,9 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 										f1[charsf1] = 0;
 										f2[charsf2] = 0;
 										printf("Preprocessing %s to %s\n", f1, f2);
-										do_preprocess(memory_pooler_collection, f1, f2);
-										free(f1);
-										free(f2);
+										do_preprocess(memory_pool_collection, f1, f2);
+										heap_memory_pool_free(memory_pool_collection->heap_pool, f1);
+										heap_memory_pool_free(memory_pool_collection->heap_pool, f2);
 										i++;
 									}
 								} else {printf("Error: no filename.");}
@@ -205,7 +213,7 @@ int execute_build_script(struct memory_pooler_collection * memory_pooler_collect
 	return 0;
 }
 
-int process_build_script(struct memory_pooler_collection * memory_pooler_collection, char * in_file){
+int process_build_script(struct memory_pool_collection * memory_pool_collection, char * in_file){
 	int rtn;
 	unsigned int i;
 	struct build_script_lexer_state build_script_lexer_state;
@@ -213,7 +221,7 @@ int process_build_script(struct memory_pooler_collection * memory_pooler_collect
 	struct unsigned_char_list build_script;
 	unsigned_char_list_create(&lexer_output);
 	unsigned_char_list_create(&build_script);
-	build_script_lexer_state.c.memory_pooler_collection = memory_pooler_collection;
+	build_script_lexer_state.c.memory_pool_collection = memory_pool_collection;
 
 	add_file_to_buffer(&build_script, in_file);
 
@@ -226,7 +234,7 @@ int process_build_script(struct memory_pooler_collection * memory_pooler_collect
 	if(rtn){
 		printf("Lexical analysis failed during preprocessing of build script %s\n", in_file);
 	}else{
-		execute_build_script(memory_pooler_collection, &build_script_lexer_state);
+		execute_build_script(memory_pool_collection, &build_script_lexer_state);
 		destroy_build_script_lexer_state(&build_script_lexer_state);
 	}
 	unsigned_char_list_destroy(&build_script);
@@ -234,14 +242,12 @@ int process_build_script(struct memory_pooler_collection * memory_pooler_collect
 	return rtn;
 }
 
-int main(int argc, char** argv){
-	struct memory_pooler_collection memory_pooler_collection;
-	memory_pooler_collection_create(&memory_pooler_collection);
-
+int main(int argc, char ** argv){
+	struct memory_pool_collection memory_pool_collection;
+	memory_pool_collection_create(&memory_pool_collection);
 	assert(argc == 2 && "Compiler was invoked with the wrong number of arguments.  Sorry, I haven't had the time to make this more user friendly.");
 
-	process_build_script(&memory_pooler_collection, argv[1]);
-
-	memory_pooler_collection_destroy(&memory_pooler_collection);
+	process_build_script(&memory_pool_collection, argv[1]);
+	memory_pool_collection_destroy(&memory_pool_collection);
 	return 0;
 }

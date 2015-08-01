@@ -50,30 +50,41 @@ void sprintf_hook(const char* format, ...){
 
 void buffered_printf(struct unsigned_char_list * list, const char* format, ...){
 	va_list arglist;
-	unsigned int i = 0;
-	va_start( arglist, format );
+	unsigned int length;
+	unsigned char * dst;
+	unsigned int size_before;
+	va_start(arglist, format);
 	vsprintf_hook(format, arglist);
-	while(g_format_buffer[i]){
-		unsigned_char_list_add_end(list, (unsigned char)g_format_buffer[i]);
-		i++;
-	}
+	length = (unsigned int)strlen((char *)g_format_buffer);
+	size_before = binary_exponential_buffer_size(&list->buffer);
+	binary_exponential_buffer_increment(&list->buffer, length);
+	dst = binary_exponential_buffer_data(&list->buffer);
+	memcpy(&dst[size_before], g_format_buffer, length);
 	va_end(arglist);
 }
 
 int add_file_to_buffer(struct unsigned_char_list * buffer, char * in_file){
 	FILE *f = NULL;
-	int c = 0;
+	unsigned int bytes_this_chunk = 0;
+	unsigned int bytes_next_chunk = 1;
+	unsigned int bytes_just_read = 0;
+	unsigned int current_buffer_size;
 	if(!(f = fopen(in_file, "rb"))){
 		printf("Failed to open file %s for read.\n", in_file);
 		return 1;
 	}
 
-	while (c != EOF) {
-		c = getc(f);
-		if(c == EOF)
-			break;
-		unsigned_char_list_add_end(buffer, (unsigned char)c);
+	while (bytes_just_read == bytes_this_chunk) {
+		unsigned char * start_write_position;
+		bytes_this_chunk = bytes_next_chunk;
+		current_buffer_size = binary_exponential_buffer_size(&buffer->buffer);
+		binary_exponential_buffer_increment(&buffer->buffer, bytes_this_chunk);
+		start_write_position = &(((unsigned char *)binary_exponential_buffer_data(&buffer->buffer))[current_buffer_size * buffer->buffer.element_size]);
+		bytes_just_read = fread(start_write_position, sizeof(unsigned char), bytes_this_chunk, f);
+		bytes_next_chunk = bytes_this_chunk * 2; /* Increment by two each time */
 	}
+	/*  Last increment was likely a bit larger than it needed to be */
+	binary_exponential_buffer_decrement(&buffer->buffer, bytes_this_chunk - bytes_just_read);
 	fclose(f);
 	return 0;
 }
@@ -82,27 +93,14 @@ int output_buffer_to_file(struct unsigned_char_list * buffer, char * out_file){
 	FILE *f = NULL;
 	unsigned char * data = unsigned_char_list_data(buffer);
 	unsigned int size = unsigned_char_list_size(buffer);
-	unsigned int i;
 	if(!(f = fopen(out_file, "w"))){
 		printf("Failed to open file %s for write.\n", out_file);
 		return 1;
 	}
 
-	for(i = 0; i < size; i++){
-		fputc ( data[i] , f);
-	}
+	fwrite(data, sizeof(unsigned char), size, f);
 	fclose(f);
 	return 0;
-}
-
-void copy_string_into_buffer(unsigned char * from, unsigned char * to, unsigned char * dst){
-	/* Copies characters between and including from and to.  dst is assumed to be large enough */
-	unsigned char * i;
-	unsigned int j = 0;
-	for(i = from; i < (to + 1); i++){
-		dst[j] = *i;
-		j = j + 1;
-	}
 }
 
 unsigned char * get_null_terminator(unsigned char * c){
@@ -112,10 +110,11 @@ unsigned char * get_null_terminator(unsigned char * c){
 	return c;
 }
 
-unsigned char * copy_null_terminated_string(unsigned char * start){
+unsigned char * copy_null_terminated_string(unsigned char * start, struct memory_pool_collection * m){
 	unsigned int length = (unsigned int)strlen((char *)start);
-	unsigned char * rtn = (unsigned char *)malloc((sizeof(unsigned char) * length) + 1);
+	unsigned char * rtn = (unsigned char *)heap_memory_pool_malloc(m->heap_pool, ((sizeof(unsigned char) * length) + 1));
 	unsigned int i = 0;
+	(void)m;
 	for(i = 0; i < length; i++){
 		rtn[i] = start[i];
 	}
@@ -123,12 +122,13 @@ unsigned char * copy_null_terminated_string(unsigned char * start){
 	return rtn;
 }
 
-unsigned char * copy_string(unsigned char * start, unsigned char * end){
+unsigned char * copy_string(unsigned char * start, unsigned char * end, struct memory_pool_collection * m){
 	unsigned int length = (unsigned int)(end - start) + 1;
 	unsigned char * string;
-	string = (unsigned char *)malloc((sizeof(unsigned char) * length) + 1);
+	(void)m;
+	string = (unsigned char *)heap_memory_pool_malloc(m->heap_pool, (sizeof(unsigned char) * length) + 1);
 	string[length] = 0; /* Null termination */
-	copy_string_into_buffer(start, end, string);
+	memcpy(string, start, length);
 	return string;
 }
 
@@ -143,7 +143,7 @@ int unsigned_strcmp(unsigned char * a, unsigned char * b){
 	return strcmp((const char *)a,(const char *)b);
 }
 
-void resolve_path_components(unsigned char * path, struct unsigned_char_ptr_list * path_components){
+void resolve_path_components(unsigned char * path, struct unsigned_char_ptr_list * path_components, struct memory_pool_collection * m){
 	/*  Split up a path like /a/b/abc/d into 'a', 'b', 'abc', 'd' */
 	unsigned int j = 0;
 	struct unsigned_char_list tmp;
@@ -152,10 +152,10 @@ void resolve_path_components(unsigned char * path, struct unsigned_char_ptr_list
 		if(path[j] == '/'){
 			if(unsigned_char_list_size(&tmp)){
 				unsigned int len = unsigned_char_list_size(&tmp);
-				unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + (len -1));
+				unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + (len -1), m);
 				unsigned_char_ptr_list_add_end(path_components, s);
 			}else{
-				unsigned char * s = malloc(1);
+				unsigned char * s = heap_memory_pool_malloc(m->heap_pool, 1);
 				s[0] = 0; /* empty string */
 				unsigned_char_ptr_list_add_end(path_components, s);
 			}
@@ -168,7 +168,7 @@ void resolve_path_components(unsigned char * path, struct unsigned_char_ptr_list
 	}
 	if(unsigned_char_list_size(&tmp)){
 		unsigned int len = unsigned_char_list_size(&tmp);
-		unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + (len-1));
+		unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + (len-1), m);
 		unsigned_char_ptr_list_add_end(path_components, s);
 	}
 	unsigned_char_list_destroy(&tmp);

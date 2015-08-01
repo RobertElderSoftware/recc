@@ -15,7 +15,6 @@
 #ifndef __unsigned_char_ptr_compare__H__DEFINED__
 #include "unsigned_char_ptr_compare.h"
 #endif
-
-int unsigned_char_ptr_compare(unsigned char ** a, unsigned char ** b){
-	return strcmp((char*)*a, (char*)*b);
+int unsigned_char_ptr_compare(unsigned char * a, unsigned char * b){
+	return strcmp((char*)a, (char*)b);
 }

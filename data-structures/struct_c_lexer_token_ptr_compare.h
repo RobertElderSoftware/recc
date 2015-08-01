@@ -19,6 +19,6 @@
 #include "../core_data_types.h"
 #endif
 
-int struct_c_lexer_token_ptr_compare(struct c_lexer_token **, struct c_lexer_token **);
+int struct_c_lexer_token_ptr_compare(struct c_lexer_token *, struct c_lexer_token *);
 
 #endif

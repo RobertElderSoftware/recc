@@ -5,7 +5,7 @@
 # File names
 SOURCES = $(wildcard test/*.c)
 BUILTIN_SOURCES= $(wildcard builtin/*.c)
-OTHER_OBJECTS=code_generator.o preprocessor.o parser.o io.o lexer.o data-structures/binary_exponential_buffer.o data-structures/memory_pooler.o data-structures/libgenerated-data-structures.a 
+OTHER_OBJECTS=memory_pool_collection.o heap_memory_pool.o code_generator.o preprocessor.o parser.o io.o lexer.o data-structures/binary_exponential_buffer.o data-structures/libgenerated-data-structures.a 
 BUILTIN_OBJECTS= $(BUILTIN_SOURCES:.c=.o)
 PREPROCESSED= $(SOURCES:.c=.i)
 ASSEMBLY= $(SOURCES:.c=.l2)
@@ -42,7 +42,7 @@ $(GCC_EXECUTABLES): $(BUILTIN_OBJECTS) $(OTHER_OBJECTS)
 
 # To obtain gcc output
 %.gccoutput: %.gcc recc
-	@./$< > $@
+	@./$< > $@ 2>&1 || true #  This commands never errors, even if the gcc executable does.
 
 # To obtain js vm output
 js-output: $(CLEAN_ASSEMBLY) $(JS_PRELOADER)

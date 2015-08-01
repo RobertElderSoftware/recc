@@ -16,18 +16,30 @@
 */
 
 /*  Data types required to be defined/declared by our data structures */
-struct type_description;
+
+#ifndef __TYPES_PARSER_struct_type_description_H__
+#include "types/parser/struct_type_description.h"
+#endif
+
+#ifndef __TYPES_LINKER_struct_asm_instruction_h__
+#include "types/linker/struct_asm_instruction.h"
+#endif
+
+#ifndef __TYPES_LINKER_struct_linker_symbol_h__
+#include "types/linker/struct_linker_symbol.h"
+#endif
+
+#ifndef __TYPES_struct_heap_ptr_index_pair_H__
+#include "types/struct_heap_ptr_index_pair.h"
+#endif
+
 struct parser_operation;
 struct normalized_specifier;
 struct normalized_declarator;
 struct normalized_declaration_element;
-struct memory_pooler;
-struct memory_pooler_collection;
-struct c_lexer_token;
+struct memory_pool;
 struct build_script_lexer_token;
 struct asm_lexer_token;
-struct linker_symbol;
-struct asm_instruction;
 struct unsigned_char_list;
 struct linker_object;
 struct asm_lexer_state;
@@ -46,15 +58,67 @@ struct struct_unsigned_char_list;
 struct c_lexer_state;
 struct preprocessor_file_context;
 
-/*  Required for sorting map keys */
-struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair;
-struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair;
-struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair;
-struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair;
-struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair;
-struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair;
-struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair;
-struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair;
+
+/*  Required for sorting and searching map keys TODO:  Move to types folder. */
+struct void_ptr_to_unsigned_int_key_value_pair{
+	void * key;
+	unsigned int value;
+};
+struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair{
+	unsigned char * key;
+	unsigned char * value;
+};
+struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair{
+	unsigned char * key;
+	struct macro_parameter * value;
+};
+struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair{
+	unsigned char * key;
+	struct macro_definition * value;
+};
+struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair{
+	unsigned char * key;
+	struct special_macro_definition * value;
+};
+struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair{
+	struct c_lexer_token * key;
+	struct c_lexer_token * value;
+};
+struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair{
+	struct c_lexer_token * key;
+	unsigned char * value;
+};
+struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair{
+	unsigned char * key;
+	struct constant_description * value;
+};
+struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair{
+	unsigned char * key;
+	struct linker_symbol * value;
+};
+struct unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair{
+	unsigned char * key;
+	struct namespace_object * value;
+};
+
+enum preloader_instruction_type {
+	ADD_INSTRUCTION,
+	SUB_INSTRUCTION,
+	MUL_INSTRUCTION,
+	DIV_INSTRUCTION,
+	BEQ_INSTRUCTION,
+	BLT_INSTRUCTION,
+	LOA_INSTRUCTION,
+	STO_INSTRUCTION,
+	LL_INSTRUCTION,
+	AND_INSTRUCTION,
+	OR_INSTRUCTION,
+	NOT_INSTRUCTION,
+	SHR_INSTRUCTION,
+	SHL_INSTRUCTION,
+	DW_INSTRUCTION,
+	SW_INSTRUCTION
+};
 
 enum parser_operation_type{
 	INCREMENT_NEWLINE_COUNT,
@@ -76,6 +140,156 @@ enum parser_operation_type{
 struct parser_operation{
 	void * data;
 	enum parser_operation_type type;
+	unsigned int pad;
+};
+
+struct preloader_instruction{
+	unsigned int instruction_registers[3];
+	enum preloader_instruction_type type;
+	unsigned int constant_is_negative;
+	unsigned int constant;
+	unsigned int pad;
+};
+
+
+#ifndef __TYPES_struct_memory_pool_collection_H__
+#include "types/struct_memory_pool_collection.h"
+#endif
+
+enum c_token_type {
+	SPACE,
+	NEWLINE,
+	COMMENT,
+	AUTO,
+	BREAK,
+	CASE,
+	CHAR,
+	CONST,
+	CONTINUE,
+	DEFAULT,
+	DO,
+	DOUBLE,
+	ELSE,
+	ENUM,
+	EXTERN,
+	FLOAT,
+	FOR,
+	GOTO,
+	IF,
+	INT,
+	LONG,
+	REGISTER,
+	RETURN,
+	SHORT,
+	SIGNED,
+	SIZEOF,
+	STATIC,
+	STRUCT,
+	SWITCH,
+	TYPEDEF,
+	UNION,
+	UNSIGNED,
+	VOID,
+	VOLATILE,
+	WHILE,
+	IDENTIFIER,
+	CONSTANT_HEX,
+	CONSTANT_EXPONENT,
+	CONSTANT_FLOAT_SMALL,
+	CONSTANT_FLOAT_LARGE,
+	CONSTANT_DECIMAL,
+	CONSTANT_CHARACTER,
+	STRING_LITERAL,
+	ELLIPSIS,
+	RIGHT_ASSIGN,
+	LEFT_ASSIGN,
+	ADD_ASSIGN,
+	SUB_ASSIGN,
+	MUL_ASSIGN,
+	DIV_ASSIGN,
+	MOD_ASSIGN,
+	AND_ASSIGN,
+	XOR_ASSIGN,
+	OR_ASSIGN,
+	RIGHT_OP,
+	LEFT_OP,
+	INC_OP,
+	DEC_OP,
+	PTR_OP,
+	AND_OP,
+	OR_OP,
+	LE_OP,
+	GE_OP,
+	EQ_OP,
+	NE_OP,
+	SEMICOLON_CHAR,
+	OPEN_BRACE_CHAR,
+	CLOSE_BRACE_CHAR,
+	OPEN_SQUARE_BRACKET_CHAR,
+	CLOSE_SQUARE_BRACKET_CHAR,
+	COMMA_CHAR,
+	COLON_CHAR,
+	EQUALS_CHAR,
+	OPEN_PAREN_CHAR,
+	CLOSE_PAREN_CHAR,
+	DOT_CHAR,
+	AMPERSAND_CHAR,
+	EXCLAMATION_MARK_CHAR,
+	TILDE_CHAR,
+	MINUS_CHAR,
+	PLUS_CHAR,
+	MULTIPLY_CHAR,
+	DIVIDE_CHAR,
+	PERCENT_CHAR,
+	OPEN_ANGLE_BRACKET_CHAR,
+	CLOSE_ANGLE_BRACKET_CHAR,
+	CARET_CHAR,
+	PIPE_CHAR,
+	QUESTION_MARK_CHAR,
+	NUMBER_SIGN_CHAR
+};
+
+enum build_script_token_type {
+	B_SPACE,
+	B_NEWLINE,
+	B_CODE_GENERATE,
+	B_PREPROCESS,
+	B_LINK,
+	B_SYMBOLS,
+	B_TO,
+	B_SEMICOLON_CHAR,
+	B_COMMA_CHAR,
+	B_FILENAME
+};
+
+struct c_lexer_token{
+	unsigned char * first_byte;
+	unsigned char * last_byte;
+	enum c_token_type type;
+	unsigned int pad;
+};
+
+struct build_script_lexer_token{
+	unsigned char * first_byte;
+	unsigned char * last_byte;
+	enum build_script_token_type type;
+	unsigned int pad;
+};
+
+#ifndef __TYPES_LEXER_struct_asm_lexer_token_H__
+#include "types/lexer/struct_asm_lexer_token.h"
+#endif
+#ifndef __TYPES_PARSER_enum_node_type_H__
+#include "types/parser/enum_node_type.h"
+#endif
+
+struct parser_node;
+
+struct parser_node{
+	struct parser_node * next;
+	struct parser_node * first_child;
+	struct c_lexer_token * c_lexer_token;
+	enum node_type type;
 	unsigned int pad;
 };
 

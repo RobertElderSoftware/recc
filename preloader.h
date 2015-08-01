@@ -21,6 +21,12 @@
 #ifndef __CORE_DATA_TYPES__H__DEFINED__
 #include "core_data_types.h"
 #endif
+#ifndef __unsigned_char_list__H__DEFINED__
+#include "data-structures/unsigned_char_list.h"
+#endif
+#ifndef __struct_preloader_instruction_list__H__DEFINED__
+#include "data-structures/struct_preloader_instruction_list.h"
+#endif
 #ifndef __STDIO_H_DEFINED__
 #include <stdio.h>
 #endif

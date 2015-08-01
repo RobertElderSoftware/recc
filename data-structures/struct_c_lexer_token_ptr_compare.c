@@ -16,10 +16,10 @@
 #include "struct_c_lexer_token_ptr_compare.h"
 #endif
 
-int struct_c_lexer_token_ptr_compare(struct c_lexer_token ** a, struct c_lexer_token ** b){
-	if(*a > *b){
+int struct_c_lexer_token_ptr_compare(struct c_lexer_token * a, struct c_lexer_token * b){
+	if(a > b){
 		return 1;
-	}else if(*a < *b){
+	}else if(a < b){
 		return -1;
 	}else{
 		return 0;

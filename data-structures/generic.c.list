@@ -23,15 +23,12 @@ void T0_IDENTIFIER_list_add_end(struct T0_IDENTIFIER_list * list, T0_LITERAL ite
 void T0_IDENTIFIER_list_add_all_end(struct T0_IDENTIFIER_list * list, struct T0_IDENTIFIER_list * src){
 	unsigned int items_to_add = T0_IDENTIFIER_list_size(src);
 	unsigned int previous_items = T0_IDENTIFIER_list_size(list);
-	unsigned int i;
 	T0_LITERAL * ptr_src;
 	T0_LITERAL * ptr_dst;
 	binary_exponential_buffer_increment(&list->buffer, items_to_add);
 	ptr_src = (T0_LITERAL *)binary_exponential_buffer_data(&src->buffer);
 	ptr_dst = (T0_LITERAL *)binary_exponential_buffer_data(&list->buffer);
-	for(i = 0; i < items_to_add; i++){
-		ptr_dst[previous_items + i] = ptr_src[i];
-	}
+	memcpy(&ptr_dst[previous_items], &ptr_src[0], sizeof(T0_LITERAL) * items_to_add);
 }
 
 T0_LITERAL T0_IDENTIFIER_list_pop_end(struct T0_IDENTIFIER_list * list){
@@ -40,16 +37,16 @@ T0_LITERAL T0_IDENTIFIER_list_pop_end(struct T0_IDENTIFIER_list * list){
 	return rtn;
 }
 
-void T0_IDENTIFIER_list_remove_all(struct T0_IDENTIFIER_list * list, T0_LITERAL item){
+void T0_IDENTIFIER_list_remove_all(struct T0_IDENTIFIER_list * list, T0_LITERAL item, int (*cmp)(T0_LITERAL, T0_LITERAL)){
 	/* Remove all instances of item from the list */
 	unsigned int i = 0;
 	unsigned int old_i = 0;
 	unsigned int new_i = 0;
-	unsigned int oc = T0_IDENTIFIER_list_occurrences(list, item);
+	unsigned int oc = T0_IDENTIFIER_list_occurrences(list, item, cmp);
 	T0_LITERAL * data = (T0_LITERAL *)binary_exponential_buffer_data(&list->buffer);
 
 	for(i = 0; i < binary_exponential_buffer_size(&list->buffer); i++){
-		if(data[i] != item){
+		if(cmp(data[i], item)){
 			data[new_i] = data[old_i];
 			new_i++;
 		}
@@ -60,11 +57,11 @@ void T0_IDENTIFIER_list_remove_all(struct T0_IDENTIFIER_list * list, T0_LITERAL 
 	assert(oc == (old_i - new_i));
 }
 
-unsigned int T0_IDENTIFIER_list_occurrences(struct T0_IDENTIFIER_list * list, T0_LITERAL item){
+unsigned int T0_IDENTIFIER_list_occurrences(struct T0_IDENTIFIER_list * list, T0_LITERAL item, int (*cmp)(T0_LITERAL, T0_LITERAL)){
 	unsigned int i;
 	unsigned int occurrences = 0;
 	for(i = 0; i < binary_exponential_buffer_size(&list->buffer); i++){
-		if((*((T0_LITERAL *)binary_exponential_buffer_get(&list->buffer, i))) == item){
+		if(!cmp((*((T0_LITERAL *)binary_exponential_buffer_get(&list->buffer, i))), item)){
 			occurrences++;
 		}
 	}

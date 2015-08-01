@@ -78,9 +78,16 @@
         <option value="0x000006F4">0x000006F4 convertvalue0</option>
       </select>
     </div>
+    <div>
+      <span>Inspect Memory Location</span>
+      <input class="inspectmemoryvalue" type="text" value="0x0">
+    </div>
     <div class="debug-view-area">
       <table class="fr-bits">
         <tr>
+          <td>
+           DIV_ZERO 
+          </td>
           <td>
             UART1_IN Ready
           </td>
@@ -139,6 +146,12 @@
           <th>
             Value
           </th>
+          <th>
+            Memory Address
+          </th>
+          <th>
+            Value
+          </th>
         </tr>
         <tr>
           <td style="padding-right: 10px; border-right: 2px solid #000000;">
@@ -167,6 +180,14 @@
           </td>
           <td>
             <div class="stack-value-container">
+            </div>
+          </td>
+          <td style="padding-left: 10px;">
+            <div class="inspect-memory-address-container">
+            </div>
+          </td>
+          <td>
+            <div class="inspect-memory-value-container">
             </div>
           </td>
         </tr>

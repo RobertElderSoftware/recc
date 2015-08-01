@@ -39,3 +39,38 @@ int strcmp (const char * s1, const char * s2){
 	rtn = abc;
 	return rtn;
 }
+
+
+void * memcpy(void * dest, const void * src, size_t bytes){
+	unsigned int remain = bytes % sizeof(unsigned int);
+	void * dest_return = dest;
+	/*  If the memory locations are 4 byte aligned */
+	if(((unsigned int)src) % sizeof(unsigned int) == 0 && ((unsigned int)dest) % sizeof(unsigned int) == 0){
+		unsigned int num_words = bytes / sizeof(unsigned int);
+		if(num_words){
+			unsigned int * d = (unsigned int *)dest;
+			unsigned int * s = (unsigned int *)src;
+			unsigned int i;
+			for(i = 0; i < num_words; i++){
+				*d = *s;
+				d++;
+				s++;
+			}
+			dest = d;
+			src = s;
+		}
+	}else{
+		remain = bytes;
+	}
+	if(remain){
+		char * d = (char *)dest;
+		char * s = (char *)src;
+		unsigned int i;
+		for(i = 0; i < remain; i++){
+			*d = *s;
+			d++;
+			s++;
+		}
+	}
+	return dest_return;
+}

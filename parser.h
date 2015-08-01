@@ -36,9 +36,6 @@
 #ifndef __struct_parser_operation_stack__H__DEFINED__
 #include "data-structures/struct_parser_operation_stack.h"
 #endif
-#ifndef __MEMORY_POOLER__H__DEFINED__
-#include "data-structures/memory_pooler.h"
-#endif
 #ifndef __struct_normalized_specifier_ptr_list__H__DEFINED__
 #include "data-structures/struct_normalized_specifier_ptr_list.h"
 #endif
@@ -60,6 +57,9 @@
 #ifndef __unsigned_char_ptr_to_struct_constant_description_ptr_map__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"
 #endif
+#ifndef __unsigned_char_ptr_to_struct_namespace_object_ptr_map__H__DEFINED__
+#include "data-structures/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h"
+#endif
 #ifndef __STRING_H_DEFINED__
 #include <string.h>
 #endif
@@ -75,157 +75,39 @@
 #ifndef __STDARG_H_DEFINED__
 #include <stdarg.h>
 #endif
-
-enum node_type{
-	TERMINAL,
-	EPSILON,
-	PRIMARY_EXPRESSION,
-	POSTFIX_EXPRESSION,
-	POSTFIX_EXPRESSION_REST,
-	UNARY_EXPRESSION,
-	UNARY_OPERATOR,
-	CAST_EXPRESSION,
-	MULTIPLICATIVE_EXPRESSION,
-	MULTIPLICATIVE_EXPRESSION_REST,
-	ADDITIVE_EXPRESSION,
-	ADDITIVE_EXPRESSION_REST,
-	SHIFT_EXPRESSION,
-	SHIFT_EXPRESSION_REST,
-	RELATIONAL_EXPRESSION,
-	RELATIONAL_EXPRESSION_REST,
-	EQUALITY_EXPRESSION,
-	EQUALITY_EXPRESSION_REST,
-	AND_EXPRESSION,
-	AND_EXPRESSION_REST,
-	EXCLUSIVE_OR_EXPRESSION,
-	EXCLUSIVE_OR_EXPRESSION_REST,
-	INCLUSIVE_OR_EXPRESSION,
-	INCLUSIVE_OR_EXPRESSION_REST,
-	LOGICAL_AND_EXPRESSION,
-	LOGICAL_AND_EXPRESSION_REST,
-	LOGICAL_OR_EXPRESSION,
-	LOGICAL_OR_EXPRESSION_REST,
-	CONDITIONAL_EXPRESSION,
-	ASSIGNMENT_EXPRESSION,
-	ASSIGNMENT_OPERATOR,
-	EXPRESSION_REST,
-	EXPRESSION,
-	CONSTANT_EXPRESSION,
-	EXPRESSION_STATEMENT,
-	LABELED_STATEMENT,
-	SELECTION_STATEMENT,
-	ITERATION_STATEMENT,
-	JUMP_STATEMENT,
-	STATEMENT,
-	STATEMENT_LIST,
-	STATEMENT_LIST_REST,
-	COMPOUND_STATEMENT,
-	TYPE_QUALIFIER,
-	TYPE_QUALIFIER_LIST,
-	TYPE_QUALIFIER_LIST_REST,
-	STORAGE_CLASS_SPECIFIER,
-	TYPE_SPECIFIER,
-	ENUM_SPECIFIER,
-	DECLARATION_SPECIFIERS,
-	DECLARATION,
-	DECLARATION_LIST,
-	DECLARATION_LIST_REST,
-	DIRECT_DECLARATOR_REST,
-	DIRECT_DECLARATOR,
-	DIRECT_ABSTRACT_DECLARATOR,
-	DIRECT_ABSTRACT_DECLARATOR_REST,
-	TYPE_NAME,
-	ABSTRACT_DECLARATOR,
-	DECLARATOR,
-	INIT_DECLARATOR,
-	INIT_DECLARATOR_LIST,
-	INIT_DECLARATOR_LIST_REST,
-	INITIALIZER,
-	INITIALIZER_LIST,
-	INITIALIZER_LIST_REST,
-	IDENTIFIER_LIST,
-	IDENTIFIER_LIST_REST,
-	POINTER,
-	STRUCT_OR_UNION,
-	STRUCT_DECLARATOR,
-	STRUCT_DECLARATOR_LIST,
-	STRUCT_DECLARATOR_LIST_REST,
-	STRUCT_DECLARATION,
-	STRUCT_DECLARATION_LIST,
-	STRUCT_DECLARATION_LIST_REST,
-	STRUCT_OR_UNION_SPECIFIER,
-	SPECIFIER_QUALIFIER_LIST,
-	PARAMETER_DECLARATION,
-	ARGUMENT_EXPRESSION_LIST,
-	ARGUMENT_EXPRESSION_LIST_REST,
-	PARAMETER_LIST,
-	PARAMETER_LIST_REST,
-	PARAMETER_TYPE_LIST,
-	ENUMERATOR_LIST,
-	ENUMERATOR_LIST_REST,
-	ENUMERATOR,
-	TRANSLATION_UNIT,
-	TRANSLATION_UNIT_REST,
-	EXTERNAL_DECLARATION,
-	FUNCTION_DEFINITION
-};
-
-enum type_class{
-	TYPE_CLASS_CHAR,
-	TYPE_CLASS_SHORT,
-	TYPE_CLASS_INT,
-	TYPE_CLASS_LONG,
-	TYPE_CLASS_LONG_LONG,
-	TYPE_CLASS_FLOAT,
-	TYPE_CLASS_DOUBLE,
-	TYPE_CLASS_LONG_DOUBLE,
-	TYPE_CLASS_VOID,
-	TYPE_CLASS_POINTER,
-	TYPE_CLASS_ARRAY,
-	TYPE_CLASS_FUNCTION,
-	TYPE_CLASS_ENUM,
-	TYPE_CLASS_STRUCT,
-	TYPE_CLASS_UNION
-};
-
-enum scope_type{
-	IDENTIFIER_NAMESPACE,
-	TAG_NAMESPACE,
-	LABEL_NAMESPACE
-};
-
-enum add_or_remove{
-	ADD,
-	REMOVE
-};
-
-enum declaration_or_definition{
-	FROM_DECLARATION,
-	FROM_DEFINITION
-};
-
-enum normalized_declaration_type{
-	NORMALIZED_DECLARATION,
-	NORMALIZED_FUNCTION_DEFINITION,
-	NORMALIZED_PARAMETER_DECLARATION,
-	NORMALIZED_STRUCT_DECLARATION,
-	NORMALIZED_K_AND_R_C_IDENTIFIER_DECLARATOR_PAIR,
-	NORMALIZED_ENUMERATOR_LIST
-};
-
-enum normalized_declarator_type{
-	NORMALIZED_DECLARATOR,
-	NORMALIZED_ABSTRACT_DECLARATOR,
-	NORMALIZED_STRUCT_DECLARATOR,
-	NORMALIZED_INIT_DECLARATOR,
-	NORMALIZED_ENUMERATOR
-};
-
-enum normalized_specifier_type{
-	NORMALIZED_TYPE_SPECIFIER,
-	NORMALIZED_TYPE_QUALIFIER,
-	NORMALIZED_STORAGE_CLASS_SPECIFIER
-};
+#ifndef __struct_parser_node_memory_pool__H__DEFINED__
+#include "data-structures/struct_parser_node_memory_pool.h"
+#endif
+#ifndef __struct_c_lexer_token_memory_pool__H__DEFINED__
+#include "data-structures/struct_c_lexer_token_memory_pool.h"
+#endif
+#ifndef __struct_type_description_memory_pool__H__DEFINED__
+#include "data-structures/struct_type_description_memory_pool.h"
+#endif
+#ifndef __TYPES_PARSER_enum_type_class_H__
+#include "types/parser/enum_type_class.h"
+#endif
+#ifndef __TYPES_PARSER_enum_scope_type_H__
+#include "types/parser/enum_scope_type.h"
+#endif
+#ifndef __TYPES_PARSER_enum_add_or_remove_H__
+#include "types/parser/enum_add_or_remove.h"
+#endif
+#ifndef __TYPES_PARSER_enum_declaration_or_definition_H__
+#include "types/parser/enum_declaration_or_definition.h"
+#endif
+#ifndef __TYPES_PARSER_enum_normalized_declaration_type_H__
+#include "types/parser/enum_normalized_declaration_type.h"
+#endif
+#ifndef __TYPES_PARSER_enum_normalized_declarator_type_H__
+#include "types/parser/enum_normalized_declarator_type.h"
+#endif
+#ifndef __TYPES_PARSER_enum_normalized_specifier_type_H__
+#include "types/parser/enum_normalized_specifier_type.h"
+#endif
+#ifndef __TYPES_PARSER_enum_value_type_H__
+#include "types/parser/enum_value_type.h"
+#endif
 
 enum object_location{
 	LOCATION_STRUCT,
@@ -233,23 +115,6 @@ enum object_location{
 	GLOBAL,
 	LOCAL,
 	PARAMETER
-};
-
-
-enum value_type{
-	LVALUE,
-	WORD_ALIGNED_RVALUE,
-	MINIMAL_RVALUE
-};
-
-struct parser_node;
-
-struct parser_node{
-	struct parser_node * next;
-	struct parser_node * first_child;
-	struct c_lexer_token * c_lexer_token;
-	enum node_type type;
-	unsigned int pad;
 };
 
 struct k_and_r_c_identifier_description{
@@ -317,7 +182,7 @@ struct normalized_specifier{
 };
 
 struct namespace_object{
-	struct struct_namespace_object_ptr_list * children;
+	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map * children;
 	struct struct_normalized_declaration_element_ptr_list elements; /* All of the declaration elements related to one named symbol */
 	struct scope_level * scope_level;
 	struct namespace_object * previous; /* The previous declaration element (previous param, or previous local stack varable) */
@@ -349,7 +214,8 @@ struct namespace_modification{
 	struct normalized_declaration_element * new_element;
 	struct namespace_object * object;
 	struct scope_level * scope_level;
-	struct struct_namespace_object_ptr_list * scope_namespace;
+	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map * scope_namespace;
+	unsigned char * identifier_str;
 	enum scope_type scope_type;
 	enum object_location object_location;
 	int offset;
@@ -365,9 +231,9 @@ struct scope_level{
 	struct unsigned_char_ptr_list end_labels;      /*  For break statements  */
 	struct namespace_object * current_function;
 	struct namespace_object * first_local_object;
-	struct struct_namespace_object_ptr_list tag_namespace;
-	struct struct_namespace_object_ptr_list label_namespace;
-	struct struct_namespace_object_ptr_list identifier_namespace;
+	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map tag_namespace;
+	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map label_namespace;
+	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map identifier_namespace;
 	unsigned int num_sub_scopes;
 	unsigned int pad;
 };
@@ -382,18 +248,13 @@ struct constant_description{
 	unsigned int pad;
 };
 
-struct type_description{
-	struct normalized_declaration_element * source_element; /* Needed for anonymous struct/union/enum */
-	struct normalized_declarator * declarator;
-	struct struct_normalized_specifier_ptr_list * specifiers;
-	struct parser_node * context;
-	struct scope_level * source_scope_level;
-	enum value_type value_type;
-	unsigned int pad;
-};
+
+#ifndef __TYPES_PARSER_struct_type_description_H__
+#include "types/parser/struct_type_description.h"
+#endif
 
 struct parser_state{
-	struct memory_pooler_collection * memory_pooler_collection;
+	struct memory_pool_collection * memory_pool_collection;
 	struct c_lexer_state * c_lexer_state;
 	struct scope_level * top_scope;
 	struct parser_node * top_node;
@@ -414,38 +275,39 @@ void backtrack(struct parser_state *, unsigned int);
 struct parser_node * get_identifier_from_declarator(struct parser_node *);
 unsigned char * copy_asm_token(struct asm_lexer_token *);
 unsigned char * copy_build_script_token(struct build_script_lexer_token *);
-int parse(struct c_lexer_state *, struct parser_state *, unsigned char *);
+void create_parser_state(struct parser_state *, struct memory_pool_collection *, struct c_lexer_state *, struct unsigned_char_list *, unsigned char *);
+int parse(struct parser_state *);
 void destroy_parser_state(struct parser_state *);
 const char ** get_node_type_names(void);
-struct namespace_object * get_namespace_object_from_scope_namespace_using_string(enum scope_type, struct struct_namespace_object_ptr_list *, unsigned char *);
+struct namespace_object * get_namespace_object_from_scope_namespace_using_string(struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *, unsigned char *);
 struct constant_description * find_constant(struct parser_state *, unsigned char *);
-int is_pointer(struct parser_node *);
-int is_function(struct parser_node *);
-int is_array(struct parser_node *);
-struct parser_node * create_abstract_declarator_from_normalized_declarator(struct normalized_declarator *);
+int is_pointer(struct memory_pool_collection *, struct parser_node *);
+int is_function(struct memory_pool_collection *, struct parser_node *);
+int is_array(struct memory_pool_collection *, struct parser_node *);
+struct parser_node * create_abstract_declarator_from_normalized_declarator(struct memory_pool_collection *, struct normalized_declarator *);
 struct parser_node * get_constant_expression_from_abstract_declarator(struct parser_node *);
-struct type_description * create_type_description_from_normalized_declaration_element(struct normalized_declaration_element *, struct parser_node *, struct scope_level *, enum value_type);
-void destroy_type_description(struct type_description *);
-void print_normalized_declaration_element(struct unsigned_char_list *, struct normalized_declaration_element *, unsigned int);
-void print_normalized_declaration_declarator_and_specifiers(struct unsigned_char_list *, struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *, struct parser_node *, unsigned int);
+struct type_description * create_type_description_from_normalized_declaration_element(struct memory_pool_collection *, struct normalized_declaration_element *, struct parser_node *, struct scope_level *, enum value_type);
+void destroy_type_description(struct memory_pool_collection *, struct type_description *);
+void print_normalized_declaration_element(struct memory_pool_collection *, struct unsigned_char_list *, struct normalized_declaration_element *, unsigned int);
+void print_normalized_declaration_declarator_and_specifiers(struct memory_pool_collection *, struct unsigned_char_list *, struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *, struct parser_node *, unsigned int);
 
-struct parser_node * copy_parser_node_children_only(struct parser_node *);
-struct parser_node * copy_parser_node_tree_and_c_lexer_tokens(struct parser_node *);
-struct parser_node * destroy_parser_node_tree_and_c_lexer_tokens(struct parser_node *);
-struct type_description * copy_type_description(struct type_description *);
-int type_description_cmp(struct type_description *, struct type_description *);
-struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *, struct parser_node *, struct scope_level *, enum value_type, struct normalized_declaration_element *);
-struct parser_node * convert_abstract_declarator_to_function_type(struct parser_node *);
-void convert_to_untypedefed_type_description(struct type_description *);
-struct type_description * create_address_type_description_from_type_description(struct type_description *);
-struct type_description * create_dereferenced_pointer_type_description_from_type_description(struct type_description *);
-struct type_description * create_dereferenced_array_type_description_from_type_description(struct type_description *);
-int is_type_description_a_function(struct type_description *);
-int is_type_description_a_function_pointer(struct type_description *);
-struct type_description * get_current_function_return_type_description(struct type_description *);
+struct parser_node * copy_parser_node_children_only(struct memory_pool_collection *, struct parser_node *);
+struct parser_node * copy_parser_node_tree_and_c_lexer_tokens(struct memory_pool_collection *, struct parser_node *);
+struct parser_node * destroy_parser_node_tree_and_c_lexer_tokens(struct memory_pool_collection *, struct parser_node *);
+struct type_description * copy_type_description(struct memory_pool_collection *, struct type_description *);
+int type_description_cmp(struct memory_pool_collection *, struct type_description *, struct type_description *);
+struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct memory_pool_collection *, struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *, struct parser_node *, struct scope_level *, enum value_type, struct normalized_declaration_element *);
+struct parser_node * convert_abstract_declarator_to_function_type(struct memory_pool_collection *, struct parser_node *);
+void convert_to_untypedefed_type_description(struct memory_pool_collection *, struct type_description *);
+struct type_description * create_address_type_description_from_type_description(struct memory_pool_collection *, struct type_description *);
+struct type_description * create_dereferenced_pointer_type_description_from_type_description(struct memory_pool_collection *, struct type_description *);
+struct type_description * create_dereferenced_array_type_description_from_type_description(struct memory_pool_collection *, struct type_description *);
+int is_type_description_a_function(struct memory_pool_collection *, struct type_description *);
+int is_type_description_a_function_pointer(struct memory_pool_collection *, struct type_description *);
+struct type_description * get_current_function_return_type_description(struct memory_pool_collection *, struct type_description *);
 struct c_lexer_token * get_identifier_token_from_normalized_declarator(struct normalized_declarator *);
 
-struct type_description * create_type_description_from_type_name(struct parser_state *, struct parser_node *);
+struct type_description * create_type_description_from_type_name(struct memory_pool_collection *, struct parser_state *, struct parser_node *);
 unsigned int is_signed(struct type_description * t);
 void print_node_context(struct c_lexer_state *, struct parser_node *);
 struct parser_node * get_struct_or_union_or_enum_specifier(struct struct_normalized_specifier_ptr_list *);
@@ -453,35 +315,35 @@ int is_struct(struct parser_node *);
 int is_union(struct parser_node *);
 unsigned int contains_struct_or_union_or_enum_definition(struct namespace_object *);
 int is_enum(struct parser_node *);
-unsigned int get_enum_value(struct normalized_declaration_element *);
+unsigned int get_enum_value(struct memory_pool_collection *, struct normalized_declaration_element *);
 unsigned int convert_decimal_constant(unsigned char *);
 
-enum type_class determine_type_class(struct type_description *);
-unsigned int void_type_size(enum value_type);
-unsigned int arithmetic_type_size(struct type_description *, enum value_type);
-unsigned int pointer_type_size(struct type_description *, enum value_type);
-unsigned int enum_type_size(struct type_description *, enum value_type);
+enum type_class determine_type_class(struct memory_pool_collection *, struct type_description *);
+unsigned int void_type_size(struct memory_pool_collection *, enum value_type);
+unsigned int arithmetic_type_size(struct memory_pool_collection *, struct type_description *, enum value_type);
+unsigned int pointer_type_size(struct memory_pool_collection *, struct type_description *, enum value_type);
+unsigned int enum_type_size(struct memory_pool_collection *, struct type_description *, enum value_type);
 unsigned int get_ceil_modulo(unsigned int, unsigned int);
-void remove_enum(struct type_description *);
-void remove_specifier(struct type_description *, unsigned int, enum c_token_type);
-struct type_description * add_specifier(struct type_description *, enum c_token_type);
+void remove_enum(struct memory_pool_collection *, struct type_description *);
+void remove_specifier(struct memory_pool_collection *, struct type_description *, unsigned int, enum c_token_type);
+struct type_description * add_specifier(struct memory_pool_collection *, struct type_description *, enum c_token_type);
 unsigned int count_specifiers(struct type_description *, enum c_token_type);
-struct type_description * create_empty_type_description(void);
-unsigned int is_integral_type(struct type_description *);
-unsigned int is_floating_type(struct type_description *);
-unsigned int is_arithmetic_type(struct type_description *);
-unsigned int is_scalar_type(struct type_description *);
+struct type_description * create_empty_type_description(struct memory_pool_collection *);
+unsigned int is_integral_type(struct memory_pool_collection *, struct type_description *);
+unsigned int is_floating_type(struct memory_pool_collection *, struct type_description *);
+unsigned int is_arithmetic_type(struct memory_pool_collection *, struct type_description *);
+unsigned int is_scalar_type(struct memory_pool_collection *, struct type_description *);
 struct c_lexer_token * get_struct_or_union_or_enum_tag_token(struct parser_node *);
 struct parser_node * get_struct_declaration_list(struct parser_node *);
-struct normalized_declaration_set * create_normalized_declaration_set_from_parser_node(struct parser_node *, struct normalized_declaration_set *);
+struct normalized_declaration_set * create_normalized_declaration_set_from_parser_node(struct memory_pool_collection *, struct parser_node *, struct normalized_declaration_set *);
 struct struct_normalized_declaration_element_ptr_list * create_normalized_declaration_element_list(struct normalized_declaration_set *);
-void destroy_normalized_declaration_element_list(struct struct_normalized_declaration_element_ptr_list*);
+void destroy_normalized_declaration_element_list(struct memory_pool_collection *, struct struct_normalized_declaration_element_ptr_list*);
 struct parser_node * get_enumerator_list(struct parser_node *);
-struct namespace_object * get_namespace_object_from_closest_namespace(unsigned char *, enum scope_type, struct scope_level *, unsigned int);
-unsigned char * make_up_identifier(struct normalized_declaration_element *);
-struct normalized_declarator * make_array_brackets(void);
+struct namespace_object * get_namespace_object_from_closest_namespace(unsigned char *, enum scope_type, struct scope_level *, unsigned int, struct memory_pool_collection *);
+unsigned char * make_up_identifier(struct normalized_declaration_element *, struct memory_pool_collection *);
+struct normalized_declarator * make_array_brackets(struct memory_pool_collection *);
 void print_error_with_types(struct c_lexer_state *, struct type_description *, struct type_description *, struct parser_node *, const char *);
 void print_error_with_type(struct c_lexer_state *, struct type_description *, struct parser_node *, const char *);
-struct type_description * get_type_description_from_suffix(unsigned char *);
+struct type_description * get_type_description_from_suffix(struct memory_pool_collection *, unsigned char *);
 
 #endif

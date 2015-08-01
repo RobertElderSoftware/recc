@@ -208,7 +208,10 @@ unsigned int accept_range(unsigned char lo, unsigned char hi, struct common_lexe
 }
 
 unsigned int accept(unsigned char c, struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
-	return accept_range(c, c, common_lexer_state, tentative_position);
+	if(tentative_position < common_lexer_state->buffer_size && common_lexer_state->buf[tentative_position] == c){
+		return 1;
+	}
+	return 0;
 }
 
 unsigned int accept_word(unsigned const char * c, struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
@@ -577,7 +580,7 @@ unsigned int t_constant_string_part(struct common_lexer_state * common_lexer_sta
 					count++;
 				}else{
 					buffered_printf(common_lexer_state->buffered_output, "Unexpected end of file in constant expression.");
-					assert(0);
+					assert(0 && "Unexpected end of file in constant expression.");
 				}
 			}
 		}
@@ -642,19 +645,15 @@ void show_lexer_token(struct unsigned_char_list * out_buffer, const char * name,
 	}
 }
 
-int lex_c(struct c_lexer_state * c_lexer_state, unsigned char * filename, unsigned char * buffer, unsigned int buffer_size){
-	struct memory_pooler * c_lexer_token_pool = memory_pooler_collection_get_pool(c_lexer_state->c.memory_pooler_collection, sizeof(struct c_lexer_token));
-	c_lexer_state->c.buf = buffer;
+int lex_c(struct c_lexer_state * c_lexer_state){
 	c_lexer_state->c.position = 0;
 	c_lexer_state->c.current_line = 0;
-	c_lexer_state->c.filename = filename;
-	c_lexer_state->c.buffer_size = buffer_size;
 
 	g_format_buffer_use();
 
 	struct_c_lexer_token_ptr_list_create(&c_lexer_state->tokens);
 
-	while(c_lexer_state->c.position < buffer_size){
+	while(c_lexer_state->c.position < c_lexer_state->c.buffer_size){
 		unsigned int rtn = 0;
 		unsigned char * first_byte = &c_lexer_state->c.buf[c_lexer_state->c.position];
 		enum c_token_type type;
@@ -853,7 +852,7 @@ int lex_c(struct c_lexer_state * c_lexer_state, unsigned char * filename, unsign
 			return 1;
 		}
 
-		new_token = (struct c_lexer_token *)memory_pooler_malloc(c_lexer_token_pool);
+		new_token = struct_c_lexer_token_memory_pool_malloc(c_lexer_state->c.memory_pool_collection->struct_c_lexer_token_pool);
 		new_token->type = type;
 		new_token->first_byte = first_byte;
 		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);
@@ -866,13 +865,20 @@ int lex_c(struct c_lexer_state * c_lexer_state, unsigned char * filename, unsign
 	return 0;
 }
 
+void create_c_lexer_state(struct c_lexer_state * state, struct unsigned_char_list * buffered_output, struct memory_pool_collection * memory_pool_collection, unsigned char * in_file, unsigned char * input_buffer, unsigned int size){
+	state->c.buffered_output = buffered_output;
+	state->c.memory_pool_collection = memory_pool_collection;
+	state->c.filename = in_file;
+	state->c.buf = input_buffer;
+	state->c.buffer_size = size;
+}
+
 void destroy_c_lexer_state(struct c_lexer_state * c_lexer_state){
 	unsigned int num_tokens = struct_c_lexer_token_ptr_list_size(&c_lexer_state->tokens);
 	struct c_lexer_token ** tokens = struct_c_lexer_token_ptr_list_data(&c_lexer_state->tokens);
 	unsigned int i;
-	struct memory_pooler * c_lexer_token_pool = memory_pooler_collection_get_pool(c_lexer_state->c.memory_pooler_collection, sizeof(struct c_lexer_token));
 	for(i = 0; i < num_tokens; i++){
-		memory_pooler_free(c_lexer_token_pool, tokens[i]);
+		struct_c_lexer_token_memory_pool_free(c_lexer_state->c.memory_pool_collection->struct_c_lexer_token_pool, tokens[i]);
 	}
 	struct_c_lexer_token_ptr_list_destroy(&c_lexer_state->tokens);
 }
@@ -881,9 +887,8 @@ void destroy_build_script_lexer_state(struct build_script_lexer_state * build_sc
 	unsigned int num_tokens = struct_build_script_lexer_token_ptr_list_size(&build_script_lexer_state->tokens);
 	struct build_script_lexer_token ** tokens = struct_build_script_lexer_token_ptr_list_data(&build_script_lexer_state->tokens);
 	unsigned int i;
-	struct memory_pooler * build_script_lexer_token_pool = memory_pooler_collection_get_pool(build_script_lexer_state->c.memory_pooler_collection, sizeof(struct build_script_lexer_token));
 	for(i = 0; i < num_tokens; i++){
-		memory_pooler_free(build_script_lexer_token_pool, tokens[i]);
+		struct_build_script_lexer_token_memory_pool_free(build_script_lexer_state->c.memory_pool_collection->struct_build_script_lexer_token_pool, tokens[i]);
 	}
 	struct_build_script_lexer_token_ptr_list_destroy(&build_script_lexer_state->tokens);
 }
@@ -892,15 +897,13 @@ void destroy_asm_lexer_state(struct asm_lexer_state * asm_lexer_state){
 	unsigned int num_tokens = struct_asm_lexer_token_ptr_list_size(&asm_lexer_state->tokens);
 	struct asm_lexer_token ** tokens = struct_asm_lexer_token_ptr_list_data(&asm_lexer_state->tokens);
 	unsigned int i;
-	struct memory_pooler * asm_lexer_token_pool = memory_pooler_collection_get_pool(asm_lexer_state->c.memory_pooler_collection, sizeof(struct asm_lexer_token));
 	for(i = 0; i < num_tokens; i++){
-		memory_pooler_free(asm_lexer_token_pool, tokens[i]);
+		struct_asm_lexer_token_memory_pool_free(asm_lexer_state->c.memory_pool_collection->struct_asm_lexer_token_pool, tokens[i]);
 	}
 	struct_asm_lexer_token_ptr_list_destroy(&asm_lexer_state->tokens);
 }
 
 int lex_build_script(struct build_script_lexer_state * build_script_lexer_state, unsigned char * filename, unsigned char * buffer, unsigned int buffer_size){
-	struct memory_pooler * build_script_lexer_token_pool = memory_pooler_collection_get_pool(build_script_lexer_state->c.memory_pooler_collection, sizeof(struct build_script_lexer_token));
 	build_script_lexer_state->c.buf = buffer;
 	build_script_lexer_state->c.position = 0;
 	build_script_lexer_state->c.current_line = 0;
@@ -948,7 +951,7 @@ int lex_build_script(struct build_script_lexer_state * build_script_lexer_state,
 			return 1;
 		}
 
-		new_token = (struct build_script_lexer_token *)memory_pooler_malloc(build_script_lexer_token_pool);
+		new_token = struct_build_script_lexer_token_memory_pool_malloc(build_script_lexer_state->c.memory_pool_collection->struct_build_script_lexer_token_pool);
 		new_token->type = type;
 		new_token->first_byte = first_byte;
 		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);
@@ -962,7 +965,6 @@ int lex_build_script(struct build_script_lexer_state * build_script_lexer_state,
 }
 
 int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, unsigned char * buffer, unsigned int buffer_size){
-	struct memory_pooler * asm_lexer_token_pool = memory_pooler_collection_get_pool(asm_lexer_state->c.memory_pooler_collection, sizeof(struct asm_lexer_token));
 	asm_lexer_state->c.buf = buffer;
 	asm_lexer_state->c.position = 0;
 	asm_lexer_state->c.current_line = 0;
@@ -1056,7 +1058,7 @@ int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, 
 			return 1;
 		}
 
-		new_token = (struct asm_lexer_token *)memory_pooler_malloc(asm_lexer_token_pool);
+		new_token = struct_asm_lexer_token_memory_pool_malloc(asm_lexer_state->c.memory_pool_collection->struct_asm_lexer_token_pool);
 		new_token->type = type;
 		new_token->first_byte = first_byte;
 		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);

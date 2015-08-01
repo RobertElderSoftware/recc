@@ -63,30 +63,18 @@
 #ifndef __struct_linker_object_ptr_merge_sort__H__DEFINED__
 #include "data-structures/struct_linker_object_ptr_merge_sort.h"
 #endif
-
-int do_link(struct memory_pooler_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *);
-
-struct linker_symbol{
-	unsigned int is_implemented;
-	unsigned int is_required;
-	unsigned int is_external;
-	unsigned int instruction_index; /* The index of the instruction in its parent linker object. */
-	unsigned int observed_as_implemented;  /*  indicates if a corresponding label for that linker object has been found in the file */
-	unsigned int pad;
-	struct linker_object * parent_linker_object;  /*  External symbols need to remember which linker object they belong to. */
-};
-
-struct asm_instruction{
-	struct asm_lexer_token * op_token;
-	struct asm_lexer_token * rx_token;
-	struct asm_lexer_token * ry_token;
-	struct asm_lexer_token * rz_token;
-	struct asm_lexer_token * rw_token;
-	struct asm_lexer_token * identifier_token;
-	struct asm_lexer_token * number_token;
-	unsigned int number_token_is_negative;
-	unsigned int post_linking_offset; /* The offset (in # of 4 byte words) of this instruction after we've considered instructions that need to be re-written by the linker */
-};
+#ifndef __struct_asm_instruction_memory_pool__H__DEFINED__
+#include "data-structures/struct_asm_instruction_memory_pool.h"
+#endif
+#ifndef __struct_linker_symbol_memory_pool__H__DEFINED__
+#include "data-structures/struct_linker_symbol_memory_pool.h"
+#endif
+#ifndef __TYPES_LINKER_struct_linker_symbol_h__
+#include "types/linker/struct_linker_symbol.h"
+#endif
+#ifndef __TYPES_LINKER_struct_asm_instruction_h__
+#include "types/linker/struct_asm_instruction.h"
+#endif
 
 struct linker_object{ /*  Represents everything that comes from one translation unit (or assembly file) */
 	struct asm_lexer_state * asm_lexer_state;
@@ -99,16 +87,23 @@ struct linker_object{ /*  Represents everything that comes from one translation 
 };
 
 struct linker_state{
+	struct memory_pool_collection * memory_pool_collection;
 	struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map external_symbols;
+	struct unsigned_char_ptr_list * in_files;
+	unsigned char * symbol_file;
+	unsigned char * out_file;
 };
 
+int do_link(struct linker_state *);
 struct linker_object * process_assembly(struct linker_state *, struct asm_lexer_state *);
 void set_symbol_instruction_index(struct linker_state *, struct linker_object *, struct asm_lexer_token *, unsigned int);
-void add_internal_linker_symbol(struct linker_object *, struct asm_lexer_token *, unsigned int, unsigned int);
+void add_internal_linker_symbol(struct linker_state *, struct linker_object *, struct asm_lexer_token *, unsigned int, unsigned int);
 void add_external_linker_symbol(struct linker_state *, struct linker_object *, struct asm_lexer_token *, unsigned int, unsigned int);
 void output_artifacts(struct linker_state *, struct unsigned_char_list *, struct linker_object *, struct unsigned_char_list *, unsigned char *);
 unsigned int get_relative_symbol_offset(struct linker_object *, struct linker_symbol *);
 unsigned int get_absolute_symbol_offset(struct linker_state *, unsigned char *, struct linker_object *);
 void verify_symbol_declaration(struct linker_state *, struct linker_object *, struct asm_lexer_token *);
+void linker_state_destroy(struct linker_state *);
+void linker_state_create(struct linker_state *, struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *);
 
 #endif

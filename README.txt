@@ -1,12 +1,14 @@
+* Contributions *
+
+DO NOT CREATE PULL REQUESTS FOR THIS PROJECT.  ANY PULL REQUESTS YOU CREATE WILL NOT BE MERGED IN.
+
+Contributing to this project is not currently permitted.
+
 * Project Home *
 
 This project is a collection of compiler, microkernel and OS tools.  Read more here:
 
 http://recc.robertelder.org/
-
-* Contributions *
-
-Do not create pull requests for this project.  Contributing to this project is not currently permitted.
 
 * License *
 
@@ -26,17 +28,17 @@ make bootstrap-datatypes && make recc
 
 If you want to do full testing of cross compiled code in the browser, it would be helpful to know the testing process.
 
-In order to test the compiler on real C code, the following steps take place:
+In order to test the compiler on real C code using the Javascript emulator, the following steps take place:
 
 1)  The recc executable is built.
 2)  The recc executable is used to preprocess .i files from all of the .c files in the 'test' directory.
 3)  The recc executable is used to build .l2 files from all of the .i files in the 'test' directory.
 4)  The recc executable is used to build .l1 files for each test in the 'test' directory.
-4)  .l0.js files are created for each test in the 'test' directory.
-5)  Once all .l0.js files have been built, chrome is envoked directly from the makefile, and chrome is instructed to browse to a url served by localhost, which serves files in the test-api-endpoint directory.  This page contains javascript that interacts with the test API to obtain a list of all available test cases, then run each test and submit the result in the API.  The test result from running the compiled code in the javascript emulator is saved into the 'test' directory.
-6)  Each of the .c files in the 'test' are compiled using gcc into standard desktop executables.
-7)  The executables created using gcc are then run, and output is saved to the 'test' directory.
-8)  The saved output from javascript and gcc are diff'ed.  If the diff is not empty, the test failed.
+5)  .l0.js files are created for each test in the 'test' directory.
+6)  Once all .l0.js files have been built, chrome is envoked directly from the makefile, and chrome is instructed to browse to a url served by localhost, which serves files in the test-api-endpoint directory.  This page contains javascript that interacts with the test API to obtain a list of all available test cases, then run each test and submit the result in the API.  The test result from running the compiled code in the javascript emulator is saved into the 'test' directory.
+7)  Each of the .c files in the 'test' are compiled using gcc into standard desktop executables.
+8)  The executables created using gcc are then run, and output is saved to the 'test' directory.
+9)  The saved output from javascript and gcc are diff'ed.  If the diff is not empty, the test failed.
 
 To set up the testing API, set up a web server and point it to the root directory of this project.  The API uses php as a scripting language, so you'll need to make sure this is set up to work with your web server.  You may need to adjust permissions on the 'test' directory since php will need to write files that contain test results here.
 
@@ -82,8 +84,8 @@ The following things are current not implemented/supported:
 -  unions
 -  long and long long types
 -  float types (float, double, long double)
--  The standard library.  Only a small subset of printf is currently implemented.   Proof of concept malloc works.
--  The compiler is not yet self-hosting.  This is mainly due to the unimplemented parts of the c standard library.  It may also be necessary to introduce some optimizations in order to reduce the size of the generated code.
+-  The standard library.  Only a small subset of printf and some filesystem operations are currently implemented.  malloc and free are partially supported.
+-  The compiler is not yet completely self-hosting.  This is mainly due to the currently impractical nature of running large programs compiled with the RECC compiler.  Optimizations will need to be performed before self compilation can be done in a way that is useful.
 
 * The Kernel *
 

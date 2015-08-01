@@ -415,10 +415,10 @@ void create_specific_type(const char * file_postfix, const char * generic_filena
 	add_file_dependency_rule(binary_exponential_buffer_data(&specific_filename));
 	add_gitignores(binary_exponential_buffer_data(&specific_filename));
 
-	for(i = 0; i < num_types; i++){
+	for(i = 0; i < binary_exponential_buffer_size(&searches); i++){
 		free(((unsigned char **)binary_exponential_buffer_data(&searches))[i]);
 	}
-	for(i = 0; i < num_types; i++){
+	for(i = 0; i < binary_exponential_buffer_size(&replaces); i++){
 		free(((unsigned char **)binary_exponential_buffer_data(&replaces))[i]);
 	}
 
@@ -476,12 +476,14 @@ int main(void){
 	/*  The convention is that each type will have a file located in the 'data-structures directory' named  */
 	/*  generic.c.<something> and generic.h.<something>.  These files are then string replaced to become files named */
 	/*  with specific type information based on their types. */
+	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "void *", "unsigned int");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct linker_symbol *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "unsigned char *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct constant_description *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct macro_parameter *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct macro_definition *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct special_macro_definition *");
+	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct namespace_object *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "struct c_lexer_token *", "struct c_lexer_token *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "struct c_lexer_token *", "unsigned char *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "char");
@@ -494,7 +496,7 @@ int main(void){
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct special_macro_definition *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct macro_definition *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct macro_parameter *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct memory_pooler *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct memory_pool *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct c_lexer_token *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct c_lexer_state *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_list *");
@@ -518,33 +520,55 @@ int main(void){
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct type_traversal *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct if_branch *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preprocessor_file_context *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preloader_instruction");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct heap_ptr_index_pair");
 	create_specific_type("stack", "T0_IDENTIFIER_", 1, "unsigned int");
 	create_specific_type("stack", "T0_IDENTIFIER_", 1, "struct parser_operation");
+
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct heap_ptr_index_pair");
 	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct linker_object *");
 	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "unsigned int");
 
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair *");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct void_ptr_to_unsigned_int_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair");
 
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair *");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct void_ptr_to_unsigned_int_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair");
 
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct heap_ptr_index_pair");
 	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "unsigned int");
 
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct c_lexer_token");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct parser_node");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct build_script_lexer_token");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct asm_lexer_token");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct type_description");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct asm_instruction");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct linker_symbol");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "void *");
 
 	/*  Comparison functions for maps */
+	add_object_build_rule((unsigned char *)"void_ptr_compare");
+	add_library_build_rule((unsigned char *)"void_ptr_compare");
+	add_library_dependency_rule((unsigned char *)"void_ptr_compare");
+	add_file_dependency_rule((unsigned char *)"void_ptr_compare");
+
 	add_object_build_rule((unsigned char *)"unsigned_char_ptr_compare");
 	add_library_build_rule((unsigned char *)"unsigned_char_ptr_compare");
 	add_library_dependency_rule((unsigned char *)"unsigned_char_ptr_compare");

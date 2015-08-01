@@ -18,8 +18,8 @@
 +-----------------+---------+-----------------------------+--------------------------------------------------+
 | add rX rY rZ    |  00000  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY + rZ (32-bit unsigned)                   |
 | sub rX rY rZ    |  00001  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY - rZ (32-bit unsigned)                   |
-| mul rX rY rZ    |  00010  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY * rZ (32-bit unsigned)                   |
-| div rX rY rZ    |  00011  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY / rZ (32-bit unsigned)                   |
+| mul rX rY rZ    |  00010  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY * rZ (32-bit unsigned) Low 32 bit result |
+| div rX rY rZ    |  00011  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY / rZ (32-bit unsigned) See DIV_ZERO flag |
 | and rX rY rZ    |  00100  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY & rZ (bitwise logical and)               |
 | or rX rY rZ     |  00101  | XXXXXXXXXYYYYYYYYYZZZZZZZZZ | rX = rY | rZ (bitwise logical or)                |
 | not rX rY       |  00110  | XXXXXXXXXYYYYYYYYY--------- | rX = ~rY (bitwise logical not)                   |
@@ -29,7 +29,7 @@
 | shl rX rY       |  01010  | XXXXXXXXXYYYYYYYYY--------- | rX = (rX logical shift rY bits to the left)      |
 | beq rX rY i     |  01011  | XXXXXXXXXYYYYYYYYYiiiiiiiii | PC = PC + i * 4 if rX == rY (i is 9-bit signed)  |
 | blt rX rY i     |  01100  | XXXXXXXXXYYYYYYYYYiiiiiiiii | PC = PC + i * 4 if rX < rY (i is 9-bit signed)   |
-| ll rX 0xN       |  01101  | XXXXXXXXX--NNNNNNNNNNNNNNNN | load literal (16 bit) value into rX              |
+| ll rX 0xN       |  01101  | XXXXXXXXX--NNNNNNNNNNNNNNNN | load literal 16 bits into rX; high bits set to 0 |
 +-----------------+---------+-----------------------------+--------------------------------------------------+
 
 At CPU startup, WR = 0x4, FR = 0x200.  All other registers are initialized to 0.
@@ -53,7 +53,8 @@ Bit 7:     UART1_IN interrupt enable.  Used for detecting when bit 10 of FR has 
 Bit 8:     UART1_IN interrupt asserted.  CPU sets to 1.  User must set to 0.
 Bit 9:     UART1_OUT ready.  Indicates whether UART1_OUT is ready.  CPU sets to 1.  User must set 0.
 Bit 10:    UART1_IN ready.  Indicates whether UART1_IN contains input data.  CPU sets to 1.  User must set 0.
-Bit 11-31  Unused.
+Bit 11:    DIV_ZERO interrupt asserted due to a division by 0.  CPU sets to 1.  User must set to 0.
+Bit 12-31  Unused.
 
 Out of memory, or non 4 byte aligned access asserts bit 0 of FR.  Initial memory contents are undefined.
 
@@ -72,4 +73,4 @@ An interrupt is initiated (branches to IRQ_HANDLER) only when all 3 of the follo
 A CPU initiated interrupt atomically sets bit 1 of FR to 0, SP to SP - WR and [SP] to PC, then PC to
 IRQ_HANDLER.  At least one cycle occurs between a branch due to bit 2 being set, and a branch to IRQ_Handler.
 
-The sha1sum of the lines above is 53126dc609895cfb1afdf712f5450e923016b147
+The sha1sum of the lines above is 177c65244df640f7e5f3ac7025d961599121dac8

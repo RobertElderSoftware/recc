@@ -24,8 +24,11 @@
 #ifndef __PUTCHAR_H_DEFINED__
 #include <putchar.h>
 #endif
+#ifndef __SIZE_T_H_DEFINED__
+#include "size_t.h"
+#endif
 
-#define EOF 255   /*  TODO: shouldn't be -1*/
+#define EOF 255   /*  TODO: should be -1*/
 
 int vsprintf (char *, const char *, va_list);
 int printf(const char *, ...);
@@ -39,6 +42,8 @@ struct file_descriptor{
 typedef struct file_descriptor FILE;
 
 FILE * fopen(const char *, const char *);
+size_t fread(void *, size_t, size_t, FILE *);
+size_t fwrite(const void *, size_t, size_t, FILE *);
 int fclose(FILE *);
 int getc(FILE *);
 int fputc(int, FILE *);
