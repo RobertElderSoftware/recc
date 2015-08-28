@@ -36,20 +36,14 @@
 #ifndef __unsigned_char_list__H__DEFINED__
 #include "data-structures/unsigned_char_list.h"
 #endif
-#ifndef __struct_if_branch_ptr_list__H__DEFINED__
-#include "data-structures/struct_if_branch_ptr_list.h"
-#endif
-#ifndef __struct_c_lexer_token_ptr_list__H__DEFINED__
-#include "data-structures/struct_c_lexer_token_ptr_list.h"
+#ifndef __struct_preprocessor_if_branch_ptr_list__H__DEFINED__
+#include "data-structures/struct_preprocessor_if_branch_ptr_list.h"
 #endif
 #ifndef __struct_struct_c_lexer_token_ptr_list_ptr_list__H__DEFINED__
 #include "data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h"
 #endif
 #ifndef __unsigned_char_ptr_to_unsigned_char_ptr_map__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
-#endif
-#ifndef __unsigned_char_ptr_to_struct_macro_parameter_ptr_map__H__DEFINED__
-#include "data-structures/unsigned_char_ptr_to_struct_macro_parameter_ptr_map.h"
 #endif
 #ifndef __unsigned_char_ptr_to_struct_macro_definition_ptr_map__H__DEFINED__
 #include "data-structures/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h"
@@ -72,53 +66,33 @@
 #ifndef __struct_preprocessor_file_context_ptr_list__H__DEFINED__
 #include "data-structures/struct_preprocessor_file_context_ptr_list.h"
 #endif
-
-struct if_branch{
-	unsigned int active;
-};
-
-struct preprocessor_file_context{
-	unsigned char * filename;
-	unsigned int current_line;
-	unsigned int pad;
-};
-
-struct preprocessor_state{
-	struct struct_unsigned_char_list_ptr_list tokenizable_input_buffers;  /*  The characters underlying all of our tokens */
-	struct struct_if_branch_ptr_list if_branches;
-	struct struct_preprocessor_file_context_ptr_list file_contexts;
-	struct memory_pool_collection * memory_pool_collection;
-	struct struct_c_lexer_state_ptr_list c_lexer_states;
-	struct c_lexer_token * comma_token;
-	struct struct_c_lexer_token_ptr_list created_tokens;
-	struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_map special_macros;
-};
-
-enum macro_definition_type{
-	OBJECT_MACRO,
-	FUNCTION_MACRO
-};
-
-struct macro_parameter{
-	unsigned int position_index;
-	unsigned int is_variadic;
-};
-
-struct macro_definition{
-	struct struct_c_lexer_token_ptr_list definition_tokens;
-	struct unsigned_char_ptr_to_struct_macro_parameter_ptr_map function_macro_parameters;
-	enum macro_definition_type type;
-	unsigned int pad;
-};
-
-enum special_macro_type{
-	__LINE__MACRO,
-	__FILE__MACRO
-};
-
-struct special_macro_definition{
-	enum special_macro_type type;
-};
+#ifndef __struct_preprocessor_macro_level_ptr_list__H__DEFINED__
+#include "data-structures/struct_preprocessor_macro_level_ptr_list.h"
+#endif
+#ifndef __TYPES_PREPROCESSOR_struct_preprocessor_macro_level_H__
+#include "types/preprocessor/struct_preprocessor_macro_level.h"
+#endif
+#ifndef __TYPES_PREPROCESSOR_struct_special_macro_definition_H__
+#include "types/preprocessor/struct_special_macro_definition.h"
+#endif
+#ifndef __TYPES_PREPROCESSOR_struct_macro_parameter_H__
+#include "types/preprocessor/struct_macro_parameter.h"
+#endif
+#ifndef __TYPES_PREPROCESSOR_struct_macro_definition_H__
+#include "types/preprocessor/struct_macro_definition.h"
+#endif
+#ifndef __TYPES_PREPROCESSOR_struct_preprocessor_if_branch_H__
+#include "types/preprocessor/struct_preprocessor_if_branch.h"
+#endif
+#ifndef __TYPES_PREPROCESSOR_struct_preprocessor_file_context_H__
+#include "types/preprocessor/struct_preprocessor_file_context.h"
+#endif
+#ifndef __TYPES_PREPROCESSOR_struct_preprocessor_state_H__
+#include "types/preprocessor/struct_preprocessor_state.h"
+#endif
+#ifndef __unsigned_char_ptr_compare__H__DEFINED__
+#include "data-structures/unsigned_char_ptr_compare.h"
+#endif
 
 enum search_state{
 	MACRO_SEARCH,
@@ -139,28 +113,28 @@ enum directive_type{
 	PRAGMA_DIRECTIVE
 };
 
-void process_tokens(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *, enum search_state, unsigned int);
+void process_tokens(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, enum search_state, unsigned int, struct struct_preprocessor_macro_level_ptr_list *);
 void process_line_continuators(struct unsigned_char_list *, struct unsigned_char_list *);
 void free_macro_definition_map(struct preprocessor_state *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *);
 void free_special_macro_definition_map(struct preprocessor_state *, struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_map *);
-int get_preprocessed_output_from_file(struct preprocessor_state *, unsigned char *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
+int get_preprocessed_output_from_file(struct preprocessor_state *, unsigned char *, struct struct_c_lexer_token_ptr_list *);
 
-struct c_lexer_token * read_until_next_token(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *);
+struct c_lexer_token * read_until_next_token(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
 unsigned int is_non_whitespace_inline_token(struct c_lexer_token *);
-void release_working_tokens(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *);
-void process_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
+void release_working_tokens(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
+void process_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
 enum directive_type get_directive_type(struct preprocessor_state * state, struct c_lexer_token *);
-void process_define_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
-void process_include_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
-void process_ifndef_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *);
-unsigned int process_identifier_if_macro(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
-void split_tokens_into_parameters(struct struct_c_lexer_token_ptr_list *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *);
-void perform_argument_prescan_all(struct preprocessor_state *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
-void fully_expand_macros(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
-void evaluate_function_macro_body(struct preprocessor_state *, struct macro_definition *, struct struct_c_lexer_token_ptr_list *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map *, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map *);
+void process_define_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
+void process_include_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
+void process_ifndef_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
+unsigned int process_identifier_if_macro(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
+void split_tokens_into_parameters(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *);
+void perform_argument_prescan_all(struct preprocessor_state *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
+void fully_expand_macros(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *);
+void evaluate_function_macro_body(struct preprocessor_state *, struct macro_definition *, struct struct_c_lexer_token_ptr_list *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *, struct struct_struct_c_lexer_token_ptr_list_ptr_list *);
 struct preprocessor_state * create_preprocessor_state(struct memory_pool_collection *);
 void destroy_preprocessor_state(struct preprocessor_state *);
-void process_endif_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *);
+void process_endif_directive(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
 unsigned int is_in_active_branch(struct preprocessor_state *);
 unsigned int always_processed_directive(enum directive_type);
 unsigned char * convert_filename_to_directory(unsigned char *);
@@ -182,5 +156,10 @@ unsigned char * make_current_file_line_string(struct preprocessor_state *);
 unsigned char * make_current_file_string(struct preprocessor_state *);
 int c_lexer_token_cmp(struct c_lexer_token *, struct c_lexer_token *);
 void print_file_stack(struct preprocessor_state *);
+void put_back_token(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct c_lexer_token *, struct struct_preprocessor_macro_level_ptr_list *);
+void destroy_preprocessor_macro_level(struct preprocessor_macro_level *, struct memory_pool_collection *);
+struct preprocessor_macro_level * create_preprocessor_macro_level(struct macro_definition *, unsigned char *, struct memory_pool_collection *);
+struct c_lexer_token * read_one_token(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
+void reduce_multiple_whitespace_to_single(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *);
 
 #endif

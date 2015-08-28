@@ -16,17 +16,26 @@
  
 $response_object = Array();
 
-$files = scandir(realpath(dirname(__FILE__))."/../../../test/");
+$directories = Array(
+	"c89/",
+	"c99/"
+);
 
-if($files === false){
-	$response_object['error'] = "Unable to find test cases.";
-}else{
-	$files = array_filter($files, function($a) { return ($a != "." && $a != ".." && preg_match('/\.c$/', $a));});
+$all_files = Array();
 
-	$files = array_map(function($a) { $s = explode(".",$a); return $s[0]; }, $files);
-
-	$response_object['available_tests'] = array_values($files);
+foreach($directories as $directory){
+	$dir = realpath(dirname(__FILE__))."/../../../test/".$directory;
+	$current_files = scandir($dir);
+	if($current_files === false){
+		$response_object['error'] = "Unable to find test cases in ".$dir;
+		break;
+	}
+	$current_files = array_filter($current_files, function($a) { return ($a != "." && $a != ".." && preg_match('/\.c$/', $a));});
+	$current_files = array_map(function($a) { global $directory; $s = explode(".",$a); return $directory.$s[0]; }, $current_files);
+	$all_files = array_merge($all_files, $current_files);
 }
+
+$response_object['available_tests'] = array_values($all_files);
 
 echo json_encode($response_object);
 

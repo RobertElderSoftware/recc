@@ -27,9 +27,6 @@
 #ifndef __struct_asm_lexer_token_memory_pool__H__DEFINED__
 #include "data-structures/struct_asm_lexer_token_memory_pool.h"
 #endif
-#ifndef __struct_build_script_lexer_token_memory_pool__H__DEFINED__
-#include "data-structures/struct_build_script_lexer_token_memory_pool.h"
-#endif
 #ifndef __struct_type_description_memory_pool__H__DEFINED__
 #include "data-structures/struct_type_description_memory_pool.h"
 #endif

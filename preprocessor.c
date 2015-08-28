@@ -16,6 +16,7 @@
 #include "preprocessor.h"
 
 static const char * comma = ",";
+static const char * space = " ";
 
 void removes_quotes_from_string_literal(unsigned char * str){
 	unsigned char * a = str;
@@ -44,48 +45,94 @@ unsigned char * convert_filename_to_directory(unsigned char * str){
 }
 
 unsigned int is_in_active_branch(struct preprocessor_state * state){
-	unsigned int size = struct_if_branch_ptr_list_size(&state->if_branches);
-	return size == 0 || struct_if_branch_ptr_list_get(&state->if_branches, size -1)->active;
+	unsigned int size = struct_preprocessor_if_branch_ptr_list_size(&state->preprocessor_if_branches);
+	return size == 0 || struct_preprocessor_if_branch_ptr_list_get(&state->preprocessor_if_branches, size -1)->active;
 }
 
 unsigned int is_non_whitespace_inline_token(struct c_lexer_token * t){
 	return !(t->type == COMMENT || t->type == SPACE);
 }
 
-struct c_lexer_token * read_until_next_token(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * input_tokens, struct struct_c_lexer_token_ptr_list * working_tokens){
-	struct c_lexer_token * current_token;
-	(void)state;
-	while(struct_c_lexer_token_ptr_list_size(input_tokens)){
-		current_token = struct_c_lexer_token_ptr_list_pop_end(input_tokens);
-		struct_c_lexer_token_ptr_list_add_end(working_tokens, current_token);
-		if(is_non_whitespace_inline_token(current_token)){
-			return current_token;
+struct c_lexer_token * read_one_token(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * input_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
+	/*  Read out one token no matter what type it is */
+	while(struct_preprocessor_macro_level_ptr_list_size(macro_expansion_levels) || struct_c_lexer_token_ptr_list_size(input_tokens)){
+		if(struct_preprocessor_macro_level_ptr_list_size(macro_expansion_levels)){
+			/*  Take it from the top macro expansion level */
+			unsigned int size = struct_preprocessor_macro_level_ptr_list_size(macro_expansion_levels);
+			struct preprocessor_macro_level * top_level = struct_preprocessor_macro_level_ptr_list_get(macro_expansion_levels, size -1);
+			if(struct_c_lexer_token_ptr_list_size(&top_level->tokens)){
+				return struct_c_lexer_token_ptr_list_pop_end(&top_level->tokens);
+			}else{
+				/*  It was empty */
+				struct preprocessor_macro_level * d = struct_preprocessor_macro_level_ptr_list_pop_end(macro_expansion_levels);
+				/*  We can now re-enable this macro: */
+				if(!unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->disabled_macros, d->identifier)){
+					printf("macro %s is not disabled.\n", d->identifier);
+					assert(0 && "Re-enabled macro that is not disabled.");
+				}
+				unsigned_char_ptr_to_struct_macro_definition_ptr_map_remove(&state->disabled_macros, d->identifier);
+				assert(!unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->disabled_macros, d->identifier));
+				destroy_preprocessor_macro_level(d, state->memory_pool_collection);
+				/*  Should just continue in while loop until a real token is found or there are none left */
+			}
+		}else{
+			/*  Get from the normal input tokens */
+			return struct_c_lexer_token_ptr_list_pop_end(input_tokens);
 		}
 	}
 	return (struct c_lexer_token *)0;
 }
 
-void release_working_tokens(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * working_tokens){
+void put_back_token(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * input_tokens, struct c_lexer_token * t, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
+	(void)state;
+	/*  If we're inside a macro expansion, pop tokens from the context of expanding that macro */
+	if(struct_preprocessor_macro_level_ptr_list_size(macro_expansion_levels)){
+		unsigned int size = struct_preprocessor_macro_level_ptr_list_size(macro_expansion_levels);
+		struct preprocessor_macro_level * top_level = struct_preprocessor_macro_level_ptr_list_get(macro_expansion_levels, size -1);
+		struct_c_lexer_token_ptr_list_add_end(&top_level->tokens, t);
+	}else{
+		struct_c_lexer_token_ptr_list_add_end(input_tokens, t);
+	}
+}
+
+struct c_lexer_token * read_until_next_token(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * input_tokens, struct struct_c_lexer_token_ptr_list * working_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
+	struct c_lexer_token * tok = (struct c_lexer_token *)0;
+	while((tok = read_one_token(state, input_tokens, macro_expansion_levels))){
+		struct_c_lexer_token_ptr_list_add_end(working_tokens, tok);
+		if(is_non_whitespace_inline_token(tok)){
+			return tok;
+		}
+	}
+	return tok;
+}
+
+void release_working_tokens(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * working_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
 	/*  Add the current set of working tokens to output tokens, since they have been processed. */
-	unsigned int num_working_tokens = struct_c_lexer_token_ptr_list_size(working_tokens);
-	struct c_lexer_token ** working_tokens_data = struct_c_lexer_token_ptr_list_data(working_tokens);
-	unsigned int i;
-		for(i = 0; i < num_working_tokens; i++){
-			if(is_in_active_branch(state)){ /*  Don't output tokens from inactive branch */
-				struct_c_lexer_token_ptr_list_add_end(output_tokens, working_tokens_data[i]);
-			}
-			/*  Account for newlines in comments */
-			if(working_tokens_data[i]->type == COMMENT){
-				unsigned int num_comment_newlines = count_newlines_in_comment(working_tokens_data[i]);
-				unsigned int j;
-				for(j = 0; j < num_comment_newlines; j++){
-					increment_current_line(state);
-				}
+	struct struct_c_lexer_token_ptr_list l;
+	struct c_lexer_token * tok;
+	struct struct_preprocessor_macro_level_ptr_list fake;
+	struct_preprocessor_macro_level_ptr_list_create(&fake);
+	struct_c_lexer_token_ptr_list_create(&l);
+	(void)macro_expansion_levels;
+	while((tok = read_one_token(state, working_tokens, &fake))){
+		struct_c_lexer_token_ptr_list_add_end(&l, tok);
+		/*  Account for newlines in comments */
+		if(tok->type == COMMENT){
+			unsigned int num_comment_newlines = count_newlines_in_comment(tok);
+			unsigned int j;
+			for(j = 0; j < num_comment_newlines; j++){
+				increment_current_line(state);
 			}
 		}
-	/*  Remove all tokens from working set */
-	struct_c_lexer_token_ptr_list_destroy(working_tokens);
-	struct_c_lexer_token_ptr_list_create(working_tokens);
+	}
+
+	if(is_in_active_branch(state)){ /*  Don't output tokens from inactive branch */
+		struct_c_lexer_token_ptr_list_reverse(&l);
+		struct_c_lexer_token_ptr_list_add_all_end(output_tokens, &l);
+		assert(!struct_c_lexer_token_ptr_list_size(working_tokens));
+	}
+	struct_preprocessor_macro_level_ptr_list_destroy(&fake);
+	struct_c_lexer_token_ptr_list_destroy(&l);
 }
 
 enum directive_type get_directive_type(struct preprocessor_state * state, struct c_lexer_token * token){
@@ -115,34 +162,35 @@ enum directive_type get_directive_type(struct preprocessor_state * state, struct
 	return rtn;
 }
 
-void process_define_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * define_body_tokens, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map * disabled_tokens){
+void process_define_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * define_body_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
 	struct struct_c_lexer_token_ptr_list processed_tokens;
 	struct c_lexer_token * def_token;
 	struct c_lexer_token * current_token = (struct c_lexer_token *)0;
 	struct c_lexer_token * identifier_token;
-	struct macro_definition * new_macro_definition = malloc(sizeof(struct macro_definition));
+	struct macro_definition * new_macro_definition = (struct macro_definition *)malloc(sizeof(struct macro_definition));
 	unsigned char * macro_identifier;
 	const char * va_arg_str = "__VA_ARGS__";
 	struct_c_lexer_token_ptr_list_create(&processed_tokens);
 	unsigned_char_ptr_to_struct_macro_parameter_ptr_map_create(&new_macro_definition->function_macro_parameters);
 
-	identifier_token = read_until_next_token(state, define_body_tokens, &processed_tokens);
-	assert(identifier_token->type == IDENTIFIER); /*  Identifier for the macro */
-	if(struct_c_lexer_token_ptr_list_size(define_body_tokens)){
-		current_token = struct_c_lexer_token_ptr_list_pop_end(define_body_tokens);
+	identifier_token = read_until_next_token(state, define_body_tokens, &processed_tokens, macro_expansion_levels);
+	if(!identifier_token){
+		print_file_stack(state);
+		printf("Current line is %d\n", struct_preprocessor_file_context_ptr_list_get(&state->file_contexts, struct_preprocessor_file_context_ptr_list_size(&state->file_contexts) -1)->current_line);
+		assert(0 && "No identifier token.");
 	}
-	(void)disabled_macros;
-	(void)disabled_tokens;
+	assert(identifier_token->type == IDENTIFIER); /*  Identifier for the macro */
+	current_token = read_one_token(state, define_body_tokens, macro_expansion_levels);
 	if(current_token && current_token->type == OPEN_PAREN_CHAR){
 		unsigned parameter_index = 0;
 		/*  Function like macro */
 		new_macro_definition->type = FUNCTION_MACRO;
-		while((current_token = read_until_next_token(state, define_body_tokens, &processed_tokens))->type != CLOSE_PAREN_CHAR){
+		while((current_token = read_until_next_token(state, define_body_tokens, &processed_tokens, macro_expansion_levels))->type != CLOSE_PAREN_CHAR){
 			switch(current_token->type){
 				case ELLIPSIS:{
 					/* Case statement fallthrough to identifier */
 					unsigned char * parameter_identifier = copy_string((unsigned char *)va_arg_str, get_null_terminator((unsigned char *)va_arg_str), state->memory_pool_collection);
-					struct macro_parameter * new_parameter = malloc(sizeof(struct macro_parameter));
+					struct macro_parameter * new_parameter = (struct macro_parameter *)malloc(sizeof(struct macro_parameter));
 					new_parameter->is_variadic = 1;
 					new_parameter->position_index = parameter_index;
 					assert(!unsigned_char_ptr_to_struct_macro_parameter_ptr_map_exists(&new_macro_definition->function_macro_parameters, parameter_identifier) && "Duplicate parameter name in macro.");
@@ -151,7 +199,7 @@ void process_define_directive(struct preprocessor_state * state, struct struct_c
 					break;
 				}case IDENTIFIER:{
 					unsigned char * parameter_identifier = copy_string(current_token->first_byte, current_token->last_byte, state->memory_pool_collection);
-					struct macro_parameter * new_parameter = malloc(sizeof(struct macro_parameter));
+					struct macro_parameter * new_parameter = (struct macro_parameter *)malloc(sizeof(struct macro_parameter));
 					new_parameter->is_variadic = 0;
 					new_parameter->position_index = parameter_index;
 					assert(!unsigned_char_ptr_to_struct_macro_parameter_ptr_map_exists(&new_macro_definition->function_macro_parameters, parameter_identifier) && "Duplicate parameter name in macro.");
@@ -167,10 +215,10 @@ void process_define_directive(struct preprocessor_state * state, struct struct_c
 			}
 		}
 		/*  Skip over whitespace */
-		current_token = read_until_next_token(state, define_body_tokens, &processed_tokens);
+		current_token = read_until_next_token(state, define_body_tokens, &processed_tokens, macro_expansion_levels);
 		/*  Put first non-whitespace token back */
 		if(current_token){
-			struct_c_lexer_token_ptr_list_add_end(define_body_tokens, current_token);
+			put_back_token(state, define_body_tokens, current_token, macro_expansion_levels);
 		}
 	}else if(!current_token || current_token->type == SPACE){
 		/*  Object like macro */
@@ -183,18 +231,22 @@ void process_define_directive(struct preprocessor_state * state, struct struct_c
 	struct_c_lexer_token_ptr_list_create(&new_macro_definition->definition_tokens);
 	if(current_token){ /* If we're already at end, its an empty definition */
 		do{
-			def_token = read_until_next_token(state, define_body_tokens, &new_macro_definition->definition_tokens);
+			def_token = read_until_next_token(state, define_body_tokens, &new_macro_definition->definition_tokens, macro_expansion_levels);
 		}while(def_token);
 	}
 
 	macro_identifier = copy_string(identifier_token->first_byte, identifier_token->last_byte, state->memory_pool_collection);
 	/*  Save our macro definition */
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_put(macro_map, macro_identifier, new_macro_definition);
+	if(unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->macro_map, macro_identifier)){
+		printf("Attempting to re-define macro %s\n", macro_identifier);
+		assert(0 && "Macro already defined.");
+	}
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_put(&state->macro_map, macro_identifier, new_macro_definition);
 
 	struct_c_lexer_token_ptr_list_destroy(&processed_tokens);
 }
 
-void process_include_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * include_body_tokens, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map * disabled_tokens){
+void process_include_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * include_body_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
 	struct struct_c_lexer_token_ptr_list processed_include_body_tokens;
 	struct struct_c_lexer_token_ptr_list working_tokens;
 	struct c_lexer_token * current_token;
@@ -210,9 +262,9 @@ void process_include_directive(struct preprocessor_state * state, struct struct_
 	struct_c_lexer_token_ptr_list_create(&processed_include_body_tokens);
 	struct_c_lexer_token_ptr_list_create(&working_tokens);
 	/*  Need to resolve any macros that might describe the file to include (instead of literal "abc.h") */
-	process_tokens(state, &processed_include_body_tokens, include_body_tokens, macro_map, disabled_macros, disabled_tokens, BEGIN_LINE, 0);
+	process_tokens(state, &processed_include_body_tokens, include_body_tokens, BEGIN_LINE, 0, macro_expansion_levels);
 	struct_c_lexer_token_ptr_list_reverse(&processed_include_body_tokens);
-	current_token = read_until_next_token(state, &processed_include_body_tokens, &working_tokens);
+	current_token = read_until_next_token(state, &processed_include_body_tokens, &working_tokens, macro_expansion_levels);
 	if(current_token && current_token->type == STRING_LITERAL){
 		unsigned char * literal;
 		unsigned char * j;
@@ -230,7 +282,7 @@ void process_include_directive(struct preprocessor_state * state, struct struct_
 			j++;
 		}	
 		heap_memory_pool_free(state->memory_pool_collection->heap_pool, literal);
-		current_token = read_until_next_token(state, &processed_include_body_tokens, &working_tokens);
+		current_token = read_until_next_token(state, &processed_include_body_tokens, &working_tokens, macro_expansion_levels);
 	}else if(current_token && current_token->type == OPEN_ANGLE_BRACKET_CHAR){
 		unsigned char * j;
 		j = (unsigned char *)stdlib_directory;
@@ -239,7 +291,7 @@ void process_include_directive(struct preprocessor_state * state, struct struct_
 			j++;
 		}
 		do{
-			current_token = read_until_next_token(state, &processed_include_body_tokens, &working_tokens);
+			current_token = read_until_next_token(state, &processed_include_body_tokens, &working_tokens, macro_expansion_levels);
 			if(current_token && current_token->type != CLOSE_ANGLE_BRACKET_CHAR){
 				for(j = current_token->first_byte; j < (current_token->last_byte + 1); j++){
 					unsigned_char_list_add_end(&file_to_include, *j);
@@ -249,7 +301,7 @@ void process_include_directive(struct preprocessor_state * state, struct struct_
 		if(!current_token){
 			assert(0 && "Unfinished include directive.");
 		}
-		current_token = read_until_next_token(state, &processed_include_body_tokens, &working_tokens);
+		current_token = read_until_next_token(state, &processed_include_body_tokens, &working_tokens, macro_expansion_levels);
 	}else{
 		printf("Type is %s\n", get_c_token_type_names()[current_token->type]);
 		assert(0 && "Bad include directive.");
@@ -258,16 +310,12 @@ void process_include_directive(struct preprocessor_state * state, struct struct_
 	unsigned_char_list_add_end(&file_to_include, 0);
 	final_include_path = unsigned_char_list_data(&file_to_include);
 
-	struct_preprocessor_file_context_ptr_list_add_end(&state->file_contexts, make_preprocessor_file_context(state, copy_string(final_include_path, get_null_terminator(final_include_path), state->memory_pool_collection)));
-	printf("Begin preprocessing ");
-	print_file_stack(state);
-	if(!(preprocess_rtn = get_preprocessed_output_from_file(state, final_include_path, &header_tokens, macro_map, disabled_macros, disabled_tokens))){
+	if(!(preprocess_rtn = get_preprocessed_output_from_file(state, final_include_path, &header_tokens))){
 		struct_c_lexer_token_ptr_list_add_all_end(output_tokens, &header_tokens);
 	}else{
 		printf("Nothing to output.  Preprocessing failed for %s\n", final_include_path);
 		assert(0);
 	}
-	destroy_preprocessor_file_context(state, struct_preprocessor_file_context_ptr_list_pop_end(&state->file_contexts));
 	
 	heap_memory_pool_free(state->memory_pool_collection->heap_pool, current_directory);
 	struct_c_lexer_token_ptr_list_destroy(&working_tokens);
@@ -276,16 +324,16 @@ void process_include_directive(struct preprocessor_state * state, struct struct_
 	struct_c_lexer_token_ptr_list_destroy(&header_tokens);
 }
 
-void process_endif_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * working_tokens)
+void process_endif_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * working_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels)
 {
 	struct struct_c_lexer_token_ptr_list processed_tokens;
 	struct c_lexer_token * current_token;
 	struct_c_lexer_token_ptr_list_create(&processed_tokens);
-	current_token = read_until_next_token(state, working_tokens, &processed_tokens);
+	current_token = read_until_next_token(state, working_tokens, &processed_tokens, macro_expansion_levels);
 	if(!current_token || current_token->type == NEWLINE){
-		struct if_branch * branch;
-		assert(struct_if_branch_ptr_list_size(&state->if_branches));
-		branch = struct_if_branch_ptr_list_pop_end(&state->if_branches);
+		struct preprocessor_if_branch * branch;
+		assert(struct_preprocessor_if_branch_ptr_list_size(&state->preprocessor_if_branches));
+		branch = struct_preprocessor_if_branch_ptr_list_pop_end(&state->preprocessor_if_branches);
 		free(branch);
 	}else{
 		assert(0 && "Expected newline.");
@@ -293,16 +341,16 @@ void process_endif_directive(struct preprocessor_state * state, struct struct_c_
 	struct_c_lexer_token_ptr_list_destroy(&processed_tokens);
 }
 
-void process_ifndef_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * working_tokens, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map)
+void process_ifndef_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * working_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels)
 {
 	struct struct_c_lexer_token_ptr_list processed_tokens;
-	struct if_branch * branch = malloc(sizeof(struct if_branch));
+	struct preprocessor_if_branch * branch = (struct preprocessor_if_branch *)malloc(sizeof(struct preprocessor_if_branch));
 	struct c_lexer_token * current_token;
 	struct_c_lexer_token_ptr_list_create(&processed_tokens);
-	current_token = read_until_next_token(state, working_tokens, &processed_tokens);
+	current_token = read_until_next_token(state, working_tokens, &processed_tokens, macro_expansion_levels);
 	if(current_token->type == IDENTIFIER){
 		unsigned char * identifier_str = copy_string(current_token->first_byte, current_token->last_byte, state->memory_pool_collection);
-		unsigned int macro_defined = unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(macro_map, identifier_str);
+		unsigned int macro_defined = unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->macro_map, identifier_str);
 		if(macro_defined){
 			branch->active = 0;
 		}else{
@@ -312,9 +360,9 @@ void process_ifndef_directive(struct preprocessor_state * state, struct struct_c
 	}else{
 		assert(0 && "Expected identifier.");
 	}
-	current_token = read_until_next_token(state, working_tokens, &processed_tokens);
+	current_token = read_until_next_token(state, working_tokens, &processed_tokens, macro_expansion_levels);
 	assert(!current_token);
-	struct_if_branch_ptr_list_add_end(&state->if_branches, branch);
+	struct_preprocessor_if_branch_ptr_list_add_end(&state->preprocessor_if_branches, branch);
 	struct_c_lexer_token_ptr_list_destroy(&processed_tokens);
 }
 
@@ -322,7 +370,7 @@ unsigned int always_processed_directive(enum directive_type d){
 	return d == ENDIF_DIRECTIVE || d == IFDEF_DIRECTIVE || d == IFNDEF_DIRECTIVE || d == IF_DIRECTIVE;
 }
 
-void process_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * working_tokens, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map * disabled_tokens){
+void process_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * working_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
 	/*  We're now working with a single line that contains a preprocessor directive.  */
 	enum directive_type directive_type;
 	struct struct_c_lexer_token_ptr_list processed_tokens;
@@ -334,22 +382,20 @@ void process_directive(struct preprocessor_state * state, struct struct_c_lexer_
 	if(tok->type != NEWLINE){
 		struct_c_lexer_token_ptr_list_add_end(working_tokens, tok);
 	}
-
-	/*  Reverse list of working tokens so we can push and pop */
 	struct_c_lexer_token_ptr_list_reverse(working_tokens);
 
-	current_token = read_until_next_token(state, working_tokens, &processed_tokens);
+	current_token = read_until_next_token(state, working_tokens, &processed_tokens, macro_expansion_levels);
 	assert(current_token->type == NUMBER_SIGN_CHAR);
-	current_token = read_until_next_token(state, working_tokens, &processed_tokens);
+	current_token = read_until_next_token(state, working_tokens, &processed_tokens, macro_expansion_levels);
 	assert(current_token->type == IDENTIFIER);
 	directive_type = get_directive_type(state, current_token);
 	if(always_processed_directive(directive_type) || is_in_active_branch(state)){
 		switch(directive_type){
 			case DEFINE_DIRECTIVE:{
-				process_define_directive(state, working_tokens, macro_map, disabled_macros, disabled_tokens);
+				process_define_directive(state, working_tokens, macro_expansion_levels);
 				break;
 			}case INCLUDE_DIRECTIVE:{
-				process_include_directive(state, output_tokens, working_tokens, macro_map, disabled_macros, disabled_tokens);
+				process_include_directive(state, output_tokens, working_tokens, macro_expansion_levels);
 				break;
 			}case PRAGMA_DIRECTIVE:{
 				break;
@@ -358,12 +404,12 @@ void process_directive(struct preprocessor_state * state, struct struct_c_lexer_
 			}case IF_DIRECTIVE:{
 				break;
 			}case IFNDEF_DIRECTIVE:{
-				process_ifndef_directive(state, working_tokens, macro_map);
+				process_ifndef_directive(state, working_tokens, macro_expansion_levels);
 				break;
 			}case IFDEF_DIRECTIVE:{
 				break;
 			}case ENDIF_DIRECTIVE:{
-				process_endif_directive(state, working_tokens);
+				process_endif_directive(state, working_tokens, macro_expansion_levels);
 				break;
 			}default:{
 				assert(0 && "Unexpected case.");
@@ -380,17 +426,19 @@ void process_directive(struct preprocessor_state * state, struct struct_c_lexer_
 	struct_c_lexer_token_ptr_list_create(working_tokens);
 }
 
-void split_tokens_into_parameters(struct struct_c_lexer_token_ptr_list * all_parameters, struct struct_struct_c_lexer_token_ptr_list_ptr_list * parameter_lists){
+void split_tokens_into_parameters(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * all_parameters, struct struct_struct_c_lexer_token_ptr_list_ptr_list * parameter_lists){
 	/* Split up the tokens that make up the argument list into lists for each argument position. */
 	unsigned int i;
 	unsigned int num_tokens = struct_c_lexer_token_ptr_list_size(all_parameters);
 	unsigned int paren_level = 0; /* Argument lists for nested function macros need to be tracked */
 
 	struct struct_c_lexer_token_ptr_list tmp_arg_tokens;
-	struct struct_c_lexer_token_ptr_list * current_argument_tokens = malloc(sizeof(struct struct_c_lexer_token_ptr_list));
+	struct struct_c_lexer_token_ptr_list trimmed_argument_tokens;
+	struct struct_c_lexer_token_ptr_list * whitespace_reduced_tokens = (struct struct_c_lexer_token_ptr_list *)malloc(sizeof(struct struct_c_lexer_token_ptr_list));
 	/*  Temp list before we do a trim */
 	struct_c_lexer_token_ptr_list_create(&tmp_arg_tokens);
-	struct_c_lexer_token_ptr_list_create(current_argument_tokens);
+	struct_c_lexer_token_ptr_list_create(&trimmed_argument_tokens);
+	struct_c_lexer_token_ptr_list_create(whitespace_reduced_tokens);
 	for(i = 0; i < num_tokens; i++){
 		struct c_lexer_token * tok = struct_c_lexer_token_ptr_list_get(all_parameters, i);
 
@@ -408,40 +456,44 @@ void split_tokens_into_parameters(struct struct_c_lexer_token_ptr_list * all_par
 		}
 
 		if(tok->type == COMMA_CHAR && paren_level == 0){
-			make_trimmed_arg_list(current_argument_tokens, &tmp_arg_tokens);
-			struct_struct_c_lexer_token_ptr_list_ptr_list_add_end(parameter_lists, current_argument_tokens);
-			current_argument_tokens = malloc(sizeof(struct struct_c_lexer_token_ptr_list));
-			struct_c_lexer_token_ptr_list_create(current_argument_tokens);
+			make_trimmed_arg_list(&trimmed_argument_tokens, &tmp_arg_tokens);
+			reduce_multiple_whitespace_to_single(state, whitespace_reduced_tokens, &trimmed_argument_tokens);
+			struct_struct_c_lexer_token_ptr_list_ptr_list_add_end(parameter_lists, whitespace_reduced_tokens);
+			whitespace_reduced_tokens = (struct struct_c_lexer_token_ptr_list *)malloc(sizeof(struct struct_c_lexer_token_ptr_list));
+			struct_c_lexer_token_ptr_list_create(whitespace_reduced_tokens);
 			/*  Clear temp tokens */
 			struct_c_lexer_token_ptr_list_destroy(&tmp_arg_tokens);
 			struct_c_lexer_token_ptr_list_create(&tmp_arg_tokens);
+			struct_c_lexer_token_ptr_list_destroy(&trimmed_argument_tokens);
+			struct_c_lexer_token_ptr_list_create(&trimmed_argument_tokens);
 		}
 	}
 
-	make_trimmed_arg_list(current_argument_tokens, &tmp_arg_tokens);
-	struct_struct_c_lexer_token_ptr_list_ptr_list_add_end(parameter_lists, current_argument_tokens);
+	make_trimmed_arg_list(&trimmed_argument_tokens, &tmp_arg_tokens);
+	reduce_multiple_whitespace_to_single(state, whitespace_reduced_tokens, &trimmed_argument_tokens);
+	struct_struct_c_lexer_token_ptr_list_ptr_list_add_end(parameter_lists, whitespace_reduced_tokens);
 	struct_c_lexer_token_ptr_list_destroy(&tmp_arg_tokens);
+	struct_c_lexer_token_ptr_list_destroy(&trimmed_argument_tokens);
 }
 
-void fully_expand_macros(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * arg_after, struct struct_c_lexer_token_ptr_list * arg_before, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map * disabled_tokens){
-	struct unsigned_char_ptr_to_struct_macro_definition_ptr_map new_disabled_macros;
-	struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map new_disabled_tokens;
-	new_disabled_macros = unsigned_char_ptr_to_struct_macro_definition_ptr_map_copy(disabled_macros);
-	new_disabled_tokens = struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_copy(disabled_tokens);
+void fully_expand_macros(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * arg_after, struct struct_c_lexer_token_ptr_list * arg_before){
+	struct struct_preprocessor_macro_level_ptr_list new_macro_expansion_levels;
 	struct_c_lexer_token_ptr_list_reverse(arg_before); /*  So we can pop next token off end */
-	process_tokens(state, arg_after, arg_before, macro_map, &new_disabled_macros, disabled_tokens, MACRO_SEARCH, 0);
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_destroy(&new_disabled_macros);
-	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_destroy(&new_disabled_tokens);
+	struct_preprocessor_macro_level_ptr_list_create(&new_macro_expansion_levels);
+	process_tokens(state, arg_after, arg_before, MACRO_SEARCH, 0, &new_macro_expansion_levels);
+	assert(struct_preprocessor_macro_level_ptr_list_size(&new_macro_expansion_levels) == 0);
+	struct_preprocessor_macro_level_ptr_list_destroy(&new_macro_expansion_levels);
 }
 
-void perform_argument_prescan_all(struct preprocessor_state * state, struct struct_struct_c_lexer_token_ptr_list_ptr_list * after, struct struct_struct_c_lexer_token_ptr_list_ptr_list * before, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map * disabled_tokens){
+void perform_argument_prescan_all(struct preprocessor_state * state, struct struct_struct_c_lexer_token_ptr_list_ptr_list * after, struct struct_struct_c_lexer_token_ptr_list_ptr_list * before, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
 	unsigned int i;
 	unsigned int num_lists = struct_struct_c_lexer_token_ptr_list_ptr_list_size(before);
+	(void)macro_expansion_levels;
 	for(i = 0; i < num_lists; i++){
-		struct struct_c_lexer_token_ptr_list * arg_after = malloc(sizeof(struct struct_c_lexer_token_ptr_list));
+		struct struct_c_lexer_token_ptr_list * arg_after = (struct struct_c_lexer_token_ptr_list *)malloc(sizeof(struct struct_c_lexer_token_ptr_list));
 		struct struct_c_lexer_token_ptr_list arg_before_copy = struct_c_lexer_token_ptr_list_copy(struct_struct_c_lexer_token_ptr_list_ptr_list_get(before, i));
 		struct_c_lexer_token_ptr_list_create(arg_after);
-		fully_expand_macros(state, arg_after, &arg_before_copy, macro_map, disabled_macros, disabled_tokens);
+		fully_expand_macros(state, arg_after, &arg_before_copy);
 		struct_struct_c_lexer_token_ptr_list_ptr_list_add_end(after, arg_after);
 		struct_c_lexer_token_ptr_list_destroy(&arg_before_copy);
 	}
@@ -455,6 +507,25 @@ void add_stringified_character(struct unsigned_char_list * chars, unsigned int *
 		*num_chars = *num_chars + 1;
 	}
 	unsigned_char_list_add_end(chars, c);
+}
+
+void reduce_multiple_whitespace_to_single(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * whitespace_reduced_tokens, struct struct_c_lexer_token_ptr_list * trimmed_argument_tokens){
+	/*  Take any sequences of spaces and replace them with a single space */
+	unsigned int i;
+	unsigned int size = struct_c_lexer_token_ptr_list_size(trimmed_argument_tokens);
+	unsigned int last_was_space = 0;
+	for(i = 0; i < size; i++){
+		struct c_lexer_token * tok = struct_c_lexer_token_ptr_list_get(trimmed_argument_tokens, i);
+		if(tok->type == SPACE && !last_was_space){
+			struct_c_lexer_token_ptr_list_add_end(whitespace_reduced_tokens, state->space_token);
+			last_was_space = 1;
+		}else if(tok->type == SPACE && last_was_space){
+			/*  Just ignore this token  */
+		}else{
+			struct_c_lexer_token_ptr_list_add_end(whitespace_reduced_tokens, tok);
+			last_was_space = 0;
+		}
+	}
 }
 
 void make_trimmed_arg_list(struct struct_c_lexer_token_ptr_list * trimmed_arg_list, struct struct_c_lexer_token_ptr_list * arg_list){
@@ -510,26 +581,28 @@ struct c_lexer_token * make_stringified_token(struct preprocessor_state * state,
 	return token;
 }
 
-void evaluate_function_macro_body(struct preprocessor_state * state, struct macro_definition * macro_def, struct struct_c_lexer_token_ptr_list * result, struct struct_struct_c_lexer_token_ptr_list_ptr_list * after_prescan, struct struct_struct_c_lexer_token_ptr_list_ptr_list * before_prescan, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map * disabled_tokens){
+void evaluate_function_macro_body(struct preprocessor_state * state, struct macro_definition * macro_def, struct struct_c_lexer_token_ptr_list * result, struct struct_struct_c_lexer_token_ptr_list_ptr_list * after_prescan, struct struct_struct_c_lexer_token_ptr_list_ptr_list * before_prescan){
 	struct struct_c_lexer_token_ptr_list after_arg_substitution;
 	struct struct_c_lexer_token_ptr_list definition_tokens = struct_c_lexer_token_ptr_list_copy(&macro_def->definition_tokens);
 	struct struct_c_lexer_token_ptr_list working_tokens;
 	unsigned int i;
 	unsigned int num_definition_tokens = struct_c_lexer_token_ptr_list_size(&macro_def->definition_tokens);
+	/*  Create a fake empty list of levels because we're just reading from the saved body of the macro definition */
+	struct struct_preprocessor_macro_level_ptr_list macro_expansion_levels;
+	struct_preprocessor_macro_level_ptr_list_create(&macro_expansion_levels);
+
 	struct_c_lexer_token_ptr_list_create(&after_arg_substitution);
 	struct_c_lexer_token_ptr_list_create(&working_tokens);
 	struct_c_lexer_token_ptr_list_reverse(&definition_tokens);
-	(void)disabled_macros;
-	(void)disabled_tokens;
-	(void)macro_map;
 	for(i = 0; i < num_definition_tokens; i++){
-		struct c_lexer_token * tok = read_until_next_token(state, &definition_tokens, &working_tokens);
+		struct c_lexer_token * tok = read_until_next_token(state, &definition_tokens, &working_tokens, &macro_expansion_levels);
 		if(!tok){
 			/*  Do nothing */
 		}else if(tok->type == IDENTIFIER){
 			unsigned char * identifier_str = copy_string(tok->first_byte, tok->last_byte, state->memory_pool_collection);
 			struct macro_parameter * potential_param = unsigned_char_ptr_to_struct_macro_parameter_ptr_map_exists(&macro_def->function_macro_parameters,identifier_str) ? unsigned_char_ptr_to_struct_macro_parameter_ptr_map_get(&macro_def->function_macro_parameters,identifier_str) : (struct macro_parameter *)0;
 			unsigned int j;
+			struct struct_struct_c_lexer_token_ptr_list_ptr_list * source_list = after_prescan;
 			/* Add whitespace tokens */
 			for(j = 0; j < struct_c_lexer_token_ptr_list_size(&working_tokens); j++){
 				if(j != struct_c_lexer_token_ptr_list_size(&working_tokens) -1){ /*  Last one isn't whitespace */
@@ -539,23 +612,39 @@ void evaluate_function_macro_body(struct preprocessor_state * state, struct macr
 			struct_c_lexer_token_ptr_list_destroy(&working_tokens);
 			struct_c_lexer_token_ptr_list_create(&working_tokens);
 			/*  If the function body references a parameter of the function, replace it with the prescanned version of the arg */
+			{
+				/*  Check if this parameter precedes a token concatenation operator */
+				struct c_lexer_token * check_token1;
+				struct c_lexer_token * check_token2;
+				struct struct_c_lexer_token_ptr_list tmp_check_tokens;
+				struct_c_lexer_token_ptr_list_create(&tmp_check_tokens);
+				check_token1 = read_until_next_token(state, &definition_tokens, &tmp_check_tokens, &macro_expansion_levels);
+				check_token2 = read_until_next_token(state, &definition_tokens, &tmp_check_tokens, &macro_expansion_levels);
+				while(struct_c_lexer_token_ptr_list_size(&tmp_check_tokens)){
+					put_back_token(state, &definition_tokens, struct_c_lexer_token_ptr_list_pop_end(&tmp_check_tokens), &macro_expansion_levels);
+				}
+				struct_c_lexer_token_ptr_list_destroy(&tmp_check_tokens);
+				if(check_token1 && check_token2 && check_token1->type == NUMBER_SIGN_CHAR && check_token2->type == NUMBER_SIGN_CHAR){
+					source_list = before_prescan;
+				}
+			}
 			if(potential_param){
 				if(potential_param->is_variadic){
 					/*  For variadic arguments, take all of the rest of the tokens */
 					unsigned int k;
 					struct struct_c_lexer_token_ptr_list * arg_list;
-					for(k = potential_param->position_index; k < struct_struct_c_lexer_token_ptr_list_ptr_list_size(after_prescan); k++){
-						assert(struct_struct_c_lexer_token_ptr_list_ptr_list_size(after_prescan) > k);
-						arg_list = struct_struct_c_lexer_token_ptr_list_ptr_list_get(after_prescan, k);
+					for(k = potential_param->position_index; k < struct_struct_c_lexer_token_ptr_list_ptr_list_size(source_list); k++){
+						assert(struct_struct_c_lexer_token_ptr_list_ptr_list_size(source_list) > k);
+						arg_list = struct_struct_c_lexer_token_ptr_list_ptr_list_get(source_list, k);
 						struct_c_lexer_token_ptr_list_add_all_end(result, arg_list);
-						if(k != (struct_struct_c_lexer_token_ptr_list_ptr_list_size(after_prescan) -1)){
+						if(k != (struct_struct_c_lexer_token_ptr_list_ptr_list_size(source_list) -1)){
 							struct_c_lexer_token_ptr_list_add_end(result, state->comma_token);
 						}
 					}
 				}else{
 					struct struct_c_lexer_token_ptr_list * arg_list;
-					assert(struct_struct_c_lexer_token_ptr_list_ptr_list_size(after_prescan) > potential_param->position_index);
-					arg_list = struct_struct_c_lexer_token_ptr_list_ptr_list_get(after_prescan, potential_param->position_index);
+					assert(struct_struct_c_lexer_token_ptr_list_ptr_list_size(source_list) > potential_param->position_index);
+					arg_list = struct_struct_c_lexer_token_ptr_list_ptr_list_get(source_list, potential_param->position_index);
 					struct_c_lexer_token_ptr_list_add_all_end(result, arg_list);
 				}
 			}else{
@@ -564,12 +653,84 @@ void evaluate_function_macro_body(struct preprocessor_state * state, struct macr
 			heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
 		}else if(tok->type == NUMBER_SIGN_CHAR){
 			/* Was this the last token in the definition? */
-			struct c_lexer_token * next = read_until_next_token(state, &definition_tokens, &working_tokens);
+			struct c_lexer_token * next = read_one_token(state, &definition_tokens, &macro_expansion_levels);
 			if(!next){ /* # was last non whitespace token */
 				struct_c_lexer_token_ptr_list_add_end(result, tok);
-			}else if(next->type == IDENTIFIER){
-				unsigned char * identifier_str = copy_string(next->first_byte, next->last_byte, state->memory_pool_collection);
-				struct macro_parameter * potential_param = unsigned_char_ptr_to_struct_macro_parameter_ptr_map_exists(&macro_def->function_macro_parameters,identifier_str) ? unsigned_char_ptr_to_struct_macro_parameter_ptr_map_get(&macro_def->function_macro_parameters,identifier_str) : (struct macro_parameter *)0;
+			}else if(next->type == NUMBER_SIGN_CHAR){/*  It's a token concatenation (##) operation */
+				unsigned char * c;
+				unsigned char * d;
+				struct c_lexer_token * prev = struct_c_lexer_token_ptr_list_size(result) ? struct_c_lexer_token_ptr_list_pop_end(result) : (struct c_lexer_token*)0;
+				struct c_lexer_token * first_token_token_of_rhs;
+				struct struct_c_lexer_token_ptr_list * arg_list = (struct struct_c_lexer_token_ptr_list *)0;
+				next = read_until_next_token(state, &definition_tokens, &working_tokens, &macro_expansion_levels);
+				first_token_token_of_rhs = next;
+				if(next->type == IDENTIFIER){
+					/*  If rhs is a parameter, get whatever those tokens were */
+					unsigned char * identifier_str = copy_string(next->first_byte, next->last_byte, state->memory_pool_collection);
+					struct macro_parameter * potential_param = unsigned_char_ptr_to_struct_macro_parameter_ptr_map_exists(&macro_def->function_macro_parameters,identifier_str) ? unsigned_char_ptr_to_struct_macro_parameter_ptr_map_get(&macro_def->function_macro_parameters,identifier_str) : (struct macro_parameter *)0;
+					if(potential_param){
+						/*  Next token really does represent a parameter, get passed tokens  */
+						assert(struct_struct_c_lexer_token_ptr_list_ptr_list_size(before_prescan) > potential_param->position_index);
+						arg_list = struct_struct_c_lexer_token_ptr_list_ptr_list_get(before_prescan, potential_param->position_index);
+						if(struct_c_lexer_token_ptr_list_size(arg_list)){
+							first_token_token_of_rhs = struct_c_lexer_token_ptr_list_get(arg_list, 0);
+						}else{
+							/*  Empty token list from right parameter */
+							first_token_token_of_rhs = (struct c_lexer_token *)0;
+						}
+					}
+					heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
+				}
+				if(prev || first_token_token_of_rhs){
+					unsigned int new_token_string_length = 0;
+					struct c_lexer_token * new_token = struct_c_lexer_token_memory_pool_malloc(state->memory_pool_collection->struct_c_lexer_token_pool);
+					if(prev){
+						c = prev->first_byte;
+						do {new_token_string_length++;} while(c++ != prev->last_byte);
+					}
+					if(first_token_token_of_rhs){
+						c = first_token_token_of_rhs->first_byte;
+						do {new_token_string_length++;} while(c++ != first_token_token_of_rhs->last_byte);
+					}
+					new_token->first_byte = heap_memory_pool_malloc(state->memory_pool_collection->heap_pool, new_token_string_length);
+					new_token->last_byte = new_token->first_byte + (new_token_string_length -1);
+					new_token->type = prev ? prev->type : first_token_token_of_rhs->type;
+					/*  Copy the new data for the token over */
+					d = new_token->first_byte;
+					if(prev){
+						c = prev->first_byte;
+						do {*d = *c; d++;} while(c++ != prev->last_byte);
+					}
+					if(first_token_token_of_rhs){
+						c = first_token_token_of_rhs->first_byte;
+						do {*d = *c; d++;} while(c++ != first_token_token_of_rhs->last_byte);
+					}
+					/*  Remember to delete later: */
+					struct_c_lexer_token_ptr_list_add_end(&state->created_tokens, new_token);
+					/*  Add our new token */
+					struct_c_lexer_token_ptr_list_add_end(result, new_token);
+					if(arg_list && struct_c_lexer_token_ptr_list_size(arg_list) > 1){
+						/*  If it it was from an argument, add the rest of the tokens after */
+						unsigned int g;
+						for(g = 1; g < struct_c_lexer_token_ptr_list_size(arg_list); g++){
+							struct c_lexer_token * l = struct_c_lexer_token_ptr_list_get(arg_list, g);
+							struct_c_lexer_token_ptr_list_add_end(result, l);
+						}
+					}
+				}
+
+				/*  Empty the working tokens */
+				struct_c_lexer_token_ptr_list_destroy(&working_tokens);
+				struct_c_lexer_token_ptr_list_create(&working_tokens);
+			}else if(next->type == IDENTIFIER || next->type == SPACE){
+				unsigned char * identifier_str;
+				struct macro_parameter * potential_param;
+				if(next->type == SPACE){
+					next = read_until_next_token(state, &definition_tokens, &working_tokens, &macro_expansion_levels);
+					assert(next->type == IDENTIFIER);
+				}
+				identifier_str = copy_string(next->first_byte, next->last_byte, state->memory_pool_collection);
+				potential_param = unsigned_char_ptr_to_struct_macro_parameter_ptr_map_exists(&macro_def->function_macro_parameters,identifier_str) ? unsigned_char_ptr_to_struct_macro_parameter_ptr_map_get(&macro_def->function_macro_parameters,identifier_str) : (struct macro_parameter *)0;
 				if(potential_param){
 					struct c_lexer_token * stingified_token;
 					struct struct_c_lexer_token_ptr_list * arg_list;
@@ -598,11 +759,11 @@ void evaluate_function_macro_body(struct preprocessor_state * state, struct macr
 			struct_c_lexer_token_ptr_list_add_end(result, tok);
 		}
 	}
-	/*  Perform another scan after macro arguments have been substituted */
-	/*fully_expand_macros(result, &after_arg_substitution, macro_map, disabled_macros, disabled_tokens);*/
 	struct_c_lexer_token_ptr_list_destroy(&after_arg_substitution);
 	struct_c_lexer_token_ptr_list_destroy(&working_tokens);
 	struct_c_lexer_token_ptr_list_destroy(&definition_tokens);
+	assert(struct_preprocessor_macro_level_ptr_list_size(&macro_expansion_levels) == 0);
+	struct_preprocessor_macro_level_ptr_list_destroy(&macro_expansion_levels);
 }
 
 unsigned char * make_current_file_line_string(struct preprocessor_state * state){
@@ -645,22 +806,20 @@ void evaluate_special_macro(struct preprocessor_state * state, struct special_ma
 	}
 }
 
-unsigned int process_identifier_if_macro(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * input_tokens, struct struct_c_lexer_token_ptr_list * working_tokens, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map * disabled_tokens){
+unsigned int process_identifier_if_macro(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * input_tokens, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels, struct struct_preprocessor_macro_level_ptr_list * fake){
 	/*  Does nothing if identifer is not a macro */
 	/*  Expands macro and puts token back if it is a macro  */
 	/*  Pop the last token we just inspected */
-	struct c_lexer_token * identifier_token = struct_c_lexer_token_ptr_list_pop_end(working_tokens);
-	struct c_lexer_token * disabled_token = struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_exists(disabled_tokens, identifier_token) ? struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_get(disabled_tokens, identifier_token) : (struct c_lexer_token *)0;
+	struct c_lexer_token * identifier_token = read_one_token(state, input_tokens, fake);
+	struct c_lexer_token * disabled_token = struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_exists(&state->disabled_tokens, identifier_token) ? struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_get(&state->disabled_tokens, identifier_token) : (struct c_lexer_token *)0;
 	unsigned char * identifier_str = copy_string(identifier_token->first_byte, identifier_token->last_byte, state->memory_pool_collection);
-	struct macro_definition * macro_def = unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(macro_map, identifier_str) ? unsigned_char_ptr_to_struct_macro_definition_ptr_map_get(macro_map, identifier_str) : (struct macro_definition *)0;
-	struct macro_definition * disabled_def = unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(disabled_macros, identifier_str) ? unsigned_char_ptr_to_struct_macro_definition_ptr_map_get(disabled_macros, identifier_str) : (struct macro_definition *)0;
+	struct macro_definition * macro_def = unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->macro_map, identifier_str) ? unsigned_char_ptr_to_struct_macro_definition_ptr_map_get(&state->macro_map, identifier_str) : (struct macro_definition *)0;
+	struct macro_definition * disabled_def = unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->disabled_macros, identifier_str) ? unsigned_char_ptr_to_struct_macro_definition_ptr_map_get(&state->disabled_macros, identifier_str) : (struct macro_definition *)0;
 	struct special_macro_definition * special_def = unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_exists(&state->special_macros, identifier_str) ? unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_get(&state->special_macros, identifier_str) : (struct special_macro_definition *)0;
 	unsigned int rtn;
-	(void)output_tokens;
-	(void)disabled_token;
 	if(disabled_token){
-		/*  Disabled, put it back */
-		struct_c_lexer_token_ptr_list_add_end(working_tokens, identifier_token);
+		/*  Disabled, let it through */
+		put_back_token(state, input_tokens, identifier_token, fake);
 		rtn = 0;
 	}else if(special_def){
 		/*  Special macro definition */
@@ -670,7 +829,7 @@ unsigned int process_identifier_if_macro(struct preprocessor_state * state, stru
 		if(struct_c_lexer_token_ptr_list_size(&after_expansion)){
 			unsigned int i;
 			for(i = struct_c_lexer_token_ptr_list_size(&after_expansion) -1; ; i--){
-				struct_c_lexer_token_ptr_list_add_end(input_tokens, struct_c_lexer_token_ptr_list_get(&after_expansion, i));
+				put_back_token(state, output_tokens, struct_c_lexer_token_ptr_list_get(&after_expansion, i), macro_expansion_levels);
 				if(i == 0){
 					break;
 				}
@@ -678,10 +837,10 @@ unsigned int process_identifier_if_macro(struct preprocessor_state * state, stru
 		}
 		struct_c_lexer_token_ptr_list_destroy(&after_expansion);
 		rtn = 0;
-	}else if(macro_def && disabled_def == macro_def){
-		struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_put(disabled_tokens, identifier_token, identifier_token);
+	}else if(macro_def && disabled_def == macro_def && macro_def->type != FUNCTION_MACRO){ /*  Disable function macro tokens only if they have a ( after */
+		struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_put(&state->disabled_tokens, identifier_token, identifier_token);
 		/*  Disabled, put it back */
-		struct_c_lexer_token_ptr_list_add_end(working_tokens, identifier_token);
+		put_back_token(state, input_tokens, identifier_token, fake);
 		rtn = 0;
 	}else if(macro_def){
 		unsigned int num_definition_tokens = struct_c_lexer_token_ptr_list_size(&macro_def->definition_tokens);
@@ -689,24 +848,36 @@ unsigned int process_identifier_if_macro(struct preprocessor_state * state, stru
 		if(macro_def->type == OBJECT_MACRO){
 			struct struct_c_lexer_token_ptr_list initial_replacement;
 			struct struct_c_lexer_token_ptr_list after_expansion;
+			unsigned char * disabled_key;
 			struct_c_lexer_token_ptr_list_create(&initial_replacement);
 			struct_c_lexer_token_ptr_list_create(&after_expansion);
-			for(i = 0; i < num_definition_tokens; i++){
-				struct c_lexer_token * tok = struct_c_lexer_token_ptr_list_get(&macro_def->definition_tokens, i);
-				struct_c_lexer_token_ptr_list_add_end(&initial_replacement, tok);
-			}
-			unsigned_char_ptr_to_struct_macro_definition_ptr_map_put(disabled_macros, identifier_str, macro_def);
-			fully_expand_macros(state, &after_expansion, &initial_replacement, macro_map, disabled_macros, disabled_tokens);
-			unsigned_char_ptr_to_struct_macro_definition_ptr_map_remove(disabled_macros, identifier_str);
 
-			if(struct_c_lexer_token_ptr_list_size(&after_expansion)){
-				for(i = struct_c_lexer_token_ptr_list_size(&after_expansion) -1; ; i--){
-					struct_c_lexer_token_ptr_list_add_end(input_tokens, struct_c_lexer_token_ptr_list_get(&after_expansion, i));
+			disabled_key = copy_null_terminated_string(identifier_str, state->memory_pool_collection);
+			struct_preprocessor_macro_level_ptr_list_add_end(macro_expansion_levels, create_preprocessor_macro_level(macro_def, disabled_key, state->memory_pool_collection));
+			assert(!unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->disabled_macros, disabled_key));
+			unsigned_char_ptr_to_struct_macro_definition_ptr_map_put(&state->disabled_macros, disabled_key, macro_def);
+
+			if(num_definition_tokens){
+				for(i = num_definition_tokens -1; ; i--){
+					struct c_lexer_token * tok = struct_c_lexer_token_ptr_list_get(&macro_def->definition_tokens, i);
+					put_back_token(state, output_tokens, tok, macro_expansion_levels);
 					if(i == 0){
 						break;
 					}
 				}
 			}
+			/*fully_expand_macros(state, &after_expansion, &initial_replacement);*/
+
+			/*
+			if(struct_c_lexer_token_ptr_list_size(&after_expansion)){
+				for(i = struct_c_lexer_token_ptr_list_size(&after_expansion) -1; ; i--){
+					put_back_token(state, input_tokens, struct_c_lexer_token_ptr_list_get(&after_expansion, i), macro_expansion_levels);
+					if(i == 0){
+						break;
+					}
+				}
+			}
+			*/
 
 			struct_c_lexer_token_ptr_list_destroy(&initial_replacement);
 			struct_c_lexer_token_ptr_list_destroy(&after_expansion);
@@ -718,35 +889,54 @@ unsigned int process_identifier_if_macro(struct preprocessor_state * state, stru
 			struct struct_c_lexer_token_ptr_list initial_pass_tokens;
 			struct c_lexer_token * open_paren;
 			unsigned int k;
+			unsigned char * disabled_key;
 			struct_c_lexer_token_ptr_list_create(&tmp_before_open_paren);
 			/*  We expect the next non-whitespace character to be a ( */
-			open_paren = read_until_next_token(state, input_tokens, &tmp_before_open_paren);
+			open_paren = read_until_next_token(state, output_tokens, &tmp_before_open_paren, macro_expansion_levels);
 			if(!open_paren || open_paren->type != OPEN_PAREN_CHAR){
 				/*  This not an invocation of the function, just a reference to the name */
 				/*  whitespace and non paren tokens we just poped off  */
 				while(struct_c_lexer_token_ptr_list_size(&tmp_before_open_paren)){
-					struct_c_lexer_token_ptr_list_add_end(input_tokens, struct_c_lexer_token_ptr_list_pop_end(&tmp_before_open_paren));
+					put_back_token(state, output_tokens, struct_c_lexer_token_ptr_list_pop_end(&tmp_before_open_paren), macro_expansion_levels);
 				}
-				heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
 				struct_c_lexer_token_ptr_list_destroy(&tmp_before_open_paren);
-				/*  Put back identifier */
-				struct_c_lexer_token_ptr_list_add_end(working_tokens, identifier_token);
+				/*  Put back identifier, but put it into input so it gets considered processed */
+				put_back_token(state, input_tokens, identifier_token, fake);
+
+				heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
 				return 0;
 			}
+			/*  Was it a function macro invocation of a disabled macro? */
+ 			if(disabled_def == macro_def && open_paren->type == OPEN_PAREN_CHAR){
+				while(struct_c_lexer_token_ptr_list_size(&tmp_before_open_paren)){
+					put_back_token(state, output_tokens, struct_c_lexer_token_ptr_list_pop_end(&tmp_before_open_paren), macro_expansion_levels);
+				}
+				struct_c_lexer_token_ptr_list_destroy(&tmp_before_open_paren);
+				put_back_token(state, input_tokens, identifier_token, fake);
+				struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_put(&state->disabled_tokens, identifier_token, identifier_token);
+				heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
+				return 0;
+ 			}
 
 			struct_struct_c_lexer_token_ptr_list_ptr_list_create(&argument_token_collections);
 			struct_struct_c_lexer_token_ptr_list_ptr_list_create(&prescanned_argument_token_collections);
 			struct_c_lexer_token_ptr_list_create(&initial_pass_tokens);
 			struct_c_lexer_token_ptr_list_create(&function_macro_result);
 			/*  Process tokens to evaluate any macro directives embedded inside the function macro invocation */
-			process_tokens(state, &initial_pass_tokens, input_tokens, macro_map, disabled_macros, disabled_tokens, MACRO_SEARCH, 1);
-			split_tokens_into_parameters(&initial_pass_tokens, &argument_token_collections);
+			/*  Process tokens knows to stop on a ) because we are passing in a flag that says so */
+			process_tokens(state, &initial_pass_tokens, output_tokens, MACRO_SEARCH, 1, macro_expansion_levels);
+			split_tokens_into_parameters(state, &initial_pass_tokens, &argument_token_collections);
 
-			perform_argument_prescan_all(state, &prescanned_argument_token_collections, &argument_token_collections, macro_map, disabled_macros, disabled_tokens);
-			unsigned_char_ptr_to_struct_macro_definition_ptr_map_put(disabled_macros, identifier_str, macro_def);
-			evaluate_function_macro_body(state, macro_def, &function_macro_result, &prescanned_argument_token_collections, &argument_token_collections, macro_map, disabled_macros, disabled_tokens);
-
-			unsigned_char_ptr_to_struct_macro_definition_ptr_map_remove(disabled_macros, identifier_str);
+			perform_argument_prescan_all(state, &prescanned_argument_token_collections, &argument_token_collections, macro_expansion_levels);
+			/*  Create a macro expansion level that remembers when we can re-enable this macro */
+			disabled_key = copy_null_terminated_string(identifier_str, state->memory_pool_collection);
+			struct_preprocessor_macro_level_ptr_list_add_end(macro_expansion_levels, create_preprocessor_macro_level(macro_def, disabled_key, state->memory_pool_collection));
+			if(unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->disabled_macros, disabled_key)){
+				printf("\nAttempting to disable function macro %s, but it is already disabled.\n", disabled_key);
+				assert(0);
+			}
+			unsigned_char_ptr_to_struct_macro_definition_ptr_map_put(&state->disabled_macros, disabled_key, macro_def);
+			evaluate_function_macro_body(state, macro_def, &function_macro_result, &prescanned_argument_token_collections, &argument_token_collections);
 
 			/*  Clean up argument tokens */
 			for(k = 0; k < struct_struct_c_lexer_token_ptr_list_ptr_list_size(&argument_token_collections); k++){
@@ -765,7 +955,7 @@ unsigned int process_identifier_if_macro(struct preprocessor_state * state, stru
 			if(struct_c_lexer_token_ptr_list_size(&function_macro_result)){
 				for(k = struct_c_lexer_token_ptr_list_size(&function_macro_result) -1; ; k--){
 					struct c_lexer_token * tok = struct_c_lexer_token_ptr_list_get(&function_macro_result, k);
-					struct_c_lexer_token_ptr_list_add_end(input_tokens, tok);
+					put_back_token(state, output_tokens, tok, macro_expansion_levels);
 					if(k == 0){
 						break;
 					}
@@ -783,14 +973,14 @@ unsigned int process_identifier_if_macro(struct preprocessor_state * state, stru
 		rtn = 1;
 	}else{
 		/*  Was not a defined macro, put it back */
-		struct_c_lexer_token_ptr_list_add_end(working_tokens, identifier_token);
+		put_back_token(state, input_tokens, identifier_token, fake);
 		rtn = 0;
 	}
 	heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
 	return rtn;
 }
 
-void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * input_tokens, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map * disabled_tokens, enum search_state starting_state, unsigned int inside_function_macro_invocation){
+void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * input_tokens, enum search_state starting_state, unsigned int inside_function_macro_invocation, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
 	struct struct_c_lexer_token_ptr_list working_tokens;
 	enum search_state current_state = starting_state;
 	struct c_lexer_token * current_token;
@@ -798,7 +988,7 @@ void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_tok
 	struct_c_lexer_token_ptr_list_create(&working_tokens);
 	do {
 		/*  Returns 0 when all tokens have been read */
-		current_token = read_until_next_token(state, input_tokens, &working_tokens);
+		current_token = read_until_next_token(state, input_tokens, &working_tokens, macro_expansion_levels);
 		/* current_token is the last token in 'working_tokens' */
 		switch(current_state){
 			case BEGIN_LINE:{
@@ -808,20 +998,26 @@ void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_tok
 							current_state = EXPECT_DIRECTIVE;
 							break;
 						}case NEWLINE:{
-							release_working_tokens(state, output_tokens, &working_tokens);
+							release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 							current_state = BEGIN_LINE;
 							increment_current_line(state);
 							break;
 						}case IDENTIFIER:{
+							unsigned int changed = 0;
 							if(!inside_function_macro_invocation){
-								process_identifier_if_macro(state, output_tokens, input_tokens, &working_tokens, macro_map, disabled_macros, disabled_tokens);
+								struct struct_preprocessor_macro_level_ptr_list fake;
+								struct_preprocessor_macro_level_ptr_list_create(&fake);
+								changed = process_identifier_if_macro(state, &working_tokens, input_tokens, macro_expansion_levels, &fake);
+								struct_preprocessor_macro_level_ptr_list_destroy(&fake);
 							}
 							current_state = MACRO_SEARCH;
-							release_working_tokens(state, output_tokens, &working_tokens);
+							if(!changed){
+								release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
+							}
 							break;
 						}case OPEN_PAREN_CHAR:{
 							function_macro_paren_level++;
-							release_working_tokens(state, output_tokens, &working_tokens);
+							release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 							current_state = MACRO_SEARCH;
 							break;
 						}case CLOSE_PAREN_CHAR:{
@@ -832,7 +1028,7 @@ void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_tok
 								struct_c_lexer_token_ptr_list_destroy(&working_tokens);
 								return;
 							}else{
-								release_working_tokens(state, output_tokens, &working_tokens);
+								release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 								current_state = MACRO_SEARCH;
 							}
 							break;
@@ -842,27 +1038,33 @@ void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_tok
 						}
 					}
 				}else{
-					release_working_tokens(state, output_tokens, &working_tokens);
+					release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 				}
 				break;
 			}case MACRO_SEARCH:{
 				if(current_token){
 					switch(current_token->type){
 						case IDENTIFIER:{
+							unsigned int changed = 0;
 							if(!inside_function_macro_invocation){
-								process_identifier_if_macro(state, output_tokens, input_tokens, &working_tokens, macro_map, disabled_macros, disabled_tokens);
+								struct struct_preprocessor_macro_level_ptr_list fake;
+								struct_preprocessor_macro_level_ptr_list_create(&fake);
+								changed = process_identifier_if_macro(state, &working_tokens, input_tokens, macro_expansion_levels, &fake);
+								struct_preprocessor_macro_level_ptr_list_destroy(&fake);
 							}
-							release_working_tokens(state, output_tokens, &working_tokens);
 							current_state = MACRO_SEARCH;
+							if(!changed){
+								release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
+							}
 							break;
 						}case NEWLINE:{
-							release_working_tokens(state, output_tokens, &working_tokens);
+							release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 							current_state = BEGIN_LINE;
 							increment_current_line(state);
 							break;
 						}case OPEN_PAREN_CHAR:{
 							function_macro_paren_level++;
-							release_working_tokens(state, output_tokens, &working_tokens);
+							release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 							break;
 						}case CLOSE_PAREN_CHAR:{
 							assert(function_macro_paren_level);
@@ -872,16 +1074,16 @@ void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_tok
 								struct_c_lexer_token_ptr_list_destroy(&working_tokens);
 								return;
 							}else{
-								release_working_tokens(state, output_tokens, &working_tokens);
+								release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 							}
 							break;
 						}default:{
-							release_working_tokens(state, output_tokens, &working_tokens);
+							release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 							break;
 						}
 					}
 				}else{
-					release_working_tokens(state, output_tokens, &working_tokens);
+					release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 				}
 				break;
 			}case EXPECT_DIRECTIVE:{
@@ -896,14 +1098,14 @@ void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_tok
 						}
 					}
 				}else{
-					release_working_tokens(state, output_tokens, &working_tokens);
+					release_working_tokens(state, output_tokens, &working_tokens, macro_expansion_levels);
 				}
 				break;
 			}case COMPLETE_DIRECTIVE:{
 				if(current_token){
 					switch(current_token->type){
 						case NEWLINE:{
-							process_directive(state, output_tokens, &working_tokens, macro_map, disabled_macros, disabled_tokens);
+							process_directive(state, output_tokens, &working_tokens, macro_expansion_levels);
 							current_state = BEGIN_LINE;
 							/*  Newline count is incremented somewhere in process directive */
 							break;
@@ -913,7 +1115,7 @@ void process_tokens(struct preprocessor_state * state, struct struct_c_lexer_tok
 						}
 					}
 				}else{
-					process_directive(state, output_tokens, &working_tokens, macro_map, disabled_macros, disabled_tokens);
+					process_directive(state, output_tokens, &working_tokens, macro_expansion_levels);
 				}
 				break;
 			}default:{
@@ -932,19 +1134,29 @@ void process_line_continuators(struct unsigned_char_list * in_characters, struct
 	unsigned int i;
 	unsigned int in_size = unsigned_char_list_size(in_characters);
 	unsigned char * in_data = unsigned_char_list_data(in_characters);
-	if(in_size > 0){
-		for(i = 1; i < in_size; i++){
-			if(in_data[i -1] == '\\' && in_data[i] == '\n'){
-				/*  Skip '\' and loop increment skips newline */
-				i++;
-				continue;
-			}else{
-				unsigned_char_list_add_end(out_characters, in_data[i-1]);
+	unsigned int possible_line_continuator = 0;
+	for(i = 0; i < in_size; i++){
+		unsigned_char_list_add_end(out_characters, in_data[i]);
+		if(in_data[i] == '\\'){
+			possible_line_continuator = 1;
+		}else if(in_data[i] == '\r'){
+			/*  Do nothing, don't disable possible line continuator */
+		}else if(in_data[i] == '\n'){
+			if(possible_line_continuator){
+				unsigned char r;
+				unsigned_char_list_pop_end(out_characters); /* remove newline */
+				r = unsigned_char_list_pop_end(out_characters);
+				if(r == '\r'){
+					unsigned char s = unsigned_char_list_pop_end(out_characters);
+					assert((s == '\\') && "Problem with line continuators");
+				}else if(r == '\\'){
+				}else{
+					assert(0 && "Problem with line continuators");
+				}
+				possible_line_continuator = 0;
 			}
-		}
-		/*  Add the last character only if was not part of a line continuation mark */
-		if(i == in_size -1){
-			unsigned_char_list_add_end(out_characters, in_data[in_size -1]);
+		}else{
+			possible_line_continuator = 0;
 		}
 	}
 }
@@ -960,19 +1172,19 @@ int c_lexer_token_cmp(struct c_lexer_token * a, struct c_lexer_token * b){
 }
 
 struct unsigned_char_list * add_tokenizable_input_buffer(struct preprocessor_state * state){
-	struct unsigned_char_list * new_list = malloc(sizeof(struct unsigned_char_list));
+	struct unsigned_char_list * new_list = (struct unsigned_char_list *)malloc(sizeof(struct unsigned_char_list));
 	unsigned_char_list_create(new_list);
 	struct_unsigned_char_list_ptr_list_add_end(&state->tokenizable_input_buffers, new_list);
 	return new_list;
 }
 
 struct c_lexer_state * add_c_lexer_state(struct preprocessor_state * state){
-	struct c_lexer_state * new_lexer = malloc(sizeof(struct c_lexer_state));
+	struct c_lexer_state * new_lexer = (struct c_lexer_state *)malloc(sizeof(struct c_lexer_state));
 	struct_c_lexer_state_ptr_list_add_end(&state->c_lexer_states, new_lexer);
 	return new_lexer;
 }
 
-int get_preprocessed_output_from_file(struct preprocessor_state * state, unsigned char * in_file, struct struct_c_lexer_token_ptr_list * output_tokens, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * macro_map, struct unsigned_char_ptr_to_struct_macro_definition_ptr_map * disabled_macros, struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map  * disabled_tokens){
+int get_preprocessed_output_from_file(struct preprocessor_state * state, unsigned char * in_file, struct struct_c_lexer_token_ptr_list * output_tokens){
 	struct unsigned_char_list file_input;
 	struct unsigned_char_list lexer_output;
 	struct unsigned_char_list * tokenizable_input = add_tokenizable_input_buffer(state); /*  Released when preprocessor is destroyed */
@@ -980,6 +1192,13 @@ int get_preprocessed_output_from_file(struct preprocessor_state * state, unsigne
 	struct struct_c_lexer_token_ptr_list input_tokens;
 	int rtn = 0;
 	unsigned int i;
+	struct struct_preprocessor_macro_level_ptr_list macro_expansion_levels;
+	struct_preprocessor_macro_level_ptr_list_create(&macro_expansion_levels);
+	/*  Push the first file we're traversing down into */
+	struct_preprocessor_file_context_ptr_list_add_end(&state->file_contexts, make_preprocessor_file_context(state, copy_string(in_file, get_null_terminator(in_file), state->memory_pool_collection)));
+
+	printf("Begin preprocessing ");
+	print_file_stack(state);
 	unsigned_char_list_create(&file_input);
 	unsigned_char_list_create(&lexer_output);
 	/*  Read the file we want to preprocess */
@@ -992,7 +1211,7 @@ int get_preprocessed_output_from_file(struct preprocessor_state * state, unsigne
 	/*  Reverse the list of tokens so we can use the list's push and pop with good memory performance */
 	input_tokens = struct_c_lexer_token_ptr_list_copy(&c_lexer_state->tokens);
 	struct_c_lexer_token_ptr_list_reverse(&input_tokens);
-	process_tokens(state, output_tokens, &input_tokens, macro_map, disabled_macros, disabled_tokens, BEGIN_LINE, 0);
+	process_tokens(state, output_tokens, &input_tokens, BEGIN_LINE, 0, &macro_expansion_levels);
 
 	/*  Typically, there is only output if there is an error.  There could also be debug info output */
 	for(i = 0; i < unsigned_char_list_size(&lexer_output); i++){
@@ -1002,6 +1221,9 @@ int get_preprocessed_output_from_file(struct preprocessor_state * state, unsigne
 	unsigned_char_list_destroy(&lexer_output);
 	unsigned_char_list_destroy(&file_input);
 	struct_c_lexer_token_ptr_list_destroy(&input_tokens);
+	destroy_preprocessor_file_context(state, struct_preprocessor_file_context_ptr_list_pop_end(&state->file_contexts));
+	assert(struct_preprocessor_macro_level_ptr_list_size(&macro_expansion_levels) == 0);
+	struct_preprocessor_macro_level_ptr_list_destroy(&macro_expansion_levels);
 	return rtn;
 }
 
@@ -1056,7 +1278,7 @@ void free_macro_definition_map(struct preprocessor_state * state, struct unsigne
 
 void destroy_preprocessor_state(struct preprocessor_state * state){
 	unsigned int i;
-	struct_if_branch_ptr_list_destroy(&state->if_branches);
+	struct_preprocessor_if_branch_ptr_list_destroy(&state->preprocessor_if_branches);
 
 	for(i = 0; i < struct_unsigned_char_list_ptr_list_size(&state->tokenizable_input_buffers); i++){
 		struct unsigned_char_list * l = struct_unsigned_char_list_ptr_list_get(&state->tokenizable_input_buffers, i);
@@ -1071,6 +1293,7 @@ void destroy_preprocessor_state(struct preprocessor_state * state){
 	}
 	struct_c_lexer_state_ptr_list_destroy(&state->c_lexer_states);
 	free(state->comma_token);
+	free(state->space_token);
 
 	for(i = 0; i < struct_c_lexer_token_ptr_list_size(&state->created_tokens); i++){
 		struct c_lexer_token * t = struct_c_lexer_token_ptr_list_get(&state->created_tokens, i);
@@ -1081,6 +1304,11 @@ void destroy_preprocessor_state(struct preprocessor_state * state){
 	struct_preprocessor_file_context_ptr_list_destroy(&state->file_contexts);
 
 	free_special_macro_definition_map(state, &state->special_macros);
+
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_destroy(&state->disabled_macros);
+	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_destroy(&state->disabled_tokens);
+	free_macro_definition_map(state, &state->macro_map);
+
 	free(state);
 	g_format_buffer_release();
 }
@@ -1118,29 +1346,54 @@ unsigned char * get_current_file(struct preprocessor_state * state){
 void add_special_macros(struct preprocessor_state * state, struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_map * map){
 	const char * line_macro = "__LINE__";
 	const char * file_macro = "__FILE__";
-	struct special_macro_definition * line_macro_definition = malloc(sizeof(struct special_macro_definition));
-	struct special_macro_definition * file_macro_definition = malloc(sizeof(struct special_macro_definition));
+	struct special_macro_definition * line_macro_definition = (struct special_macro_definition *)malloc(sizeof(struct special_macro_definition));
+	struct special_macro_definition * file_macro_definition = (struct special_macro_definition *)malloc(sizeof(struct special_macro_definition));
 	line_macro_definition->type = __LINE__MACRO;
 	file_macro_definition->type = __FILE__MACRO;
 	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_put(map, copy_null_terminated_string((unsigned char *)line_macro, state->memory_pool_collection), line_macro_definition);
 	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_put(map, copy_null_terminated_string((unsigned char *)file_macro, state->memory_pool_collection), file_macro_definition);
 }
 
+struct preprocessor_macro_level * create_preprocessor_macro_level(struct macro_definition * def, unsigned char * identifier, struct memory_pool_collection * memory_pool_collection){
+	struct preprocessor_macro_level * rtn = malloc(sizeof(struct preprocessor_macro_level));
+	struct_c_lexer_token_ptr_list_create(&rtn->tokens);
+	rtn->parent_macro = def;
+	rtn->identifier = identifier;
+	(void)memory_pool_collection;
+	return rtn;
+}
+
+void destroy_preprocessor_macro_level(struct preprocessor_macro_level * level, struct memory_pool_collection * memory_pool_collection){
+	struct_c_lexer_token_ptr_list_destroy(&level->tokens);
+	heap_memory_pool_free(memory_pool_collection->heap_pool, level->identifier);
+	free(level);
+}
+
 struct preprocessor_state * create_preprocessor_state(struct memory_pool_collection * memory_pool_collection){
-	struct preprocessor_state * state = malloc(sizeof(struct preprocessor_state));
+	struct preprocessor_state * state = (struct preprocessor_state *)malloc(sizeof(struct preprocessor_state));
 	g_format_buffer_use();
 	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_create(&state->special_macros);
-	state->comma_token = malloc(sizeof(struct c_lexer_token));
+
+	state->comma_token = (struct c_lexer_token*)malloc(sizeof(struct c_lexer_token));
 	state->comma_token->type = COMMA_CHAR;
 	state->comma_token->first_byte = (unsigned char *)comma;
 	state->comma_token->last_byte = (unsigned char *)comma;
+
+	state->space_token = (struct c_lexer_token*)malloc(sizeof(struct c_lexer_token));
+	state->space_token->type = SPACE;
+	state->space_token->first_byte = (unsigned char *)space;
+	state->space_token->last_byte = (unsigned char *)space;
+
 	state->memory_pool_collection = memory_pool_collection;
-	struct_if_branch_ptr_list_create(&state->if_branches);
+	struct_preprocessor_if_branch_ptr_list_create(&state->preprocessor_if_branches);
 	struct_unsigned_char_list_ptr_list_create(&state->tokenizable_input_buffers);
 	struct_preprocessor_file_context_ptr_list_create(&state->file_contexts);
 	struct_c_lexer_state_ptr_list_create(&state->c_lexer_states);
 	struct_c_lexer_token_ptr_list_create(&state->created_tokens);
 	add_special_macros(state, &state->special_macros);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->disabled_macros);
+	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&state->disabled_tokens);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->macro_map);
 	return state;
 }
 
@@ -1150,7 +1403,7 @@ void destroy_preprocessor_file_context(struct preprocessor_state * state, struct
 }
 
 struct preprocessor_file_context * make_preprocessor_file_context(struct preprocessor_state * state, unsigned char * filename){
-	struct preprocessor_file_context * file_context = malloc(sizeof(struct preprocessor_file_context));
+	struct preprocessor_file_context * file_context = (struct preprocessor_file_context *)malloc(sizeof(struct preprocessor_file_context));
 	(void)state;
 	file_context->filename = filename;
 	file_context->current_line = 1;
@@ -1168,13 +1421,8 @@ int do_preprocess(struct memory_pool_collection * memory_pool_collection, unsign
 	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&disabled_macros);
 	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&disabled_tokens);
 
-	/*  Push the first file we're traversing down into */
-	struct_preprocessor_file_context_ptr_list_add_end(&preprocessor_state->file_contexts, make_preprocessor_file_context(preprocessor_state, copy_string(in_file, get_null_terminator(in_file), memory_pool_collection)));
-
-	printf("Begin preprocessing ");
-	print_file_stack(preprocessor_state);
 	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&macro_map);
-	if(!(rtn = get_preprocessed_output_from_file(preprocessor_state, in_file, &output_tokens, &macro_map, &disabled_macros, &disabled_tokens))){
+	if(!(rtn = get_preprocessed_output_from_file(preprocessor_state, in_file, &output_tokens))){
 		unsigned int i;
 		struct unsigned_char_list file_output;
 		unsigned_char_list_create(&file_output);
@@ -1190,7 +1438,6 @@ int do_preprocess(struct memory_pool_collection * memory_pool_collection, unsign
 	}else{
 		printf("Nothing to output.  Preprocessing failed for %s\n", in_file);
 	}
-	destroy_preprocessor_file_context(preprocessor_state, struct_preprocessor_file_context_ptr_list_pop_end(&preprocessor_state->file_contexts));
 
 	free_macro_definition_map(preprocessor_state, &macro_map);
 	struct_c_lexer_token_ptr_list_destroy(&output_tokens);

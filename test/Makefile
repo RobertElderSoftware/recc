@@ -1,60 +1,80 @@
-.PRECIOUS: %.o
-.PRECIOUS: %.gcc
-.PRECIOUS: %.gccoutput
+.PRECIOUS: %.oc89
+.PRECIOUS: %.oc99
+.PRECIOUS: %.exec89
+.PRECIOUS: %.exec99
 
-# File names
-SOURCES = $(wildcard test/*.c)
-BUILTIN_SOURCES= $(wildcard builtin/*.c)
-OTHER_OBJECTS=memory_pool_collection.o heap_memory_pool.o code_generator.o preprocessor.o parser.o io.o lexer.o data-structures/binary_exponential_buffer.o data-structures/libgenerated-data-structures.a 
-BUILTIN_OBJECTS= $(BUILTIN_SOURCES:.c=.o)
-PREPROCESSED= $(SOURCES:.c=.i)
-ASSEMBLY= $(SOURCES:.c=.l2)
-CLEAN_ASSEMBLY= $(SOURCES:.c=.l1)
-GCC_EXECUTABLES= $(SOURCES:.c=.gcc)
-GCC_OUTPUT= $(GCC_EXECUTABLES:.gcc=.gccoutput)
-JS_OUTPUT= $(CLEAN_ASSEMBLY:.l1=.jsoutput)
-JS_PRELOADER= $(CLEAN_ASSEMBLY:.l1=.l0.js)
-OUTPUT_DIFFS= $(JS_OUTPUT:.jsoutput=.diff)
+C89_SOURCES = $(wildcard test/c89/*.c)
+C99_SOURCES = $(wildcard test/c99/*.c)
+
+C89_HOST_CC_OBJECTS= $(C89_SOURCES:.c=.oc89)
+C99_HOST_CC_OBJECTS= $(C99_SOURCES:.c=.oc99)
+
+C89_HOST_CC_EXECUTABLES= $(C89_SOURCES:.c=.exec89)
+C99_HOST_CC_EXECUTABLES= $(C99_SOURCES:.c=.exec99)
+
+C89_HOST_CC_OUTPUT=$(C89_SOURCES:.c=.c89output)
+C99_HOST_CC_OUTPUT=$(C99_SOURCES:.c=.c99output)
+
+C89_DIFF=$(C89_SOURCES:.c=.c89diff)
+C99_DIFF=$(C99_SOURCES:.c=.c99diff)
+
+ALL_OBJECTS=$(C89_HOST_CC_OBJECTS) $(C99_HOST_CC_OBJECTS)
+ALL_EXECUTABLES=$(C89_HOST_CC_EXECUTABLES) $(C99_HOST_CC_EXECUTABLES)
+ALL_HOST_CC_OUTPUT=$(C89_HOST_CC_OUTPUT) $(C99_HOST_CC_OUTPUT)
+ALL_SOURCES=$(C89_SOURCES) $(C99_SOURCES)
+ALL_DIFFS=$(C89_DIFF) $(C99_DIFF)
+
+RECC_PREPROCESSED= $(ALL_SOURCES:.c=.i)
+RECC_L2= $(ALL_SOURCES:.c=.l2)
+RECC_L1= $(ALL_SOURCES:.c=.l1)
+RECC_L0= $(ALL_SOURCES:.c=.l0.js)
+JS_OUTPUT= $(ALL_SOURCES:.c=.jsoutput)
+
+REQUIRED_BUILTIN_OBJECTS=builtin/extern_test.o builtin/print_bits.o builtin/print_decimal.o builtin/random.o builtin/signed_division.o builtin/signed_greater_than.o builtin/signed_greater_than_or_equal_to.o builtin/signed_less_than.o builtin/signed_less_than_or_equal_to.o builtin/signed_modulo.o
 
 # Main target
-run-tests: $(OUTPUT_DIFFS)
+run-tests: $(ALL_DIFFS)
 
+test/recc.o: test/recc.c
+	@$(HOSTCC) -c test/recc.c -o test/recc.o $(CUSTOM_C89_FLAGS)
 
 remove-old-js-and-diffs:
-	@rm -f $(JS_OUTPUT) $(OUTPUT_DIFFS)
+	@rm -f $(JS_OUTPUT) $(ALL_DIFFS)
 
-run-build-script: $(GCC_OUTPUT) $(SOURCES) $(CUSTOM_CC) build-builtins build-stdlib
-	$(VALGRIND) $(CUSTOM_CC) test/build-script
-
-$(CLEAN_ASSEMBLY): run-build-script
-
-%.l0.js: %.l1 preloader
-	@$(VALGRIND) $(CUSTOM_PRELOADER) jsonpCallback $< $@ jsonp
-
-# To obtain gcc objects of executables
-%.o: %.c
-	@$(HOSTCC) -c $< -o $@ $(CUSTOM_FLAGS)
-
-$(GCC_EXECUTABLES): $(BUILTIN_OBJECTS) $(OTHER_OBJECTS)
-
-%.gcc: %.o
-	@$(HOSTCC) $< $(BUILTIN_OBJECTS) $(OTHER_OBJECTS) -o $@ $(CUSTOM_FLAGS)
-
-# To obtain gcc output
-%.gccoutput: %.gcc recc
-	@./$< > $@ 2>&1 || true #  This commands never errors, even if the gcc executable does.
-
-# To obtain js vm output
-js-output: $(CLEAN_ASSEMBLY) $(JS_PRELOADER)
-#  The use of this data dir will make the browser tests blocking if there is already a chrome window open.
-	@google-chrome "http://localhost/emulators/javascript/" --user-data-dir="chrome/data-dir" > /dev/null 2>&1
+run-build-tests: $(ALL_HOST_CC_OUTPUT) $(SOURCES) build_tests
+	$(VALGRIND) ./build_tests
 
 $(JS_OUTPUT): js-output
 
-# To obtain js vm output
-%.diff: %.gccoutput %.jsoutput
-	@diff $< $(word 2,$^) > $@ || echo "\033[0;31mTest Failure for "$<" \033[0m"
+js-output: run-build-tests
+#  The use of this data dir will make the browser tests blocking if there is already a chrome window open.
+	@google-chrome "http://localhost/emulators/javascript/" --user-data-dir="chrome/data-dir" > /dev/null 2>&1
 
-# To remove generated files
+$(ALL_EXECUTABLES): $(REQUIRED_BUILTIN_OBJECTS) $(COMPILER_OBJECTS)
+
+%.oc89: %.c
+	@$(HOSTCC) -c $< -o $@ $(CUSTOM_C89_FLAGS)
+
+%.oc99: %.c
+	@$(HOSTCC) -c $< -o $@ $(CUSTOM_C99_FLAGS)
+
+%.exec89: %.oc89
+	@$(HOSTCC) $< $(REQUIRED_BUILTIN_OBJECTS) $(COMPILER_OBJECTS) -o $@ $(CUSTOM_C89_FLAGS)
+
+%.exec99: %.oc99
+	@$(HOSTCC) $< $(REQUIRED_BUILTIN_OBJECTS) $(COMPILER_OBJECTS) -o $@ $(CUSTOM_C99_FLAGS)
+
+%.c89output: %.exec89
+	@./$< > $@ 2>&1 || true #  This commands never errors, even if the gcc executable does.
+
+%.c99output: %.exec99
+	@./$< > $@ 2>&1 || true #  This commands never errors, even if the gcc executable does.
+
+%.c89diff: %.c89output %.jsoutput
+	@diff $< $(word 2,$^) > $@ || >&2 echo "\033[0;31mTest Failure for "$<" \033[0m"
+
+%.c99diff: %.c99output %.jsoutput
+	@diff $< $(word 2,$^) > $@ || >&2 echo "\033[0;31mTest Failure for "$<" \033[0m"
+
 clean-tests:
-	@rm -f test/*.l2 test/*.i test/*.o $(PREPROCESSED) $(ASSEMBLY) $(CLEAN_ASSEMBLY) $(GCC_EXECUTABLES) $(GCC_OUTPUT) $(JS_PRELOADER) $(JS_OUTPUT) $(OUTPUT_DIFFS)
+	@rm -f test/recc.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS)

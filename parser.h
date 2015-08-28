@@ -108,165 +108,36 @@
 #ifndef __TYPES_PARSER_enum_value_type_H__
 #include "types/parser/enum_value_type.h"
 #endif
-
-enum object_location{
-	LOCATION_STRUCT,
-	ENUM_IDENTIFIER,
-	GLOBAL,
-	LOCAL,
-	PARAMETER
-};
-
-struct k_and_r_c_identifier_description{
-	/*
-	   TODO: review if this struct can be removed...
-	   Describes the identifier and possible declarator
-	   in a K&R C style function definition. Ex:
-	   int foo(a,b,c) int a, int (*c)(int); {return 0;}
-	   For a, this gives:
-	   identifier: a, declaration_specifiers: int, declarator: a
-	   For b, this gives:
-	   identifier: b, declaration_specifiers: null, declarator: null
-	   For c, this gives:
-	   identifier: c, declaration_specifiers: int, declarator: (*c)(int)
-	*/
-	struct parser_node * identifier;  /*  The identifier in the identifier list of the function declaration */
-	struct parser_node * declaration_specifiers;
-	struct parser_node * declarator;
-};
-
-struct normalized_declaration_set{
-	/*  This is essentially a wrapper for a parser_node that
-	    happens to one of the common methods of declaring things.
-	    The important point is that in the normalized_declaration_set,
-	    the parser_node can have a declarator list with more than one
-	    declarator in whatever declarator list it uses.
-	    For example, int a, b, f(); has an init_declarator_list that
-	    declares three different symbols.
-	*/
-	struct parser_node * set; /* a declaration, struct_declaration, parameter_declaration etc. */
-	struct normalized_declaration_set * parent_normalized_declaration_set; /* Used to point to the main enum, struct or union declaration from an inner declaration. */
-	struct struct_normalized_specifier_ptr_list * normalized_specifiers; /*  This entire list of specifiers gets applied to */
-	struct struct_normalized_declarator_ptr_list * normalized_declarators; /*  each of these declarators */
-	enum normalized_declaration_type type;
-	unsigned int pad;
-};
-
-struct normalized_declaration_element{
-	/*  In the normalized_declaration_element, the normalized_declarator can
-	    ONLY HAVE ONE declarator in whatever declarator list it
-	    uses to describe the declaration.
-	*/
-	struct normalized_declaration_set * normalized_declaration_set; /* the declaration set (declarator list) this element belongs to */
-	struct normalized_declarator * normalized_declarator;
-	struct struct_normalized_specifier_ptr_list * normalized_specifiers;
-};
-
-struct normalized_declarator{
-	/*  
-	    Used for abstracting away struct_declarator_list, init_declarator_list etc.
-	*/
-	struct parser_node * declarator;
-	enum normalized_declarator_type type;
-	unsigned int pad;
-};
-
-struct normalized_specifier{
-	/*  
-	    Used for abstracting away declaration_specifiers, type_specifier_list,
-	    and qualifier_specifier_list
-	*/
-	struct parser_node * specifier;
-	enum normalized_specifier_type type;
-	unsigned int pad;
-};
-
-struct namespace_object{
-	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map * children;
-	struct struct_normalized_declaration_element_ptr_list elements; /* All of the declaration elements related to one named symbol */
-	struct scope_level * scope_level;
-	struct namespace_object * previous; /* The previous declaration element (previous param, or previous local stack varable) */
-	struct namespace_object * next; /* The previous declaration element (previous param, or previous local stack varable) */
-	enum object_location object_location;
-	unsigned int first_load;
-	int offset;
-	unsigned int pad;
-};
-
-struct first_and_last_namespace_object{
-	struct namespace_object * first; /* The first namespace occupying namespace object resulting from a set of declarations  */
-	struct namespace_object * last; /* The last ...   */
-};
-
-struct namespace_object_change {
-	struct namespace_object * target; /* The namespace object for which we're going to change one of its pointers */
-	struct namespace_object * old_obj;
-	struct namespace_object * new_obj;
-};
-
-struct current_function_change {
-	struct scope_level * target; /* The scope namespace for which we're going to change the current function */
-	struct namespace_object * old_obj;
-	struct namespace_object * new_obj;
-};
-
-struct namespace_modification{
-	struct normalized_declaration_element * new_element;
-	struct namespace_object * object;
-	struct scope_level * scope_level;
-	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map * scope_namespace;
-	unsigned char * identifier_str;
-	enum scope_type scope_type;
-	enum object_location object_location;
-	int offset;
-	int pad;
-};
-
-struct scope_level;
-
-struct scope_level{
-	struct scope_level * parent_scope;
-	struct scope_level ** scopes;
-	struct unsigned_char_ptr_list evaluate_labels; /*  For continue statements  */
-	struct unsigned_char_ptr_list end_labels;      /*  For break statements  */
-	struct namespace_object * current_function;
-	struct namespace_object * first_local_object;
-	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map tag_namespace;
-	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map label_namespace;
-	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map identifier_namespace;
-	unsigned int num_sub_scopes;
-	unsigned int pad;
-};
-
-struct constant_description{
-	struct type_description * type_description;
-	unsigned char * str;
-	unsigned int * native_data; /* Byte array of the data used in the program */
-	unsigned int size_in_bytes;
-	unsigned int num_references;
-	enum c_token_type type;
-	unsigned int pad;
-};
-
-
+#ifndef __TYPES_PARSER_enum_object_location_H__
+#include "types/parser/enum_object_location.h"
+#endif
 #ifndef __TYPES_PARSER_struct_type_description_H__
 #include "types/parser/struct_type_description.h"
 #endif
-
-struct parser_state{
-	struct memory_pool_collection * memory_pool_collection;
-	struct c_lexer_state * c_lexer_state;
-	struct scope_level * top_scope;
-	struct parser_node * top_node;
-	struct unsigned_char_list * buffered_output;
-	struct struct_parser_operation_stack operation_stack;
-	struct unsigned_char_ptr_to_struct_constant_description_ptr_map constant_map;
-	unsigned char * buff;
-	unsigned int tokens_position;
-	unsigned int line_number;
-	unsigned int current_scope_depth;
-	unsigned int pad;
-};
+#ifndef __TYPES_PARSER_struct_parser_state_H__
+#include "types/parser/struct_parser_state.h"
+#endif
+#ifndef __TYPES_PARSER_struct_normalized_specifier_H__
+#include "types/parser/struct_normalized_specifier.h"
+#endif
+#ifndef __TYPES_PARSER_struct_normalized_declarator_H__
+#include "types/parser/struct_normalized_declarator.h"
+#endif
+#ifndef __TYPES_PARSER_struct_normalized_declaration_set_H__
+#include "types/parser/struct_normalized_declaration_set.h"
+#endif
+#ifndef __TYPES_PARSER_struct_namespace_modification_H__
+#include "types/parser/struct_namespace_modification.h"
+#endif
+#ifndef __TYPES_PARSER_struct_namespace_object_change_H__
+#include "types/parser/struct_namespace_object_change.h"
+#endif
+#ifndef __TYPES_PARSER_struct_first_and_last_namespace_object_H__
+#include "types/parser/struct_first_and_last_namespace_object.h"
+#endif
+#ifndef __TYPES_PARSER_struct_current_function_change_H__
+#include "types/parser/struct_current_function_change.h"
+#endif
 
 void * push_operation(struct parser_state *, enum parser_operation_type, void *);
 void pop_operation(struct parser_state *);
@@ -274,7 +145,6 @@ void backtrack(struct parser_state *, unsigned int);
 
 struct parser_node * get_identifier_from_declarator(struct parser_node *);
 unsigned char * copy_asm_token(struct asm_lexer_token *);
-unsigned char * copy_build_script_token(struct build_script_lexer_token *);
 void create_parser_state(struct parser_state *, struct memory_pool_collection *, struct c_lexer_state *, struct unsigned_char_list *, unsigned char *);
 int parse(struct parser_state *);
 void destroy_parser_state(struct parser_state *);
@@ -314,6 +184,8 @@ struct parser_node * get_struct_or_union_or_enum_specifier(struct struct_normali
 int is_struct(struct parser_node *);
 int is_union(struct parser_node *);
 unsigned int contains_struct_or_union_or_enum_definition(struct namespace_object *);
+unsigned int contains_function_definition(struct namespace_object *);
+struct parser_node * get_function_definition_from_namespace_object(struct namespace_object *);
 int is_enum(struct parser_node *);
 unsigned int get_enum_value(struct memory_pool_collection *, struct normalized_declaration_element *);
 unsigned int convert_decimal_constant(unsigned char *);
@@ -345,5 +217,8 @@ struct normalized_declarator * make_array_brackets(struct memory_pool_collection
 void print_error_with_types(struct c_lexer_state *, struct type_description *, struct type_description *, struct parser_node *, const char *);
 void print_error_with_type(struct c_lexer_state *, struct type_description *, struct parser_node *, const char *);
 struct type_description * get_type_description_from_suffix(struct memory_pool_collection *, unsigned char *);
+struct parser_node * get_nth_parameter_declaration_from_parameter_type_list(struct parser_node *, unsigned int);
+struct parser_node * get_parameter_type_list_from_abstract_declarator(struct parser_node *);
+unsigned int is_function_variadic(struct parser_node *);
 
 #endif

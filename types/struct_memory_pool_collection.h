@@ -17,7 +17,6 @@
 
 struct memory_pool_collection{
 	struct struct_asm_lexer_token_memory_pool * struct_asm_lexer_token_pool;
-	struct struct_build_script_lexer_token_memory_pool * struct_build_script_lexer_token_pool;
 	struct struct_c_lexer_token_memory_pool * struct_c_lexer_token_pool;
 	struct struct_parser_node_memory_pool * struct_parser_node_pool;
 	struct struct_type_description_memory_pool * struct_type_description_pool;

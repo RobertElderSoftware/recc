@@ -286,6 +286,7 @@ void add_external_linker_symbol(struct linker_state * linker_state, struct linke
 	if(existing_symbol){
 		if(existing_symbol->is_implemented && is_implemented){
 			printf("Detected duplicate external symbol %s re-implemented on line %d in file %s\n", identifier_str, linker_object->current_line, linker_object->asm_lexer_state->c.filename);
+			printf("The previously declared external symbol was declared in file %s\n", existing_symbol->parent_linker_object->asm_lexer_state->c.filename);
 			assert(0 && "Cannot implement external symbol multiple times.");
 		}
 		existing_symbol->is_implemented = existing_symbol->is_implemented ? existing_symbol->is_implemented : is_implemented;

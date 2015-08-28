@@ -16,17 +16,15 @@
 #include "memory_pool_collection.h"
 
 void memory_pool_collection_create(struct memory_pool_collection * m){
-	m->struct_c_lexer_token_pool = malloc(sizeof(struct struct_c_lexer_token_memory_pool));
-	m->struct_parser_node_pool = malloc(sizeof(struct struct_parser_node_memory_pool));
-	m->struct_build_script_lexer_token_pool = malloc(sizeof(struct struct_build_script_lexer_token_memory_pool));
-	m->struct_asm_lexer_token_pool = malloc(sizeof(struct struct_asm_lexer_token_memory_pool));
-	m->struct_type_description_pool = malloc(sizeof(struct struct_asm_lexer_token_memory_pool));
-	m->struct_asm_instruction_pool = malloc(sizeof(struct struct_asm_instruction_memory_pool));
-	m->struct_linker_symbol_pool = malloc(sizeof(struct struct_linker_symbol_memory_pool));
-	m->heap_pool = malloc(sizeof(struct heap_memory_pool));
+	m->struct_c_lexer_token_pool = (struct struct_c_lexer_token_memory_pool *)malloc(sizeof(struct struct_c_lexer_token_memory_pool));
+	m->struct_parser_node_pool = (struct struct_parser_node_memory_pool*)malloc(sizeof(struct struct_parser_node_memory_pool));
+	m->struct_asm_lexer_token_pool = (struct struct_asm_lexer_token_memory_pool*)malloc(sizeof(struct struct_asm_lexer_token_memory_pool));
+	m->struct_type_description_pool = (struct struct_type_description_memory_pool*)malloc(sizeof(struct struct_type_description_memory_pool));
+	m->struct_asm_instruction_pool = (struct struct_asm_instruction_memory_pool*)malloc(sizeof(struct struct_asm_instruction_memory_pool));
+	m->struct_linker_symbol_pool = (struct struct_linker_symbol_memory_pool*)malloc(sizeof(struct struct_linker_symbol_memory_pool));
+	m->heap_pool = (struct heap_memory_pool*)malloc(sizeof(struct heap_memory_pool));
 	struct_c_lexer_token_memory_pool_create(m->struct_c_lexer_token_pool);
 	struct_parser_node_memory_pool_create(m->struct_parser_node_pool);
-	struct_build_script_lexer_token_memory_pool_create(m->struct_build_script_lexer_token_pool);
 	struct_asm_lexer_token_memory_pool_create(m->struct_asm_lexer_token_pool);
 	struct_type_description_memory_pool_create(m->struct_type_description_pool);
 	struct_asm_instruction_memory_pool_create(m->struct_asm_instruction_pool);
@@ -37,7 +35,6 @@ void memory_pool_collection_create(struct memory_pool_collection * m){
 void memory_pool_collection_destroy(struct memory_pool_collection * m){
 	struct_c_lexer_token_memory_pool_destroy(m->struct_c_lexer_token_pool);
 	struct_parser_node_memory_pool_destroy(m->struct_parser_node_pool);
-	struct_build_script_lexer_token_memory_pool_destroy(m->struct_build_script_lexer_token_pool);
 	struct_asm_lexer_token_memory_pool_destroy(m->struct_asm_lexer_token_pool);
 	struct_type_description_memory_pool_destroy(m->struct_type_description_pool);
 	struct_linker_symbol_memory_pool_destroy(m->struct_linker_symbol_pool);
@@ -45,7 +42,6 @@ void memory_pool_collection_destroy(struct memory_pool_collection * m){
 	heap_memory_pool_destroy(m->heap_pool);
 	free(m->struct_c_lexer_token_pool);
 	free(m->struct_parser_node_pool);
-	free(m->struct_build_script_lexer_token_pool);
 	free(m->struct_asm_lexer_token_pool);
 	free(m->struct_type_description_pool);
 	free(m->struct_asm_instruction_pool);

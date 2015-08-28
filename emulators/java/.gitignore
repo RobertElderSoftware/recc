@@ -1,2 +1,4 @@
 /OpCPU/*.class
 /OpCPU/KernelData.java
+/build_java_example.o
+/build_java_example

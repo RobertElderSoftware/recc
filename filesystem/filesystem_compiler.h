@@ -34,10 +34,11 @@
 #include "../io.h"
 #endif
 
-void output_filesystem_impl(void);
+void output_filesystem_impl(unsigned char *);
 void create_directories(struct unsigned_char_ptr_list *, struct memory_pool_collection *);
 void create_files(struct unsigned_char_ptr_to_unsigned_char_ptr_map *, struct memory_pool_collection *);
 void load_file(unsigned char *, FILE *, struct memory_pool_collection *);
 void load_file_given_new_inode(unsigned int, FILE *);
+void create_filesystem_impl(unsigned char *);
 
 #endif

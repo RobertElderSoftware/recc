@@ -20,19 +20,21 @@ A 'Preloader' for producing programming language specific instructions for loadi
 
 */
 
+enum language_type get_language_type(char *);
+void java_generic_data(FILE *);
 
 static unsigned int java_max_items_per_method = 1000;
 static unsigned int num_instruction_types = 16;
 static unsigned int instruction_template_length = 4;
+void output_data_open(unsigned int size, char * variable_name, FILE * out, enum language_type language);
 
 struct l1_file{
 	struct struct_preloader_instruction_list instructions;
 	unsigned int is_relocatable;
 	unsigned int offset;
-	unsigned int pad;
 };
 
-struct parser_state{
+struct preloader_parser_state{
 	char * in_bytes;
 	unsigned int size_buffer;
 	unsigned int input_size;
@@ -42,36 +44,36 @@ struct parser_state{
 
 struct preloader_state {
 	struct l1_file * l1_f;
-	struct parser_state * state;
+	struct preloader_parser_state * state;
 };
 
 enum instruction_part_type{
 	PRELOADER_REGISTER,
-	HEXIDECIMAL_CONSTANT,
-	DECIMAL_CONSTANT,
-	NOTHING
+	PRELOADER_HEXIDECIMAL_CONSTANT,
+	PRELOADER_DECIMAL_CONSTANT,
+	PRELOADER_NOTHING
 };
 
-static unsigned int instruction_templates [16][4] = {
+static unsigned int preloader_instruction_templates [16][4] = {
 	{ADD_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_REGISTER},
 	{SUB_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_REGISTER},
 	{MUL_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_REGISTER},
 	{DIV_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_REGISTER},
-	{BEQ_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, DECIMAL_CONSTANT},
-	{BLT_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, DECIMAL_CONSTANT},
-	{LOA_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, NOTHING},
-	{STO_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, NOTHING},
-	{LL_INSTRUCTION, PRELOADER_REGISTER, HEXIDECIMAL_CONSTANT, NOTHING},
+	{BEQ_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_DECIMAL_CONSTANT},
+	{BLT_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_DECIMAL_CONSTANT},
+	{LOA_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_NOTHING},
+	{STO_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_NOTHING},
+	{LL_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_HEXIDECIMAL_CONSTANT, PRELOADER_NOTHING},
 	{AND_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_REGISTER},
 	{OR_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_REGISTER},
-	{NOT_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, NOTHING},
-	{SHR_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, NOTHING},
-	{SHL_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, NOTHING},
-	{DW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING},
-	{SW_INSTRUCTION, HEXIDECIMAL_CONSTANT, NOTHING, NOTHING}
+	{NOT_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_NOTHING},
+	{SHR_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_NOTHING},
+	{SHL_INSTRUCTION, PRELOADER_REGISTER, PRELOADER_REGISTER, PRELOADER_NOTHING},
+	{DW_INSTRUCTION, PRELOADER_HEXIDECIMAL_CONSTANT, PRELOADER_NOTHING, PRELOADER_NOTHING},
+	{SW_INSTRUCTION, PRELOADER_HEXIDECIMAL_CONSTANT, PRELOADER_NOTHING, PRELOADER_NOTHING}
 };
 
-static unsigned int instruction_op_codes [14][2] = {
+static unsigned int preloader_instruction_op_codes [14][2] = {
 	{ADD_INSTRUCTION, 0u  << OP_CODE_OFFSET },
 	{SUB_INSTRUCTION, 1u  << OP_CODE_OFFSET },
 	{MUL_INSTRUCTION, 2u  << OP_CODE_OFFSET },
@@ -93,26 +95,26 @@ struct first_and_last_byte{
 	char * last_byte;
 };
 
-static int load_file(struct parser_state *, char *);
+static int load_file(struct preloader_parser_state *, char *);
 static unsigned int len(char *);
-static unsigned int accept_character(char, struct parser_state *);
+static unsigned int accept_character(char, struct preloader_parser_state *);
 static unsigned int parse_decimal_string(struct first_and_last_byte *);
 static unsigned int parse_hexidecimal_string(struct first_and_last_byte *);
-static unsigned int accept_decimal_digit(struct parser_state *);
-static unsigned int accept_hexidecimal_digit(struct parser_state *);
-static unsigned int accept_word(const char *, struct parser_state *, struct first_and_last_byte *);
-static unsigned int accept_newline(struct parser_state *);
-static unsigned int accept_decimal_constant(struct parser_state *, struct first_and_last_byte *);
-static unsigned int accept_hexidecimal_constant(struct parser_state *, struct first_and_last_byte *);
-static unsigned int accept_register(struct parser_state *);
+static unsigned int accept_decimal_digit(struct preloader_parser_state *);
+static unsigned int accept_hexidecimal_digit(struct preloader_parser_state *);
+static unsigned int accept_word(const char *, struct preloader_parser_state *, struct first_and_last_byte *);
+static unsigned int accept_newline(struct preloader_parser_state *);
+static unsigned int accept_decimal_constant(struct preloader_parser_state *, struct first_and_last_byte *);
+static unsigned int accept_hexidecimal_constant(struct preloader_parser_state *, struct first_and_last_byte *);
+static unsigned int accept_register(struct preloader_parser_state *);
 static unsigned int get_instruction_op_code(enum preloader_instruction_type);
 static unsigned int * get_instruction_template(enum preloader_instruction_type);
-static unsigned int accept_instruction(struct parser_state *, struct preloader_instruction *);
-static struct l1_file * l1_file(struct parser_state *);
+static unsigned int accept_instruction(struct preloader_parser_state *, struct preloader_instruction *);
+static struct l1_file * l1_file(struct preloader_parser_state *);
 static unsigned int do_exponent(unsigned int, unsigned int);
-static void setup_preloader_state(struct preloader_state *, char *, char *, enum language_type);
+static void output_to_l0_file(struct preloader_state *, char *, char *, enum language_type);
 
-static int load_file(struct parser_state * state, char * in_file){
+static int load_file(struct preloader_parser_state * state, char * in_file){
 	FILE *f = NULL;
 	int c = 0;
 	if(!(f = fopen(in_file, "rb"))){
@@ -144,7 +146,7 @@ static unsigned int len(char * str){
 	return i;
 }
 
-static unsigned int accept_character(char c, struct parser_state * state){
+static unsigned int accept_character(char c, struct preloader_parser_state * state){
 	if(state->in_bytes[state->buffer_position] == c){
 		state->buffer_position = state->buffer_position + 1;
 		return 1;
@@ -183,7 +185,7 @@ static unsigned int parse_hexidecimal_string(struct first_and_last_byte * flb){
 	return i;
 }
 
-static unsigned int accept_decimal_digit(struct parser_state * state){
+static unsigned int accept_decimal_digit(struct preloader_parser_state * state){
 	return (
 		accept_character('0', state) ||
 		accept_character('1', state) ||
@@ -198,7 +200,7 @@ static unsigned int accept_decimal_digit(struct parser_state * state){
 	);
 }
 
-static unsigned int accept_hexidecimal_digit(struct parser_state * state){
+static unsigned int accept_hexidecimal_digit(struct preloader_parser_state * state){
 	return (
 		accept_decimal_digit(state) ||
 		accept_character('A', state) ||
@@ -210,7 +212,7 @@ static unsigned int accept_hexidecimal_digit(struct parser_state * state){
 	);
 }
 
-static unsigned int accept_word(const char * str, struct parser_state * state, struct first_and_last_byte * flb){
+static unsigned int accept_word(const char * str, struct preloader_parser_state * state, struct first_and_last_byte * flb){
 	unsigned int length = len((char*)str);
 	unsigned int i;
 	unsigned int checkpoint = state->buffer_position;
@@ -225,7 +227,7 @@ static unsigned int accept_word(const char * str, struct parser_state * state, s
 	return 1;
 }
 
-static unsigned int accept_newline(struct parser_state * state){
+static unsigned int accept_newline(struct preloader_parser_state * state){
 	if(accept_character('\x0a', state)){
 		accept_character('\x0d', state);
 		return 1;
@@ -237,7 +239,7 @@ static unsigned int accept_newline(struct parser_state * state){
 	}
 }
 
-static unsigned int accept_decimal_constant(struct parser_state * state, struct first_and_last_byte * flb){
+static unsigned int accept_decimal_constant(struct preloader_parser_state * state, struct first_and_last_byte * flb){
 	flb->first_byte = &state->in_bytes[state->buffer_position];
 	while(state->buffer_position < state->input_size && accept_decimal_digit(state)){
 	}
@@ -245,7 +247,7 @@ static unsigned int accept_decimal_constant(struct parser_state * state, struct 
 	return 1;
 }
 
-static unsigned int accept_hexidecimal_constant(struct parser_state * state, struct first_and_last_byte * flb){
+static unsigned int accept_hexidecimal_constant(struct preloader_parser_state * state, struct first_and_last_byte * flb){
 	flb->first_byte = &state->in_bytes[state->buffer_position];
 	if(!accept_character('0', state)){
 		return 0;
@@ -266,7 +268,7 @@ static unsigned int accept_hexidecimal_constant(struct parser_state * state, str
 	return 1;
 }
 
-static unsigned int accept_register(struct parser_state * state){
+static unsigned int accept_register(struct preloader_parser_state * state){
 	struct first_and_last_byte flb;
 	if(accept_word("PC", state, &flb)){
 		return 0;
@@ -299,8 +301,8 @@ static unsigned int accept_register(struct parser_state * state){
 static unsigned int get_instruction_op_code(enum preloader_instruction_type type){
 	unsigned int i;
 	for(i = 0; i < num_instruction_types -1; i++){
-		if(instruction_op_codes[i][0] == type){
-			return instruction_op_codes[i][1];
+		if(preloader_instruction_op_codes[i][0] == type){
+			return preloader_instruction_op_codes[i][1];
 		}
 	}
 	assert(0 && "Not possible.");
@@ -309,14 +311,14 @@ static unsigned int get_instruction_op_code(enum preloader_instruction_type type
 static unsigned int * get_instruction_template(enum preloader_instruction_type type){
 	unsigned int i;
 	for(i = 0; i < num_instruction_types; i++){
-		if(instruction_templates[i][0] == type){
-			return instruction_templates[i];
+		if(preloader_instruction_templates[i][0] == type){
+			return preloader_instruction_templates[i];
 		}
 	}
 	assert(0 && "Not possible.");
 }
 
-static unsigned int accept_instruction(struct parser_state * state, struct preloader_instruction * instruction){
+static unsigned int accept_instruction(struct preloader_parser_state * state, struct preloader_instruction * instruction){
 	struct first_and_last_byte flb;
 	unsigned int * instruction_template;
 	unsigned int i;
@@ -366,7 +368,7 @@ static unsigned int accept_instruction(struct parser_state * state, struct prelo
 		if(instruction_template[i] == PRELOADER_REGISTER){
 			accept_character(' ', state);
 			instruction->instruction_registers[i-1] = accept_register(state);
-		}else if(instruction_template[i] == DECIMAL_CONSTANT){
+		}else if(instruction_template[i] == PRELOADER_DECIMAL_CONSTANT){
 			struct first_and_last_byte flb_dc;
 			accept_character(' ', state);
 			if(accept_character('-', state)){
@@ -376,13 +378,13 @@ static unsigned int accept_instruction(struct parser_state * state, struct prelo
 			}
 			accept_decimal_constant(state, &flb_dc);
 			instruction->constant = parse_decimal_string(&flb_dc);
-		}else if(instruction_template[i] == HEXIDECIMAL_CONSTANT){
+		}else if(instruction_template[i] == PRELOADER_HEXIDECIMAL_CONSTANT){
 			struct first_and_last_byte flb_hc;
 			accept_character(' ', state);
 			accept_hexidecimal_constant(state, &flb_hc);
 			instruction->constant = parse_hexidecimal_string(&flb_hc);
 			instruction->constant_is_negative = 0; 
-		}else if(instruction_template[i] == NOTHING){
+		}else if(instruction_template[i] == PRELOADER_NOTHING){
 			/* Do nothing */
 		}else{
 			assert(0 && "Should not happen->");
@@ -392,7 +394,7 @@ static unsigned int accept_instruction(struct parser_state * state, struct prelo
 	return 1;
 }
 
-static struct l1_file * l1_file(struct parser_state * state){
+static struct l1_file * l1_file(struct preloader_parser_state * state){
 	struct l1_file * l1_f = (struct l1_file *)malloc(sizeof(struct l1_file));
 	struct first_and_last_byte offset_word;
 	struct_preloader_instruction_list_create(&l1_f->instructions);
@@ -452,6 +454,9 @@ void output_start_end(unsigned int start, unsigned int end, char * variable_name
 			break;
 		}case JAVA_LANGUAGE_TYPE:{
 			fprintf(out, "package OpCPU;\n\nclass %s implements OpCPUDataInterface {\n    private static final long dataStart = 0x%08XL;\n    private static final long dataEnd = 0x%08XL;\n", variable_name, start, end);
+			fprintf(out, "    private static final long itemsPerClass = %uL;\n\n", java_max_items_per_method);
+			java_generic_data(out);
+			fprintf(out, "}\n");
 			break;
 		}default:{
 			assert(0 && "Should not happen.");
@@ -459,7 +464,6 @@ void output_start_end(unsigned int start, unsigned int end, char * variable_name
 	}
 }
 
-void output_data_open(unsigned int size, char * variable_name, FILE * out, enum language_type language);
 
 void output_data_open(unsigned int size, char * variable_name, FILE * out, enum language_type language){
 	switch(language){
@@ -474,7 +478,6 @@ void output_data_open(unsigned int size, char * variable_name, FILE * out, enum 
 			fprintf(out, "        self.data = [\n");
 			break;
 		}case JAVA_LANGUAGE_TYPE:{
-			fprintf(out, "    private static final long itemsPerMethod = %uL;\n\n", java_max_items_per_method);
 			break;
 		}default:{
 			assert(0 && "Should not happen.");
@@ -486,7 +489,8 @@ void output_data_open(unsigned int size, char * variable_name, FILE * out, enum 
 void output_java_method_start(FILE *, unsigned int index);
 
 void output_java_method_start(FILE * out, unsigned int index){
-	fprintf(out, "    public long [][] getData%u(){\n", index);
+	fprintf(out, "class dataClass%u{\n", index);
+	fprintf(out, "    public static long [][] getData(){\n");
 	fprintf(out, "        final long data [][] = {\n");
 }
 
@@ -497,6 +501,7 @@ void output_java_method_end(FILE * out){
 	fprintf(out, "        };\n");
 	fprintf(out, "        return data;\n");
 	fprintf(out, "    }\n");
+	fprintf(out, "}\n");
 }
 
 void output_data_item(unsigned int, unsigned int, FILE *, enum language_type, unsigned int, unsigned int);
@@ -533,7 +538,6 @@ void output_data_item(unsigned int type, unsigned int v, FILE * out, enum langua
 	}
 }
 
-void java_generic_data(FILE *);
 
 void java_generic_data(FILE * out){
 	fprintf(out, "\n");
@@ -547,8 +551,13 @@ void java_generic_data(FILE * out){
 	fprintf(out, "\n");
 	fprintf(out, "    public long [] getData(Long index){\n");
 	fprintf(out, "        try{\n");
-	fprintf(out, "            Long methodIndex = index / itemsPerMethod;\n");
-	fprintf(out, "            return ((long [][])this.getClass().getMethod(\"getData\" + methodIndex).invoke(this))[(int)(index - (methodIndex * itemsPerMethod))];\n");
+	fprintf(out, "            Long classIndex = index / itemsPerClass;\n");
+	fprintf(out, "            Class<?> clazz = Class.forName(\"OpCPU.dataClass\" + classIndex);\n");
+	fprintf(out, "            long [] f = ((long [][])clazz.getMethod(\"getData\").invoke(this))[(int)(index - (classIndex * itemsPerClass))];\n");
+	fprintf(out, "            if(index %% 20000 == 0){\n");
+	fprintf(out, "                System.out.println(\"Loading kernel image...\" + index + \" words loaded.\");\n");
+	fprintf(out, "            }\n");
+	fprintf(out, "            return f;\n");
 	fprintf(out, "        }catch(Exception e){\n");
 	fprintf(out, "            System.out.println(\"Exception getting CPU data.\");\n");
 	fprintf(out, "            return new long [] {0,0};\n");
@@ -570,8 +579,6 @@ void output_data_close(FILE * out, enum language_type language){
 			fprintf(out, "        ]\n");
 			break;
 		}case JAVA_LANGUAGE_TYPE:{
-			java_generic_data(out);
-			fprintf(out, "}");
 			break;
 		}default:{
 			assert(0 && "Should not happen.");
@@ -579,7 +586,7 @@ void output_data_close(FILE * out, enum language_type language){
 	}
 }
 
-static void setup_preloader_state(struct preloader_state * preloader_state, char * variable_name, char * out_file, enum language_type language){
+static void output_to_l0_file(struct preloader_state * preloader_state, char * variable_name, char * out_file, enum language_type language){
 	/*  TODO: currently assuming that sizeof(unsigned int) == 4 */
 	unsigned int i;
 	unsigned int * current_template;
@@ -616,14 +623,14 @@ static void setup_preloader_state(struct preloader_state * preloader_state, char
 			for(k = 1; k < instruction_template_length; k++){
 				if(current_template[k] == PRELOADER_REGISTER){
 					ins += ((1L << ra_OFFSET) / do_exponent(1u << BITS_PER_REGISTER, k -1)) * instructions[i].instruction_registers[k-1];
-				}else if(current_template[k] == DECIMAL_CONSTANT || current_template[k] == HEXIDECIMAL_CONSTANT){
+				}else if(current_template[k] == PRELOADER_DECIMAL_CONSTANT || current_template[k] == PRELOADER_HEXIDECIMAL_CONSTANT){
 					/* It was a dw, an ll, a beq or a blt */
 					if(instructions[i].constant_is_negative){
 						ins += ((BRANCH_DISTANCE_MASK - instructions[i].constant) + 1);
 					}else{
 						ins += instructions[i].constant;
 					}
-				}else if(current_template[k] == NOTHING){
+				}else if(current_template[k] == PRELOADER_NOTHING){
 					/* Do nothing */
 				}else{
 					assert(0 && "unknown template");
@@ -647,17 +654,18 @@ static void setup_preloader_state(struct preloader_state * preloader_state, char
 	fclose(out);
 }
 
-struct preloader_state * preloader_state_create(char * variable_name, char * in_file, char * out_file, enum language_type language){
+struct preloader_state * preloader_state_create(unsigned char * variable_name, unsigned char * in_file, unsigned char * out_file, unsigned char * language_str){
 	struct preloader_state * preloader_state = (struct preloader_state *)malloc(sizeof(struct preloader_state));
-	preloader_state->state = (struct parser_state *)malloc(sizeof(struct parser_state));
+	enum language_type language = get_language_type((char*)language_str);
+	preloader_state->state = (struct preloader_parser_state *)malloc(sizeof(struct preloader_parser_state));
 	preloader_state->state->in_bytes = (char *)malloc(1);
 	preloader_state->state->input_size = 0;
 	preloader_state->state->size_buffer = 1;
 	preloader_state->state->buffer_position = 0;
-	load_file(preloader_state->state, in_file);
+	load_file(preloader_state->state, (char*)in_file);
 	preloader_state->state->in_bytes[preloader_state->state->input_size] = 0;
 	if((preloader_state->l1_f = l1_file(preloader_state->state))){
-		setup_preloader_state(preloader_state, variable_name, out_file, language);
+		output_to_l0_file(preloader_state, (char*)variable_name, (char*)out_file, language);
 	}else{
 		assert(0 && "Unable to parser instructions.");
 	}
@@ -672,7 +680,6 @@ void preloader_state_destroy(struct preloader_state * preloader_state){
 	free(preloader_state);
 }
 
-enum language_type get_language_type(char *);
 enum language_type get_language_type(char * l){
 	if(!strcmp("jsonp", l)){
 		return JSONP_LANGUAGE_TYPE;
@@ -686,14 +693,4 @@ enum language_type get_language_type(char * l){
 		assert(0 && "Unknown language");
 		return C_LANGUAGE_TYPE;
 	}
-}
-
-int main(int argc, char ** argv){
-	struct preloader_state * preloader_state;
-
-	assert(argc == 5 && "Preloader was invoked with the wrong number of arguments.");
-	preloader_state = preloader_state_create(argv[1], argv[2], argv[3], get_language_type(argv[4]));
-
-	preloader_state_destroy(preloader_state);
-	return 0;
 }

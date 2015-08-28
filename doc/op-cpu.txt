@@ -38,7 +38,7 @@ At CPU startup, WR = 0x4, FR = 0x200.  All other registers are initialized to 0.
 #1)  SP (Stack Pointer)    Points to the top item on the stack.  #4)  FR (Flags Register)  Special CPU flags.
 #2)  FP (Frame Pointer)    Points to previous frame pointer.     #5)  WR (Word Register)   Initialized to 4.
 
-Special registers #0 to #5 are PC, SP, FP, ZR, FR, WR.  General registers #6 to #512 are named r1 to r506.
+Special registers #0 to #5 are PC, SP, FP, ZR, FR, WR.  General registers #6 to #511 are named r1 to r506.
 
 Flags Register (FR) Description
 
@@ -73,4 +73,4 @@ An interrupt is initiated (branches to IRQ_HANDLER) only when all 3 of the follo
 A CPU initiated interrupt atomically sets bit 1 of FR to 0, SP to SP - WR and [SP] to PC, then PC to
 IRQ_HANDLER.  At least one cycle occurs between a branch due to bit 2 being set, and a branch to IRQ_Handler.
 
-The sha1sum of the lines above is 177c65244df640f7e5f3ac7025d961599121dac8
+The sha1sum of the lines above is a1d3015541a129825a6d3a7cf6979756a166cd61

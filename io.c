@@ -58,7 +58,7 @@ void buffered_printf(struct unsigned_char_list * list, const char* format, ...){
 	length = (unsigned int)strlen((char *)g_format_buffer);
 	size_before = binary_exponential_buffer_size(&list->buffer);
 	binary_exponential_buffer_increment(&list->buffer, length);
-	dst = binary_exponential_buffer_data(&list->buffer);
+	dst = (unsigned char *)binary_exponential_buffer_data(&list->buffer);
 	memcpy(&dst[size_before], g_format_buffer, length);
 	va_end(arglist);
 }
@@ -80,7 +80,7 @@ int add_file_to_buffer(struct unsigned_char_list * buffer, char * in_file){
 		current_buffer_size = binary_exponential_buffer_size(&buffer->buffer);
 		binary_exponential_buffer_increment(&buffer->buffer, bytes_this_chunk);
 		start_write_position = &(((unsigned char *)binary_exponential_buffer_data(&buffer->buffer))[current_buffer_size * buffer->buffer.element_size]);
-		bytes_just_read = fread(start_write_position, sizeof(unsigned char), bytes_this_chunk, f);
+		bytes_just_read = (unsigned int)fread(start_write_position, sizeof(unsigned char), bytes_this_chunk, f);
 		bytes_next_chunk = bytes_this_chunk * 2; /* Increment by two each time */
 	}
 	/*  Last increment was likely a bit larger than it needed to be */
@@ -155,7 +155,7 @@ void resolve_path_components(unsigned char * path, struct unsigned_char_ptr_list
 				unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + (len -1), m);
 				unsigned_char_ptr_list_add_end(path_components, s);
 			}else{
-				unsigned char * s = heap_memory_pool_malloc(m->heap_pool, 1);
+				unsigned char * s = (unsigned char *)heap_memory_pool_malloc(m->heap_pool, 1);
 				s[0] = 0; /* empty string */
 				unsigned_char_ptr_list_add_end(path_components, s);
 			}

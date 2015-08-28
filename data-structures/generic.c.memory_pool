@@ -64,7 +64,7 @@ void T0_IDENTIFIER_memory_pool_destroy(struct T0_IDENTIFIER_memory_pool * p){
 	unsigned int i;
 	unsigned int size = void_ptr_list_size(&p->block_pointers);
 	assert((!p->objects_allocated) && "There still objects allocated in this memory pool!");
-	free(p->freed_pointers);
+	free((void*)p->freed_pointers);
 	for(i = 0; i < size; i++){
 		free(void_ptr_list_get(&p->block_pointers, i));
 	}
@@ -92,7 +92,7 @@ T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking(struct T0_IDENTIFIER_memo
 			rtn = p->freed_pointers[p->num_freed_pointers -1];
 			p->num_freed_pointers = p->num_freed_pointers -1;
 			assert(rtn);
-			return rtn;
+			return (T0_LITERAL *)rtn;
 		}
 		/*  No recently freed objects, check if we need to allocate another memory block */
 		if(p->objects_allocated == p->next_preallocation){
@@ -102,15 +102,15 @@ T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking(struct T0_IDENTIFIER_memo
 			*new_region_last_item = &((char *)new_region)[(p->objects_to_preallocate - 1) * p->object_size];
 			/*  Allocate a new block of size 2^n, where n increases by one each time we do this */
 			void_ptr_list_add_end(&p->block_pointers, new_region);
-			free(p->freed_pointers); /*  Don't need realloc because there must have been no free pointers to get here */
+			free((void*)p->freed_pointers); /*  Don't need realloc because there must have been no free pointers to get here */
 			p->freed_pointers = (void**)malloc((p->objects_to_preallocate + p->objects_allocated) * sizeof(void*)); /*  Worst case to free all pointers */
 			p->next_preallocation = p->objects_to_preallocate;
 			p->objects_to_preallocate *= 2;
 		}
 		p->objects_allocated = p->objects_allocated + 1;
-		return T0_IDENTIFIER_get_object_pointer(void_ptr_list_data(&p->block_pointers), p->objects_allocated -1, p->object_size);
+		return (T0_LITERAL *)T0_IDENTIFIER_get_object_pointer(void_ptr_list_data(&p->block_pointers), p->objects_allocated -1, p->object_size);
 	}else{
-		return malloc(p->object_size);
+		return (T0_LITERAL *)malloc(p->object_size);
 	}
 }
 
@@ -123,6 +123,6 @@ void T0_IDENTIFIER_memory_pool_free(struct T0_IDENTIFIER_memory_pool * p, T0_LIT
 			p->num_freed_pointers = p->num_freed_pointers + 1;
 		}
 	}else{
-		free(ptr);
+		free((void*)ptr);
 	}
 }

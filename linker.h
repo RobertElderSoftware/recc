@@ -76,16 +76,6 @@
 #include "types/linker/struct_asm_instruction.h"
 #endif
 
-struct linker_object{ /*  Represents everything that comes from one translation unit (or assembly file) */
-	struct asm_lexer_state * asm_lexer_state;
-	struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map internal_symbols;
-	struct struct_asm_instruction_ptr_list instructions;
-	unsigned int is_relocatable;
-	unsigned int current_line;
-	unsigned int linker_object_post_linking_offset; /* The offset to the instruction of this symbol after considering instructions re-written by the linker */
-	unsigned int pad;
-};
-
 struct linker_state{
 	struct memory_pool_collection * memory_pool_collection;
 	struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map external_symbols;

@@ -14,8 +14,8 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
-#ifndef __CORE_DATA_TYPES__H__DEFINED__
-#include "../core_data_types.h"
+#ifndef __TYPES_DATA_STRUCTURES_T0_IDENTIFIER_H__
+#include "../types/data-structures/T0_IDENTIFIER.h"
 #endif
 
 enum T0_IDENTIFIER_binary_search_not_found_result_type{

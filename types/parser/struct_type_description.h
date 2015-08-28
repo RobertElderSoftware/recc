@@ -18,12 +18,21 @@
 #ifndef __TYPES_PARSER_enum_value_type_H__
 #include "enum_value_type.h"
 #endif
-
-struct normalized_declaration_element;
-struct normalized_declarator;
-struct struct_normalized_specifier_ptr_list;
-struct parser_node;
-struct scope_level;
+#ifndef __TYPES_PARSER_struct_normalized_declaration_element_H__
+#include "struct_normalized_declaration_element.h"
+#endif
+#ifndef __TYPES_PARSER_struct_normalized_declarator_H__
+#include "struct_normalized_declarator.h"
+#endif
+#ifndef __TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H__
+#include "../../data-structures/struct_struct_normalized_specifier_ptr_list.h"
+#endif
+#ifndef __TYPES_PARSER_struct_parser_node_H__
+#include "struct_parser_node.h"
+#endif
+#ifndef __TYPES_PARSER_struct_scope_level_H__
+#include "struct_scope_level.h"
+#endif
 
 struct type_description{
         struct normalized_declaration_element * source_element; /* Needed for anonymous struct/union/enum */

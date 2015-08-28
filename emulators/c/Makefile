@@ -2,19 +2,25 @@ emulators/c/linux-emulator-example: emulators/c/op-cpu.o emulators/c/linux-emula
 	@$(HOSTCC) emulators/c/op-cpu.o emulators/c/linux-emulator-example.o emulators/c/linux-emulator-example-data.o -o emulators/c/linux-emulator-example
 
 emulators/c/linux-emulator-example.o: emulators/c/linux-emulator-example.c emulators/c/op-cpu.h
-	@$(HOSTCC) -c emulators/c/linux-emulator-example.c -o emulators/c/linux-emulator-example.o $(CUSTOM_FLAGS)
+	@$(HOSTCC) -c emulators/c/linux-emulator-example.c -o emulators/c/linux-emulator-example.o $(CUSTOM_C89_FLAGS)
 
 emulators/c/op-cpu.o: emulators/c/op-cpu.c emulators/c/op-cpu.h
-	@$(HOSTCC) -c emulators/c/op-cpu.c -o emulators/c/op-cpu.o $(CUSTOM_FLAGS)
+	@$(HOSTCC) -c emulators/c/op-cpu.c -o emulators/c/op-cpu.o $(CUSTOM_C89_FLAGS)
 
-emulators/c/linux-emulator-example-data.l0.c: preloader
-	@$(CUSTOM_PRELOADER) data kernel/kernel.l1 emulators/c/linux-emulator-example-data.l0.c c
+emulators/c/kernel.l0.c: emulators/c/build_c_example
+	@./emulators/c/build_c_example
 
-emulators/c/linux-emulator-example-data.o: emulators/c/linux-emulator-example-data.l0.c
-	@$(HOSTCC) -c emulators/c/linux-emulator-example-data.l0.c -o emulators/c/linux-emulator-example-data.o $(CUSTOM_FLAGS)
+emulators/c/build_c_example: emulators/c/build_c_example.o $(COMPILER_OBJECTS)
+	@$(HOSTCC) -o emulators/c/build_c_example emulators/c/build_c_example.o $(COMPILER_OBJECTS)  $(CUSTOM_C89_FLAGS)
+
+emulators/c/build_c_example.o: emulators/c/build_c_example.c compiler_interface.h
+	@$(HOSTCC) -c emulators/c/build_c_example.c -o emulators/c/build_c_example.o $(CUSTOM_C89_FLAGS)
+
+emulators/c/linux-emulator-example-data.o: emulators/c/kernel.l0.c
+	@$(HOSTCC) -c emulators/c/kernel.l0.c -o emulators/c/linux-emulator-example-data.o $(CUSTOM_C89_FLAGS)
 
 run-c-emulator: emulators/c/linux-emulator-example
 	@emulators/c/linux-emulator-example
 
 clean-c-emulator:
-	@rm -f emulators/c/*.o emulators/c/linux-emulator-example-data.l0.c emulators/c/linux-emulator-example
+	@rm -f emulators/c/kernel.l0.c emulators/c/*.o emulators/c/build_c_example emulators/c/linux-emulator-example

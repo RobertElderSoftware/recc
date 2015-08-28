@@ -1,3 +1,5 @@
 /*.o
 /linux-emulator-example-data.l0.c
 /linux-emulator-example
+/kernel.l0.c
+/build_c_example

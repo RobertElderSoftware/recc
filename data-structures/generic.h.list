@@ -21,16 +21,12 @@
 #ifndef __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
 #include "binary_exponential_buffer.h"
 #endif
-#ifndef __CORE_DATA_TYPES__H__DEFINED__
-#include "../core_data_types.h"
+#ifndef __TYPES_DATA_STRUCTURES_struct_T0_IDENTIFIER_list_H__
+#include "../types/data-structures/struct_T0_IDENTIFIER_list.h"
 #endif
 #ifndef __STRING_H_DEFINED__
 #include <string.h>
 #endif
-
-struct T0_IDENTIFIER_list{
-	struct binary_exponential_buffer buffer;
-};
 
 void T0_IDENTIFIER_list_add_end(struct T0_IDENTIFIER_list *, T0_LITERAL);
 void T0_IDENTIFIER_list_add_all_end(struct T0_IDENTIFIER_list *, struct T0_IDENTIFIER_list *);

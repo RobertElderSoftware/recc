@@ -32,8 +32,8 @@ eight hexidecimal digits.
 5.  A "special register" is defined as one of the following tokens: "PC",
 "SP", "FP", "FR", "ZR", or "WR".
 
-6.  A "general register" is defined as the character "r" followed by one or
-two decimal digits.
+6.  A "general register" is defined as the character "r" followed by one to
+three decimal digits.
 
 7.  A "aggregate register" is defined as either special register or a general
 register.
@@ -97,4 +97,4 @@ offset declaration, followed by zero or more of the following:
 and finally, an optional additional newline can be the last character in the
 file.
 
-The sha1sum of the lines above is ced83ca65ffa528716aac7b2ab689b1bdf61d92b
+The sha1sum of the lines above is b78e40dbdbdec8c48fbf0e39da752a5660167fa1

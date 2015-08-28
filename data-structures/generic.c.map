@@ -37,8 +37,8 @@ void T0_IDENTIFIER_to_T1_IDENTIFIER_map_put(struct T0_IDENTIFIER_to_T1_IDENTIFIE
 	kvp.key = key;
 	kvp.value = value;
 	/*  Make sure there is no pre-existing item with that key */
-	assert(-1 == struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_binary_search(binary_exponential_buffer_data(&map->key_value_pairs), kvp, (int)binary_exponential_buffer_size(&map->key_value_pairs), struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_compare, struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_BINARY_SEARCH_RETURN_NEG_ONE));
-	closest = struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_binary_search(binary_exponential_buffer_data(&map->key_value_pairs), kvp, (int)binary_exponential_buffer_size(&map->key_value_pairs), struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_compare, struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_BINARY_SEARCH_RETURN_MIN);
+	assert(-1 == struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_binary_search((struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair*)binary_exponential_buffer_data(&map->key_value_pairs), kvp, (int)binary_exponential_buffer_size(&map->key_value_pairs), struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_compare, struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_BINARY_SEARCH_RETURN_NEG_ONE));
+	closest = struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_binary_search((struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair*)binary_exponential_buffer_data(&map->key_value_pairs), kvp, (int)binary_exponential_buffer_size(&map->key_value_pairs), struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_compare, struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_BINARY_SEARCH_RETURN_MIN);
 	old_num = binary_exponential_buffer_size(&map->key_value_pairs);
 	binary_exponential_buffer_increment(&map->key_value_pairs, 1);
 	data = (struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs);

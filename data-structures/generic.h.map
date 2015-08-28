@@ -39,20 +39,9 @@
 #ifndef __T1_IDENTIFIER_list__H__DEFINED__
 #include "T1_IDENTIFIER_list.h"
 #endif
-
-/*
-TODO:  This should be dynamically generated into types folders 
-struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair{
-	T0_LITERAL key;
-	T1_LITERAL value;
-};
-*/
-
-struct T0_IDENTIFIER_to_T1_IDENTIFIER_map{
-	struct binary_exponential_buffer key_value_pairs;
-	int (*compare)(T0_LITERAL, T0_LITERAL);
-};
-
+#ifndef __TYPES_DATA_STRUCTURES_struct_T0_IDENTIFIER_to_T1_IDENTIFIER_map_H__
+#include "../types/data-structures/struct_T0_IDENTIFIER_to_T1_IDENTIFIER_map.h"
+#endif
 
 unsigned int T0_IDENTIFIER_to_T1_IDENTIFIER_map_exists(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *, T0_LITERAL);
 int struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_compare(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *, struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *);

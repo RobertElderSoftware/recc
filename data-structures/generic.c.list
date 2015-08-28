@@ -28,7 +28,7 @@ void T0_IDENTIFIER_list_add_all_end(struct T0_IDENTIFIER_list * list, struct T0_
 	binary_exponential_buffer_increment(&list->buffer, items_to_add);
 	ptr_src = (T0_LITERAL *)binary_exponential_buffer_data(&src->buffer);
 	ptr_dst = (T0_LITERAL *)binary_exponential_buffer_data(&list->buffer);
-	memcpy(&ptr_dst[previous_items], &ptr_src[0], sizeof(T0_LITERAL) * items_to_add);
+	memcpy((void*)&ptr_dst[previous_items], (void*)&ptr_src[0], sizeof(T0_LITERAL) * items_to_add);
 }
 
 T0_LITERAL T0_IDENTIFIER_list_pop_end(struct T0_IDENTIFIER_list * list){

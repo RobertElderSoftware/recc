@@ -46,7 +46,7 @@ enum language_type {
 	JAVA_LANGUAGE_TYPE
 };
 
-struct preloader_state * preloader_state_create(char *, char *, char *, enum language_type);
+struct preloader_state * preloader_state_create(unsigned char *, unsigned char *, unsigned char *, unsigned char *);
 void preloader_state_destroy(struct preloader_state *);
 
 #endif

@@ -21,14 +21,7 @@
 #ifndef __TYPES_struct_heap_memory_pool_H__
 #include "types/struct_heap_memory_pool.h"
 #endif
-#ifndef __struct_heap_ptr_index_pair_binary_search__H__DEFINED__
-#include "data-structures/struct_heap_ptr_index_pair_binary_search.h"
-#endif
-#ifndef __struct_heap_ptr_index_pair_merge_sort__H__DEFINED__
-#include "data-structures/struct_heap_ptr_index_pair_merge_sort.h"
-#endif
 
-int struct_heap_ptr_index_pair_cmp(struct heap_ptr_index_pair *, struct heap_ptr_index_pair *);
 void heap_memory_pool_create(struct heap_memory_pool *);
 void heap_memory_pool_destroy(struct heap_memory_pool *);
 void * heap_memory_pool_malloc(struct heap_memory_pool *, unsigned int);

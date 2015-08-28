@@ -102,14 +102,14 @@ int vsprintf(char * buf, const char * fmt, va_list va){
 	while(fmt[i]){
 		if(fmt[i] == '%'){
 			if(fmt[i+1] == 'c'){
-				*buf = (char)va_arg(va, unsigned int);
+				*buf = (char)va_arg(va, char);
 				buf++;
 				i++;
 			}else if(fmt[i+1] == 's'){
-				print_string(&buf, va_arg(va, unsigned int));
+				print_string(&buf, va_arg(va, char *));
 				i++;
 			}else if((fmt[i+1] == 'd') || (fmt[i+1] == 'i')){
-				print_decimal(&buf, va_arg(va, unsigned int));
+				print_decimal(&buf, va_arg(va, int));
 				i++;
 			}else if((fmt[i+1] == 'p') || (fmt[i+1] == 'P')){
 				*buf = '0';

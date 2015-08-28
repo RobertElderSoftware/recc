@@ -58,6 +58,8 @@ int main(void){
 	struct termios * original = terminal_setup();
 
 	vm = vm_create(data_start, data_end, data);
+	printf("Kernel image has been loaded. All input is now being handled by the emulator.\n");
+	printf("Press 'q' to quit.\n");
 
 	while(!is_halted(vm)){
 		if(vm_getc(vm, &output)){

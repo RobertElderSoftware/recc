@@ -109,20 +109,6 @@ static const char * c_token_type_names[90] = {
 	"NUMBER_SIGN_CHAR"
 };
 
-static const char * build_script_token_type_names[10] = {
-	"B_SPACE",
-	"B_NEWLINE",
-	"B_CODE_GENERATE",
-	"B_PREPROCESS",
-	"B_LINK",
-	"B_SYMBOLS",
-	"B_TO",
-	"B_SEMICOLON_CHAR",
-	"B_COMMA_CHAR",
-	"B_FILENAME"
-};
-
-
 static const char * asm_token_type_names[32] = {
 	"A_SPACE",
 	"A_NEWLINE",
@@ -185,7 +171,6 @@ unsigned int t_constant_string_part(struct common_lexer_state *, unsigned int);
 unsigned int t_constant_string(struct common_lexer_state *, unsigned int);
 unsigned int t_newline(struct common_lexer_state *, unsigned int);
 unsigned int t_space(struct common_lexer_state *, unsigned int);
-unsigned int t_filename(struct common_lexer_state *, unsigned int);
 void show_lexer_token(struct unsigned_char_list *, const char *, unsigned char *, unsigned char *, unsigned int);
 
 unsigned int count_newlines_in_comment(struct c_lexer_token * t){
@@ -230,7 +215,8 @@ unsigned int t_D(struct common_lexer_state * common_lexer_state, unsigned int te
 }
 
 unsigned int t_L(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
-	return accept_range('a','z', common_lexer_state, tentative_position) || accept_range('A','Z', common_lexer_state, tentative_position) || accept('_', common_lexer_state, tentative_position);
+	/*  Currently treating $ as a letter.  TODO: make this a compiler option. */
+	return accept_range('a','z', common_lexer_state, tentative_position) || accept_range('A','Z', common_lexer_state, tentative_position) || accept('_', common_lexer_state, tentative_position) || accept('$', common_lexer_state, tentative_position);
 }
 
 unsigned int t_H(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
@@ -378,14 +364,6 @@ unsigned int t_asm_register(struct common_lexer_state * common_lexer_state, unsi
 		}else{
 			return 0;
 		}
-	}
-	return count;
-}
-
-unsigned int t_filename(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
-	unsigned int count = 0;
-	while(accept_range('!', '+', common_lexer_state, tentative_position + count) || accept_range('-', ';', common_lexer_state, tentative_position + count) || accept_range('A', '_', common_lexer_state, tentative_position + count) || accept_range('a', '}', common_lexer_state, tentative_position + count)){
-		count += 1;
 	}
 	return count;
 }
@@ -614,8 +592,13 @@ unsigned int t_constant_string(struct common_lexer_state * common_lexer_state, u
 }
 
 unsigned int t_newline(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
-	if(accept('\n', common_lexer_state, tentative_position)){
-		return 1;
+	unsigned int count = 0;
+	if(accept('\r', common_lexer_state, tentative_position + count)){
+		count++;
+	}
+	if(accept('\n', common_lexer_state, tentative_position + count)){
+		count++;
+		return count;
 	}
 	return 0;
 }
@@ -663,7 +646,7 @@ int lex_c(struct c_lexer_state * c_lexer_state){
 			type = SPACE;
 		}else if((rtn = t_newline(&c_lexer_state->c, c_lexer_state->c.position))){
 			type = NEWLINE;
-			c_lexer_state->c.current_line = c_lexer_state->c.current_line + rtn; /* NEWLINE token can be multiple newlines */
+			c_lexer_state->c.current_line = c_lexer_state->c.current_line + rtn;
 		}else if((rtn = t_comment(&c_lexer_state->c, c_lexer_state->c.position, &c_lexer_state->c.current_line))){
 			type = COMMENT;
 		}else if((rtn = t_keyword((const unsigned char *)"auto", &c_lexer_state->c, c_lexer_state->c.position))){
@@ -842,12 +825,14 @@ int lex_c(struct c_lexer_state * c_lexer_state){
 			type = NUMBER_SIGN_CHAR;
 		}else{
 			unsigned int i = 0;
-			buffered_printf(c_lexer_state->c.buffered_output, "Lexer stopping on character '%c' 0x(%x)\n", c_lexer_state->c.buf[c_lexer_state->c.position], c_lexer_state->c.buf[c_lexer_state->c.position]);
-			for(c_lexer_state->c.position = 0; i < c_lexer_state->c.position + 100; i++){
+			printf("Lexer stopping on character 0x%02x.  This was character %u of %u\nFollowing chars are:", c_lexer_state->c.buf[c_lexer_state->c.position], (c_lexer_state->c.position + 1), c_lexer_state->c.buffer_size);
+			for(i = c_lexer_state->c.position; i < (c_lexer_state->c.position + 100) && i < c_lexer_state->c.buffer_size; i++){
 				if(c_lexer_state->c.buf[i]){
-					buffered_printf(c_lexer_state->c.buffered_output, "%c", c_lexer_state->c.buf[i]);
+					printf("%c", c_lexer_state->c.buf[i]);
 				}
 			}
+			buffered_printf(c_lexer_state->c.buffered_output, "\n");
+			assert(0 && "Invalid character in lexer.");
 			g_format_buffer_release();
 			return 1;
 		}
@@ -856,6 +841,22 @@ int lex_c(struct c_lexer_state * c_lexer_state){
 		new_token->type = type;
 		new_token->first_byte = first_byte;
 		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);
+		{
+			/*
+			unsigned char *g = new_token->first_byte;
+			printf("Got token: %s ", get_c_token_type_names()[new_token->type]);
+			do{
+				if(*g == '\n'){
+					printf("\\n");
+				}else if(*g == '\r'){
+					printf("\\r");
+				}else{
+					printf("%c", *g);
+				}
+			}while(g++ != new_token->last_byte);
+			printf("\n");
+			*/
+		}
 
 		struct_c_lexer_token_ptr_list_add_end(&c_lexer_state->tokens, new_token);
 		show_lexer_token(c_lexer_state->c.buffered_output, get_c_token_type_names()[new_token->type], new_token->first_byte, new_token->last_byte, SHOW_LEXER_TOKENS);
@@ -866,6 +867,7 @@ int lex_c(struct c_lexer_state * c_lexer_state){
 }
 
 void create_c_lexer_state(struct c_lexer_state * state, struct unsigned_char_list * buffered_output, struct memory_pool_collection * memory_pool_collection, unsigned char * in_file, unsigned char * input_buffer, unsigned int size){
+	g_format_buffer_use();
 	state->c.buffered_output = buffered_output;
 	state->c.memory_pool_collection = memory_pool_collection;
 	state->c.filename = in_file;
@@ -881,16 +883,7 @@ void destroy_c_lexer_state(struct c_lexer_state * c_lexer_state){
 		struct_c_lexer_token_memory_pool_free(c_lexer_state->c.memory_pool_collection->struct_c_lexer_token_pool, tokens[i]);
 	}
 	struct_c_lexer_token_ptr_list_destroy(&c_lexer_state->tokens);
-}
-
-void destroy_build_script_lexer_state(struct build_script_lexer_state * build_script_lexer_state){
-	unsigned int num_tokens = struct_build_script_lexer_token_ptr_list_size(&build_script_lexer_state->tokens);
-	struct build_script_lexer_token ** tokens = struct_build_script_lexer_token_ptr_list_data(&build_script_lexer_state->tokens);
-	unsigned int i;
-	for(i = 0; i < num_tokens; i++){
-		struct_build_script_lexer_token_memory_pool_free(build_script_lexer_state->c.memory_pool_collection->struct_build_script_lexer_token_pool, tokens[i]);
-	}
-	struct_build_script_lexer_token_ptr_list_destroy(&build_script_lexer_state->tokens);
+	g_format_buffer_release();
 }
 
 void destroy_asm_lexer_state(struct asm_lexer_state * asm_lexer_state){
@@ -901,67 +894,6 @@ void destroy_asm_lexer_state(struct asm_lexer_state * asm_lexer_state){
 		struct_asm_lexer_token_memory_pool_free(asm_lexer_state->c.memory_pool_collection->struct_asm_lexer_token_pool, tokens[i]);
 	}
 	struct_asm_lexer_token_ptr_list_destroy(&asm_lexer_state->tokens);
-}
-
-int lex_build_script(struct build_script_lexer_state * build_script_lexer_state, unsigned char * filename, unsigned char * buffer, unsigned int buffer_size){
-	build_script_lexer_state->c.buf = buffer;
-	build_script_lexer_state->c.position = 0;
-	build_script_lexer_state->c.current_line = 0;
-	build_script_lexer_state->c.filename = filename;
-	build_script_lexer_state->c.buffer_size = buffer_size;
-
-	g_format_buffer_use();
-
-	struct_build_script_lexer_token_ptr_list_create(&build_script_lexer_state->tokens);
-
-	while(build_script_lexer_state->c.position < buffer_size){
-		unsigned int rtn = 0;
-		unsigned char * first_byte = &build_script_lexer_state->c.buf[build_script_lexer_state->c.position];
-		enum build_script_token_type type;
-		struct build_script_lexer_token * new_token;
-
-		if((rtn = t_space(&build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_SPACE;
-		}else if((rtn = t_newline(&build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_NEWLINE;
-			build_script_lexer_state->c.current_line = build_script_lexer_state->c.current_line + rtn; /* NEWLINE token can be multiple newlines */
-		}else if((rtn = t_keyword((const unsigned char *)"PREPROCESS", &build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_PREPROCESS;
-		}else if((rtn = t_keyword((const unsigned char *)"CODE GENERATE", &build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_CODE_GENERATE;
-		}else if((rtn = t_keyword((const unsigned char *)"LINK", &build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_LINK;
-		}else if((rtn = t_keyword((const unsigned char *)"SYMBOLS", &build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_SYMBOLS;
-		}else if((rtn = t_keyword((const unsigned char *)"TO", &build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_TO;
-		}else if((rtn = t_filename(&build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_FILENAME;
-		}else if((rtn = t_symbol((const unsigned char *)",", &build_script_lexer_state->c, build_script_lexer_state->c.position))){
-			type = B_COMMA_CHAR;
-		}else{
-			unsigned int i = 0;
-			buffered_printf(build_script_lexer_state->c.buffered_output, "Lexer stopping on character '%c' 0x(%x)\n", build_script_lexer_state->c.buf[build_script_lexer_state->c.position], build_script_lexer_state->c.buf[build_script_lexer_state->c.position]);
-			for(build_script_lexer_state->c.position = 0; i < build_script_lexer_state->c.position + 100; i++){
-				if(build_script_lexer_state->c.buf[i]){
-					buffered_printf(build_script_lexer_state->c.buffered_output, "%c", build_script_lexer_state->c.buf[i]);
-				}
-			}
-			g_format_buffer_release();
-			return 1;
-		}
-
-		new_token = struct_build_script_lexer_token_memory_pool_malloc(build_script_lexer_state->c.memory_pool_collection->struct_build_script_lexer_token_pool);
-		new_token->type = type;
-		new_token->first_byte = first_byte;
-		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);
-
-		struct_build_script_lexer_token_ptr_list_add_end(&build_script_lexer_state->tokens, new_token);
-		show_lexer_token(build_script_lexer_state->c.buffered_output, get_c_token_type_names()[new_token->type], new_token->first_byte, new_token->last_byte, SHOW_LEXER_TOKENS);
-		build_script_lexer_state->c.position += rtn;
-	}
-	g_format_buffer_release();
-	return 0;
 }
 
 int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, unsigned char * buffer, unsigned int buffer_size){
@@ -985,7 +917,7 @@ int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, 
 			type = A_SPACE;
 		}else if((rtn = t_newline(&asm_lexer_state->c, asm_lexer_state->c.position))){
 			type = A_NEWLINE;
-			asm_lexer_state->c.current_line = asm_lexer_state->c.current_line + rtn; /* NEWLINE token can be multiple newlines */
+			asm_lexer_state->c.current_line = asm_lexer_state->c.current_line + rtn;
 		}else if((rtn = t_asm_comment(&asm_lexer_state->c, asm_lexer_state->c.position))){
 			type = A_ASM_COMMENT;
 		}else if((rtn = t_symbol((const unsigned char *)":", &asm_lexer_state->c, asm_lexer_state->c.position))){
@@ -1048,12 +980,13 @@ int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, 
 			type = A_IDENTIFIER;
 		}else{
 			unsigned int i = 0;
-			buffered_printf(asm_lexer_state->c.buffered_output, "Lexer stopping on character '%c' 0x(%x)\n", asm_lexer_state->c.buf[asm_lexer_state->c.position], asm_lexer_state->c.buf[asm_lexer_state->c.position]);
-			for(asm_lexer_state->c.position = 0; i < asm_lexer_state->c.position + 100; i++){
+			buffered_printf(asm_lexer_state->c.buffered_output, "Lexer stopping on character 0x%02x.  This was character %u of %u\nFollowing chars are:", asm_lexer_state->c.buf[asm_lexer_state->c.position], (asm_lexer_state->c.position + 1), asm_lexer_state->c.buffer_size);
+			for(i = asm_lexer_state->c.position; i < (asm_lexer_state->c.position + 100) && i < asm_lexer_state->c.buffer_size; i++){
 				if(asm_lexer_state->c.buf[i]){
 					buffered_printf(asm_lexer_state->c.buffered_output, "%c", asm_lexer_state->c.buf[i]);
 				}
 			}
+			buffered_printf(asm_lexer_state->c.buffered_output, "\n");
 			g_format_buffer_release();
 			return 1;
 		}
@@ -1073,10 +1006,6 @@ int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, 
 
 const char ** get_c_token_type_names(void){
 	return c_token_type_names;
-}
-
-const char ** get_build_script_token_type_names(void){
-	return build_script_token_type_names;
 }
 
 const char ** get_asm_token_type_names(void){

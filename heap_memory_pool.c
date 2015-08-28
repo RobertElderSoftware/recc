@@ -18,16 +18,6 @@
 
 #define WORD_SIZE_LOG_2 2
 
-int struct_heap_ptr_index_pair_cmp(struct heap_ptr_index_pair * a, struct heap_ptr_index_pair * b){
-	if(a->p < b->p){
-		return -1;
-	}else if(a->p > b->p){
-		return 1;
-	}else{
-		return 0;
-	}
-}
-
 void heap_memory_pool_create(struct heap_memory_pool * h){
 	unsigned int i;
 	unsigned int current_pool_item_size = sizeof(unsigned int);    /*  Start pool block sizes at the size of a word */
@@ -100,10 +90,9 @@ void heap_memory_pool_free(struct heap_memory_pool * h, void * p){
 	}
 	if(h->heap_pools[0].pooling_active){
 		if((list_index == -1 || (!(list_index < size)))){
-			/*  TODO: this condition will always fail if heap pooling is inactive */
 			assert(0 && "This should never happen.");
 		}else{
-			void_ptr_memory_pool_free(&h->heap_pools[data[list_index].value], p);
+			void_ptr_memory_pool_free(&h->heap_pools[data[list_index].value], (void**)p);
 		}
 	}else{
 		free(p);
