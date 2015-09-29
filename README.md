@@ -10,15 +10,13 @@ This project is a collection of compiler, microkernel and OS tools.  Read more h
 
 http://recc.robertelder.org/
 
-This project is unlikely to be interesting or usable by anyone who is not among the most hard-core programmers.  If you enjoy sitting at home, writing code on a Friday night then this project is for you!  Many aspects of the compiler are undocumented and I change them constantly.  This is often because I haven't yet figured out what the best approach is, and I want to avoid creating wasteful documentation that will be wrong shortly in the future.  As I become more confident about what the best approach is, I will add documentation explaining how it works.  If you want to know how something works, the best place to look is in the Makefiles to see how things are being build.
+This project is unlikely to be interesting or usable by anyone who is not among the most hard-core programmers.  If you enjoy sitting at home, writing code on a Friday night then this project is for you!  Many aspects of the compiler are undocumented and I change them constantly.  This is often because I haven't yet figured out what the best approach is, and I want to avoid creating wasteful documentation that will be wrong shortly in the future.  As I become more confident about what the best approach is, I will add documentation explaining how it works.  If you want to know how something works, the best place to look is in the Makefiles to see how things are being built.
+
+This project is in a constant state of flux and there is no guarantee provided in terms of backward compatibility (nobody really uses it for anything serious anyway).  The eventual goal will be to move toward standardizing certain things, but for now I tend to use this project as a playground to try out completely new ways of doing things.  Sometimes this works out, and sometimes it doesn't.
 
 # License
 
 See LICENSE.txt
-
-# Overview
-
-This project is in a constant state of flux and there is no guarantee provided in terms of backward compatibility (nobody really uses it for anything serious anyway).  The eventual goal will be to move toward standardizing certain things, but for now I tend to use this project as a playground to try out completely new ways of doing things.  Sometimes this works out, and sometimes it doesn't.
 
 # Developer Set Up
 

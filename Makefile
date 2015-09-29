@@ -14,7 +14,7 @@ COMPILER_OBJECTS=libc/filesystem.o test/recc.o data-structures/recc.o libc/recc.
 help:
 	@echo "What would you like to make?"
 	@echo ""
-	@echo "1) make bootstrap-datatypes  - (IMPORTANT) Must be run before anything else in a fresh project to create initial Makefiles."
+	@echo "1) make data-structures/bootstrap-datatypes - (IMPORTANT) Must be run before anything else in a fresh project to create initial Makefiles."
 	@echo "2) make kernel/build_kernel  - Builds an executable 'kernel/build_kernel', that can build the kernel."
 	@echo "2) make test/build_tests     - Builds an executable 'test/build_tests', that can build all tests."
 	@echo "3) make kernel/kernel.l1     - Builds the kernel image (but doesn't try to run it)."
