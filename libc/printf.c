@@ -15,130 +15,83 @@
 
 #include <assert.h>
 #include <stdarg.h>
-
-char printfbuffer[1048576];
+#include "../builtin/print_buff_add.h"
+#include "../builtin/print_string.h"
+#include "../builtin/print_decimal.h"
+#include "../builtin/print_hexadecimal.h"
+#include "../types/builtin/struct_printing_state.h"
 
 int putchar(int);
 
 int printf(const char *, ...);
 
-void print_hexadecimal(char **, unsigned int);
-
-void print_decimal(char **, int);
-
-void print_string(char **, const char *);
-
-void print_hexadecimal(char ** buf, unsigned int d){
-	unsigned int leading_zero = 1;
-	unsigned int base = 0x10000000;
-	unsigned int current;
-	unsigned int a;
-	unsigned int digit = 0;
-	unsigned int digits[16];
-	digits[0] = '0';
-	digits[1] = '1';
-	digits[2] = '2';
-	digits[3] = '3';
-	digits[4] = '4';
-	digits[5] = '5';
-	digits[6] = '6';
-	digits[7] = '7';
-	digits[8] = '8';
-	digits[9] = '9';
-	digits[10] = 'A';
-	digits[11] = 'B';
-	digits[12] = 'C';
-	digits[13] = 'D';
-	digits[14] = 'E';
-	digits[15] = 'F';
-	if(d == 0){
-		(*(*buf)) = '0';
-		(*buf) = (*buf) + 1;
-	}
-
-	current = d;
-	while(base){
-		digit = current / base;
-		if(digit){
-			(*(*buf)) = (char)digits[digit];
-			(*buf) = (*buf) + 1;
-			leading_zero = 0;
-		}else{
-			if(!leading_zero){
-				(*(*buf)) = (char)digits[digit];
-				(*buf) = (*buf) + 1;
-			}
-		}
-		a = base * digit;
-		current = current - a;
-		base = base / 16;
-	}
-}
-
-void print_string(char ** buf, const char * c){
-	while(*c){
-		(*(*buf)) = *c;
-		c++;
-		(*buf) = (*buf) + 1;
-	}
-}
-
 int printf(const char * fmt, ...){
 	va_list arglist;
-	char *result = &printfbuffer[0];
-	int rtn;
+	int rtn = 0;
 	va_start(arglist, fmt);
-	rtn = vsprintf(&printfbuffer[0], fmt, arglist);
+	rtn = vprintf(fmt, arglist);
 	va_end( arglist );
-	while(*result) {
-		putchar(*result);
-		result++;
-	}
 	return rtn;
 }
 
-int vsprintf(char * buf, const char * fmt, va_list va){
-	unsigned int i = 0;
-	while(fmt[i]){
-		if(fmt[i] == '%'){
-			if(fmt[i+1] == 'c'){
-				*buf = (char)va_arg(va, char);
-				buf++;
-				i++;
-			}else if(fmt[i+1] == 's'){
-				print_string(&buf, va_arg(va, char *));
-				i++;
-			}else if((fmt[i+1] == 'd') || (fmt[i+1] == 'i')){
-				print_decimal(&buf, va_arg(va, int));
-				i++;
-			}else if((fmt[i+1] == 'p') || (fmt[i+1] == 'P')){
-				*buf = '0';
-				buf++;
-				*buf = 'x';
-				buf++;
-				print_hexadecimal(&buf, va_arg(va, unsigned int));
-				i++;
-			}else if((fmt[i+1] == 'x') || (fmt[i+1] == 'X')){
-				print_hexadecimal(&buf, va_arg(va, unsigned int));
-				i++;
-			}else if(fmt[i+1] == '\0'){
-				*buf = '%';
-				buf++;
-				i++;
-			}else{
-				*buf = (char)fmt[i+1];
-				buf++;
-				i++;
+int vprintf(const char * fmt, va_list va){
+	/*  Keep trying to print safely using the stack as temporary storage: */
+	char try1[4];
+	char *result1 = &try1[0];
+	unsigned int chars_required = vsnprintf(&try1[0], 4, fmt, va);
+	if(chars_required < 4){
+		while(*result1){
+			putchar(*result1);
+			result1++;
+		}
+	}else{
+		char try2[16];
+		unsigned int chars_required = vsnprintf(&try2[0], 16, fmt, va);
+		char * result2 = &try2[0];
+		if(chars_required < 16){
+			while(*result2){
+				putchar(*result2);
+				result2++;
 			}
 		}else{
-			*buf = (char)fmt[i];
-			buf++;
+			char try3[200];
+			unsigned int chars_required = vsnprintf(&try3[0], 200, fmt, va);
+			char * result3 = &try3[0];
+			if(chars_required < 200){
+				while(*result3){
+					putchar(*result3);
+					result3++;
+				}
+			}else{
+
+				assert(0 && "Print buffer too small.");
+			}
 		}
-		i++;
 	}
-	*buf = '\0';
-	buf++;
 	return 0;
+}
+
+int vsprintf(char * buf, const char * fmt, va_list va){
+	/*  TODO:  Set this number to max int in the future.  Technically, there is 
+	    no bound on number of characters, which is why sprintf is unsafe.
+	    The number passed in has nothing to do with the actual buffer size
+	    (because we don't know the buffer size, that is why sprintf is terrible.)
+	*/
+	vsnprintf(buf, 1048576, fmt, va);
+	return 0;
+}
+
+int snprintf(char * buf, size_t n, const char * fmt, ...){
+	va_list arglist;
+	int rtn = 0;
+	va_start(arglist, fmt);
+	rtn = vsnprintf(buf, n, fmt, arglist);
+	va_end( arglist );
+	return rtn;
+}
+
+int vsnprintf(char * buf, size_t n, const char * fmt, va_list va){
+	return c89_vsnprintf(buf, n, fmt, va);
 }
 
 int sprintf(char * buf, const char * fmt, ...){

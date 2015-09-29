@@ -13,8 +13,7 @@
 	use of this software.
 */
 "use strict";
-var running_kernel = window.top.location.href.indexOf("kernel_mode") > -1 ? "kernel" : null;
-var specific_tests = running_kernel ? "kernel" : null;
+var running_kernel = window.top.location.href.indexOf("kernel_mode") > -1 ? true : false;
 var input_queue = [];
 var memory_size_ints;
 var is_debug_mode = running_kernel ? true : false;
@@ -483,11 +482,7 @@ $(document).ready(function () {
       if(d.error){
         alert("Error: " + d.error);
       }else if(d.available_tests){
-        if(specific_tests == null){
-          test_function(d.available_tests);
-        }else{
-          test_function([specific_tests]);
-        }
+        test_function(d.available_tests);
       }
     }
   );

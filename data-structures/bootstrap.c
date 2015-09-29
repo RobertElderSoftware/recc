@@ -466,8 +466,8 @@ int main(void){
 	add_string_to_buffer((unsigned char *)"/libgenerated-data-structures.a\n", &gitignores);
 
 	add_string_to_buffer((void*)"clean-generated-files:\n\t@rm -f data-structures/*.i data-structures/*.l2 ", &clean_files);
-	add_string_to_buffer((unsigned char *)artifacts_location, &library_dependency);
-	add_string_to_buffer((void*)"libgenerated-data-structures.a: ", &library_dependency);
+	/*add_string_to_buffer((unsigned char *)artifacts_location, &library_dependency);*/
+	add_string_to_buffer((void*)"DATA_STRUCTURES_OBJECT_FILES=", &library_dependency);
 
 	add_string_to_buffer((void*)"\n\t@ar -rcs ", &library_buildcommand);
 	add_string_to_buffer((unsigned char *)artifacts_location, &library_buildcommand);
@@ -579,9 +579,17 @@ int main(void){
 	add_library_dependency_rule((unsigned char *)"struct_c_lexer_token_ptr_compare");
 	add_file_dependency_rule((unsigned char *)"struct_c_lexer_token_ptr_compare");
 
-	add_string_to_buffer((void*)": bootstrap-datatypes", &file_dependencies);
+	add_object_build_rule((unsigned char *)"binary_exponential_buffer");
+	add_library_build_rule((unsigned char *)"binary_exponential_buffer");
+	add_library_dependency_rule((unsigned char *)"binary_exponential_buffer");
+
+	add_object_build_rule((unsigned char *)"replace_tool");
+	add_library_build_rule((unsigned char *)"replace_tool");
+	add_library_dependency_rule((unsigned char *)"replace_tool");
+
+	add_string_to_buffer((void*)": data-structures/bootstrap-datatypes", &file_dependencies);
 	add_string_to_buffer_with_null_terminator((void*)"", &library_buildcommand);
-	add_string_to_buffer(binary_exponential_buffer_data(&library_buildcommand), &library_dependency);
+	/*add_string_to_buffer(binary_exponential_buffer_data(&library_buildcommand), &library_dependency);*/
 
 	output_buffer_to_file(&library_dependency, (unsigned char *)binary_exponential_buffer_data(library_data_structures_filename));
 	output_buffer_to_file(&object_makefile, (unsigned char *)binary_exponential_buffer_data(object_data_structures_filename));

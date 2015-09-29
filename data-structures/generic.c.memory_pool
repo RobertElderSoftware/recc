@@ -21,6 +21,38 @@
 	number of kernel calls to malloc and free.
 
 	Pointers returned are guaranteed to be always point to the underlying object until they are freed, or this data structure is destroyed.
+
+	This data structure keeps an array of 'block pointers' that points to blocks of size 2^N:
+
+
+	                                          +--------+
+	                                          | Item 6 |
+	                                          +--------+
+	                                          +--------+
+	                                          | Item 5 |
+	                                          +--------+
+	                     +--------+           +--------+         
+	                     | Item 2 |           | Item 4 |         	
+	                     +--------+           +--------+         
+	+--------+           +--------+           +--------+         
+	| Item 0 |           | Item 1 |           | Item 3 |         
+	+--------+           +--------+           +--------+          ...
+                                                                          
+	block_pointers[0]    block_pointers[1]    block_pointers[2]   ...  block_pointers[...]  
+	contains 2^0 blocks  contains 2^1 blocks  contains 2^2 blocks ...  contains 2^.. blocks
+
+	When we need to allocate a new object, if there happens to be a free block we simply need to return the pointer to that item inside the block.
+	If there are no free blocks, we will allocate a chunk of memory that has size (sizeof(item size) * 2^N+1) where N is log_2 of the
+	the current largest number of items in a block.
+
+	In the worst case this implementation will waste no more than half of the memory it has allocated.
+
+	When an item is freed, the current implementation will simply add that item pointer to a list, so it can be returned for a future
+	allocation request.  When this data structure is destroyed the entire blocks can be freed instead of freeing each individual item.
+	
+	Finally, it doesn't always make sense for the initial block size to be one, so as an additional configuration parameter you can start
+	with a block size that is larger.
+	
 */
 
 static unsigned int T0_IDENTIFIER_pooling_active = 1;  /* Easy switch to toggle between pooling and normal malloc free */

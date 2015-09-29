@@ -18,4 +18,5 @@
 #define va_start(a,b) a = (unsigned int*)&b
 #define va_arg(a,b) *((b*)(a=(unsigned int *)((unsigned int)a - sizeof(unsigned int))))
 #define va_end(a) 
+#define va_copy(a,b) a = b
 #endif

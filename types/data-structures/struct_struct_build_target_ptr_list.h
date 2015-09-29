@@ -19,7 +19,7 @@
 #include "../../data-structures/binary_exponential_buffer.h"
 #endif
 #ifndef __TYPES_struct_build_target_H__
-#include "../struct_build_target.h"
+#include "../recc-implementation/struct_build_target.h"
 #endif
 
 struct struct_build_target_ptr_list{

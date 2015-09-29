@@ -17,3 +17,5 @@
 /queue.i
 /kernel.sym
 /recc.o
+/build_kernel
+/build_kernel.o

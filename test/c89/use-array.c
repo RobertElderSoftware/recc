@@ -112,6 +112,7 @@ void inc_array(int arr1[4]){
 }
 
 int main(void){
+	char c[20];
 	struct food f;
 	struct food g;
 	int arr1[4];
@@ -142,5 +143,43 @@ int main(void){
 	putchar(arr1[2]);
 	putchar(arr1[3]);
 	putchar('a' + (int)(&arr1[1] - &arr1[0]));
+	(void)c;
+	{
+		char d[20];
+		(void)d;
+		{
+			char e[40];
+			(void)e;
+		}
+	}
+
+	{
+		char try1[12];
+		char *result1 = &try1[0];
+		unsigned int chars_required = 99;
+		unsigned int i;
+		for(i = 0; i < 12; i++){
+			try1[i] = 'a' + (char)i;
+		}
+		{
+			char try2[200];
+			unsigned int chars_required2 = chars_required;
+			for(i = 0; i < 200; i++){
+				try2[i] = 'a' + (char)(i%26);
+			}
+			try2[199] = '\0';
+			result1 = &try2[0];
+			if(chars_required2 < 200){
+				while(*result1){
+					putchar(*result1);
+					result1++;
+				}
+			}
+		}
+		for(i = 0; i < 12; i++){
+			putchar(try1[i]);
+		}
+	}
+
 	return 0;
 }

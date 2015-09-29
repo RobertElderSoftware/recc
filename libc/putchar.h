@@ -14,5 +14,6 @@
 	Software Inc. be liable for incidental or consequential damages in connection with
 	use of this software.
 */
+#include "../builtin/putchar_busy.h"
 int putchar(int);
 #endif

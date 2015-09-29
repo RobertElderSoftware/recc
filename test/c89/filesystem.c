@@ -18,12 +18,12 @@
 #include <assert.h>
 #include "../../data-structures/unsigned_char_list.h"
 #include "../../data-structures/unsigned_char_ptr_list.h"
-#include "../../io.h"
-#include "../../preprocessor.h"
-#include "../../lexer.h"
-#include "../../parser.h"
-#include "../../code_generator.h"
-#include "../../memory_pool_collection.h"
+#include "../../recc-implementation/io.h"
+#include "../../recc-implementation/preprocessor.h"
+#include "../../recc-implementation/lexer.h"
+#include "../../recc-implementation/parser.h"
+#include "../../recc-implementation/code_generator.h"
+#include "../../recc-implementation/memory_pool_collection.h"
 
 void print_parser_nodes(struct parser_node *, unsigned int i);
 void print_parser_nodes(struct parser_node * n, unsigned int i){
@@ -117,6 +117,10 @@ int main(void){
 		size = unsigned_char_list_size(&generated_code);
 		data = unsigned_char_list_data(&generated_code);
 
+		printf("About to print\n");
+		printf("%c\n",'a');
+		printf("print %d size\n", size);
+		printf("print %c first \n", data[0]);
 		for(i = 0; i < size; i++){
 			printf("%c", data[i]);
 		}

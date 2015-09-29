@@ -19,7 +19,7 @@ int putchar(int);
 
 int main(void){
 	/*  Need to set the kernel stack pointer before we can make any kernel calls */
-	g_kernel_sp = (unsigned int *)&kernel_stack_start;
+	g_kernel_sp = &kernel_stack[STACK_SIZE -1];
 	kernel_init(); /*  This method will block until the kernel exits */
 	return 0;
 }

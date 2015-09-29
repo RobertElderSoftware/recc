@@ -16,25 +16,14 @@
  
 $response_object = Array();
 
-$directories = Array(
-	"c89/",
-	"c99/"
-);
-
 $all_files = Array();
-
-foreach($directories as $directory){
-	$dir = realpath(dirname(__FILE__))."/../../../test/".$directory;
-	$current_files = scandir($dir);
-	if($current_files === false){
-		$response_object['error'] = "Unable to find test cases in ".$dir;
-		break;
-	}
-	$current_files = array_filter($current_files, function($a) { return ($a != "." && $a != ".." && preg_match('/\.c$/', $a));});
-	$current_files = array_map(function($a) { global $directory; $s = explode(".",$a); return $directory.$s[0]; }, $current_files);
-	$all_files = array_merge($all_files, $current_files);
+$location = realpath(dirname(__FILE__))."/../../../test/tests_to_run";
+$data = file_get_contents($location);
+if($data === false){
+	$response_object['error'] = "Unable to find test cases in ".$location."  Could it be a permission problem?";
+}else{
+	$all_files = array_merge($all_files, explode(' ', str_replace("\n",'',str_replace("\r",'',$data))));
 }
-
 $response_object['available_tests'] = array_values($all_files);
 
 echo json_encode($response_object);

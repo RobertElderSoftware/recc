@@ -8,12 +8,12 @@ emulators/c/op-cpu.o: emulators/c/op-cpu.c emulators/c/op-cpu.h
 	@$(HOSTCC) -c emulators/c/op-cpu.c -o emulators/c/op-cpu.o $(CUSTOM_C89_FLAGS)
 
 emulators/c/kernel.l0.c: emulators/c/build_c_example
-	@./emulators/c/build_c_example
+	$(VALGRIND) ./emulators/c/build_c_example
 
 emulators/c/build_c_example: emulators/c/build_c_example.o $(COMPILER_OBJECTS)
-	@$(HOSTCC) -o emulators/c/build_c_example emulators/c/build_c_example.o $(COMPILER_OBJECTS)  $(CUSTOM_C89_FLAGS)
+	@$(HOSTCC) $(COMPILER_OBJECTS) emulators/c/build_c_example.o -o emulators/c/build_c_example $(CUSTOM_C89_FLAGS)
 
-emulators/c/build_c_example.o: emulators/c/build_c_example.c compiler_interface.h
+emulators/c/build_c_example.o: emulators/c/build_c_example.c recc-implementation/compiler_interface.h
 	@$(HOSTCC) -c emulators/c/build_c_example.c -o emulators/c/build_c_example.o $(CUSTOM_C89_FLAGS)
 
 emulators/c/linux-emulator-example-data.o: emulators/c/kernel.l0.c

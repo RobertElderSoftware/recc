@@ -68,6 +68,13 @@
 #define join_test_joiner(X, Y) X##Y
 #define join_test_1 4hfu44fu4dk
 
+
+/*  Prescan testing */
+#define prescan_test1(x) Y_ ## x
+#define prescan_test2(x) prescan_test1(x)
+#define prescan_test3 99
+#define prescan_test4 prescan_test3
+
 #include <stdio.h>
 #include <stdio.h>
 
@@ -220,6 +227,10 @@ int main(void){
 	ignore_spaces_print(stringify_indirect(FST_other(Y)));
 	ignore_spaces_print("\n");
 	ignore_spaces_print(stringify_indirect(join_test_joiner(join_test_1, X)));
+	ignore_spaces_print("\n");
+	ignore_spaces_print(stringify_indirect(prescan_test1(prescan_test4)));
+	ignore_spaces_print("\n");
+	ignore_spaces_print(stringify_indirect(prescan_test2(prescan_test4)));
 
 
 	ignore_spaces_print("\n");

@@ -21,9 +21,6 @@
 #ifndef __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
 #include "binary_exponential_buffer.h"
 #endif
-#ifndef __CORE_DATA_TYPES__H__DEFINED__
-#include "../core_data_types.h"
-#endif
 #ifndef __struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_merge_sort__H__DEFINED__
 #include "struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_merge_sort.h"
 #endif

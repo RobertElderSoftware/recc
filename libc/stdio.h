@@ -30,8 +30,11 @@
 
 #define EOF 255   /*  TODO: should be -1*/
 
+int vsnprintf(char *, size_t, const char *, va_list);
+int snprintf(char *, size_t, const char *, ...);
 int vsprintf (char *, const char *, va_list);
 int printf(const char *, ...);
+int vprintf(const char *, ...);
 
 struct file_descriptor{
 	unsigned int position;

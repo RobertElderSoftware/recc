@@ -20,7 +20,7 @@ int main_argv_indirect(void){
 	/*  Call the 'real' main method with arguments */
 	int argc = 1;
 	char * argv[2];
-	argv[0] = (char *)"./test/c89/main_with_parameters.exec89"; /*  Currently used for a specific unit test. */
+	argv[0] = (char *)"./test/c89/main_with_parameters.exec"; /*  Currently used for a specific unit test. */
 	argv[1] = (char *)0;
 	return main(argc, argv);
 }

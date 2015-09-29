@@ -27,21 +27,9 @@
 #ifndef __unsigned_int_list__H__DEFINED__
 #include "unsigned_int_list.h"
 #endif
-#ifndef __CORE_DATA_TYPES__H__DEFINED__
-/* TODO:  Get rid of this include with smarter dependencies. */
-#include "../core_data_types.h"
+#ifndef __TYPES_DATA_STRUCTURES_struct_T0_IDENTIFIER_memory_pool_H__
+#include "../types/data-structures/struct_T0_IDENTIFIER_memory_pool.h"
 #endif
-
-struct T0_IDENTIFIER_memory_pool{
-	void ** freed_pointers;  /* Pointers that we can just hand out next time we get a memory request */
-	struct void_ptr_list block_pointers;  /* An array of pointers to blocks of object_size * 2^n */
-	unsigned int object_size; /*  The size of the object (in bytes) for which we're providing this service. */
-	unsigned int objects_allocated;  /*  The total number of outstanding non-freed objects */
-	unsigned int next_preallocation;  /*  If we're asked to allocate more memory, and we find that objects_allocated is next_allocation, allocate another block */
-	unsigned int objects_to_preallocate;  /*  The number of objects we'll allocate next time we allocate another block */
-	unsigned int num_freed_pointers;  /*  The number of pointers in freed_pointers that we can just hand out for a malloc */
-	unsigned int pooling_active;
-};
 
 void T0_IDENTIFIER_memory_pool_create(struct T0_IDENTIFIER_memory_pool *);
 void T0_IDENTIFIER_memory_pool_destroy(struct T0_IDENTIFIER_memory_pool *);

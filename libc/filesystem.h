@@ -27,7 +27,7 @@
 #include "../data-structures/unsigned_char_list.h"
 #endif
 #ifndef __IO_H__
-#include "../io.h"
+#include "../recc-implementation/io.h"
 #endif
 #ifndef __STDIO_H_DEFINED__
 #include <stdio.h>

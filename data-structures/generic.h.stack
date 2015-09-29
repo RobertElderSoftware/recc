@@ -21,13 +21,9 @@
 #ifndef __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
 #include "binary_exponential_buffer.h"
 #endif
-#ifndef __CORE_DATA_TYPES__H__DEFINED__
-#include "../core_data_types.h"
+#ifndef __TYPES_DATA_STRUCTURES_struct_T0_IDENTIFIER_stack_H__
+#include "../types/data-structures/struct_T0_IDENTIFIER_stack.h"
 #endif
-
-struct T0_IDENTIFIER_stack{
-	struct binary_exponential_buffer buffer;
-};
 
 void T0_IDENTIFIER_stack_push(struct T0_IDENTIFIER_stack *, T0_LITERAL);
 T0_LITERAL T0_IDENTIFIER_stack_pop(struct T0_IDENTIFIER_stack *);

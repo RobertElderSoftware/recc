@@ -16,7 +16,7 @@
 */
 
 #ifndef __TYPES_struct_memory_pool_collection_H__
-#include "../struct_memory_pool_collection.h"
+#include "../recc-implementation/struct_memory_pool_collection.h"
 #endif
 #ifndef __TYPES_DATA_STRUCTURES_struct_unsigned_char_list_H__
 #include "../data-structures/struct_unsigned_char_list.h"

@@ -1,9 +1,0 @@
-/build_kernel
-/build_tests
-/linker
-/recc
-/preloader
-/chrome/data-dir/*
-/*.o
-/*.l2
-/*.i
