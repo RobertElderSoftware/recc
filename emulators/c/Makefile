@@ -1,5 +1,5 @@
 emulators/c/linux-emulator-example: emulators/c/op-cpu.o emulators/c/linux-emulator-example.o emulators/c/linux-emulator-example-data.o
-	@$(HOSTCC) emulators/c/op-cpu.o emulators/c/linux-emulator-example.o emulators/c/linux-emulator-example-data.o -o emulators/c/linux-emulator-example
+	@$(HOSTCC) emulators/c/op-cpu.o emulators/c/linux-emulator-example.o emulators/c/linux-emulator-example-data.o -o emulators/c/linux-emulator-example -lpthread
 
 emulators/c/linux-emulator-example.o: emulators/c/linux-emulator-example.c emulators/c/op-cpu.h
 	@$(HOSTCC) -c emulators/c/linux-emulator-example.c -o emulators/c/linux-emulator-example.o $(CUSTOM_C89_FLAGS)

@@ -26,6 +26,7 @@ of non-standard terminal input, and output.
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <pthread.h>
 
 extern unsigned char data_start[4];
 extern unsigned char data_end[4];
@@ -47,19 +48,35 @@ struct termios * terminal_setup(void){
         stdio.c_cc[VTIME]=0;
         tcsetattr(STDOUT_FILENO,TCSANOW,&stdio);
         tcsetattr(STDOUT_FILENO,TCSAFLUSH,&stdio);
-        fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
         return original;
+}
+
+static volatile int c = -1;
+static pthread_mutex_t c_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void* read_stdin(void *arg __attribute__((unused))) {
+	while(1) {
+		unsigned char a;
+		if(read(STDIN_FILENO, &a, 1) == 1) {
+			pthread_mutex_lock(&c_mutex);
+			c = a;
+			pthread_mutex_unlock(&c_mutex);
+		}
+	}
+	return NULL;
 }
 
 int main(void){
 	struct virtual_machine * vm;
 	unsigned int output;
-        unsigned char c;
 	struct termios * original = terminal_setup();
+	pthread_t stdin_thread;
 
 	vm = vm_create(data_start, data_end, data);
 	printf("Kernel image has been loaded. All input is now being handled by the emulator.\n");
 	printf("Press 'q' to quit.\n");
+
+	pthread_create(&stdin_thread, NULL, read_stdin, NULL);
 
 	while(!is_halted(vm)){
 		if(vm_getc(vm, &output)){
@@ -67,8 +84,13 @@ int main(void){
 			fflush(stdout);
 		}
 
-		if(read(STDIN_FILENO, &c, 1) > 0){
-			vm_putc(vm, c);
+		if(c != -1) {
+			unsigned char a;
+			pthread_mutex_lock(&c_mutex);
+			a = c;
+			c = -1;
+			pthread_mutex_unlock(&c_mutex);
+			vm_putc(vm, a);
 		}
 		step(vm);
 	}

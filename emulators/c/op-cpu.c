@@ -22,20 +22,20 @@ This implementation assumes that sizeof(unsigned int) == 4
 */
 
 enum instruction_type {
-	ADD_INSTRUCTION,
-	SUB_INSTRUCTION,
-	MUL_INSTRUCTION,
-	DIV_INSTRUCTION,
-	BEQ_INSTRUCTION,
-	BLT_INSTRUCTION,
-	LOA_INSTRUCTION,
-	STO_INSTRUCTION,
-	LL_INSTRUCTION,
-	AND_INSTRUCTION,
-	OR_INSTRUCTION,
-	NOT_INSTRUCTION,
-	SHR_INSTRUCTION,
-	SHL_INSTRUCTION
+	ADD_INSTRUCTION = 0,
+	SUB_INSTRUCTION = 1,
+	MUL_INSTRUCTION = 2,
+	DIV_INSTRUCTION = 3,
+	AND_INSTRUCTION = 4,
+	OR_INSTRUCTION = 5,
+	NOT_INSTRUCTION = 6,
+	LOA_INSTRUCTION = 7,
+	STO_INSTRUCTION = 8,
+	SHR_INSTRUCTION = 9,
+	SHL_INSTRUCTION = 10,
+	BEQ_INSTRUCTION = 11,
+	BLT_INSTRUCTION = 12,
+	LL_INSTRUCTION = 13
 };
 
 struct virtual_machine {
@@ -47,36 +47,14 @@ struct virtual_machine {
 	unsigned int * registeruint32;
 };
 
-static unsigned int instruction_op_codes [NUM_INSTRUCTION_TYPES][2] = {
-	{ADD_INSTRUCTION, 0u  << OP_CODE_OFFSET },
-	{SUB_INSTRUCTION, 1u  << OP_CODE_OFFSET },
-	{MUL_INSTRUCTION, 2u  << OP_CODE_OFFSET },
-	{DIV_INSTRUCTION, 3u  << OP_CODE_OFFSET },
-	{AND_INSTRUCTION, 4u  << OP_CODE_OFFSET },
-	{OR_INSTRUCTION , 5u  << OP_CODE_OFFSET },
-	{NOT_INSTRUCTION, 6u  << OP_CODE_OFFSET },
-	{LOA_INSTRUCTION, 7u  << OP_CODE_OFFSET },
-	{STO_INSTRUCTION, 8u  << OP_CODE_OFFSET },
-	{SHR_INSTRUCTION, 9u  << OP_CODE_OFFSET },
-	{SHL_INSTRUCTION, 10u << OP_CODE_OFFSET },
-	{BEQ_INSTRUCTION, 11u << OP_CODE_OFFSET },
-	{BLT_INSTRUCTION, 12u << OP_CODE_OFFSET },
-	{LL_INSTRUCTION , 13u << OP_CODE_OFFSET }
-};
-
-static enum instruction_type lookup_instruction_op_code(unsigned int);
 static void do_interrupt(struct virtual_machine *);
 static void fetch_decode_execute(struct virtual_machine *);
 void setup_virtual_machine(struct virtual_machine *);
 
 static enum instruction_type lookup_instruction_op_code(unsigned int op_code){
-	unsigned int i;
-	for(i = 0; i < NUM_INSTRUCTION_TYPES; i++){
-		if(instruction_op_codes[i][1] == op_code){
-			return instruction_op_codes[i][0];
-		}
-	}
-	assert(0 && "Not possible.");
+	unsigned int type = op_code >> OP_CODE_OFFSET;
+	assert(type < NUM_INSTRUCTION_TYPES && "Invalid opcode.");
+	return type;
 }
 
 static void do_interrupt(struct virtual_machine * vm){
@@ -92,9 +70,9 @@ static void fetch_decode_execute(struct virtual_machine * vm){
 	unsigned int current_inst = vm->memoryuint32[vm->registeruint32[PC_index] / sizeof(unsigned int)];
 	int branch_dist = current_inst & BRANCH_DISTANCE_SIGN_BIT ? -((BRANCH_DISTANCE_MASK & ~(current_inst & BRANCH_DISTANCE_MASK)) + 1) : (current_inst & BRANCH_DISTANCE_MASK);
 	unsigned int literal = LITERAL_MASK & current_inst;
-	unsigned int ra = (ra_MASK & current_inst) / (1u << ra_OFFSET);
-	unsigned int rb = (rb_MASK & current_inst) / (1u << rb_OFFSET);
-	unsigned int rc = (rc_MASK & current_inst) / (1u << rc_OFFSET);
+	unsigned int ra = (ra_MASK & current_inst) >> ra_OFFSET;
+	unsigned int rb = (rb_MASK & current_inst) >> rb_OFFSET;
+	unsigned int rc = (rc_MASK & current_inst) >> rc_OFFSET;
 
 	enum instruction_type op_type = lookup_instruction_op_code(current_inst & OP_CODE_MASK);
 	assert(vm->registeruint32[PC_index] / sizeof(unsigned int) < vm->num_memory_words);
