@@ -1,0 +1,35 @@
+OFFSET RELOCATABLE
+IMPLEMENTS EXTERNAL putchar_busy
+putchar_busy:
+loa r2 SP;  Load whatever that argument was.
+;  The bit mask for UART1_OUT ready
+ll r3 0x200;
+;  The address of UART1_OUT
+ll r5 0x3000;
+shl r5 WR; 0x30000;
+shl r5 WR; 0x300000;
+;  Mask out the UART1_OUT ready bit
+and r6 FR r3;
+;  Busy wait on the bit being set
+beq r6 ZR -2;
+;  Put the byte
+sto r5 r2;
+;  Create a mask to unset the UART1_OUT ready bit
+not r7 r3;
+;  Apply the mask to unset the UART1_OUT ready bit
+and FR FR r7;
+;  Increment the stack pointer to get over the one argument
+;  that is a 4 byte integer
+add SP SP WR;
+;  Load the previous frame pointer
+loa FP SP;
+;  Jump over the frame pointer to get to the return address
+add SP SP WR;
+;  Load the return address
+loa r1 SP;
+;  Jump over the return address, which points us at the return address space (an int)
+add SP SP WR;
+;  Return 0
+sto SP ZR;
+;  Jump back to the place where the function was called
+add PC ZR r1;

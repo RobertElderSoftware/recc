@@ -1,0 +1,29 @@
+OFFSET RELOCATABLE
+IMPLEMENTS EXTERNAL getchar_nobusy
+getchar_nobusy:
+;  The bit mask for UART1_IN ready
+ll r3 0x400;
+;  The address of UART1_IN
+ll r5 0x3000;
+shl r5 WR;    0x30000
+shl r5 WR;    0x300000
+ll r2 0x10;
+add r5 r2 r5; 0x300010
+;  Get the byte
+loa r2 r5;
+;  Create a mask to unset the UART1_IN ready bit
+not r7 r3;
+;  Apply the mask to unset the UART1_IN ready bit
+and FR FR r7;
+;  Load the previous frame pointer
+loa FP SP;
+;  Jump over the frame pointer to get to the return address
+add SP SP WR;
+;  Load the return address
+loa r1 SP;
+;  Jump over the return address, which points us at the return address space (an int)
+add SP SP WR;
+;  Store our return value
+sto SP r2;
+;  Jump back to the place where the function was called
+add PC ZR r1;
