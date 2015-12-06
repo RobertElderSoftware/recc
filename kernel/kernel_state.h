@@ -40,16 +40,16 @@ extern struct task_queue blocked_on_uart1_in_ready_queue;
 
 extern unsigned int * g_kernel_sp;
 extern unsigned int * g_current_sp;
-extern unsigned int * kernel_stack_start;
+extern unsigned int kernel_stack[STACK_SIZE];
 extern struct process_control_block pcbs[MAX_NUM_PROCESSES];
-extern unsigned int user_proc_1_stack_start;
-extern unsigned int user_proc_2_stack_start;
-extern unsigned int user_proc_3_stack_start;
-extern unsigned int user_proc_4_stack_start;
-extern unsigned int user_proc_5_stack_start;
-extern unsigned int user_proc_6_stack_start;
-extern unsigned int user_proc_7_stack_start;
-extern unsigned int user_proc_8_stack_start;
-extern unsigned int user_proc_9_stack_start;
+extern unsigned int user_proc_1_stack[STACK_SIZE];
+extern unsigned int user_proc_2_stack[STACK_SIZE];
+extern unsigned int user_proc_3_stack[STACK_SIZE];
+extern unsigned int user_proc_4_stack[STACK_SIZE];
+extern unsigned int user_proc_5_stack[STACK_SIZE];
+extern unsigned int user_proc_6_stack[STACK_SIZE];
+extern unsigned int user_proc_7_stack[STACK_SIZE];
+extern unsigned int user_proc_8_stack[STACK_SIZE];
+extern unsigned int user_proc_9_stack[STACK_SIZE];
 
 #endif

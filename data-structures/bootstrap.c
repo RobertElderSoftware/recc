@@ -158,7 +158,7 @@ void add_object_build_rule(unsigned char * filename){
 	add_string_to_buffer(binary_exponential_buffer_data(&c_file), &object_makefile);
 	add_string_to_buffer((void*)" -o ", &object_makefile);
 	add_string_to_buffer(binary_exponential_buffer_data(&o_file), &object_makefile);
-	add_string_to_buffer((void*)" $(CUSTOM_FLAGS)\n\n", &object_makefile);
+	add_string_to_buffer((void*)" $(CUSTOM_C89_FLAGS)\n\n", &object_makefile);
 
 	binary_exponential_buffer_destroy(&h_file);
 	binary_exponential_buffer_destroy(&c_file);
@@ -286,7 +286,7 @@ void add_string_to_buffer_with_null_terminator(void * dest, struct binary_expone
 
 void add_char_ptr_to_list(void * ptr, struct binary_exponential_buffer * b){
 	binary_exponential_buffer_increment(b, 1);
-	((unsigned char **)binary_exponential_buffer_data(b))[binary_exponential_buffer_size(b) -1] = ptr;
+	((unsigned char **)binary_exponential_buffer_data(b))[binary_exponential_buffer_size(b) -1] = (unsigned char *)ptr;
 }
 
 struct binary_exponential_buffer create_identifier_friendly_type(unsigned char * type){
@@ -326,7 +326,7 @@ unsigned char * deep_copy_string(unsigned char * str){
 		num_chars++;
 	}
 	num_chars++; /*  For null terminator */
-	rtn = malloc(num_chars*sizeof(unsigned char));
+	rtn = (unsigned char *)malloc(num_chars*sizeof(unsigned char));
 	c = str; 
 	while(*c){
 		rtn[i] = *c;
@@ -379,13 +379,13 @@ void create_specific_type(const char * file_postfix, const char * generic_filena
 		add_string_to_buffer((void*)"T", &identifier_tag);
 		add_unsigned_int_to_buffer(i, &identifier_tag);
 		add_string_to_buffer_with_null_terminator((void*)"_IDENTIFIER", &identifier_tag);
-		add_char_ptr_to_list(deep_copy_string(binary_exponential_buffer_data(&identifier_tag)), &searches);
-		add_char_ptr_to_list(deep_copy_string(binary_exponential_buffer_data(&type_identifier)), &replaces);
+		add_char_ptr_to_list(deep_copy_string((unsigned char *)binary_exponential_buffer_data(&identifier_tag)), &searches);
+		add_char_ptr_to_list(deep_copy_string((unsigned char *)binary_exponential_buffer_data(&type_identifier)), &replaces);
 
 		add_string_to_buffer((void*)"T", &literal_tag);
 		add_unsigned_int_to_buffer(i, &literal_tag);
 		add_string_to_buffer_with_null_terminator((void*)"_LITERAL", &literal_tag);
-		add_char_ptr_to_list(deep_copy_string(binary_exponential_buffer_data(&literal_tag)), &searches);
+		add_char_ptr_to_list(deep_copy_string((unsigned char *)binary_exponential_buffer_data(&literal_tag)), &searches);
 		add_char_ptr_to_list(deep_copy_string(current_type), &replaces);
 		binary_exponential_buffer_destroy(&identifier_tag);
 		binary_exponential_buffer_destroy(&literal_tag);
@@ -397,7 +397,7 @@ void create_specific_type(const char * file_postfix, const char * generic_filena
 
 	add_file_to_buffer(&in_characters, (unsigned char *)binary_exponential_buffer_data(&list_h_filename));
 	do_string_replacements(&searches, &replaces, &in_characters, &out_characters);
-	output_buffer_to_h_file(&out_characters, binary_exponential_buffer_data(&specific_filename));
+	output_buffer_to_h_file(&out_characters, (unsigned char *)binary_exponential_buffer_data(&specific_filename));
 	/*  Clear input and output buffers. */
 	binary_exponential_buffer_destroy(&in_characters);
 	binary_exponential_buffer_create(&in_characters, sizeof(unsigned char));
@@ -406,19 +406,19 @@ void create_specific_type(const char * file_postfix, const char * generic_filena
 
 	add_file_to_buffer(&in_characters, (unsigned char *)binary_exponential_buffer_data(&list_c_filename));
 	do_string_replacements(&searches, &replaces, &in_characters, &out_characters);
-	output_buffer_to_c_file(&out_characters, binary_exponential_buffer_data(&specific_filename));
+	output_buffer_to_c_file(&out_characters, (unsigned char *)binary_exponential_buffer_data(&specific_filename));
 
-	add_object_build_rule(binary_exponential_buffer_data(&specific_filename));
-	add_library_build_rule(binary_exponential_buffer_data(&specific_filename));
-	add_library_dependency_rule(binary_exponential_buffer_data(&specific_filename));
-	add_clean_rule(binary_exponential_buffer_data(&specific_filename));
-	add_file_dependency_rule(binary_exponential_buffer_data(&specific_filename));
-	add_gitignores(binary_exponential_buffer_data(&specific_filename));
+	add_object_build_rule((unsigned char *)binary_exponential_buffer_data(&specific_filename));
+	add_library_build_rule((unsigned char *)binary_exponential_buffer_data(&specific_filename));
+	add_library_dependency_rule((unsigned char *)binary_exponential_buffer_data(&specific_filename));
+	add_clean_rule((unsigned char *)binary_exponential_buffer_data(&specific_filename));
+	add_file_dependency_rule((unsigned char *)binary_exponential_buffer_data(&specific_filename));
+	add_gitignores((unsigned char *)binary_exponential_buffer_data(&specific_filename));
 
-	for(i = 0; i < num_types; i++){
+	for(i = 0; i < binary_exponential_buffer_size(&searches); i++){
 		free(((unsigned char **)binary_exponential_buffer_data(&searches))[i]);
 	}
-	for(i = 0; i < num_types; i++){
+	for(i = 0; i < binary_exponential_buffer_size(&replaces); i++){
 		free(((unsigned char **)binary_exponential_buffer_data(&replaces))[i]);
 	}
 
@@ -435,7 +435,7 @@ void create_specific_type(const char * file_postfix, const char * generic_filena
 }
 
 struct binary_exponential_buffer * make_file_path(unsigned char * str){
-	struct binary_exponential_buffer * b = malloc(sizeof(struct binary_exponential_buffer));
+	struct binary_exponential_buffer * b = (struct binary_exponential_buffer *)malloc(sizeof(struct binary_exponential_buffer));
 	binary_exponential_buffer_create(b, sizeof(unsigned char));
 	add_string_to_buffer((void*)artifacts_location, b);
 	add_string_to_buffer_with_null_terminator(str, b);
@@ -455,6 +455,8 @@ int main(void){
 	binary_exponential_buffer_create(&file_dependencies, sizeof(unsigned char));
 	binary_exponential_buffer_create(&gitignores, sizeof(unsigned char));
 
+	add_string_to_buffer((unsigned char *)"/*.i\n", &gitignores);
+	add_string_to_buffer((unsigned char *)"/*.l2\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/*.o\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/bootstrap-datatypes\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/object-data-structures\n", &gitignores);
@@ -463,9 +465,9 @@ int main(void){
 	add_string_to_buffer((unsigned char *)"/library-data-structures\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/libgenerated-data-structures.a\n", &gitignores);
 
-	add_string_to_buffer((void*)"clean-generated-files:\n\t@rm -f ", &clean_files);
-	add_string_to_buffer((unsigned char *)artifacts_location, &library_dependency);
-	add_string_to_buffer((void*)"libgenerated-data-structures.a: ", &library_dependency);
+	add_string_to_buffer((void*)"clean-generated-files:\n\t@rm -f data-structures/*.i data-structures/*.l2 ", &clean_files);
+	/*add_string_to_buffer((unsigned char *)artifacts_location, &library_dependency);*/
+	add_string_to_buffer((void*)"DATA_STRUCTURES_OBJECT_FILES=", &library_dependency);
 
 	add_string_to_buffer((void*)"\n\t@ar -rcs ", &library_buildcommand);
 	add_string_to_buffer((unsigned char *)artifacts_location, &library_buildcommand);
@@ -476,12 +478,15 @@ int main(void){
 	/*  The convention is that each type will have a file located in the 'data-structures directory' named  */
 	/*  generic.c.<something> and generic.h.<something>.  These files are then string replaced to become files named */
 	/*  with specific type information based on their types. */
+	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "void *", "unsigned int");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct linker_symbol *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "unsigned char *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct constant_description *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct macro_parameter *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct macro_definition *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct special_macro_definition *");
+	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct namespace_object *");
+	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "unsigned char *", "struct build_target *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "struct c_lexer_token *", "struct c_lexer_token *");
 	create_specific_type("map", "T0_IDENTIFIER_to_T1_IDENTIFIER_", 2, "struct c_lexer_token *", "unsigned char *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "char");
@@ -494,13 +499,10 @@ int main(void){
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct special_macro_definition *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct macro_definition *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct macro_parameter *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct memory_pooler *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct c_lexer_token *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct c_lexer_state *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_list *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct struct_unsigned_char_list *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct asm_lexer_token *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct build_script_lexer_token *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct normalized_specifier *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct normalized_declarator *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct normalized_declaration_element *");
@@ -516,35 +518,57 @@ int main(void){
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct constant_description *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct constant_initializer_level *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct type_traversal *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct if_branch *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preprocessor_if_branch *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preprocessor_file_context *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preloader_instruction");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct build_target *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preprocessor_macro_level *");
 	create_specific_type("stack", "T0_IDENTIFIER_", 1, "unsigned int");
 	create_specific_type("stack", "T0_IDENTIFIER_", 1, "struct parser_operation");
+
 	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct linker_object *");
 	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "unsigned int");
 
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair *");
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair *");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct void_ptr_to_unsigned_int_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_build_target_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair");
 
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair *");
-	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair *");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct void_ptr_to_unsigned_int_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_build_target_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair");
+	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "struct unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair");
 
 	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "unsigned int");
 
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct c_lexer_token");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct parser_node");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct asm_lexer_token");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct type_description");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct asm_instruction");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct linker_symbol");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "void *");
 
 	/*  Comparison functions for maps */
+	add_object_build_rule((unsigned char *)"void_ptr_compare");
+	add_library_build_rule((unsigned char *)"void_ptr_compare");
+	add_library_dependency_rule((unsigned char *)"void_ptr_compare");
+	add_file_dependency_rule((unsigned char *)"void_ptr_compare");
+
 	add_object_build_rule((unsigned char *)"unsigned_char_ptr_compare");
 	add_library_build_rule((unsigned char *)"unsigned_char_ptr_compare");
 	add_library_dependency_rule((unsigned char *)"unsigned_char_ptr_compare");
@@ -555,9 +579,17 @@ int main(void){
 	add_library_dependency_rule((unsigned char *)"struct_c_lexer_token_ptr_compare");
 	add_file_dependency_rule((unsigned char *)"struct_c_lexer_token_ptr_compare");
 
-	add_string_to_buffer((void*)": bootstrap-datatypes", &file_dependencies);
+	add_object_build_rule((unsigned char *)"binary_exponential_buffer");
+	add_library_build_rule((unsigned char *)"binary_exponential_buffer");
+	add_library_dependency_rule((unsigned char *)"binary_exponential_buffer");
+
+	add_object_build_rule((unsigned char *)"replace_tool");
+	add_library_build_rule((unsigned char *)"replace_tool");
+	add_library_dependency_rule((unsigned char *)"replace_tool");
+
+	add_string_to_buffer((void*)": data-structures/bootstrap-datatypes", &file_dependencies);
 	add_string_to_buffer_with_null_terminator((void*)"", &library_buildcommand);
-	add_string_to_buffer(binary_exponential_buffer_data(&library_buildcommand), &library_dependency);
+	/*add_string_to_buffer(binary_exponential_buffer_data(&library_buildcommand), &library_dependency);*/
 
 	output_buffer_to_file(&library_dependency, (unsigned char *)binary_exponential_buffer_data(library_data_structures_filename));
 	output_buffer_to_file(&object_makefile, (unsigned char *)binary_exponential_buffer_data(object_data_structures_filename));

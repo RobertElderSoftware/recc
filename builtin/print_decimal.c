@@ -13,23 +13,24 @@
 	use of this software.
 */
 #include <stdio.h>
+#include "print_buff_add.h"
+#include "print_decimal.h"
+#include "../types/builtin/struct_printing_state.h"
 
-void print_decimal(char **, int);
+void print_decimal(struct printing_state *, int);
 
-void print_decimal(char ** buf, int d){
+void print_decimal(struct printing_state * ps, int d){
 	unsigned int leading_zero = 1;
 	unsigned int base = 1000000000;
 	unsigned int digit = 0;
 	unsigned int unsigned_d;
 	if(d == 0){
-		(*(*buf)) = '0';
-		(*buf) = (*buf) + 1;
+		print_buff_add(ps, '0');
 	}
 
 	if((int)0 >= d){
 		if((unsigned int)d){
-			(*(*buf)) = '-';
-			(*buf) = (*buf) + 1;
+			print_buff_add(ps, '-');
 		}
 		unsigned_d = (unsigned int)-d;
 	}else{
@@ -38,13 +39,11 @@ void print_decimal(char ** buf, int d){
 	while(base){
 		digit = unsigned_d / base;
 		if(digit){
-			(*(*buf)) = (char)('0' + (int)digit);
-			(*buf) = (*buf) + 1;
+			print_buff_add(ps, (char)('0' + (int)digit));
 			leading_zero = 0;
 		}else{
 			if(!leading_zero){
-				(*(*buf)) = (char)('0' + (int)digit);
-				(*buf) = (*buf) + 1;
+				print_buff_add(ps, (char)('0' + (int)digit));
 			}
 		}
 		unsigned_d = unsigned_d - (base * digit);

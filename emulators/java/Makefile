@@ -13,8 +13,14 @@ emulators/java/OpCPU/KernelData.class: emulators/java/OpCPU/KernelData.java
 emulators/java/OpCPU/OpCPUDataInterface.class: emulators/java/OpCPU/OpCPUDataInterface.java
 	@javac -cp .:emulators/java -Xlint emulators/java/OpCPU/OpCPUDataInterface.java
 
-emulators/java/OpCPU/KernelData.java: preloader
-	@$(CUSTOM_PRELOADER) KernelData kernel/kernel.l1 emulators/java/OpCPU/KernelData.java java
+emulators/java/build_java_example: emulators/java/build_java_example.o $(COMPILER_OBJECTS)
+	@$(HOSTCC) -o emulators/java/build_java_example emulators/java/build_java_example.o $(COMPILER_OBJECTS)  $(CUSTOM_C89_FLAGS)
+
+emulators/java/build_java_example.o: emulators/java/build_java_example.c recc-implementation/compiler_interface.h
+	@$(HOSTCC) -c emulators/java/build_java_example.c -o emulators/java/build_java_example.o $(CUSTOM_C89_FLAGS)
+
+emulators/java/OpCPU/KernelData.java: emulators/java/build_java_example
+	@./emulators/java/build_java_example
 
 clean-java-emulator:
-	@rm -f emulators/java/OpCPU/*.class emulators/java/OpCPU/KernelData.java 
+	@rm -f emulators/java/build_java_example.o emulators/java/build_java_example emulators/java/OpCPU/*.class emulators/java/OpCPU/KernelData.java 

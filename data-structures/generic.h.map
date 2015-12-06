@@ -21,14 +21,11 @@
 #ifndef __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
 #include "binary_exponential_buffer.h"
 #endif
-#ifndef __CORE_DATA_TYPES__H__DEFINED__
-#include "../core_data_types.h"
+#ifndef __struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_merge_sort__H__DEFINED__
+#include "struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_merge_sort.h"
 #endif
-#ifndef __struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_merge_sort__H__DEFINED__
-#include "struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_merge_sort.h"
-#endif
-#ifndef __struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_binary_search__H__DEFINED__
-#include "struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_binary_search.h"
+#ifndef __struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_binary_search__H__DEFINED__
+#include "struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_binary_search.h"
 #endif
 #ifndef __T0_IDENTIFIER_compare__H__DEFINED__
 #include "T0_IDENTIFIER_compare.h"
@@ -39,20 +36,12 @@
 #ifndef __T1_IDENTIFIER_list__H__DEFINED__
 #include "T1_IDENTIFIER_list.h"
 #endif
-
-struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair{
-	T0_LITERAL key;
-	T1_LITERAL value;
-};
-
-struct T0_IDENTIFIER_to_T1_IDENTIFIER_map{
-	struct binary_exponential_buffer key_value_pairs;
-	int (*compare)(T0_LITERAL, T0_LITERAL);
-};
-
+#ifndef __TYPES_DATA_STRUCTURES_struct_T0_IDENTIFIER_to_T1_IDENTIFIER_map_H__
+#include "../types/data-structures/struct_T0_IDENTIFIER_to_T1_IDENTIFIER_map.h"
+#endif
 
 unsigned int T0_IDENTIFIER_to_T1_IDENTIFIER_map_exists(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *, T0_LITERAL);
-int struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_ptr_compare(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **, struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair **);
+int struct_T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair_compare(struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *, struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *);
 void T0_IDENTIFIER_to_T1_IDENTIFIER_map_create(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *);
 void T0_IDENTIFIER_to_T1_IDENTIFIER_map_destroy(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *);
 void T0_IDENTIFIER_to_T1_IDENTIFIER_map_put(struct T0_IDENTIFIER_to_T1_IDENTIFIER_map *, T0_LITERAL, T1_LITERAL);

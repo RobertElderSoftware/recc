@@ -83,6 +83,7 @@ function opCPU(l0_description) {
   this.UART1_IN_ASSERTED_BIT       = 1 << 8;
   this.UART1_OUT_READY_BIT         = 1 << 9;
   this.UART1_IN_READY_BIT          = 1 << 10;
+  this.DIV_ZERO_ASSERTED_BIT       = 1 << 11;
 
   this.PC_index = 0;
   this.SP_index = 1;
@@ -237,7 +238,12 @@ opCPU.prototype.fetch_decode_execute = function(){
       this.registeruint32[ra] = (low_result >>> 0) | (high_result >>> 0);
       break;
     }case this._asm_op_codes["div"]:{
-      this.registeruint32[ra] = this.registeruint32[rb] / this.registeruint32[rc];
+      if(this.registeruint32[rc]){
+        this.registeruint32[ra] = this.registeruint32[rb] / this.registeruint32[rc];
+      }else{
+        /*  Division by zero detected */
+        this.registeruint32[this.FR_index] = this.registeruint32[this.FR_index] | this.DIV_ZERO_ASSERTED_BIT;
+      }
       break;
     }case this._asm_op_codes["beq"]:{
       if(this.registeruint32[ra] == this.registeruint32[rb]){
@@ -383,7 +389,10 @@ opCPU.prototype.step = function () {
   }
 
   if(this.registeruint32[this.FR_index] & this.GLOBAL_INTERRUPT_ENABLE_BIT){
-    if(this.registeruint32[this.FR_index] & this.TIMER1_ENABLE_BIT && (this.registeruint32[this.FR_index] & this.TIMER1_ASSERTED_BIT)){
+    if(this.registeruint32[this.FR_index] & this.DIV_ZERO_ASSERTED_BIT){
+      this.do_interrupt();
+      return; 
+    }else if(this.registeruint32[this.FR_index] & this.TIMER1_ENABLE_BIT && (this.registeruint32[this.FR_index] & this.TIMER1_ASSERTED_BIT)){
       this.do_interrupt();
       return; 
     }else if(this.registeruint32[this.FR_index] & this.UART1_OUT_ENABLE_BIT && (this.registeruint32[this.FR_index] & this.UART1_OUT_ASSERTED_BIT)){

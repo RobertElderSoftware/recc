@@ -1,14 +1,3 @@
 /*.o
 /*.i
-/extern_test.l2
-/random.l2
-/signed_greater_than_or_equal_to.l2
-/signed_modulo.l2
-/print_bits.l2
-/signed_division.l2
-/signed_less_than.l2
-/print_decimal.l2
-/signed_greater_than.l2
-/signed_less_than_or_equal_to.l2
-/main_argv_indirect.l2
-/main_argv_indirect_filesystem.l2
+/*.l2

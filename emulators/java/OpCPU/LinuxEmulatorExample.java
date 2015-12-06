@@ -28,8 +28,11 @@ class LinuxEmulatorExample {
         String[] cooked = {"/bin/sh", "-c", "stty cooked echo </dev/tty"};
         List<Integer> stdinChrs = new ArrayList<Integer>();
         KernelData d = new KernelData();
+        System.out.print("Loading kernel image.  Sorry, but due to limitations in Java class sizes, this is currently rather slow.\n");
         OpCPU opCPU = new OpCPU(d);
         try{
+            System.out.print("Kernel image has been loaded. All input is now being handled by the emulator.\n");
+            System.out.print("Press 'q' to quit.\n");
             Runtime.getRuntime().exec(raw);
             BufferedInputStream stdin = new BufferedInputStream(System.in);
             while(!opCPU.isHalted()){

@@ -15,10 +15,10 @@
 	use of this software.
 */
 
-#ifndef __CORE_DATA_TYPES__H__DEFINED__
-#include "../core_data_types.h"
+#ifndef __TYPES_LEXER_struct_c_lexer_token_H__
+#include "../types/lexer/struct_c_lexer_token.h"
 #endif
 
-int struct_c_lexer_token_ptr_compare(struct c_lexer_token **, struct c_lexer_token **);
+int struct_c_lexer_token_ptr_compare(struct c_lexer_token *, struct c_lexer_token *);
 
 #endif

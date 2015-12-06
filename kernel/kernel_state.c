@@ -32,32 +32,14 @@ unsigned int g_kernel_sp;
 
 struct process_control_block pcbs[MAX_NUM_PROCESSES];
 
-unsigned int kernel_stack[STACK_SIZE];     /*  8K Space for our kernel stack (1 int item takes up 8 bytes in memory) */
-unsigned int kernel_stack_start;     /*  Relies on adjacent items beging layed out adjacent in memory */
+unsigned int kernel_stack[STACK_SIZE];     /*  4K Space for our kernel stack (1 int item takes up 4 bytes in memory) */
 
 unsigned int user_proc_1_stack[STACK_SIZE];
-unsigned int user_proc_1_stack_start;
-
 unsigned int user_proc_2_stack[STACK_SIZE];
-unsigned int user_proc_2_stack_start;
-
 unsigned int user_proc_3_stack[STACK_SIZE];
-unsigned int user_proc_3_stack_start;
-
 unsigned int user_proc_4_stack[STACK_SIZE];
-unsigned int user_proc_4_stack_start;
-
 unsigned int user_proc_5_stack[STACK_SIZE];
-unsigned int user_proc_5_stack_start;
-
 unsigned int user_proc_6_stack[STACK_SIZE];
-unsigned int user_proc_6_stack_start;
-
 unsigned int user_proc_7_stack[STACK_SIZE];
-unsigned int user_proc_7_stack_start;
-
 unsigned int user_proc_8_stack[STACK_SIZE];
-unsigned int user_proc_8_stack_start;
-
 unsigned int user_proc_9_stack[STACK_SIZE];
-unsigned int user_proc_9_stack_start;

@@ -55,42 +55,41 @@ void malloc_init(void){
 }
 
 void * malloc(size_t num_bytes){
-	unsigned int i;
-	unsigned int blocks_needed = ((num_bytes % BYTES_PER_BLOCK) == 0 ? 0 : 1) + (num_bytes / BYTES_PER_BLOCK);
-
-	assert(num_bytes);
-	/*printf("malloc size %d, need %d blocks\n", num_bytes, blocks_needed);*/
-
-	if(!malloc_inited){
-		malloc_init();
-		malloc_inited = 1;
-	}
-
-	/*  Find a contiguous region of n blocks of BYTES_PER_BLOCK that are free */
-	for(i = 0; i < (num_blocks + (blocks_needed -1)); i++){
-		unsigned int j;
-		unsigned int ok_to_allocate = 1;
-		for(j = 0; j < blocks_needed; j++){
-			if(used_flags[i + j]){
-				/*  There was a block allocated, try again */
-				ok_to_allocate = 0;
-				i+=j; /*  Avoid making this check n^2 */
-				break;
-			}
+	if(num_bytes){
+		unsigned int i;
+		unsigned int blocks_needed = ((num_bytes % BYTES_PER_BLOCK) == 0 ? 0 : 1) + (num_bytes / BYTES_PER_BLOCK);
+		/*printf("malloc size %d, need %d blocks\n", num_bytes, blocks_needed);*/
+		if(!malloc_inited){
+			malloc_init();
+			malloc_inited = 1;
 		}
-		if(ok_to_allocate){
-			void * rtn;
+
+		/*  Find a contiguous region of n blocks of BYTES_PER_BLOCK that are free */
+		for(i = 0; i < (num_blocks + (blocks_needed -1)); i++){
+			unsigned int j;
+			unsigned int ok_to_allocate = 1;
 			for(j = 0; j < blocks_needed; j++){
-				used_flags[i + j] = blocks_needed - j; /*  Value indicates number of blocks ahead that are allocated */
+				if(used_flags[i + j]){
+					/*  There was a block allocated, try again */
+					ok_to_allocate = 0;
+					i+=j; /*  Avoid making this check n^2 */
+					break;
+				}
 			}
-			rtn = (void *)(((unsigned int)first_block_addr) + (i * BYTES_PER_BLOCK));
-			/*printf("finish malloc %p\n", rtn);*/
-			return rtn;
+			if(ok_to_allocate){
+				void * rtn;
+				for(j = 0; j < blocks_needed; j++){
+					used_flags[i + j] = blocks_needed - j; /*  Value indicates number of blocks ahead that are allocated */
+				}
+				rtn = (void *)(((unsigned int)first_block_addr) + (i * BYTES_PER_BLOCK));
+				/*printf("finish malloc %p\n", rtn);*/
+				return rtn;
+			}
 		}
+		assert(0 && "Out of memory!\n");
+	}else{
+		return (void*)0;
 	}
-	
-	assert(0 && "Out of memory!\n");
-	return (void*)0;
 }
 
 void * realloc(void * ptr, size_t num_bytes){

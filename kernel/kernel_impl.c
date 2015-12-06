@@ -19,6 +19,8 @@ unsigned int current_task_id = 0;
 unsigned int num_clock_ticks = 0;
 unsigned int saved_uart1_out_ready = 0;
 unsigned int saved_uart1_in_ready = 0;
+unsigned int current_timer_period = 0xA000;
+unsigned int interrupts_this_period = 0;
 
 void schedule_next_task(void){
 	struct process_control_block * next_task;
@@ -35,6 +37,7 @@ void schedule_next_task(void){
 	next_task->state = ACTIVE;
 	/*  Set its stack pointer */
 	g_current_sp = next_task->stack_pointer;
+	finish_schedule_next:
 	current_task_id = next_task->pid;
 }
 
@@ -155,22 +158,39 @@ void k_block_on_event(enum kernel_event event){
 	}
 }
 
-void k_irq_handler(unsigned int interrupt_id){
-	switch(interrupt_id){
-		case 16:{/*  Bit 4 was set */
-			num_clock_ticks++;
-			unblock_tasks_for_event(CLOCK_TICK_EVENT);
-			break;
-		}case 64:{/*  Bit 6 was set */
-			unblock_tasks_for_event(UART1_OUT_READY);
-			break;
-		}case 256:{/*  Bit 8 was set */
-			unblock_tasks_for_event(UART1_IN_READY);
-			break;
-		}default:{
-			break;
-		}
+void k_irq_handler(void){
+	unsigned int flags_register = read_flags_register();
+	if(flags_register & 0x10){ /*  Bit 4 was set */
+		deassert_bits_in_flags_register(0x10);
+		num_clock_ticks++;
+		unblock_tasks_for_event(CLOCK_TICK_EVENT);
+	}else if(flags_register & 0x40){/*  Bit 6 was set */
+		deassert_bits_in_flags_register(0x40);
+		unblock_tasks_for_event(UART1_OUT_READY);
+	}else if(flags_register & 0x100){/*  Bit 8 was set */
+		deassert_bits_in_flags_register(0x100);
+		unblock_tasks_for_event(UART1_IN_READY);
+	}else{
+		/*  Something really bad happend. */
+		/*  Busy print will affect flags, but in this case everything is broken anyway */
+		putchar_busy('I');
+		putchar_busy('R');
+		putchar_busy('Q');
+		putchar_busy(' ');
+		putchar_busy('F');
+		putchar_busy('A');
+		putchar_busy('I');
+		putchar_busy('L');
+		or_into_flags_register(0x1); /*  Halt the processor */
 	}
+
+	/*  Used as a stress test for the kernel:  Try out all interleavings of interrupts and timer periods */
+	if(interrupts_this_period == 20){
+		interrupts_this_period = 0;
+		current_timer_period++;
+		set_timer_period(current_timer_period);
+	}
+	interrupts_this_period++;
 	scheduler();
 }
 
@@ -246,8 +266,6 @@ unsigned int uart1_in_interrupt_enable(void){
 
 void k_kernel_init(void){
 	unsigned int i;
-	/*  Set up some globals for putchar function */
-	putchar_init();
 
 	task_queue_init(&ready_queue_p0, MAX_NUM_PROCESSES);
 	task_queue_init(&ready_queue_p1, MAX_NUM_PROCESSES);
@@ -258,7 +276,7 @@ void k_kernel_init(void){
 	task_queue_init(&blocked_on_uart1_out_ready_queue, MAX_NUM_PROCESSES);
 	task_queue_init(&blocked_on_uart1_in_ready_queue, MAX_NUM_PROCESSES);
 
-	pcbs[0].state = ACTIVE; /*  Task 0 is not really a task, is the 'int main' that we might want to return to later for graceful exit. */
+	pcbs[0].state = ACTIVE; /*  Task 0 is not really a task, it is the 'int main' that we might want to return to later for graceful exit. */
 
 	for(i = 0; i < MAX_NUM_PROCESSES; i++)
 		pcbs[i].pid = i;
@@ -275,15 +293,15 @@ void k_kernel_init(void){
 	pcbs[9].priority = 3;
 
 	pcbs[0].stack_pointer = g_current_sp; /*  Save SP from entering this method so we can exit kernel gracefully */
-	pcbs[1].stack_pointer = (unsigned int *)&user_proc_1_stack_start;
-	pcbs[2].stack_pointer = (unsigned int *)&user_proc_2_stack_start;
-	pcbs[3].stack_pointer = (unsigned int *)&user_proc_3_stack_start;
-	pcbs[4].stack_pointer = (unsigned int *)&user_proc_4_stack_start;
-	pcbs[5].stack_pointer = (unsigned int *)&user_proc_5_stack_start;
-	pcbs[6].stack_pointer = (unsigned int *)&user_proc_6_stack_start;
-	pcbs[7].stack_pointer = (unsigned int *)&user_proc_7_stack_start;
-	pcbs[8].stack_pointer = (unsigned int *)&user_proc_8_stack_start;
-	pcbs[9].stack_pointer = (unsigned int *)&user_proc_9_stack_start;
+	pcbs[1].stack_pointer = &user_proc_1_stack[STACK_SIZE -1];
+	pcbs[2].stack_pointer = &user_proc_2_stack[STACK_SIZE -1];
+	pcbs[3].stack_pointer = &user_proc_3_stack[STACK_SIZE -1];
+	pcbs[4].stack_pointer = &user_proc_4_stack[STACK_SIZE -1];
+	pcbs[5].stack_pointer = &user_proc_5_stack[STACK_SIZE -1];
+	pcbs[6].stack_pointer = &user_proc_6_stack[STACK_SIZE -1];
+	pcbs[7].stack_pointer = &user_proc_7_stack[STACK_SIZE -1];
+	pcbs[8].stack_pointer = &user_proc_8_stack[STACK_SIZE -1];
+	pcbs[9].stack_pointer = &user_proc_9_stack[STACK_SIZE -1];
 
 	for(i = 0; i < MAX_NUM_PROCESSES; i++)
 		message_queue_init(&pcbs[i].messages, MAX_NUM_PROCESSES);
@@ -303,7 +321,7 @@ void k_kernel_init(void){
 	init_task_stack(&(pcbs[9].stack_pointer), command_server);
 
 	set_irq_handler(irq_handler);
-	set_timer_period(0xA0000);
+	set_timer_period(current_timer_period);
 	timer_interrupt_enable();
 	uart1_out_interrupt_enable();
 	uart1_in_interrupt_enable();

@@ -19,6 +19,6 @@
 #include <string.h>
 #endif
 
-int unsigned_char_ptr_compare(unsigned char **, unsigned char **);
+int unsigned_char_ptr_compare(unsigned char *, unsigned char *);
 
 #endif

@@ -16,11 +16,11 @@
 #include <assert.h>
 #include <stdio.h>
 
-int T0_IDENTIFIER_binary_search_impl(T0_LITERAL *, T0_LITERAL, int, int, int (*)(T0_LITERAL *, T0_LITERAL *));
+int T0_IDENTIFIER_binary_search_impl(T0_LITERAL *, T0_LITERAL, int, int, int (*)(T0_LITERAL *, T0_LITERAL *), enum T0_IDENTIFIER_binary_search_not_found_result_type);
 
-int T0_IDENTIFIER_binary_search(T0_LITERAL * a, T0_LITERAL key, int num_items, int (*cmp_fcn)(T0_LITERAL *, T0_LITERAL *)){
+int T0_IDENTIFIER_binary_search(T0_LITERAL * a, T0_LITERAL key, int num_items, int (*cmp_fcn)(T0_LITERAL *, T0_LITERAL *), enum T0_IDENTIFIER_binary_search_not_found_result_type result_type){
 	if(num_items > 0){
-		return T0_IDENTIFIER_binary_search_impl(a, key, 0, num_items -1, cmp_fcn);
+		return T0_IDENTIFIER_binary_search_impl(a, key, 0, num_items -1, cmp_fcn, result_type);
 	}else if(num_items == 0){
 		return -1;
 	}else{
@@ -28,7 +28,7 @@ int T0_IDENTIFIER_binary_search(T0_LITERAL * a, T0_LITERAL key, int num_items, i
 	}
 }
 
-int T0_IDENTIFIER_binary_search_impl(T0_LITERAL * a, T0_LITERAL key, int imin, int imax, int (*cmp_fcn)(T0_LITERAL *, T0_LITERAL *)){
+int T0_IDENTIFIER_binary_search_impl(T0_LITERAL * a, T0_LITERAL key, int imin, int imax, int (*cmp_fcn)(T0_LITERAL *, T0_LITERAL *), enum T0_IDENTIFIER_binary_search_not_found_result_type result_type){
 	while (imax >= imin) {
 		int imid = imin + ((imax - imin) / 2);
 		int cmp_result = cmp_fcn(&a[imid], &key);
@@ -40,5 +40,16 @@ int T0_IDENTIFIER_binary_search_impl(T0_LITERAL * a, T0_LITERAL key, int imin, i
 			return imid; 
 		}
 	}
-	return -1;
+	switch(result_type){
+		case T0_IDENTIFIER_BINARY_SEARCH_RETURN_NEG_ONE:{
+			return -1;
+		}case T0_IDENTIFIER_BINARY_SEARCH_RETURN_MIN:{
+			return imin;
+		}case T0_IDENTIFIER_BINARY_SEARCH_RETURN_MAX:{
+			return imax;
+		}default:{
+			assert(0);
+			return -1;
+		}
+	}
 }

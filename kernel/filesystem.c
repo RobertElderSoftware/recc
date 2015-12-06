@@ -18,11 +18,12 @@
 #include <assert.h>
 #include "../data-structures/unsigned_char_list.h"
 #include "../data-structures/unsigned_char_ptr_list.h"
-#include "../io.h"
-#include "../preprocessor.h"
-#include "../lexer.h"
-#include "../parser.h"
-#include "../code_generator.h"
+#include "../recc-implementation/io.h"
+#include "../recc-implementation/preprocessor.h"
+#include "../recc-implementation/lexer.h"
+#include "../recc-implementation/parser.h"
+#include "../recc-implementation/code_generator.h"
+#include "../recc-implementation/memory_pool_collection.h"
 
 void print_parser_nodes(struct parser_node *, unsigned int i);
 void print_parser_nodes(struct parser_node * n, unsigned int i){
@@ -30,7 +31,7 @@ void print_parser_nodes(struct parser_node * n, unsigned int i){
 		unsigned int j;
 		unsigned char * c;
 		for(j = 0; j < i; j++){
-			printf(">");
+			printf("-> ");
 		}
 		printf("%s", get_node_type_names()[n->type]);
 		if(n->type == TERMINAL){
@@ -47,49 +48,35 @@ void print_parser_nodes(struct parser_node * n, unsigned int i){
 
 int do_compile(void){
 	while(1){
-		const char * file_to_open = "test/basic-putchar-a.c";
+		const char * file_to_open = "test/c89/empty-main-return-zero.c";
 		struct c_lexer_state c_lexer_state;
-		struct memory_pooler_collection memory_pooler_collection;
+		struct memory_pool_collection memory_pool_collection;
 		struct unsigned_char_list input_characters;
 		int rtn = 0;
 		struct parser_state parser_state;
 		struct unsigned_char_list generated_code;
+		struct unsigned_char_list lexer_output;
 		struct unsigned_char_list buffered_symbol_table;
 		struct preprocessor_state * preprocessor_state;
-		struct unsigned_char_ptr_to_struct_macro_definition_ptr_map macro_map;
-		struct unsigned_char_ptr_to_struct_macro_definition_ptr_map disabled_macros;
-		struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map disabled_tokens;
 		struct unsigned_char_list preprocssed_characters;
 		struct struct_c_lexer_token_ptr_list output_tokens;
 		struct code_gen_state code_gen_state;
-		g_format_buffer_use();
 		struct_c_lexer_token_ptr_list_create(&output_tokens);
-		unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&disabled_macros);
-		struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&disabled_tokens);
+		unsigned_char_list_create(&lexer_output);
 		unsigned_char_list_create(&input_characters);
 		unsigned_char_list_create(&buffered_symbol_table);
 		unsigned_char_list_create(&preprocssed_characters);
-		memory_pooler_collection_create(&memory_pooler_collection);
-		c_lexer_state.c.memory_pooler_collection = &memory_pooler_collection;
+		memory_pool_collection_create(&memory_pool_collection);
 		unsigned_char_list_create(&generated_code);
-		code_gen_state.buffered_output = &generated_code; 
-		code_gen_state.buffered_symbol_table = &buffered_symbol_table; 
-		preprocessor_state = create_preprocessor_state(&memory_pooler_collection);
+		preprocessor_state = create_preprocessor_state(&memory_pool_collection);
 
-		unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&macro_map);
-
-		struct_preprocessor_file_context_ptr_list_add_end(&preprocessor_state->file_contexts, make_preprocessor_file_context(copy_null_terminated_string((unsigned char *)file_to_open)));
-		printf("Begin preprocessing ");
-		print_file_stack(preprocessor_state);
-		if(!(rtn = get_preprocessed_output_from_file(preprocessor_state, (unsigned char *)file_to_open, &output_tokens, &macro_map, &disabled_macros, &disabled_tokens))){
+		if(!(rtn = get_preprocessed_output_from_file(preprocessor_state, (unsigned char *)file_to_open, &output_tokens))){
 			unsigned int i;
-			printf("Preprocessed output:\n");
 			for(i = 0; i < struct_c_lexer_token_ptr_list_size(&output_tokens); i++){
 				struct c_lexer_token * current_token = struct_c_lexer_token_ptr_list_get(&output_tokens, i);
 				unsigned char * j;
 				for(j = current_token->first_byte; j < (current_token->last_byte + 1); j++){
 					unsigned_char_list_add_end(&preprocssed_characters, *j);
-					putchar(*j);
 				}
 			}
 		}else{
@@ -97,34 +84,25 @@ int do_compile(void){
 		}
 		printf("\nCompleted preprocessing\n");
 		printf("\n");
-		destroy_preprocessor_file_context(struct_preprocessor_file_context_ptr_list_pop_end(&preprocessor_state->file_contexts));
 
-		printf("Begin lexing preprocessed output...\n");
-		rtn = lex_c(&c_lexer_state, (unsigned char *)file_to_open, unsigned_char_list_data(&preprocssed_characters), unsigned_char_list_size(&preprocssed_characters));
-		printf("Finished lexing preprocessed output:\n");
+		create_c_lexer_state(&c_lexer_state, &lexer_output, &memory_pool_collection, (unsigned char *)file_to_open, unsigned_char_list_data(&preprocssed_characters), unsigned_char_list_size(&preprocssed_characters));
+		rtn = lex_c(&c_lexer_state);
 		if(!rtn){
-			unsigned int i;
-			for(i = 0; i < struct_c_lexer_token_ptr_list_size(&c_lexer_state.tokens); i++){
-				struct c_lexer_token * tok = struct_c_lexer_token_ptr_list_get(&c_lexer_state.tokens, i);
-				printf("%s\n", get_c_token_type_names()[tok->type]);
-			}
 			printf("Lex was successful.\n");
 		}
 
-		parser_state.memory_pooler_collection = &memory_pooler_collection; 
-		parser_state.buffered_output = &generated_code; 
-
 		printf("Begin parsing:\n");
-		if(parse(&c_lexer_state, &parser_state, unsigned_char_list_data(&preprocssed_characters))){
+		
+		create_parser_state(&parser_state, &memory_pool_collection, &c_lexer_state, &generated_code, unsigned_char_list_data(&preprocssed_characters));
+		if(parse(&parser_state)){
 			printf("Parsing failed.\n");
 		}else{
-			printf("Full parse tree:\n");
-			print_parser_nodes(parser_state.top_node, 0);
+			printf("Parsing successful.\n");
 		}
 
-		printf("Begin code generation:\n");
-		if(generate_code(&parser_state, &code_gen_state)){
-			printf("Code generation failed.\n");
+		create_code_gen_state(&code_gen_state, &parser_state, &generated_code, &buffered_symbol_table);
+		if(generate_code(&code_gen_state)){
+			printf("Parsing failed.\n");
 		}else{
 			unsigned int i;
 			unsigned int size;
@@ -142,8 +120,13 @@ int do_compile(void){
 		unsigned_char_list_destroy(&input_characters);
 		unsigned_char_list_destroy(&generated_code);
 		unsigned_char_list_destroy(&buffered_symbol_table);
-		g_format_buffer_release();
-		printf("Finished compiling %s\n", file_to_open);
+		unsigned_char_list_destroy(&lexer_output);
+		destroy_code_gen_state(&code_gen_state);
+		destroy_parser_state(&parser_state);
+		destroy_preprocessor_state(preprocessor_state);
+		unsigned_char_list_destroy(&preprocssed_characters);
+		destroy_c_lexer_state(&c_lexer_state);
+		memory_pool_collection_destroy(&memory_pool_collection);
 	}
 	return 0;
 }

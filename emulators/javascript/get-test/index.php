@@ -21,7 +21,7 @@ if(isset($_REQUEST['test_name'])){
 	$test_name = $_REQUEST['test_name'];
 
         //  TODO:  this should be safer if the endpoint is ever on a server
-	$test_code = file_get_contents(realpath(dirname(__FILE__))."/../../../test/$test_name.l0.js");
+	$test_code = file_get_contents(realpath(dirname(__FILE__))."/../../../$test_name.l0.js");
 
 	if($test_code === false){
 		$response_object['error'] = "Test with name $test_name was not found.  Did you assemble the test case?  This can be caused by a permission issue sometimes.";

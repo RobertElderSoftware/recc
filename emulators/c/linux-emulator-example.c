@@ -73,6 +73,8 @@ int main(void){
 	pthread_t stdin_thread;
 
 	vm = vm_create(data_start, data_end, data);
+	printf("Kernel image has been loaded. All input is now being handled by the emulator.\n");
+	printf("Press 'q' to quit.\n");
 
 	pthread_create(&stdin_thread, NULL, read_stdin, NULL);
 

@@ -17,6 +17,10 @@
 #ifndef __SIZE_T_H_DEFINED__
 #include "size_t.h"
 #endif
+#ifndef __ASSERT_H_DEFINED__
+#include <assert.h>
+#endif
 size_t strlen(const char *);
 int strcmp(const char *, const char *);
+void *memcpy(void *, const void *, size_t);
 #endif

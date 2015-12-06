@@ -13,8 +13,7 @@
 	use of this software.
 */
 "use strict";
-var running_kernel = window.top.location.href.indexOf("kernel_mode") > -1 ? "kernel" : null;
-var specific_tests = running_kernel ? "kernel" : null;
+var running_kernel = window.top.location.href.indexOf("kernel_mode") > -1 ? true : false;
 var input_queue = [];
 var memory_size_ints;
 var is_debug_mode = running_kernel ? true : false;
@@ -117,6 +116,8 @@ function clear_state(){
   $(".value-container").html('');
   $(".stack-address-container").html('');
   $(".stack-value-container").html('');
+  $(".inspect-memory-address-container").html('');
+  $(".inspect-memory-value-container").html('');
 }
 
 
@@ -277,17 +278,18 @@ function print_state(vm){
 
   $(".debug-view-area").show();
 
-  if(registeruint32[vm.FR_index] & vm.HALTED_BIT) $(".fr-bits td:nth-child(11)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.GLOBAL_INTERRUPT_ENABLE_BIT) $(".fr-bits td:nth-child(10)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.RTE_BIT) $(".fr-bits td:nth-child(9)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.TIMER1_ENABLE_BIT) $(".fr-bits td:nth-child(8)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.TIMER1_ASSERTED_BIT) $(".fr-bits td:nth-child(7)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.UART1_OUT_ENABLE_BIT) $(".fr-bits td:nth-child(6)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.UART1_OUT_ASSERTED_BIT) $(".fr-bits td:nth-child(5)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.UART1_IN_ENABLE_BIT) $(".fr-bits td:nth-child(4)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.UART1_IN_ASSERTED_BIT) $(".fr-bits td:nth-child(3)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.UART1_OUT_READY_BIT) $(".fr-bits td:nth-child(2)").addClass('active');
-  if(registeruint32[vm.FR_index] & vm.UART1_IN_READY_BIT) $(".fr-bits td:nth-child(1)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.HALTED_BIT) $(".fr-bits td:nth-child(12)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.GLOBAL_INTERRUPT_ENABLE_BIT) $(".fr-bits td:nth-child(11)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.RTE_BIT) $(".fr-bits td:nth-child(10)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.TIMER1_ENABLE_BIT) $(".fr-bits td:nth-child(9)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.TIMER1_ASSERTED_BIT) $(".fr-bits td:nth-child(8)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_OUT_ENABLE_BIT) $(".fr-bits td:nth-child(7)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_OUT_ASSERTED_BIT) $(".fr-bits td:nth-child(6)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_IN_ENABLE_BIT) $(".fr-bits td:nth-child(5)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_IN_ASSERTED_BIT) $(".fr-bits td:nth-child(4)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_OUT_READY_BIT) $(".fr-bits td:nth-child(3)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.UART1_IN_READY_BIT) $(".fr-bits td:nth-child(2)").addClass('active');
+  if(registeruint32[vm.FR_index] & vm.DIV_ZERO_BIT) $(".fr-bits td:nth-child(1)").addClass('active');
 
   for(var i = starting_loc; i < starting_loc + 20; i++){
     var css_class = "";
@@ -307,6 +309,15 @@ function print_state(vm){
     $(".stack-address-container").append('<div><span style="color: ' + color + ';">' + prefix + '</span>0x' + (registeruint32[vm.SP_index] + (i * 4)).toString(16) + "</div>");
     $(".stack-value-container").append("<div>0x" + (memoryuint32[((registeruint32[vm.SP_index] + (i * 4)) / vm.sizeof_int)]).toString(16) + "</div>");
   }
+
+  var inspectmemoryvalue;
+  try { inspectmemoryvalue = eval($('.inspectmemoryvalue').val()); } catch (e) { inspectmemoryvalue = 0; }
+  if(isNaN(inspectmemoryvalue) || inspectmemoryvalue % 4 != 0) {inspectmemoryvalue = 0;}
+  for(var i = 0; i < 20; i++){
+    $(".inspect-memory-address-container").append('<div><span style=";"></span>0x' + (inspectmemoryvalue + (i * vm.sizeof_int)).toString(16) + "</div>");
+    $(".inspect-memory-value-container").append("<div>0x" + memoryuint32[(inspectmemoryvalue + (i * vm.sizeof_int)) / vm.sizeof_int].toString(16) + "</div>");
+  }
+
 }
 
 $(document).ready(function () {
@@ -471,11 +482,7 @@ $(document).ready(function () {
       if(d.error){
         alert("Error: " + d.error);
       }else if(d.available_tests){
-        if(specific_tests == null){
-          test_function(d.available_tests);
-        }else{
-          test_function([specific_tests]);
-        }
+        test_function(d.available_tests);
       }
     }
   );

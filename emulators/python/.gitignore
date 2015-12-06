@@ -1,2 +1,4 @@
 /op_cpu_package/*.pyc
 /op_cpu_package/python_l0_module.py
+/build_python_example
+/build_python_example.o

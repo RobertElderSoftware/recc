@@ -18,10 +18,10 @@
 int putchar(int);
 int putchar_nobusy(int);
 
-struct kernel_message putchar_m;
-struct kernel_message putchar_reply;
-
 int putchar(int c){
+	struct kernel_message putchar_m;
+	struct kernel_message putchar_reply;
+	putchar_m.message_type = OUTPUT_CHARACTER;
 	putchar_m.data = c;
 	send_message(&putchar_m, 6, &putchar_reply);
 	switch(putchar_reply.message_type){
@@ -31,9 +31,4 @@ int putchar(int c){
 			assert(0 && "Unknown message type.\n");
 		}
 	}
-}
-
-void putchar_init(void){
-	/*  Set up once, and not for every character */
-	putchar_m.message_type = OUTPUT_CHARACTER;
 }

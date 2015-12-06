@@ -71,6 +71,7 @@ class OpCPU(object):
     UART1_IN_ASSERTED_BIT       = 1 << 8
     UART1_OUT_READY_BIT         = 1 << 9
     UART1_IN_READY_BIT          = 1 << 10
+    DIV_ZERO_ASSERTED_BIT       = 1 << 11
 
     def __init__(self, loader_data):
         self.cycles_executed = 0
@@ -128,7 +129,11 @@ class OpCPU(object):
         elif op_type == OpCPU.MUL_INSTRUCTION:
             self.registeruint32[ra] = self.registeruint32[rb] * self.registeruint32[rc]
         elif op_type == OpCPU.DIV_INSTRUCTION:
-            self.registeruint32[ra] = self.registeruint32[rb] / self.registeruint32[rc]
+          if(self.registeruint32[rc]):
+            self.registeruint32[ra] = self.registeruint32[rb] / self.registeruint32[rc];
+          else:
+            #  Division by zero detected
+            self.registeruint32[OpCPU.FR_index] = self.registeruint32[OpCPU.FR_index] | OpCPU.DIV_ZERO_ASSERTED_BIT;
         elif op_type == OpCPU.BEQ_INSTRUCTION:
             if(self.registeruint32[ra] == self.registeruint32[rb]):
                 self.registeruint32[OpCPU.PC_index] = self.registeruint32[OpCPU.PC_index] + 4 * branch_dist
@@ -208,7 +213,10 @@ class OpCPU(object):
             return 
  
         if(self.registeruint32[OpCPU.FR_index] & OpCPU.GLOBAL_INTERRUPT_ENABLE_BIT):
-            if(self.registeruint32[OpCPU.FR_index] & OpCPU.TIMER1_ENABLE_BIT and (self.registeruint32[OpCPU.FR_index] & OpCPU.TIMER1_ASSERTED_BIT)):
+            if(self.registeruint32[OpCPU.FR_index] & OpCPU.DIV_ZERO_ASSERTED_BIT):
+                self.do_interrupt()
+                return
+            elif(self.registeruint32[OpCPU.FR_index] & OpCPU.TIMER1_ENABLE_BIT and (self.registeruint32[OpCPU.FR_index] & OpCPU.TIMER1_ASSERTED_BIT)):
                 self.do_interrupt()
                 return 
             elif(self.registeruint32[OpCPU.FR_index] & OpCPU.UART1_OUT_ENABLE_BIT and (self.registeruint32[OpCPU.FR_index] & OpCPU.UART1_OUT_ASSERTED_BIT)):
