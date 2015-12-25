@@ -1,16 +1,17 @@
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 #include "replace_tool.h"
 #include <stdio.h>
@@ -458,7 +459,7 @@ int main(void){
 	add_string_to_buffer((unsigned char *)"/*.i\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/*.l2\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/*.o\n", &gitignores);
-	add_string_to_buffer((unsigned char *)"/bootstrap-datatypes\n", &gitignores);
+	add_string_to_buffer((unsigned char *)"/bootstrap\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/object-data-structures\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/clean-data-structures\n", &gitignores);
 	add_string_to_buffer((unsigned char *)"/file-dependencies-data-structures\n", &gitignores);
@@ -502,7 +503,7 @@ int main(void){
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct c_lexer_token *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct c_lexer_state *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct struct_c_lexer_token_ptr_list *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct asm_lexer_token *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct l2_lexer_token *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct normalized_specifier *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct normalized_declarator *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct normalized_declaration_element *");
@@ -510,23 +511,30 @@ int main(void){
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct scope_level *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct switch_frame *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct unsigned_char_list *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct asm_instruction *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct asm_lexer_state *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct linker_object *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct l2_item *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct l2_lexer_state *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct l2_parser_state *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct linker_file *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct linker_symbol *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct type_description *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct constant_description *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct constant_initializer_level *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct compile_time_constant *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct type_traversal *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preprocessor_if_branch *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preprocessor_file_context *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preloader_instruction");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct l0_item");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct build_target *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct preprocessor_macro_level *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct linker_object *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct start_end");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct linker_region");
 	create_specific_type("stack", "T0_IDENTIFIER_", 1, "unsigned int");
 	create_specific_type("stack", "T0_IDENTIFIER_", 1, "struct parser_operation");
+	create_specific_type("stack", "T0_IDENTIFIER_", 1, "struct l2_parser_operation");
 
-	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct linker_object *");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct start_end");
+	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct linker_file *");
 	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "unsigned int");
 
 	create_specific_type("merge_sort", "T0_IDENTIFIER_", 1, "struct void_ptr_to_unsigned_int_key_value_pair");
@@ -557,13 +565,19 @@ int main(void){
 
 	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct c_lexer_token");
 	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct parser_node");
-	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct asm_lexer_token");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct l2_parser_node");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct l2_lexer_token");
 	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct type_description");
-	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct asm_instruction");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct l2_item");
 	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct linker_symbol");
 	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "void *");
 
 	/*  Comparison functions for maps */
+	add_object_build_rule((unsigned char *)"struct_start_end_ptr_compare");
+	add_library_build_rule((unsigned char *)"struct_start_end_ptr_compare");
+	add_library_dependency_rule((unsigned char *)"struct_start_end_ptr_compare");
+	add_file_dependency_rule((unsigned char *)"struct_start_end_ptr_compare");
+
 	add_object_build_rule((unsigned char *)"void_ptr_compare");
 	add_library_build_rule((unsigned char *)"void_ptr_compare");
 	add_library_dependency_rule((unsigned char *)"void_ptr_compare");
@@ -587,7 +601,7 @@ int main(void){
 	add_library_build_rule((unsigned char *)"replace_tool");
 	add_library_dependency_rule((unsigned char *)"replace_tool");
 
-	add_string_to_buffer((void*)": data-structures/bootstrap-datatypes", &file_dependencies);
+	add_string_to_buffer((void*)": data-structures/bootstrap", &file_dependencies);
 	add_string_to_buffer_with_null_terminator((void*)"", &library_buildcommand);
 	/*add_string_to_buffer(binary_exponential_buffer_data(&library_buildcommand), &library_dependency);*/
 

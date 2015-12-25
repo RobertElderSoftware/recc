@@ -1,16 +1,16 @@
-#  Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-#
-#  This specification is not currently available under any license, and
-#  unauthorized use or copying is not permitted.
-#
-#  This specification will likely be available under a common open source
-#  license in the near future.  Licensing is currently pending feedback from
-#  a lawyer.  If you have an opinion on this subject you can send it to
-#  recc [at] robertelder.org.
-#
-#  This specification comes with ABSOLUTELY NO WARRANTY.  In no event shall
-#  Robert Elder Software Inc. be liable for incidental or consequential damages
-#  in connection with use of this specification.
+#   Copyright 2015 Robert Elder Software Inc.
+#   
+#   Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+#   use this file except in compliance with the License.  You may obtain a copy 
+#   of the License at
+#   
+#       http://www.apache.org/licenses/LICENSE-2.0
+#   
+#   Unless required by applicable law or agreed to in writing, software 
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+#   License for the specific language governing permissions and limitations 
+#   under the License.
 
 1.  INTRODUCTION
 
@@ -419,7 +419,11 @@
            anywhere.  Any addresses in this file must be stated abstractly
            with identifiers that will be replaced in a further linking step.
 
-    4.3.2  'OFFSET 0xNNNNNNNN'   The code in this file must be linked in such a
+    4.3.2  'OFFSET END'  The code in this file must be placed at the end of
+           the resulting file.  There can be a maximum of one file with this
+           type of offset directive.
+
+    4.3.3  'OFFSET 0xNNNNNNNN'   The code in this file must be linked in such a
            way that the resulting executable will be loaded to address
            0xNNNNNNNN.  If an attempt is made to link multiple non relocatable
            L2 files to overlapping memory locations an error will occur.
@@ -481,4 +485,45 @@
   This is important because it relies on the assumption that the stack pointer
   is always pointing to the top of the stack.
 
-The sha1sum of the lines above is c9a239027bcad4b057ec80b737225c2d42c41640
+  4.5  FUNCTION, VARIABLE, CONSTANT
+
+  These directives are used to describe the start and end of regions of
+  machine instructions.  These directives will dictate the permissions
+  assigned to these regions when the are loaded into memory in order for
+  virtual memory to work properly.
+
+  4.6  START, END
+
+  Used in proximity to a few different directives to indicate start and end
+  addresses.
+
+  4.7  IMPLEMENTED, REQUIRED
+
+  Used to indicate that certain symbols are either required or implemented.
+  Intended to be used when loading shared libraries.  These directives may be
+  removed in the future.
+
+  4.8  UNRESOLVED
+
+  Used to indicate that a symbol in a .l0 file is unresolved, and the loader
+  must find the address of a symbol that matches the corresponding name in
+  a shared library.
+
+  4.9  STRING
+
+  Used to specify 4 bytes of a string that is stored in little-endian.  Used
+  to keep track of symbol names inside of .l0 files, and helps resolve
+  unresolved symbols.
+
+  4.10  REGION
+
+  Used to indicate that a certain region in the program has certain properties
+  (like permissions).  Used to keep symbols with different permissions grouped
+  together.
+
+  4.11  PERMISSION
+
+  Used in conjunction with REGION directive to specify the read, write or
+  execute permissions associated with a region of code.
+
+The sha1sum of the lines above is 3fa9e6d03f943d85a0e1b1b7bea56fedef83661a

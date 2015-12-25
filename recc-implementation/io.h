@@ -1,51 +1,52 @@
-#ifndef __IO_H__
-#define __IO_H__
+#ifndef IO_H__
+#define IO_H__
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
-#ifndef __STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED__
 #include <stdlib.h>
 #endif
-#ifndef __STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED__
 #include <stdio.h>
 #endif
-#ifndef __STDARG_H_DEFINED__
+#ifndef STDARG_H_DEFINED__
 #include <stdarg.h>
 #endif
-#ifndef __ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED__
 #include <assert.h>
 #endif
-#ifndef __STRING_H_DEFINED__
+#ifndef STRING_H_DEFINED__
 #include <string.h>
 #endif
-#ifndef __unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list__H__DEFINED__
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef __unsigned_char_ptr_list__H__DEFINED__
+#ifndef unsigned_char_ptr_list__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_list.h"
 #endif
-#ifndef __MEMORY_POOL_COLLECTION_H__
+#ifndef MEMORY_POOL_COLLECTION_H__
 #include "memory_pool_collection.h"
 #endif
-#ifndef __HEAP_MEMORY_POOL_H__
+#ifndef HEAP_MEMORY_POOL_H__
 #include "heap_memory_pool.h"
 #endif
-#ifndef __TYPES_BUILTIN_struct_printing_state_H__
+#ifndef TYPES_BUILTIN_struct_printing_state_H__
 #include "../types/builtin/struct_printing_state.h"
 #endif
-#ifndef __BUILTIN_C99LIBC_IN_C89__
+#ifndef BUILTIN_C99LIBC_IN_C89__
 #include "../builtin/c99libc_in_c89.h"
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef __T0_IDENTIFIER_MEMORY_POOL__H__DEFINED__
-#define __T0_IDENTIFIER_MEMORY_POOL__H__DEFINED__
+#ifndef T0_IDENTIFIER_MEMORY_POOL__H__DEFINED__
+#define T0_IDENTIFIER_MEMORY_POOL__H__DEFINED__
 /*
 	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
 
@@ -15,19 +15,19 @@
 	use of this software.
 */
 
-#ifndef __ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED__
 #include <assert.h>
 #endif
-#ifndef __BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
+#ifndef BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
 #include "binary_exponential_buffer.h"
 #endif
-#ifndef __void_ptr_list__H__DEFINED__
+#ifndef void_ptr_list__H__DEFINED__
 #include "void_ptr_list.h"
 #endif
-#ifndef __unsigned_int_list__H__DEFINED__
+#ifndef unsigned_int_list__H__DEFINED__
 #include "unsigned_int_list.h"
 #endif
-#ifndef __TYPES_DATA_STRUCTURES_struct_T0_IDENTIFIER_memory_pool_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_T0_IDENTIFIER_memory_pool_H__
 #include "../types/data-structures/struct_T0_IDENTIFIER_memory_pool.h"
 #endif
 

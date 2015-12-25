@@ -1,5 +1,7 @@
 OFFSET RELOCATABLE
+FUNCTION getchar_nobusy getchar_nobusy_end
 IMPLEMENTS EXTERNAL getchar_nobusy
+IMPLEMENTS EXTERNAL getchar_nobusy_end
 getchar_nobusy:
 ;  The bit mask for UART1_IN ready
 ll r3 0x400;
@@ -27,3 +29,4 @@ add SP SP WR;
 sto SP r2;
 ;  Jump back to the place where the function was called
 add PC ZR r1;
+getchar_nobusy_end:

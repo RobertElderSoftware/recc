@@ -1,18 +1,21 @@
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
+#include "../builtin/printf_busy.h"
 #include "private_kernel_interface.h"
+#include "../emulators/c/op-cpu.h"
 #include <assert.h>
 
 unsigned int current_task_id = 0;
@@ -37,7 +40,6 @@ void schedule_next_task(void){
 	next_task->state = ACTIVE;
 	/*  Set its stack pointer */
 	g_current_sp = next_task->stack_pointer;
-	finish_schedule_next:
 	current_task_id = next_task->pid;
 }
 
@@ -158,30 +160,57 @@ void k_block_on_event(enum kernel_event event){
 	}
 }
 
+void handle_page_fault_exception(void){
+	unsigned int * pfe_page_pointer = *((unsigned int **)PFE_PAGE_POINTER);
+	unsigned int pfe_pc_value = *((unsigned int *)PFE_PC_VALUE);
+	unsigned int pfe_access = *((unsigned int *)PFE_ACCESS);
+	unsigned int pfe_virtual = *((unsigned int *)PFE_VIRTUAL);
+
+	unsigned int level_2_index = (pfe_virtual & LEVEL_2_PAGE_TABLE_INDEX_MASK) >> (LEVEL_1_PAGE_TABLE_NUM_BITS + OP_CPU_PAGE_SIZE_NUM_BITS);
+	unsigned int level_1_index = (pfe_virtual & LEVEL_1_PAGE_TABLE_INDEX_MASK) >> OP_CPU_PAGE_SIZE_NUM_BITS;
+	unsigned int offset = (pfe_virtual & PAGE_OFFSET_MASK);
+	unsigned int level_2_page_table_entry = pfe_page_pointer[level_2_index];
+	printf_busy("A Page fault exception occurred originating from PC location 0x%X, seeking 0x%X access.\n", pfe_pc_value, pfe_access);
+	printf_busy("Virtual address 0x%X gives lvl 2 index 0x%X and lvl 1 index 0x%X and offset 0x%X using 0x%X as lvl 2 page table pointer\n", pfe_virtual, level_2_index, level_1_index, offset, level_2_page_table_entry);
+	/*  Make sure we have access to this level 2 page table entry, and that it is valid */
+	if(level_2_page_table_entry & LEVEL_2_PAGE_TABLE_ENTRY_INITIALIZED){
+		unsigned int * level_1_page_table_pointer = (unsigned int*)(level_2_page_table_entry & (LEVEL_1_PAGE_TABLE_INDEX_MASK | LEVEL_2_PAGE_TABLE_INDEX_MASK));
+		unsigned int level_1_page_table_entry = level_1_page_table_pointer[level_1_index];
+		/*  Make sure we have access to this level 1 page table entry, and that it is valid */
+		if((level_1_page_table_entry & pfe_access) && (level_1_page_table_entry & LEVEL_2_PAGE_TABLE_ENTRY_INITIALIZED)){
+			unsigned int linear_address_page = level_1_page_table_entry & (LEVEL_1_PAGE_TABLE_INDEX_MASK | LEVEL_2_PAGE_TABLE_INDEX_MASK);
+			printf_busy("Should not occur, no PFE: address was translated to 0x%X\n", linear_address_page + offset);
+		}else{
+			printf_busy("Page fault is at level 1 with entry as 0x%X\n", level_1_page_table_entry);
+		}
+	}else{
+		printf_busy("Page fault is at level 2 with entry as 0x%X\n", level_2_page_table_entry);
+	}
+}
+
 void k_irq_handler(void){
 	unsigned int flags_register = read_flags_register();
-	if(flags_register & 0x10){ /*  Bit 4 was set */
-		deassert_bits_in_flags_register(0x10);
+	if(flags_register & PAGE_FAULT_EXCEPTION_ASSERTED_BIT){
+		/*  Handle page fault exception */
+		handle_page_fault_exception();
+		or_into_flags_register(HALTED_BIT); /*  Halt the processor for now */
+		/*  De-assert the bit last, so we can detect nested page fault exceptions */
+		deassert_bits_in_flags_register(PAGE_FAULT_EXCEPTION_ASSERTED_BIT);
+	}else if(flags_register & TIMER1_ASSERTED_BIT){
+		deassert_bits_in_flags_register(TIMER1_ASSERTED_BIT);
 		num_clock_ticks++;
 		unblock_tasks_for_event(CLOCK_TICK_EVENT);
-	}else if(flags_register & 0x40){/*  Bit 6 was set */
-		deassert_bits_in_flags_register(0x40);
+	}else if(flags_register & UART1_OUT_ASSERTED_BIT){
+		deassert_bits_in_flags_register(UART1_OUT_ASSERTED_BIT);
 		unblock_tasks_for_event(UART1_OUT_READY);
-	}else if(flags_register & 0x100){/*  Bit 8 was set */
-		deassert_bits_in_flags_register(0x100);
+	}else if(flags_register & UART1_IN_ASSERTED_BIT){
+		deassert_bits_in_flags_register(UART1_IN_ASSERTED_BIT);
 		unblock_tasks_for_event(UART1_IN_READY);
 	}else{
 		/*  Something really bad happend. */
 		/*  Busy print will affect flags, but in this case everything is broken anyway */
-		putchar_busy('I');
-		putchar_busy('R');
-		putchar_busy('Q');
-		putchar_busy(' ');
-		putchar_busy('F');
-		putchar_busy('A');
-		putchar_busy('I');
-		putchar_busy('L');
-		or_into_flags_register(0x1); /*  Halt the processor */
+		printf_busy("IRQ FAILURE!\n");
+		or_into_flags_register(HALTED_BIT); /*  Halt the processor */
 	}
 
 	/*  Used as a stress test for the kernel:  Try out all interleavings of interrupts and timer periods */
@@ -243,29 +272,131 @@ void k_kernel_exit(void){
 }
 
 void set_irq_handler(void (*irq_handler_fcn)(void)){
-	void (**irq_handler_fcn_location)(void) = (void (**)(void))0x300020;
+	void (**irq_handler_fcn_location)(void) = (void (**)(void))IRQ_HANDLER;
 	*irq_handler_fcn_location = irq_handler_fcn;
 }
 
 void set_timer_period(unsigned int period){
-	unsigned int * period_location = (unsigned int *)0x300030;
+	unsigned int * period_location = (unsigned int *)TIMER_PERIOD;
 	*period_location = period;
 }
 
+void set_level_2_page_pointer(unsigned int * pointer){
+	unsigned int ** pointer_location = (unsigned int **)PAGE_POINTER;
+	*pointer_location = pointer;
+	printf_busy("Page ptr is %p\n", pointer);
+}
+
 unsigned int timer_interrupt_enable(void){
-	or_into_flags_register(0x8);
+	or_into_flags_register(TIMER1_ENABLE_BIT);
 }
 
 unsigned int uart1_out_interrupt_enable(void){
-	or_into_flags_register(0x20);
+	or_into_flags_register(UART1_OUT_ENABLE_BIT);
 }
 
 unsigned int uart1_in_interrupt_enable(void){
-	or_into_flags_register(0x80);
+	or_into_flags_register(UART1_IN_ENABLE_BIT);
+}
+
+unsigned int page_fault_exception_interrupt_enable(void){
+	or_into_flags_register(PAGEING_ENABLE_BIT);
+}
+
+unsigned int * allocate_level_1_page_table(void){
+	unsigned pages_in_table = (1 << LEVEL_1_PAGE_TABLE_NUM_BITS);
+	if((num_level_1_page_table_mappings_used + pages_in_table) <= MAX_LEVEL_1_PAGE_TABLE_MAPPINGS){
+		unsigned int * rtn = &level_1_page_table_mappings[num_level_1_page_table_mappings_used];
+		unsigned int i;
+		/*  Intitialize entries */
+		for(i = num_level_1_page_table_mappings_used; i < (num_level_1_page_table_mappings_used + pages_in_table); i++){
+			level_1_page_table_mappings[i] = 0;
+		}
+		num_level_1_page_table_mappings_used += pages_in_table;
+		return rtn;
+	}else{
+		printf_busy("Level 1 page table allocation failed.\n");
+	}
+	return (unsigned int *)0;
+}
+
+unsigned int * allocate_level_2_page_table(void){
+	unsigned pages_in_table = (1 << LEVEL_2_PAGE_TABLE_NUM_BITS);
+	if((num_level_2_page_table_mappings_used + pages_in_table) <= MAX_LEVEL_2_PAGE_TABLE_MAPPINGS){
+		unsigned int * rtn = &level_2_page_table_mappings[num_level_2_page_table_mappings_used];
+		unsigned int i;
+		/*  Intitialize entries */
+		for(i = num_level_2_page_table_mappings_used; i < (num_level_2_page_table_mappings_used + pages_in_table); i++){
+			level_2_page_table_mappings[i] = 0;
+		}
+		num_level_2_page_table_mappings_used += pages_in_table;
+		return rtn;
+	}else{
+		printf_busy("Level 2 page table allocation failed.\n");
+	}
+	return (unsigned int *)0;
+}
+
+void create_level_1_page_table_entry(unsigned int * level_2_page_table_entry, unsigned int linear_address, unsigned int level_1_index, unsigned int permissions){
+	unsigned int * level_1_table_ptr;
+	if(!(*level_2_page_table_entry & LEVEL_2_PAGE_TABLE_ENTRY_INITIALIZED)){
+		unsigned int * new_page_table_ptr = allocate_level_1_page_table();
+		*level_2_page_table_entry = ((unsigned int)new_page_table_ptr | LEVEL_2_PAGE_TABLE_ENTRY_INITIALIZED);
+		/*printf_busy("Initialized to 0x%X\n", *level_2_page_table_entry);*/
+	}
+	level_1_table_ptr = (unsigned int *)((LEVEL_2_PAGE_TABLE_INDEX_MASK | LEVEL_1_PAGE_TABLE_INDEX_MASK) & (*level_2_page_table_entry));
+	/*  Linear address is expected to be a page aligned address with only the high bits set. */
+	level_1_table_ptr[level_1_index] = linear_address | permissions | LEVEL_1_PAGE_TABLE_ENTRY_INITIALIZED;
+	/*printf_busy("Intialized l2 pt entry %p that points to l1 pt %p and set l1 pt entry %d to be %X\n", level_2_page_table_entry, level_1_table_ptr, level_1_index, level_1_table_ptr[level_1_index]);*/
+}
+
+void create_level_2_page_table_entry(unsigned int linear_address, unsigned int virtual_address, unsigned int permissions, unsigned int * level_2_page_table){
+	unsigned int level_2_index = (LEVEL_2_PAGE_TABLE_INDEX_MASK & virtual_address) >> (LEVEL_1_PAGE_TABLE_NUM_BITS + OP_CPU_PAGE_SIZE_NUM_BITS);
+	unsigned int level_1_index = (LEVEL_1_PAGE_TABLE_INDEX_MASK & virtual_address) >> OP_CPU_PAGE_SIZE_NUM_BITS;
+	unsigned int * level_2_page_table_entry = &level_2_page_table_mappings[level_2_index];
+	create_level_1_page_table_entry(level_2_page_table_entry, linear_address, level_1_index, permissions);
+}
+
+void set_up_identity_kernel_mapping_for_region(unsigned int start, unsigned int end, unsigned int permissions, unsigned int * level_2_page_table){
+	unsigned int current;
+	for(current = start; current < end; current += OP_CPU_PAGE_SIZE){
+		create_level_2_page_table_entry(current, current, permissions, level_2_page_table);
+	}
 }
 
 void k_kernel_init(void){
+	unsigned int num_l0_items = (data[0][1] << 24) + (data[0][2] << 16) + (data[0][3] << 8) + data[0][4];
 	unsigned int i;
+	unsigned int * level_2_page_table = allocate_level_2_page_table();
+	set_level_2_page_pointer(level_2_page_table);
+	printf_busy("Begin kernel initialization...\n");
+	for(i = 0; i < num_l0_items; i++){
+		/*  Assuming that regions are specified first */
+		if(data[i][0] == 5){
+			/*  No more regions, looking at symbol definitions now. */
+			break;
+		}else if(data[i][0] == 0xE){
+			unsigned int start;
+			unsigned int end;
+			unsigned int permission;
+			i++;
+			if(data[i][0] == 0xA){
+				start = (data[i][1] << 24) + (data[i][2] << 16) + (data[i][3] << 8) + data[i][4];
+				i++;
+			}
+			if(data[i][0] == 0xB){
+				end = (data[i][1] << 24) + (data[i][2] << 16) + (data[i][3] << 8) + data[i][4];
+				i++;
+			}
+			if(data[i][0] == 0xF){
+				permission = data[i][4];
+			}
+			printf_busy("Start: 0x%X End: 0x%X Permission: 0x%X\n", start, end, permission);
+			set_up_identity_kernel_mapping_for_region(start, end, permission, level_2_page_table);
+		}
+	}
+	set_irq_handler(irq_handler); /*  Set before paging is enabled, otherwise a page fault doesn't know where to go */
+	page_fault_exception_interrupt_enable();
 
 	task_queue_init(&ready_queue_p0, MAX_NUM_PROCESSES);
 	task_queue_init(&ready_queue_p1, MAX_NUM_PROCESSES);
@@ -320,7 +451,6 @@ void k_kernel_init(void){
 	init_task_stack(&(pcbs[8].stack_pointer), uart1_in_server);
 	init_task_stack(&(pcbs[9].stack_pointer), command_server);
 
-	set_irq_handler(irq_handler);
 	set_timer_period(current_timer_period);
 	timer_interrupt_enable();
 	uart1_out_interrupt_enable();

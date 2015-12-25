@@ -1,5 +1,7 @@
 OFFSET RELOCATABLE
+FUNCTION putchar_nobusy putchar_nobusy_end
 IMPLEMENTS EXTERNAL putchar_nobusy
+IMPLEMENTS EXTERNAL putchar_nobusy_end
 putchar_nobusy:
 loa r2 SP;  Load whatever that argument was.
 ;  The bit mask for UART1_OUT ready
@@ -27,3 +29,4 @@ loa r1 SP;
 add SP SP WR;
 ;  Jump back to the place where the function was called
 add PC ZR r1;
+putchar_nobusy_end:

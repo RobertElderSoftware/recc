@@ -1,119 +1,188 @@
-#  Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-#
-#  This specification is not currently available under any license, and
-#  unauthorized use or copying is not permitted.
-#
-#  This specification will likely be available under a common open source
-#  license in the near future.  Licensing is currently pending feedback from
-#  a lawyer.  If you have an opinion on this subject you can send it to
-#  recc [at] robertelder.org.
-#
-#  This specification comes with ABSOLUTELY NO WARRANTY.  In no event shall
-#  Robert Elder Software Inc. be liable for incidental or consequential damages
-#  in connection with use of this specification.
+#   Copyright 2015 Robert Elder Software Inc.
+#   
+#   Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+#   use this file except in compliance with the License.  You may obtain a copy 
+#   of the License at
+#   
+#       http://www.apache.org/licenses/LICENSE-2.0
+#   
+#   Unless required by applicable law or agreed to in writing, software 
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+#   License for the specific language governing permissions and limitations 
+#   under the License.
 
             One-Page CPU L2 Assembly Language Syntax Specification
 
 The L2 assembly language is meant to augment the L1 language in such a way that
 any conforming L1 file is also an L2 file, but not every L2 file is an L1 file.
 The L2 language allows for statements that specify linkage information,
-comments, relaxed whitespace constraints, and program offsets that are defined
-relatively.  This specification references and augments definitions from the
-"One-Page CPU L1 Assembly Language Syntax Specification".
+comments, and program offsets that are defined relatively.  I've recently made
+a number of changes to this, and plan to make more in the future.  For now,
+this grammar will suffice for describing the language:
 
-1.  A "space" is redefined from the L1 specification to be exactly one of the
-following:
+interface_specifier
+	:  "IMPLEMENTS"
+	:  "REQUIRES"
+	;
 
-  1.1  ASCII character 32 (a traditional 'space').
-  1.2  ASCII character 9 (a 'tab').
+linkage_domain
+	:  "INTERNAL"
+	:  "EXTERNAL"
+	;
 
-2.  An "offset declaration" is redefined from the L1 specification to be one of
-the following:
+symbol_linkage_declaration
+	:  interface_specifier linkage_domain identifier
+	:  interface_specifier "," interface_specifier linkage_domain identifier
 
-  2.1  The word "OFFSET", followed by a hexidecimal constant.
-  2.2  The word "OFFSET", followed by "RELOCATABLE"
+offset_directive
+	:  "OFFSET" "END"
+	:  "OFFSET" "RELOCATABLE"
+	:  "OFFSET" hexadecimal_number
+	;
 
-3.  A "comment" is defined as the character ";" followed by any number of any
-characters up to but not including one of the following:
+define_word_directive
+	:  "DW" hexadecimal_number
+	;
 
-  3.1 A newline.
-  3.2 The end of the file.
+skip_words_directive
+	:  "SW" hexadecimal_number
+	;
 
-4.  A "interface specifier list" is defined as one of the following:
+string_directive
+	:  "STRING" hexadecimal_number
+	;
 
-  4.1  "REQUIRES"
-  4.2  "IMPLEMENTS"
-  4.3  "REQUIRES" followed by zero or more spaces, followed by ",", followed
-by zero or more spaces, followed by "IMPLEMENTS".
-  4.4  "IMPLEMENTS" followed by zero or more spaces, followed by ",", followed
-by zero or more spaces, followed by "REQUIRES".
+implemented_directive
+	:  "IMPLEMENTED" hexadecimal_number
+	;
 
-5.  A "linkage domain" is defined as one of the following:
+required_directive
+	:  "REQUIRED" hexadecimal_number
+	;
 
-  5.1  "INTERNAL"
-  5.2  "EXTERNAL"
+unresolved_directive
+	:  "UNRESOLVED" hexadecimal_number
+	;
 
-6.  A "symbol identifier" is defined as one of any character from 6.1, 6.2 or
-6.3 followed by zero or more of any character from 6.1, 6.2, 6.3, or 6.4.
+region_directive
+	:  "REGION" hexadecimal_number
+	;
 
-  6.1  Any character between or including "a" to "z".
-  6.2  Any character between or including "A" to "Z".
-  6.3  Character "_"
-  6.4  A decimal digit.
+start_directive
+	:  "START" hexadecimal_number
+	;
 
-7.  A "symbol linkage declaration" is defined as an interface specifier list,
-followed by zero or more spaces, followed by a linkage domain, followed by zero
-or more spaces, followed by a symbol identifier.
+end_directive
+	:  "END" hexadecimal_number
+	;
 
-8.  Section 11.5 of the L1 specification is redefined to be one of the
-following:
+permission_directive
+	:  "PERMISSION" hexadecimal_number
+	;
 
-  8.1  "beq", "space", "aggregate register", "space", "aggregate register",
-"space", "decimal constant" 
-  8.2  "beq", "space", "aggregate register", "space", "aggregate register",
-"space", "symbol identifier"
+linkage_directive
+	:  linkage_domain hexadecimal_number
+	;
 
-9.  Section 11.6 of the L1 specification is redefined to be one of the
-following:
+function_directive
+	:  "FUNCTION" hexadecimal_number
+	:  "FUNCTION" identifier identifier
+	;
 
-  9.1  "blt", "space", "aggregate register", "space", "aggregate register",
-"space", "decimal constant" 
-  9.2  "blt", "space", "aggregate register", "space", "aggregate register",
-"space", "symbol identifier"
+variable_directive
+	:  "VARIABLE" hexadecimal_number
+	:  "VARIABLE" identifier identifier
+	;
 
-10.  Section 11.14 of the L1 specification is redefined to be one of the
-following:
+constant_directive
+	:  "CONSTANT" hexadecimal_number
+	:  "CONSTANT" identifier identifier
+	;
 
-  10.1  "ll", "space", "aggregate register", "space", "hexadecimal constant"
-  10.2  "ll", "space", "aggregate register", "space", "symbol identifier"
+directive_statement
+	:  offset_directive
+	:  define_word_directive
+	:  skip_words_directive
+	:  function_directive
+	:  variable_directive
+	:  constant_directive
+	:  string_directive
+	:  implemented_directive
+	:  required_directive
+	:  unresolved_directive
+	:  linkage_directive
+	:  region_directive
+	:  start_directive
+	:  end_directive
+	:  permission_directive
+	:  symbol_linkage_declaration
+	;
 
-11.  Section 11.15 of the L1 specification is redefined to be one of the
-following:
+named_register
+	:  "SP"
+	:  "FP"
+	:  "FR"
+	:  "PC"
+	:  "ZR"
+	:  "WR"
+	;
 
-  11.1  "dw", "space", "hexadecimal constant"
-  11.2  "dw", "space", "symbol identifier"
+numbered_register
+	: "r" decimal_number
+	;
 
-12.  A "symbol label" is defined as a symbol identifier, followed by zero or
-more spaces, followed by a ":" character.
+register
+	: named_register
+	: numbered_register
+	;
 
-13.  A "statement" is defined as one of the following:
+branch_distance
+	:  identifier
+	:  decimal_number
+	:  "-" decimal_number
+	;
 
-  13.1  An instruction statement.
-  13.2  A symbol linkage declaration.
-  13.2  A symbol label.
+instruction_statement
+	: "add" register register register
+	: "sub" register register register
+	: "mul" register register register
+	: "div" register register register
+	: "and" register register register
+	: "or" register register register
+	: "not" register register
+	: "loa" register register
+	: "sto" register register
+	: "shr" register register
+	: "shl" register register
+	: "beq" register register branch_distance
+	: "blt" register register branch_distance
+	: "ll" register hexidecimal_number
+	;
 
-14.  A "conforming One-Page CPU L2 file" is defined as a file containing an
-offset declaration, followed by zero or more of the following:
+label_statement
+	:  identifier ":"
+	;
 
-  14.1 A newline followed by zero or more spaces, followed by a statement,
-followed by zero or more spaces, followed by zero or one comment.
-  14.2 A newline followed by zero or more spaces, followed by zero or one
-comment.
+statement
+	:  instruction_statement
+	:  directive_statement
+	:  label_statement
+	;
 
-An optional additional newline can be the last character in the file.
+after_statement
+	:  newline statement_list
+	:  comment newline statement_list
+	:  comment 
 
-15.  Any instance of a single space mentioned in the L2 specification or the
-L1 specification may be expanded to include one or more spaces using the
-definition of a space in section 1 of this document.
+statement_list
+	:  after_statement
+	:  statement after_statement
+	:  epsilon
+	;
 
-The sha1sum of the lines above is 1d5b4c3a8eb58616bd9d15cf9265049030410adb
+l2_file
+	: statement_list
+	;
+
+The sha1sum of the lines above is d5051f90d4815d65cd444e4f4b976e491593a074

@@ -1,144 +1,145 @@
-#ifndef __PARSER_H__
-#define __PARSER_H__
+#ifndef PARSER_H__
+#define PARSER_H__
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
-#ifndef __IO_H__
+#ifndef IO_H__
 #include "io.h"
 #endif
-#ifndef __LEXER_H__
+#ifndef LEXER_H__
 #include "lexer.h"
 #endif
-#ifndef __unsigned_int_stack__H__DEFINED__
+#ifndef unsigned_int_stack__H__DEFINED__
 #include "../data-structures/unsigned_int_stack.h"
 #endif
-#ifndef __struct_type_description_ptr_list__H__DEFINED__
+#ifndef struct_type_description_ptr_list__H__DEFINED__
 #include "../data-structures/struct_type_description_ptr_list.h"
 #endif
-#ifndef __char_ptr_list__H__DEFINED__
+#ifndef char_ptr_list__H__DEFINED__
 #include "../data-structures/char_ptr_list.h"
 #endif
-#ifndef __struct_parser_operation_stack__H__DEFINED__
+#ifndef struct_parser_operation_stack__H__DEFINED__
 #include "../data-structures/struct_parser_operation_stack.h"
 #endif
-#ifndef __struct_normalized_specifier_ptr_list__H__DEFINED__
+#ifndef struct_normalized_specifier_ptr_list__H__DEFINED__
 #include "../data-structures/struct_normalized_specifier_ptr_list.h"
 #endif
-#ifndef __struct_normalized_declarator_ptr_list__H__DEFINED__
+#ifndef struct_normalized_declarator_ptr_list__H__DEFINED__
 #include "../data-structures/struct_normalized_declarator_ptr_list.h"
 #endif
-#ifndef __struct_normalized_declaration_element_ptr_list__H__DEFINED__
+#ifndef struct_normalized_declaration_element_ptr_list__H__DEFINED__
 #include "../data-structures/struct_normalized_declaration_element_ptr_list.h"
 #endif
-#ifndef __struct_namespace_object_ptr_list__H__DEFINED__
+#ifndef struct_namespace_object_ptr_list__H__DEFINED__
 #include "../data-structures/struct_namespace_object_ptr_list.h"
 #endif
-#ifndef __unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list__H__DEFINED__
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef __unsigned_char_ptr_list__H__DEFINED__
+#ifndef unsigned_char_ptr_list__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_list.h"
 #endif
-#ifndef __unsigned_char_ptr_to_struct_constant_description_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_struct_constant_description_ptr_map__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"
 #endif
-#ifndef __unsigned_char_ptr_to_struct_namespace_object_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_struct_namespace_object_ptr_map__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h"
 #endif
-#ifndef __STRING_H_DEFINED__
+#ifndef STRING_H_DEFINED__
 #include <string.h>
 #endif
-#ifndef __STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED__
 #include <stdio.h>
 #endif
-#ifndef __STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED__
 #include <stdlib.h>
 #endif
-#ifndef __ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED__
 #include <assert.h>
 #endif
-#ifndef __STDARG_H_DEFINED__
+#ifndef STDARG_H_DEFINED__
 #include <stdarg.h>
 #endif
-#ifndef __struct_parser_node_memory_pool__H__DEFINED__
+#ifndef struct_parser_node_memory_pool__H__DEFINED__
 #include "../data-structures/struct_parser_node_memory_pool.h"
 #endif
-#ifndef __struct_c_lexer_token_memory_pool__H__DEFINED__
+#ifndef struct_c_lexer_token_memory_pool__H__DEFINED__
 #include "../data-structures/struct_c_lexer_token_memory_pool.h"
 #endif
-#ifndef __struct_type_description_memory_pool__H__DEFINED__
+#ifndef struct_type_description_memory_pool__H__DEFINED__
 #include "../data-structures/struct_type_description_memory_pool.h"
 #endif
-#ifndef __TYPES_PARSER_enum_parser_operation_type_H__
+#ifndef TYPES_PARSER_enum_parser_operation_type_H__
 #include "../types/parser/enum_parser_operation_type.h"
 #endif
-#ifndef __TYPES_PARSER_enum_type_class_H__
+#ifndef TYPES_PARSER_enum_type_class_H__
 #include "../types/parser/enum_type_class.h"
 #endif
-#ifndef __TYPES_PARSER_enum_scope_type_H__
+#ifndef TYPES_PARSER_enum_scope_type_H__
 #include "../types/parser/enum_scope_type.h"
 #endif
-#ifndef __TYPES_PARSER_enum_add_or_remove_H__
+#ifndef TYPES_PARSER_enum_add_or_remove_H__
 #include "../types/parser/enum_add_or_remove.h"
 #endif
-#ifndef __TYPES_PARSER_enum_declaration_or_definition_H__
+#ifndef TYPES_PARSER_enum_declaration_or_definition_H__
 #include "../types/parser/enum_declaration_or_definition.h"
 #endif
-#ifndef __TYPES_PARSER_enum_normalized_declaration_type_H__
+#ifndef TYPES_PARSER_enum_normalized_declaration_type_H__
 #include "../types/parser/enum_normalized_declaration_type.h"
 #endif
-#ifndef __TYPES_PARSER_enum_normalized_declarator_type_H__
+#ifndef TYPES_PARSER_enum_normalized_declarator_type_H__
 #include "../types/parser/enum_normalized_declarator_type.h"
 #endif
-#ifndef __TYPES_PARSER_enum_normalized_specifier_type_H__
+#ifndef TYPES_PARSER_enum_normalized_specifier_type_H__
 #include "../types/parser/enum_normalized_specifier_type.h"
 #endif
-#ifndef __TYPES_PARSER_enum_value_type_H__
+#ifndef TYPES_PARSER_enum_value_type_H__
 #include "../types/parser/enum_value_type.h"
 #endif
-#ifndef __TYPES_PARSER_enum_object_location_H__
+#ifndef TYPES_PARSER_enum_object_location_H__
 #include "../types/parser/enum_object_location.h"
 #endif
-#ifndef __TYPES_PARSER_struct_type_description_H__
+#ifndef TYPES_PARSER_struct_type_description_H__
 #include "../types/parser/struct_type_description.h"
 #endif
-#ifndef __TYPES_PARSER_struct_parser_state_H__
+#ifndef TYPES_PARSER_struct_parser_state_H__
 #include "../types/parser/struct_parser_state.h"
 #endif
-#ifndef __TYPES_PARSER_struct_normalized_specifier_H__
+#ifndef TYPES_PARSER_struct_normalized_specifier_H__
 #include "../types/parser/struct_normalized_specifier.h"
 #endif
-#ifndef __TYPES_PARSER_struct_normalized_declarator_H__
+#ifndef TYPES_PARSER_struct_normalized_declarator_H__
 #include "../types/parser/struct_normalized_declarator.h"
 #endif
-#ifndef __TYPES_PARSER_struct_normalized_declaration_set_H__
+#ifndef TYPES_PARSER_struct_normalized_declaration_set_H__
 #include "../types/parser/struct_normalized_declaration_set.h"
 #endif
-#ifndef __TYPES_PARSER_struct_namespace_modification_H__
+#ifndef TYPES_PARSER_struct_namespace_modification_H__
 #include "../types/parser/struct_namespace_modification.h"
 #endif
-#ifndef __TYPES_PARSER_struct_namespace_object_change_H__
+#ifndef TYPES_PARSER_struct_namespace_object_change_H__
 #include "../types/parser/struct_namespace_object_change.h"
 #endif
-#ifndef __TYPES_PARSER_struct_first_and_last_namespace_object_H__
+#ifndef TYPES_PARSER_struct_first_and_last_namespace_object_H__
 #include "../types/parser/struct_first_and_last_namespace_object.h"
 #endif
-#ifndef __TYPES_PARSER_struct_current_function_change_H__
+#ifndef TYPES_PARSER_struct_current_function_change_H__
 #include "../types/parser/struct_current_function_change.h"
 #endif
-#ifndef __TYPES_PARSER_struct_parser_operation_H__
+#ifndef TYPES_PARSER_struct_parser_operation_H__
 #include "../types/parser/struct_parser_operation.h"
 #endif
 
@@ -147,7 +148,7 @@ void pop_operation(struct parser_state *);
 void backtrack(struct parser_state *, unsigned int);
 
 struct parser_node * get_identifier_from_declarator(struct parser_node *);
-unsigned char * copy_asm_token(struct asm_lexer_token *);
+unsigned char * copy_l2_token(struct l2_lexer_token *);
 void create_parser_state(struct parser_state *, struct memory_pool_collection *, struct c_lexer_state *, struct unsigned_char_list *, unsigned char *);
 int parse(struct parser_state *);
 void destroy_parser_state(struct parser_state *);

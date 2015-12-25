@@ -1,9 +1,0 @@
-;             This file describes the region where the stack for our
-;             main method will be in memory
-IMPLEMENTS EXTERNAL __g_main_stack_begin;
-IMPLEMENTS EXTERNAL __g_main_stack_end;
-OFFSET 0x100000
-__g_main_stack_begin:
-sw 0x40000;         1048576 bytes of stack space (1MB)
-__g_main_stack_end:
-;                   Ends at 0x200000

@@ -1,23 +1,29 @@
-#ifndef __KERNEL_STATE_H__
-#define __KERNEL_STATE_H__
+#ifndef KERNEL_STATE_H__
+#define KERNEL_STATE_H__
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
-#ifndef __QUEUE_H_DEFINED__
+#ifndef QUEUE_H_DEFINED__
 #include "queue.h"
 #endif
+
+#include "../emulators/c/op-cpu.h"
+
+#define MAX_LEVEL_1_PAGE_TABLE_MAPPINGS 4194304
+#define MAX_LEVEL_2_PAGE_TABLE_MAPPINGS 2048
 
 struct process_control_block{
 	enum process_state state;
@@ -51,5 +57,11 @@ extern unsigned int user_proc_6_stack[STACK_SIZE];
 extern unsigned int user_proc_7_stack[STACK_SIZE];
 extern unsigned int user_proc_8_stack[STACK_SIZE];
 extern unsigned int user_proc_9_stack[STACK_SIZE];
+
+extern unsigned int num_level_1_page_table_mappings_used;
+extern unsigned int num_level_2_page_table_mappings_used;
+
+extern unsigned int level_1_page_table_mappings[MAX_LEVEL_1_PAGE_TABLE_MAPPINGS];
+extern unsigned int level_2_page_table_mappings[MAX_LEVEL_2_PAGE_TABLE_MAPPINGS];
 
 #endif

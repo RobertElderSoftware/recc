@@ -1,16 +1,17 @@
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
 #include "../recc-implementation/compiler_interface.h"
@@ -125,17 +126,16 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/filesystem.l1", "libc/libc.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/filesystem_impl.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/filesystem.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "builtin/l2/mainstub.l2");
 
 	register_dependency(state, "test/c89/basic-operations.l1", "builtin/libbuiltin.l2");
 	register_dependency(state, "test/c89/basic-operations.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/basic-operations.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/basic-operations.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/basic-operations.l1", "libc/putchar.l2");
+	register_dependency(state, "test/c89/basic-operations.l1", "libc/printf.l2");
 
 	register_dependency(state, "test/c89/basic-putchar-aa.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/basic-putchar-aa.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/basic-putchar-aa.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/basic-putchar-aa.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/basic-putchar-aa.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/basic-putchar-aa.l1", "libc/putchar.l2");
@@ -144,7 +144,6 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/div-zero.l1", "libc/assert.l2");
 	register_dependency(state, "test/c89/div-zero.l1", "libc/printf.l2");
 	register_dependency(state, "test/c89/div-zero.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/div-zero.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/div-zero.l1", "builtin/main_div_zero_test.l2");
 	register_dependency(state, "test/c89/div-zero.l1", "builtin/l2/mainstub_div_zero_test.l2");
 	register_dependency(state, "test/c89/div-zero.l1", "libc/putchar.l2");
@@ -153,60 +152,59 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/preprocessor_test.l1", "libc/assert.l2");
 	register_dependency(state, "test/c89/preprocessor_test.l1", "libc/printf.l2");
 	register_dependency(state, "test/c89/preprocessor_test.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/preprocessor_test.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/preprocessor_test.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/preprocessor_test.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/basic-putchar-a.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/basic-putchar-a.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/basic-putchar-a.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/basic-putchar-a.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/basic-putchar-a.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/basic-putchar-a.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/basic-putchar-b.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/basic-putchar-b.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/basic-putchar-b.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/basic-putchar-b.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/basic-putchar-b.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/basic-putchar-b.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/empty-main-return-zero.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/empty-main-return-zero.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/empty-main-return-zero.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/empty-main-return-zero.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/empty-main-return-zero.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/empty-main-return-zero.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/for-loop.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/for-loop.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/for-loop.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/for-loop.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/for-loop.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/for-loop.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/ignore-local.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/ignore-local.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/ignore-local.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/ignore-local.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/ignore-local.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/ignore-local.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/many-types.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/many-types.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/many-types.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/many-types.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/many-types.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/many-types.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/nested-putchar-a.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/nested-putchar-a.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/nested-putchar-a.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/nested-putchar-a.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/nested-putchar-a.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/nested-putchar-a.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/nested-putchar-a-param-ignored.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/nested-putchar-a-param-ignored.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/nested-putchar-a-param-ignored.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/nested-putchar-a-param-ignored.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/nested-putchar-a-param-ignored.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/nested-putchar-a-param-ignored.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/nested-putchar-a-param-used.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/nested-putchar-a-param-used.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/nested-putchar-a-param-used.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/nested-putchar-a-param-used.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/nested-putchar-a-param-used.l1", "builtin/l2/putchar_busy.l2");
 	register_dependency(state, "test/c89/nested-putchar-a-param-used.l1", "libc/putchar.l2");
@@ -215,7 +213,6 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/print.l1", "libc/malloc.l2");
 	register_dependency(state, "test/c89/print.l1", "data-structures/unsigned_int_merge_sort.l2");
 	register_dependency(state, "test/c89/print.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/print.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/print.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/print.l1", "builtin/extern_test.l2");
 	register_dependency(state, "test/c89/print.l1", "libc/putchar.l2");
@@ -224,7 +221,7 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/print.l1", "libc/printf.l2");
 
 	register_dependency(state, "test/c89/putchar-return.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/putchar-return.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/putchar-return.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/putchar-return.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/putchar-return.l1", "libc/putchar.l2");
 	register_dependency(state, "test/c89/putchar-return.l1", "builtin/l2/putchar_busy.l2");
@@ -233,49 +230,49 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/string-literal.l1", "libc/assert.l2");
 	register_dependency(state, "test/c89/string-literal.l1", "libc/printf.l2");
 	register_dependency(state, "test/c89/string-literal.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/string-literal.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/string-literal.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/string-literal.l1", "libc/putchar.l2");
 
 	register_dependency(state, "test/c89/use-array.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/use-array.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/use-array.l1", "libc/assert.l2");
+	register_dependency(state, "test/c89/use-array.l1", "libc/printf.l2");
 	register_dependency(state, "test/c89/use-array.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/use-array.l1", "libc/putchar.l2");
-	register_dependency(state, "test/c89/use-array.l1", "builtin/l2/putchar_busy.l2");
+	register_dependency(state, "test/c89/use-array.l1", "builtin/libbuiltin.l2");
 
 	register_dependency(state, "test/c89/use-local.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/use-local.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/use-local.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/use-local.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/use-local.l1", "libc/putchar.l2");
 	register_dependency(state, "test/c89/use-local.l1", "builtin/l2/putchar_busy.l2");
 
 	register_dependency(state, "test/c89/use-reference.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/use-reference.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/use-reference.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/use-reference.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/use-reference.l1", "libc/putchar.l2");
 	register_dependency(state, "test/c89/use-reference.l1", "builtin/l2/putchar_busy.l2");
 
 	register_dependency(state, "test/c89/va_list_call.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/va_list_call.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/va_list_call.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/va_list_call.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/va_list_call.l1", "libc/putchar.l2");
 	register_dependency(state, "test/c89/va_list_call.l1", "builtin/l2/putchar_busy.l2");
 
 	register_dependency(state, "test/c89/while-loop.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/while-loop.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/while-loop.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/while-loop.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/while-loop.l1", "libc/putchar.l2");
 	register_dependency(state, "test/c89/while-loop.l1", "builtin/signed_less_than.l2");
 	register_dependency(state, "test/c89/while-loop.l1", "builtin/l2/putchar_busy.l2");
 
 	register_dependency(state, "test/c89/typedef.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/typedef.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/typedef.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/typedef.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/typedef.l1", "libc/putchar.l2");
 	register_dependency(state, "test/c89/typedef.l1", "builtin/l2/putchar_busy.l2");
 
 	register_dependency(state, "test/c89/exotic-declarators.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/exotic-declarators.l1", "builtin/l2/stack.l2");
+	register_dependency(state, "test/c89/exotic-declarators.l1", "builtin/stack.l2");
 	register_dependency(state, "test/c89/exotic-declarators.l1", "builtin/l2/mainstub.l2");
 	register_dependency(state, "test/c89/exotic-declarators.l1", "libc/putchar.l2");
 	register_dependency(state, "test/c89/exotic-declarators.l1", "builtin/l2/putchar_busy.l2");
@@ -285,7 +282,6 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/constants.l1", "libc/assert.l2");
 	register_dependency(state, "test/c89/constants.l1", "libc/printf.l2");
 	register_dependency(state, "test/c89/constants.l1", "libc/putchar.l2");
-	register_dependency(state, "test/c89/constants.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/constants.l1", "builtin/l2/mainstub.l2");
 
 	register_dependency(state, "test/c89/malloc-test.l1", "builtin/l2/memory_mapped_registers.l2");
@@ -294,11 +290,9 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/malloc-test.l1", "libc/printf.l2");
 	register_dependency(state, "test/c89/malloc-test.l1", "libc/malloc.l2");
 	register_dependency(state, "test/c89/malloc-test.l1", "libc/putchar.l2");
-	register_dependency(state, "test/c89/malloc-test.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/malloc-test.l1", "builtin/l2/mainstub.l2");
 
 	register_dependency(state, "test/c89/main_with_parameters.l1", "builtin/l2/memory_mapped_registers.l2");
-	register_dependency(state, "test/c89/main_with_parameters.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c89/main_with_parameters.l1", "builtin/main_argv_indirect.l2");
 	register_dependency(state, "test/c89/main_with_parameters.l1", "builtin/l2/mainstub_argv_indirect.l2");
 	register_dependency(state, "test/c89/main_with_parameters.l1", "libc/putchar.l2");
@@ -312,7 +306,6 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c99/preprocessor_test.l1", "libc/printf.l2");
 	register_dependency(state, "test/c99/preprocessor_test.l1", "libc/malloc.l2");
 	register_dependency(state, "test/c99/preprocessor_test.l1", "libc/putchar.l2");
-	register_dependency(state, "test/c99/preprocessor_test.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c99/preprocessor_test.l1", "builtin/l2/mainstub.l2");
 
 	register_dependency(state, "test/c99/snprintf_test.l1", "builtin/l2/memory_mapped_registers.l2");
@@ -321,6 +314,5 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c99/snprintf_test.l1", "libc/printf.l2");
 	register_dependency(state, "test/c99/snprintf_test.l1", "libc/malloc.l2");
 	register_dependency(state, "test/c99/snprintf_test.l1", "libc/putchar.l2");
-	register_dependency(state, "test/c99/snprintf_test.l1", "builtin/l2/stack.l2");
 	register_dependency(state, "test/c99/snprintf_test.l1", "builtin/l2/mainstub.l2");
 }

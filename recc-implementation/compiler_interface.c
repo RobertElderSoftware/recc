@@ -1,16 +1,17 @@
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
 #include "compiler_interface.h"
@@ -30,11 +31,28 @@ void register_l0_file(struct build_state * state, const char * l0_filename, cons
 	unsigned_char_ptr_to_struct_build_target_ptr_map_get(&state->targets, (unsigned char *)l0_filename)->l0_info = info;
 }
 
+void register_l1_file(struct build_state * state, const char * l1_filename, unsigned int page_align_permission_regions, unsigned int only_metadata){
+	struct l1_build_info * info = (struct l1_build_info *)malloc(sizeof(struct l1_build_info));
+	info->page_align_permission_regions = page_align_permission_regions;
+	info->only_metadata = only_metadata;
+	register_build_target(state, l1_filename, BUILD_TARGET_L1_FILE);
+	unsigned_char_ptr_to_struct_build_target_ptr_map_get(&state->targets, (unsigned char *)l1_filename)->l1_info = info;
+}
+
+void register_l2_file(struct build_state * state, const char * l2_filename, const char * offset){
+	struct l2_build_info * info = (struct l2_build_info *)malloc(sizeof(struct l2_build_info));
+	info->offset = copy_null_terminated_string((unsigned char *)offset, state->memory_pool_collection);
+	register_build_target(state, l2_filename, BUILD_TARGET_L2_FILE);
+	unsigned_char_ptr_to_struct_build_target_ptr_map_get(&state->targets, (unsigned char *)l2_filename)->l2_info = info;
+}
+
 const char * register_build_target(struct build_state * state, const char * name, enum build_target_type type){
 	struct build_target * new_target = (struct build_target *)malloc(sizeof(struct build_target));
 	unsigned char * key = copy_null_terminated_string((unsigned char *)name, state->memory_pool_collection);
 	new_target->satisfied = 0;
 	new_target->l0_info = (struct l0_build_info*)0;
+	new_target->l1_info = (struct l1_build_info*)0;
+	new_target->l2_info = (struct l2_build_info*)0;
 	new_target->type = type;
 	new_target->name = key;
 	unsigned_char_ptr_to_struct_build_target_ptr_map_create(&new_target->children);
@@ -109,24 +127,24 @@ void make_target(struct build_state * state, struct build_target * target, struc
 			}else{
 				printf(".\n");
 			}
-			do_link(state->memory_pool_collection, child_keys, target->name, symbol_file, BUILD_TARGET_L1_FILE);
+			do_link(state->memory_pool_collection, child_keys, target->name, symbol_file, BUILD_TARGET_L1_FILE, (unsigned char *)"0x0", target->l1_info->page_align_permission_regions, target->l1_info->only_metadata);
 			break;
 		}case BUILD_TARGET_L2_FILE:{
 			/*  If it has a single child that is a preprocessed C file, then we're just building a regular l2 file. */
 			if(unsigned_char_ptr_list_size(child_keys) == 1 && unsigned_char_ptr_to_struct_build_target_ptr_map_get(&target->children, unsigned_char_ptr_list_get(child_keys, 0))->type == BUILD_TARGET_PREPROCESSED_FILE){
 				printf("Build process creating L2 file '%s' from preprocessed file '%s'.\n", target->name, unsigned_char_ptr_list_get(child_keys,0));
-				do_code_generation(state->memory_pool_collection, unsigned_char_ptr_list_get(child_keys, 0), target->name);
+				do_code_generation(state->memory_pool_collection, unsigned_char_ptr_list_get(child_keys, 0), target->name, target->l2_info->offset);
 			}else{
 				/*  Otherwise, we must be linking together multiple l2 files into a bit one. */
 				unsigned char * symbol_file = get_parent_symbol_file(state, target);
-				do_link(state->memory_pool_collection, child_keys, target->name, symbol_file, BUILD_TARGET_L2_FILE);
+				do_link(state->memory_pool_collection, child_keys, target->name, symbol_file, BUILD_TARGET_L2_FILE, target->l2_info->offset, 0, 0);
 			}
 			break;
 		}case BUILD_TARGET_L0_FILE:{
-			struct preloader_state * preloader_state;
+			struct l0_generator_state * l0_generator_state;
 			printf("Build process creating L0 file '%s' from l1 file '%s'.\n", target->name, unsigned_char_ptr_list_get(child_keys,0));
-			preloader_state = preloader_state_create(target->l0_info->function_name, unsigned_char_ptr_list_get(child_keys,0), target->name, target->l0_info->language);
-			preloader_state_destroy(preloader_state);
+			l0_generator_state = l0_generator_state_create(state->memory_pool_collection, target->l0_info->function_name, unsigned_char_ptr_list_get(child_keys,0), target->name, target->l0_info->language);
+			l0_generator_state_destroy(l0_generator_state);
 			break;
 		}case BUILD_TARGET_FILESYSTEM_IMPLEMENTATION:{
 			printf("Build process creating filesystem implementation '%s'.\n", target->name);
@@ -204,7 +222,12 @@ void destroy_build_state(struct build_state * state){
 			heap_memory_pool_free(state->memory_pool_collection->heap_pool, target->l0_info->language);
 			heap_memory_pool_free(state->memory_pool_collection->heap_pool, target->l0_info->function_name);
 		}
+		if(target->l2_info){
+			heap_memory_pool_free(state->memory_pool_collection->heap_pool, target->l2_info->offset);
+		}
 		free(target->l0_info);
+		free(target->l1_info);
+		free(target->l2_info);
 		free(target);
 	}
 
@@ -221,7 +244,7 @@ void destroy_build_state(struct build_state * state){
 
 void register_to_l1(struct build_state * state, char * l2_item, char * item){
 	char * l1_item = (char *)create_formatted_string(state->memory_pool_collection, 20, "%s.l1", item);
-	register_build_target(state, l1_item, BUILD_TARGET_L1_FILE);
+	register_l1_file(state, l1_item, 0, 0);
 	register_dependency(state, l1_item, l2_item);
 	heap_memory_pool_free(state->memory_pool_collection->heap_pool, l1_item);
 }
@@ -232,7 +255,7 @@ void register_group(struct build_state * state, char * item, unsigned int includ
 	char * i_item = (char *)create_formatted_string(state->memory_pool_collection, 20, "%s.i", item);
 	char * c_item = (char *)create_formatted_string(state->memory_pool_collection, 20, "%s.c", item);
 
-	register_build_target(state, l2_item, BUILD_TARGET_L2_FILE);
+	register_l2_file(state, l2_item, "RELOCATABLE");
 	register_build_target(state, i_item,  BUILD_TARGET_PREPROCESSED_FILE);
 	register_build_target(state, c_item,  BUILD_TARGET_C_FILE);
 	register_dependency(state, i_item, c_item);

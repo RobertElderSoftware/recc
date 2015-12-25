@@ -1,108 +1,120 @@
-#ifndef __GENERATE_CODE__ 
-#define __GENERATE_CODE__ 
+#ifndef GENERATE_CODE__ 
+#define GENERATE_CODE__ 
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
-#ifndef __STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED__
 #include <stdlib.h>
 #endif
-#ifndef __STRING_H_DEFINED__
+#ifndef STRING_H_DEFINED__
 #include <string.h>
 #endif
-#ifndef __PARSER_H__
+#ifndef PARSER_H__
 #include "parser.h"
 #endif
-#ifndef __unsigned_int_list__H__DEFINED__
+#ifndef unsigned_int_list__H__DEFINED__
 #include "../data-structures/unsigned_int_list.h"
 #endif
-#ifndef __unsigned_int_stack__H__DEFINED__
+#ifndef unsigned_int_stack__H__DEFINED__
 #include "../data-structures/unsigned_int_stack.h"
 #endif
-#ifndef __struct_type_description_ptr_list__H__DEFINED__
+#ifndef struct_type_description_ptr_list__H__DEFINED__
 #include "../data-structures/struct_type_description_ptr_list.h"
 #endif
-#ifndef __unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list__H__DEFINED__
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef __unsigned_int_ptr_list__H__DEFINED__
+#ifndef unsigned_int_ptr_list__H__DEFINED__
 #include "../data-structures/unsigned_int_ptr_list.h"
 #endif
-#ifndef __unsigned_char_ptr_to_struct_linker_symbol_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_map__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
 #endif
-#ifndef __struct_switch_frame_ptr_list__H__DEFINED__
+#ifndef struct_switch_frame_ptr_list__H__DEFINED__
 #include "../data-structures/struct_switch_frame_ptr_list.h"
 #endif
-#ifndef __unsigned_int_stack__H__DEFINED__
+#ifndef unsigned_int_stack__H__DEFINED__
 #include "../data-structures/unsigned_int_stack.h"
 #endif
-#ifndef __struct_type_description_ptr_list__H__DEFINED__
+#ifndef struct_type_description_ptr_list__H__DEFINED__
 #include "../data-structures/struct_type_description_ptr_list.h"
 #endif
-#ifndef __struct_constant_initializer_level_ptr_list__H__DEFINED__
+#ifndef struct_constant_initializer_level_ptr_list__H__DEFINED__
 #include "../data-structures/struct_constant_initializer_level_ptr_list.h"
 #endif
-#ifndef __struct_type_traversal_ptr_list__H__DEFINED__
+#ifndef struct_type_traversal_ptr_list__H__DEFINED__
 #include "../data-structures/struct_type_traversal_ptr_list.h"
 #endif
-#ifndef __char_ptr_list__H__DEFINED__
+#ifndef struct_compile_time_constant_ptr_list__H__DEFINED__
+#include "../data-structures/struct_compile_time_constant_ptr_list.h"
+#endif
+#ifndef struct_linker_object_ptr_list__H__DEFINED__
+#include "../data-structures/struct_linker_object_ptr_list.h"
+#endif
+#ifndef char_ptr_list__H__DEFINED__
 #include "../data-structures/char_ptr_list.h"
 #endif
-#ifndef __LINKER_H__
+#ifndef LINKER_H__
 #include "linker.h"
 #endif
-#ifndef __LEXER_H__
+#ifndef LEXER_H__
 #include "lexer.h"
 #endif
-#ifndef __STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED__
 #include <stdio.h>
 #endif
-#ifndef __ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED__
 #include <assert.h>
 #endif
-#ifndef __STDARG_H_DEFINED__
+#ifndef STDARG_H_DEFINED__
 #include <stdarg.h>
 #endif
-#ifndef __struct_parser_node_memory_pool__H__DEFINED__
+#ifndef struct_parser_node_memory_pool__H__DEFINED__
 #include "../data-structures/struct_parser_node_memory_pool.h"
 #endif
-#ifndef __struct_c_lexer_token_memory_pool__H__DEFINED__
+#ifndef struct_c_lexer_token_memory_pool__H__DEFINED__
 #include "../data-structures/struct_c_lexer_token_memory_pool.h"
 #endif
-#ifndef __struct_linker_symbol_memory_pool__H__DEFINED__
+#ifndef struct_linker_symbol_memory_pool__H__DEFINED__
 #include "../data-structures/struct_linker_symbol_memory_pool.h"
 #endif
-#ifndef __TYPES_CODE_GENERATOR_struct_code_gen_state_H__
+#ifndef TYPES_CODE_GENERATOR_struct_code_gen_state_H__
 #include "../types/code_generator/struct_code_gen_state.h"
 #endif
-#ifndef __TYPES_CODE_GENERATOR_struct_constant_initializer_level_H__
+#ifndef TYPES_CODE_GENERATOR_struct_constant_initializer_level_H__
 #include "../types/code_generator/struct_constant_initializer_level.h"
 #endif
-#ifndef __TYPES_CODE_GENERATOR_struct_type_traversal_H__
+#ifndef TYPES_CODE_GENERATOR_struct_type_traversal_H__
 #include "../types/code_generator/struct_type_traversal.h"
 #endif
-#ifndef __TYPES_CODE_GENERATOR_struct_switch_frame_H__
+#ifndef TYPES_CODE_GENERATOR_struct_switch_frame_H__
 #include "../types/code_generator/struct_switch_frame.h"
 #endif
-#ifndef __OP_CPU_H__
+#ifndef OP_CPU_H__
 #include "../emulators/c/op-cpu.h"
 #endif
+#ifndef TYPES_LEXER_enum_l2_token_type_H__
+#include "../types/lexer/enum_l2_token_type.h"
+#endif
+
+
 
 void create_code_gen_state(struct code_gen_state *, struct parser_state *, struct unsigned_char_list *, struct unsigned_char_list *);
 int generate_code(struct code_gen_state *);
-int do_code_generation(struct memory_pool_collection *, unsigned char *, unsigned char *);
+int do_code_generation(struct memory_pool_collection *, unsigned char *, unsigned char *, unsigned char *);
 int destroy_code_gen_state(struct code_gen_state *);
 struct compile_time_constant * evaluate_constant_constant_expression(struct code_gen_state *, struct parser_node *);
 unsigned int type_size(struct code_gen_state *, struct type_description *, enum value_type, unsigned int, struct scope_level *);
@@ -159,7 +171,7 @@ void require_external_symbol(struct memory_pool_collection *, struct unsigned_ch
 void implement_external_symbol(struct memory_pool_collection *, struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *, unsigned char * );
 void require_internal_symbol(struct memory_pool_collection *, struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *, unsigned char * );
 void implement_internal_symbol(struct memory_pool_collection *, struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map *, unsigned char * );
-struct linker_symbol * make_linker_symbol(struct memory_pool_collection *, unsigned int, unsigned int, unsigned int, unsigned int);
+struct linker_symbol * make_linker_symbol(struct memory_pool_collection *, unsigned int, unsigned int, unsigned int);
 void pop(struct code_gen_state *, const char *, enum value_type);
 void push(struct code_gen_state *, const char *, enum value_type);
 void do_signed_operation_function_call(struct code_gen_state *, const char *);
@@ -199,7 +211,7 @@ struct compile_time_constant * evaluate_constant_conditional_expression(struct c
 void evaluate_constant_initializer_list(struct code_gen_state *, struct constant_initializer_level *, struct parser_node *);
 unsigned int evaluate_compile_time_constant(struct code_gen_state * code_gen_state, struct compile_time_constant *);
 void destroy_constant_initializer_level(struct constant_initializer_level *);
-void setup_global_type(struct code_gen_state *, struct type_traversal *, struct constant_initializer_level *);
+void setup_global_type(struct code_gen_state *, struct type_traversal *, struct constant_initializer_level *, struct struct_constant_description_ptr_list *, struct struct_type_description_ptr_list *);
 void setup_global_primative(struct code_gen_state *, struct type_description *, struct constant_initializer_level *);
 void ensure_top_values_are_rvalues(struct code_gen_state *, struct parser_node *);
 void l_to_lr_transform(struct code_gen_state *, struct type_description *);

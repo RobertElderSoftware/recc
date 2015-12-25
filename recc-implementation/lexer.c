@@ -1,16 +1,17 @@
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 #include "lexer.h"
 
@@ -109,39 +110,50 @@ static const char * c_token_type_names[90] = {
 	"NUMBER_SIGN_CHAR"
 };
 
-static const char * asm_token_type_names[32] = {
-	"A_SPACE",
-	"A_NEWLINE",
-	"A_ASM_COMMENT",
-	"A_IDENTIFIER",
-	"A_COLON_CHAR",
-	"A_COMMA_CHAR",
-	"A_MINUS_CHAR",
-	"A_OFFSET",
-	"A_RELOCATABLE",
-	"A_IMPLEMENTS",
-	"A_REQUIRES",
-	"A_INTERNAL",
-	"A_EXTERNAL",
-	"A_REGISTER",
-	"A_CONSTANT_HEX",
-	"A_CONSTANT_DECIMAL",
-	"A_ADD",
-	"A_SUB",
-	"A_MUL",
-	"A_DIV",
-	"A_BEQ",
-	"A_BLT",
-	"A_LOA",
-	"A_STO",
-	"A_LL",
-	"A_AND",
-	"A_OR",
-	"A_NOT",
-	"A_SHR",
-	"A_SHL",
-	"A_DW",
-	"A_SW"
+static const char * l2_token_type_names[43] = {
+	"L2_SPACE",
+	"L2_NEWLINE",
+	"L2_COMMENT",
+	"L2_IDENTIFIER",
+	"L2_COLON_CHAR",
+	"L2_COMMA_CHAR",
+	"L2_MINUS_CHAR",
+	"L2_OFFSET",
+	"L2_RELOCATABLE",
+	"L2_IMPLEMENTS",
+	"L2_IMPLEMENTED",
+	"L2_REQUIRES",
+	"L2_REQUIRED",
+	"L2_INTERNAL",
+	"L2_EXTERNAL",
+	"L2_REGISTER",
+	"L2_FUNCTION",
+	"L2_VARIABLE",
+	"L2_CONSTANT",
+	"L2_STRING",
+	"L2_UNRESOLVED",
+	"L2_REGION",
+	"L2_START",
+	"L2_END",
+	"L2_PERMISSION",
+	"L2_CONSTANT_HEX",
+	"L2_CONSTANT_DECIMAL",
+	"L2_ADD",
+	"L2_SUB",
+	"L2_MUL",
+	"L2_DIV",
+	"L2_BEQ",
+	"L2_BLT",
+	"L2_LOA",
+	"L2_STO",
+	"L2_LL",
+	"L2_AND",
+	"L2_OR",
+	"L2_NOT",
+	"L2_SHR",
+	"L2_SHL",
+	"L2_DW",
+	"L2_SW"
 };
 
 /*  Interfaces not in .h file to discourage external usage */
@@ -155,10 +167,9 @@ unsigned int t_E(struct common_lexer_state *, unsigned int);
 unsigned int t_FS(struct common_lexer_state *, unsigned int);
 unsigned int t_IS(struct common_lexer_state *, unsigned int);
 unsigned int t_comment(struct common_lexer_state *, unsigned int, unsigned int *);
-unsigned int t_asm_comment(struct common_lexer_state *, unsigned int);
-unsigned int t_asm_register(struct common_lexer_state *, unsigned int);
+unsigned int t_l2_comment(struct common_lexer_state *, unsigned int);
+unsigned int t_l2_register(struct common_lexer_state *, unsigned int);
 unsigned int t_keyword(unsigned const char *, struct common_lexer_state *, unsigned int);
-unsigned int t_keyword_space_check(unsigned const char *, struct common_lexer_state *, unsigned int);
 unsigned int t_symbol(unsigned const char *, struct common_lexer_state *, unsigned int);
 unsigned int t_identifier(struct common_lexer_state *, unsigned int);
 unsigned int t_constant_hex(struct common_lexer_state *, unsigned int);
@@ -283,7 +294,7 @@ unsigned int t_comment(struct common_lexer_state * common_lexer_state, unsigned 
 	return 0;
 }
 
-unsigned int t_asm_comment(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
+unsigned int t_l2_comment(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
 	unsigned int count = 0;
 	if(accept(';', common_lexer_state, tentative_position + count)){
 		count++;
@@ -307,7 +318,7 @@ unsigned int t_asm_comment(struct common_lexer_state * common_lexer_state, unsig
 	return count;
 }
 
-unsigned int t_asm_register(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
+unsigned int t_l2_register(struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
 	unsigned int count = 0;
 	if(accept('r', common_lexer_state, tentative_position + count)){
 		count++;
@@ -372,16 +383,6 @@ unsigned int t_keyword(unsigned const char * word, struct common_lexer_state * c
 	unsigned int count = 0;
 	if((count = accept_word(word, common_lexer_state, tentative_position + count))){
 		if(!(t_D(common_lexer_state, tentative_position + count) || t_L(common_lexer_state, tentative_position + count)))
-			return count;
-	
-	}
-	return 0;
-}
-
-unsigned int t_keyword_space_check(unsigned const char * word, struct common_lexer_state * common_lexer_state, unsigned int tentative_position){
-	unsigned int count = 0;
-	if((count = accept_word(word, common_lexer_state, tentative_position + count))){
-		if(t_space(common_lexer_state, tentative_position + count))
 			return count;
 	
 	}
@@ -880,116 +881,138 @@ void destroy_c_lexer_state(struct c_lexer_state * c_lexer_state){
 	struct_c_lexer_token_ptr_list_destroy(&c_lexer_state->tokens);
 }
 
-void destroy_asm_lexer_state(struct asm_lexer_state * asm_lexer_state){
-	unsigned int num_tokens = struct_asm_lexer_token_ptr_list_size(&asm_lexer_state->tokens);
-	struct asm_lexer_token ** tokens = struct_asm_lexer_token_ptr_list_data(&asm_lexer_state->tokens);
+void destroy_l2_lexer_state(struct l2_lexer_state * l2_lexer_state){
+	unsigned int num_tokens = struct_l2_lexer_token_ptr_list_size(&l2_lexer_state->tokens);
+	struct l2_lexer_token ** tokens = struct_l2_lexer_token_ptr_list_data(&l2_lexer_state->tokens);
 	unsigned int i;
 	for(i = 0; i < num_tokens; i++){
-		struct_asm_lexer_token_memory_pool_free(asm_lexer_state->c.memory_pool_collection->struct_asm_lexer_token_pool, tokens[i]);
+		struct_l2_lexer_token_memory_pool_free(l2_lexer_state->c.memory_pool_collection->struct_l2_lexer_token_pool, tokens[i]);
 	}
-	struct_asm_lexer_token_ptr_list_destroy(&asm_lexer_state->tokens);
+	struct_l2_lexer_token_ptr_list_destroy(&l2_lexer_state->tokens);
 }
 
-int lex_asm(struct asm_lexer_state * asm_lexer_state, unsigned char * filename, unsigned char * buffer, unsigned int buffer_size){
-	asm_lexer_state->c.buf = buffer;
-	asm_lexer_state->c.position = 0;
-	asm_lexer_state->c.current_line = 0;
-	asm_lexer_state->c.filename = filename;
-	asm_lexer_state->c.buffer_size = buffer_size;
+int lex_asm(struct l2_lexer_state * l2_lexer_state, unsigned char * filename, unsigned char * buffer, unsigned int buffer_size){
+	l2_lexer_state->c.buf = buffer;
+	l2_lexer_state->c.position = 0;
+	l2_lexer_state->c.current_line = 0;
+	l2_lexer_state->c.filename = filename;
+	l2_lexer_state->c.buffer_size = buffer_size;
 
-	struct_asm_lexer_token_ptr_list_create(&asm_lexer_state->tokens);
+	struct_l2_lexer_token_ptr_list_create(&l2_lexer_state->tokens);
 
-	while(asm_lexer_state->c.position < buffer_size){
+	while(l2_lexer_state->c.position < buffer_size){
 		unsigned int rtn = 0;
-		unsigned char * first_byte = &asm_lexer_state->c.buf[asm_lexer_state->c.position];
-		enum asm_token_type type;
-		struct asm_lexer_token * new_token;
+		unsigned char * first_byte = &l2_lexer_state->c.buf[l2_lexer_state->c.position];
+		enum l2_token_type type;
+		struct l2_lexer_token * new_token;
 
-		if((rtn = t_space(&asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_SPACE;
-		}else if((rtn = t_newline(&asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_NEWLINE;
-			asm_lexer_state->c.current_line = asm_lexer_state->c.current_line + rtn;
-		}else if((rtn = t_asm_comment(&asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_ASM_COMMENT;
-		}else if((rtn = t_symbol((const unsigned char *)":", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_COLON_CHAR;
-		}else if((rtn = t_symbol((const unsigned char *)",", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_COMMA_CHAR;
-		}else if((rtn = t_symbol((const unsigned char *)"-", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_MINUS_CHAR;
-		}else if((rtn = t_keyword((const unsigned char *)"OFFSET", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_OFFSET;
-		}else if((rtn = t_keyword((const unsigned char *)"RELOCATABLE", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_RELOCATABLE;
-		}else if((rtn = t_keyword((const unsigned char *)"IMPLEMENTS", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_IMPLEMENTS;
-		}else if((rtn = t_keyword((const unsigned char *)"REQUIRES", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_REQUIRES;
-		}else if((rtn = t_keyword((const unsigned char *)"INTERNAL", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_INTERNAL;
-		}else if((rtn = t_keyword((const unsigned char *)"EXTERNAL", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_EXTERNAL;
-		}else if((rtn = t_asm_register(&asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_REGISTER;
-		}else if((rtn = t_constant_hex(&asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_CONSTANT_HEX;
-		}else if((rtn = t_constant_decimal(&asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_CONSTANT_DECIMAL;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"add", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_ADD;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"sub", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_SUB;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"mul", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_MUL;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"div", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_DIV;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"beq", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_BEQ;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"blt", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_BLT;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"loa", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_LOA;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"sto", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_STO;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"ll", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_LL;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"and", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_AND;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"or", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_OR;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"not", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_NOT;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"shr", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_SHR;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"shl", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_SHL;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"dw", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_DW;
-		}else if((rtn = t_keyword_space_check((const unsigned char *)"sw", &asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_SW;
-		}else if((rtn = t_identifier(&asm_lexer_state->c, asm_lexer_state->c.position))){
-			type = A_IDENTIFIER;
+		if((rtn = t_space(&l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_SPACE;
+		}else if((rtn = t_newline(&l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_NEWLINE;
+			l2_lexer_state->c.current_line = l2_lexer_state->c.current_line + rtn;
+		}else if((rtn = t_l2_comment(&l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_COMMENT;
+		}else if((rtn = t_symbol((const unsigned char *)":", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_COLON_CHAR;
+		}else if((rtn = t_symbol((const unsigned char *)",", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_COMMA_CHAR;
+		}else if((rtn = t_symbol((const unsigned char *)"-", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_MINUS_CHAR;
+		}else if((rtn = t_keyword((const unsigned char *)"OFFSET", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_OFFSET;
+		}else if((rtn = t_keyword((const unsigned char *)"RELOCATABLE", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_RELOCATABLE;
+		}else if((rtn = t_keyword((const unsigned char *)"IMPLEMENTS", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_IMPLEMENTS;
+		}else if((rtn = t_keyword((const unsigned char *)"IMPLEMENTED", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_IMPLEMENTED;
+		}else if((rtn = t_keyword((const unsigned char *)"FUNCTION", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_FUNCTION;
+		}else if((rtn = t_keyword((const unsigned char *)"VARIABLE", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_VARIABLE;
+		}else if((rtn = t_keyword((const unsigned char *)"CONSTANT", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_CONSTANT;
+		}else if((rtn = t_keyword((const unsigned char *)"REQUIRES", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_REQUIRES;
+		}else if((rtn = t_keyword((const unsigned char *)"REQUIRED", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_REQUIRED;
+		}else if((rtn = t_keyword((const unsigned char *)"INTERNAL", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_INTERNAL;
+		}else if((rtn = t_keyword((const unsigned char *)"EXTERNAL", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_EXTERNAL;
+		}else if((rtn = t_keyword((const unsigned char *)"STRING", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_STRING;
+		}else if((rtn = t_keyword((const unsigned char *)"UNRESOLVED", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_UNRESOLVED;
+		}else if((rtn = t_keyword((const unsigned char *)"REGION", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_REGION;
+		}else if((rtn = t_keyword((const unsigned char *)"START", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_START;
+		}else if((rtn = t_keyword((const unsigned char *)"END", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_END;
+		}else if((rtn = t_keyword((const unsigned char *)"PERMISSION", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_PERMISSION;
+		}else if((rtn = t_l2_register(&l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_REGISTER;
+		}else if((rtn = t_constant_hex(&l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_CONSTANT_HEX;
+		}else if((rtn = t_constant_decimal(&l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_CONSTANT_DECIMAL;
+		}else if((rtn = t_keyword((const unsigned char *)"add", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_ADD;
+		}else if((rtn = t_keyword((const unsigned char *)"sub", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_SUB;
+		}else if((rtn = t_keyword((const unsigned char *)"mul", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_MUL;
+		}else if((rtn = t_keyword((const unsigned char *)"div", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_DIV;
+		}else if((rtn = t_keyword((const unsigned char *)"beq", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_BEQ;
+		}else if((rtn = t_keyword((const unsigned char *)"blt", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_BLT;
+		}else if((rtn = t_keyword((const unsigned char *)"loa", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_LOA;
+		}else if((rtn = t_keyword((const unsigned char *)"sto", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_STO;
+		}else if((rtn = t_keyword((const unsigned char *)"ll", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_LL;
+		}else if((rtn = t_keyword((const unsigned char *)"and", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_AND;
+		}else if((rtn = t_keyword((const unsigned char *)"or", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_OR;
+		}else if((rtn = t_keyword((const unsigned char *)"not", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_NOT;
+		}else if((rtn = t_keyword((const unsigned char *)"shr", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_SHR;
+		}else if((rtn = t_keyword((const unsigned char *)"shl", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_SHL;
+		}else if((rtn = t_keyword((const unsigned char *)"DW", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_DW;
+		}else if((rtn = t_keyword((const unsigned char *)"SW", &l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_SW;
+		}else if((rtn = t_identifier(&l2_lexer_state->c, l2_lexer_state->c.position))){
+			type = L2_IDENTIFIER;
 		}else{
 			unsigned int i = 0;
-			buffered_printf(asm_lexer_state->c.buffered_output, "Lexer stopping on character 0x%02x.  This was character %u of %u\nFollowing chars are:", asm_lexer_state->c.buf[asm_lexer_state->c.position], (asm_lexer_state->c.position + 1), asm_lexer_state->c.buffer_size);
-			for(i = asm_lexer_state->c.position; i < (asm_lexer_state->c.position + 100) && i < asm_lexer_state->c.buffer_size; i++){
-				if(asm_lexer_state->c.buf[i]){
-					buffered_printf(asm_lexer_state->c.buffered_output, "%c", asm_lexer_state->c.buf[i]);
+			buffered_printf(l2_lexer_state->c.buffered_output, "Lexer stopping on character 0x%02x.  This was character %u of %u\nFollowing chars are:", l2_lexer_state->c.buf[l2_lexer_state->c.position], (l2_lexer_state->c.position + 1), l2_lexer_state->c.buffer_size);
+			for(i = l2_lexer_state->c.position; i < (l2_lexer_state->c.position + 100) && i < l2_lexer_state->c.buffer_size; i++){
+				if(l2_lexer_state->c.buf[i]){
+					buffered_printf(l2_lexer_state->c.buffered_output, "%c", l2_lexer_state->c.buf[i]);
 				}
 			}
-			buffered_printf(asm_lexer_state->c.buffered_output, "\n");
+			buffered_printf(l2_lexer_state->c.buffered_output, "\n");
 			return 1;
 		}
 
-		new_token = struct_asm_lexer_token_memory_pool_malloc(asm_lexer_state->c.memory_pool_collection->struct_asm_lexer_token_pool);
+		new_token = struct_l2_lexer_token_memory_pool_malloc(l2_lexer_state->c.memory_pool_collection->struct_l2_lexer_token_pool);
 		new_token->type = type;
 		new_token->first_byte = first_byte;
 		new_token->last_byte = (unsigned char *)((first_byte + rtn) - 1);
 
-		struct_asm_lexer_token_ptr_list_add_end(&asm_lexer_state->tokens, new_token);
-		show_lexer_token(asm_lexer_state->c.buffered_output, get_c_token_type_names()[new_token->type], new_token->first_byte, new_token->last_byte, SHOW_LEXER_TOKENS);
-		asm_lexer_state->c.position += rtn;
+		struct_l2_lexer_token_ptr_list_add_end(&l2_lexer_state->tokens, new_token);
+		show_lexer_token(l2_lexer_state->c.buffered_output, get_c_token_type_names()[new_token->type], new_token->first_byte, new_token->last_byte, SHOW_LEXER_TOKENS);
+		l2_lexer_state->c.position += rtn;
 	}
 	return 0;
 }
@@ -998,6 +1021,6 @@ const char ** get_c_token_type_names(void){
 	return c_token_type_names;
 }
 
-const char ** get_asm_token_type_names(void){
-	return asm_token_type_names;
+const char ** get_l2_token_type_names(void){
+	return l2_token_type_names;
 }

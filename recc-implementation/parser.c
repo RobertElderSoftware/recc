@@ -1,16 +1,17 @@
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 #include "parser.h"
 
@@ -3417,35 +3418,35 @@ void destroy_constant_description(struct memory_pool_collection * m, struct cons
 	free(description);
 }
 
-void * push_operation(struct parser_state * parser_state, enum parser_operation_type t, void * data){
+void * push_operation(struct parser_state * state, enum parser_operation_type t, void * data){
 	struct parser_operation new_operation;
 	new_operation.type = t;
-	new_operation.data = t == ADVANCE_PARSER_POSITION ? struct_parser_node_memory_pool_malloc(parser_state->memory_pool_collection->struct_parser_node_pool) : data;
-	struct_parser_operation_stack_push(&parser_state->operation_stack, new_operation);
+	new_operation.data = t == ADVANCE_PARSER_POSITION ? struct_parser_node_memory_pool_malloc(state->memory_pool_collection->struct_parser_node_pool) : data;
+	struct_parser_operation_stack_push(&state->operation_stack, new_operation);
 	switch(t){
 		case ADVANCE_TOKEN_POSITION:{
-			struct c_lexer_token ** tokens = struct_c_lexer_token_ptr_list_data(&parser_state->c_lexer_state->tokens);
-			unsigned char * c = tokens[parser_state->tokens_position]->first_byte;
+			struct c_lexer_token ** tokens = struct_c_lexer_token_ptr_list_data(&state->c_lexer_state->tokens);
+			unsigned char * c = tokens[state->tokens_position]->first_byte;
 			stack_operation("Accepting token '");
 			do{
 				stack_operation("%c", *c);
-			}while (c++ != tokens[parser_state->tokens_position]->last_byte);
+			}while (c++ != tokens[state->tokens_position]->last_byte);
 			stack_operation("'\n");
-			parser_state->tokens_position = parser_state->tokens_position + 1;
+			state->tokens_position = state->tokens_position + 1;
 			return (void *)0;
 		}case ADVANCE_PARSER_POSITION:{
 			*((struct parser_node *)new_operation.data) = *((struct parser_node *)data);
 			return new_operation.data;
 		}case INCREMENT_SCOPE_DEPTH:{
-			manage_new_scope(parser_state->top_scope, parser_state->current_scope_depth, ADD);
-			parser_state->current_scope_depth = parser_state->current_scope_depth + 1;
+			manage_new_scope(state->top_scope, state->current_scope_depth, ADD);
+			state->current_scope_depth = state->current_scope_depth + 1;
 			return (void *)0;
 		}case DECREMENT_SCOPE_DEPTH:{
-			assert(parser_state->current_scope_depth > 0);
-			parser_state->current_scope_depth = parser_state->current_scope_depth - 1;
+			assert(state->current_scope_depth > 0);
+			state->current_scope_depth = state->current_scope_depth - 1;
 			return (void *)0;
 		}case PROCESS_CONSTANT:{
-			manage_constant(parser_state, (struct parser_node *)data, ADD);
+			manage_constant(state, (struct parser_node *)data, ADD);
 			return (void *)0;
 		}case SAVE_DECLARATION_ELEMENTS:{
 			return (void *)0;
@@ -3454,7 +3455,7 @@ void * push_operation(struct parser_state * parser_state, enum parser_operation_
 		}case CREATE_PARSER_NODE_TREE:{
 			return (void *)0;
 		}case INCREMENT_NEWLINE_COUNT:{
-			parser_state->line_number = parser_state->line_number + 1;
+			state->line_number = state->line_number + 1;
 			return (void *)0;
 		}case SET_NEXT_NAMESPACE_OBJECT:{
 			set_next_namespace_object((struct namespace_object_change *)data);
@@ -3472,20 +3473,20 @@ void * push_operation(struct parser_state * parser_state, enum parser_operation_
 	}
 }
 
-void pop_operation(struct parser_state * parser_state){
+void pop_operation(struct parser_state * state){
 	struct parser_operation poped_operation;
-	if(struct_parser_operation_stack_size(&parser_state->operation_stack) == 0){
+	if(struct_parser_operation_stack_size(&state->operation_stack) == 0){
 		assert(0 && "Trying to pop empty operation stack.\n");
 		return;
 	}
-	poped_operation = struct_parser_operation_stack_pop(&parser_state->operation_stack);
+	poped_operation = struct_parser_operation_stack_pop(&state->operation_stack);
 	
 	switch(poped_operation.type){
 		case ADVANCE_TOKEN_POSITION:{
-			struct c_lexer_token ** tokens = struct_c_lexer_token_ptr_list_data(&parser_state->c_lexer_state->tokens);
-			unsigned int new_num_tokens = parser_state->tokens_position - 1;
+			struct c_lexer_token ** tokens = struct_c_lexer_token_ptr_list_data(&state->c_lexer_state->tokens);
+			unsigned int new_num_tokens = state->tokens_position - 1;
 			unsigned char * c = tokens[new_num_tokens]->first_byte;
-			parser_state->tokens_position = new_num_tokens;
+			state->tokens_position = new_num_tokens;
 			stack_operation("Put back token '");
 			do{
 				stack_operation("%c", *c);
@@ -3493,29 +3494,29 @@ void pop_operation(struct parser_state * parser_state){
 			stack_operation("'\n");
 			break;
 		}case ADVANCE_PARSER_POSITION:{
-			struct_parser_node_memory_pool_free(parser_state->memory_pool_collection->struct_parser_node_pool, (struct parser_node*)poped_operation.data);
+			struct_parser_node_memory_pool_free(state->memory_pool_collection->struct_parser_node_pool, (struct parser_node*)poped_operation.data);
 			break;
 		}case INCREMENT_SCOPE_DEPTH:{
-			parser_state->current_scope_depth = parser_state->current_scope_depth - 1;
-			manage_new_scope(parser_state->top_scope, parser_state->current_scope_depth, REMOVE);
+			state->current_scope_depth = state->current_scope_depth - 1;
+			manage_new_scope(state->top_scope, state->current_scope_depth, REMOVE);
 			break;
 		}case DECREMENT_SCOPE_DEPTH:{
-			parser_state->current_scope_depth = parser_state->current_scope_depth + 1;
+			state->current_scope_depth = state->current_scope_depth + 1;
 			break;
 		}case PROCESS_CONSTANT:{
-			manage_constant(parser_state, (struct parser_node *)poped_operation.data, REMOVE);
+			manage_constant(state, (struct parser_node *)poped_operation.data, REMOVE);
 			break;
 		}case SAVE_DECLARATION_ELEMENTS:{
-			destroy_normalized_declaration_element_list(parser_state->memory_pool_collection, (struct struct_normalized_declaration_element_ptr_list *)(poped_operation.data));
+			destroy_normalized_declaration_element_list(state->memory_pool_collection, (struct struct_normalized_declaration_element_ptr_list *)(poped_operation.data));
 			break;
 		}case NAMESPACE_MODIFICATION:{
-			undo_namespace_modification(parser_state->memory_pool_collection, (struct namespace_modification *)(poped_operation.data));
+			undo_namespace_modification(state->memory_pool_collection, (struct namespace_modification *)(poped_operation.data));
 			break;
 		}case CREATE_PARSER_NODE_TREE:{
-			destroy_parser_node_tree_and_c_lexer_tokens(parser_state->memory_pool_collection, (struct parser_node *)(poped_operation.data));
+			destroy_parser_node_tree_and_c_lexer_tokens(state->memory_pool_collection, (struct parser_node *)(poped_operation.data));
 			break;
 		}case INCREMENT_NEWLINE_COUNT:{
-			parser_state->line_number = parser_state->line_number - 1;
+			state->line_number = state->line_number - 1;
 			break;
 		}case SET_NEXT_NAMESPACE_OBJECT:{
 			struct namespace_object_change * c = (struct namespace_object_change *)(poped_operation.data);
@@ -3538,57 +3539,57 @@ void pop_operation(struct parser_state * parser_state){
 	}
 }
 
-void backtrack(struct parser_state * parser_state, unsigned int target){
-	while(struct_parser_operation_stack_size(&parser_state->operation_stack) != target){
-		pop_operation(parser_state);
+void backtrack(struct parser_state * state, unsigned int target){
+	while(struct_parser_operation_stack_size(&state->operation_stack) != target){
+		pop_operation(state);
 	}
 }
 
-struct parser_node * create_parser_node(struct parser_state * parser_state, struct parser_node * n, struct parser_node * f, struct c_lexer_token * l, enum node_type t){
+struct parser_node * create_parser_node(struct parser_state * state, struct parser_node * n, struct parser_node * f, struct c_lexer_token * l, enum node_type t){
 	struct parser_node new_node;
 	new_node.next = n;
 	new_node.first_child = f;
 	new_node.c_lexer_token = l;
 	new_node.type = t;
-	return (struct parser_node *)push_operation(parser_state, ADVANCE_PARSER_POSITION, (void*)&new_node);
+	return (struct parser_node *)push_operation(state, ADVANCE_PARSER_POSITION, (void*)&new_node);
 }
 
-struct parser_node * p_accept(enum c_token_type t, struct parser_state * parser_state){
-	unsigned int num_tokens = struct_c_lexer_token_ptr_list_size(&parser_state->c_lexer_state->tokens);
-	struct c_lexer_token ** tokens = struct_c_lexer_token_ptr_list_data(&parser_state->c_lexer_state->tokens);
+struct parser_node * p_accept(enum c_token_type t, struct parser_state * state){
+	unsigned int num_tokens = struct_c_lexer_token_ptr_list_size(&state->c_lexer_state->tokens);
+	struct c_lexer_token ** tokens = struct_c_lexer_token_ptr_list_data(&state->c_lexer_state->tokens);
 	while(
-		(parser_state->tokens_position < num_tokens) &&
+		(state->tokens_position < num_tokens) &&
 		(
-			tokens[parser_state->tokens_position]->type == SPACE ||
-			tokens[parser_state->tokens_position]->type == NEWLINE ||
-			tokens[parser_state->tokens_position]->type == COMMENT
+			tokens[state->tokens_position]->type == SPACE ||
+			tokens[state->tokens_position]->type == NEWLINE ||
+			tokens[state->tokens_position]->type == COMMENT
 		)
 	){
-		if(tokens[parser_state->tokens_position]->type == NEWLINE){
-			push_operation(parser_state, INCREMENT_NEWLINE_COUNT, (void*)0);
-		}else if(tokens[parser_state->tokens_position]->type == COMMENT){
-			unsigned int num_newlines = count_newlines_in_comment(tokens[parser_state->tokens_position]);
+		if(tokens[state->tokens_position]->type == NEWLINE){
+			push_operation(state, INCREMENT_NEWLINE_COUNT, (void*)0);
+		}else if(tokens[state->tokens_position]->type == COMMENT){
+			unsigned int num_newlines = count_newlines_in_comment(tokens[state->tokens_position]);
 			unsigned int i;
 			for(i = 0; i < num_newlines; i++){
-				push_operation(parser_state, INCREMENT_NEWLINE_COUNT, (void*)0);
+				push_operation(state, INCREMENT_NEWLINE_COUNT, (void*)0);
 			}
 		}
-		push_operation(parser_state, ADVANCE_TOKEN_POSITION, (void*)tokens[parser_state->tokens_position]);
+		push_operation(state, ADVANCE_TOKEN_POSITION, (void*)tokens[state->tokens_position]);
 	}
 
-	if(parser_state->tokens_position < num_tokens){
-		if(tokens[parser_state->tokens_position]->type == t){
+	if(state->tokens_position < num_tokens){
+		if(tokens[state->tokens_position]->type == t){
 			struct c_lexer_token * lt;
-			lt = tokens[parser_state->tokens_position];
-		        push_operation(parser_state, ADVANCE_TOKEN_POSITION, (void*)tokens[parser_state->tokens_position]);
-			return create_parser_node(parser_state, (struct parser_node *)0, (struct parser_node *)0, lt, TERMINAL);
+			lt = tokens[state->tokens_position];
+		        push_operation(state, ADVANCE_TOKEN_POSITION, (void*)tokens[state->tokens_position]);
+			return create_parser_node(state, (struct parser_node *)0, (struct parser_node *)0, lt, TERMINAL);
 		}
 	}
 	return (struct parser_node *)0;
 }
 
-struct parser_node * expect(enum c_token_type t, struct parser_state * parser_state){
-	struct parser_node * l = p_accept(t,parser_state);
+struct parser_node * expect(enum c_token_type t, struct parser_state * state){
+	struct parser_node * l = p_accept(t,state);
 	if(l){
 		return l;
 	}
@@ -3596,36 +3597,36 @@ struct parser_node * expect(enum c_token_type t, struct parser_state * parser_st
 	return (struct parser_node *)0;
 }
 
-struct parser_node * primary_expression(struct parser_state * parser_state){
+struct parser_node * primary_expression(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build primary_expression\n");
-	if((n1 = p_accept(IDENTIFIER, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, PRIMARY_EXPRESSION);
+	if((n1 = p_accept(IDENTIFIER, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, PRIMARY_EXPRESSION);
 	}else if(
-		(n1 = p_accept(CONSTANT_HEX, parser_state)) ||
-		(n1 = p_accept(CONSTANT_EXPONENT, parser_state)) ||
-		(n1 = p_accept(CONSTANT_FLOAT_SMALL, parser_state)) ||
-		(n1 = p_accept(CONSTANT_FLOAT_LARGE, parser_state)) ||
-		(n1 = p_accept(CONSTANT_DECIMAL, parser_state)) ||
-		(n1 = p_accept(CONSTANT_CHARACTER, parser_state))
+		(n1 = p_accept(CONSTANT_HEX, state)) ||
+		(n1 = p_accept(CONSTANT_EXPONENT, state)) ||
+		(n1 = p_accept(CONSTANT_FLOAT_SMALL, state)) ||
+		(n1 = p_accept(CONSTANT_FLOAT_LARGE, state)) ||
+		(n1 = p_accept(CONSTANT_DECIMAL, state)) ||
+		(n1 = p_accept(CONSTANT_CHARACTER, state))
 	){
-		push_operation(parser_state, PROCESS_CONSTANT, (void*)n1);
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, PRIMARY_EXPRESSION);
-	}else if((n1 = p_accept(STRING_LITERAL, parser_state))){
-		push_operation(parser_state, PROCESS_CONSTANT, (void*)n1);
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, PRIMARY_EXPRESSION);
-	}else if((n1 = p_accept(OPEN_PAREN_CHAR, parser_state))){
-		if((n1->next = expression(parser_state))) {
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, PRIMARY_EXPRESSION);
+		push_operation(state, PROCESS_CONSTANT, (void*)n1);
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, PRIMARY_EXPRESSION);
+	}else if((n1 = p_accept(STRING_LITERAL, state))){
+		push_operation(state, PROCESS_CONSTANT, (void*)n1);
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, PRIMARY_EXPRESSION);
+	}else if((n1 = p_accept(OPEN_PAREN_CHAR, state))){
+		if((n1->next = expression(state))) {
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, PRIMARY_EXPRESSION);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_PAREN_CHAR\n");
 				return (struct parser_node *)0;
 			}
 		}else{
 			parser_progress("Expected EXPRESSION...backtracking...\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -3634,20 +3635,20 @@ struct parser_node * primary_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * make_epsilon(struct parser_state * parser_state){
+struct parser_node * make_epsilon(struct parser_state * state){
 	parser_progress("Attempting to build epsilon\n");
-	return create_parser_node(parser_state, (struct parser_node *)0, (struct parser_node *)0, (struct c_lexer_token *)0, EPSILON);
+	return create_parser_node(state, (struct parser_node *)0, (struct parser_node *)0, (struct c_lexer_token *)0, EPSILON);
 }
 
 
 
-struct parser_node * argument_expression_list_rest(struct parser_state * parser_state){
+struct parser_node * argument_expression_list_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build argument_expression_list_rest\n");
-	if((n1 = p_accept(COMMA_CHAR, parser_state))){
-		if((n1->next = assignment_expression(parser_state))){
-			if((n1->next->next = argument_expression_list_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, ARGUMENT_EXPRESSION_LIST_REST);
+	if((n1 = p_accept(COMMA_CHAR, state))){
+		if((n1->next = assignment_expression(state))){
+			if((n1->next->next = argument_expression_list_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, ARGUMENT_EXPRESSION_LIST_REST);
 			}else{
 				assert(0 && "Expected a ARGUMENT_EXPRESSION_LIST_REST.\n");
 				return (struct parser_node *)0;
@@ -3657,17 +3658,17 @@ struct parser_node * argument_expression_list_rest(struct parser_state * parser_
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token *)0, ARGUMENT_EXPRESSION_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token *)0, ARGUMENT_EXPRESSION_LIST_REST);
 	}
 }
 
-struct parser_node * argument_expression_list(struct parser_state * parser_state){
+struct parser_node * argument_expression_list(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build argument_expression_list\n");
-	if((n1 = assignment_expression(parser_state))){
-		if((n1->next = argument_expression_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, ARGUMENT_EXPRESSION_LIST);
+	if((n1 = assignment_expression(state))){
+		if((n1->next = argument_expression_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, ARGUMENT_EXPRESSION_LIST);
 		}else{
 			assert(0 && "Expected a ARGUMENT_EXPRESSION_LIST.\n");
 			return (struct parser_node *)0;
@@ -3678,14 +3679,14 @@ struct parser_node * argument_expression_list(struct parser_state * parser_state
 	}
 }
 
-struct parser_node * postfix_expression_rest(struct parser_state * parser_state){
+struct parser_node * postfix_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build postfix_expression_rest\n");
-	if((n1 = p_accept(OPEN_SQUARE_BRACKET_CHAR, parser_state))){
-		if((n1->next = expression(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, parser_state))){
-				if((n1->next->next->next = postfix_expression_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
+	if((n1 = p_accept(OPEN_SQUARE_BRACKET_CHAR, state))){
+		if((n1->next = expression(state))){
+			if((n1->next->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, state))){
+				if((n1->next->next->next = postfix_expression_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected postfix_expression_rest\n");
 					return (struct parser_node *)0;
@@ -3698,18 +3699,18 @@ struct parser_node * postfix_expression_rest(struct parser_state * parser_state)
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected expression\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(OPEN_PAREN_CHAR, parser_state))){
-		if((n1->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-			if((n1->next->next = postfix_expression_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
+	}else if((n1 = p_accept(OPEN_PAREN_CHAR, state))){
+		if((n1->next = p_accept(CLOSE_PAREN_CHAR, state))){
+			if((n1->next->next = postfix_expression_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected postfix_expression_rest.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = argument_expression_list(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-				if((n1->next->next->next = postfix_expression_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
+		}else if((n1->next = argument_expression_list(state))){
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+				if((n1->next->next->next = postfix_expression_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected postfix_expression_rest.\n");
 					return (struct parser_node *)0;
@@ -3722,10 +3723,10 @@ struct parser_node * postfix_expression_rest(struct parser_state * parser_state)
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_PAREN_CHAR or argument_expression_list.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(DOT_CHAR, parser_state))){
-		if((n1->next = p_accept(IDENTIFIER, parser_state))){
-			if((n1->next->next = postfix_expression_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
+	}else if((n1 = p_accept(DOT_CHAR, state))){
+		if((n1->next = p_accept(IDENTIFIER, state))){
+			if((n1->next->next = postfix_expression_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected postfix_expression_rest.\n");
 				return (struct parser_node *)0;
@@ -3734,10 +3735,10 @@ struct parser_node * postfix_expression_rest(struct parser_state * parser_state)
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected IDENTIFIER.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(PTR_OP, parser_state))){
-		if((n1->next = p_accept(IDENTIFIER, parser_state))){
-			if((n1->next->next = postfix_expression_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
+	}else if((n1 = p_accept(PTR_OP, state))){
+		if((n1->next = p_accept(IDENTIFIER, state))){
+			if((n1->next->next = postfix_expression_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected postfix_expression_rest.\n");
 				return (struct parser_node *)0;
@@ -3746,32 +3747,32 @@ struct parser_node * postfix_expression_rest(struct parser_state * parser_state)
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected IDENTIFIER.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(INC_OP, parser_state))){
-		if((n1->next = postfix_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
+	}else if((n1 = p_accept(INC_OP, state))){
+		if((n1->next = postfix_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token *)0, POSTFIX_EXPRESSION_REST);
 		}else{
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected postfix_expression_rest.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(DEC_OP, parser_state))){
-		if((n1->next = postfix_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POSTFIX_EXPRESSION_REST);
+	}else if((n1 = p_accept(DEC_OP, state))){
+		if((n1->next = postfix_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POSTFIX_EXPRESSION_REST);
 		}else{
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected postfix_expression_rest.\n");
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, POSTFIX_EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, POSTFIX_EXPRESSION_REST);
 	}
 }
 
-struct parser_node * postfix_expression(struct parser_state * parser_state){
+struct parser_node * postfix_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build postfix_expression\n");
-	if((n1 = primary_expression(parser_state))){
-		if((n1->next = postfix_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POSTFIX_EXPRESSION);
+	if((n1 = primary_expression(state))){
+		if((n1->next = postfix_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POSTFIX_EXPRESSION);
 		}else{
 			assert(0 && "Expected postfix_expression_rest\n");
 			return (struct parser_node *)0;
@@ -3783,58 +3784,58 @@ struct parser_node * postfix_expression(struct parser_state * parser_state){
 }
 
 
-struct parser_node * unary_operator(struct parser_state * parser_state){
+struct parser_node * unary_operator(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build unary_operator\n");
-	if((n1 = p_accept(AMPERSAND_CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
-	}else if((n1 = p_accept(MULTIPLY_CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
-	}else if((n1 = p_accept(PLUS_CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
-	}else if((n1 = p_accept(MINUS_CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
-	}else if((n1 = p_accept(TILDE_CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
-	}else if((n1 = p_accept(EXCLAMATION_MARK_CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
+	if((n1 = p_accept(AMPERSAND_CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
+	}else if((n1 = p_accept(MULTIPLY_CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
+	}else if((n1 = p_accept(PLUS_CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
+	}else if((n1 = p_accept(MINUS_CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
+	}else if((n1 = p_accept(TILDE_CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
+	}else if((n1 = p_accept(EXCLAMATION_MARK_CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_OPERATOR);
 	}else{
 		parser_progress("Expected unary operator.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * unary_expression(struct parser_state * parser_state){
+struct parser_node * unary_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build unary_expression\n");
-	if((n1 = postfix_expression(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
-	}else if((n1 = p_accept(INC_OP, parser_state))){
-		if((n1->next = unary_expression(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
+	if((n1 = postfix_expression(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
+	}else if((n1 = p_accept(INC_OP, state))){
+		if((n1->next = unary_expression(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
 		}else{
 			assert(0 && "Expected unary expression.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(DEC_OP, parser_state))){
-		if((n1->next = unary_expression(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
+	}else if((n1 = p_accept(DEC_OP, state))){
+		if((n1->next = unary_expression(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
 		}else{
 			assert(0 && "Expected unary expression.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = unary_operator(parser_state))){
-		if((n1->next = cast_expression(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
+	}else if((n1 = unary_operator(state))){
+		if((n1->next = cast_expression(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
 		}else{
 			assert(0 && "Expected cast_expression.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(SIZEOF, parser_state))){
-		if((n1->next = p_accept(OPEN_PAREN_CHAR, parser_state))){
-			if((n1->next->next = type_name(parser_state))){
-				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-					return (struct parser_node *)create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
+	}else if((n1 = p_accept(SIZEOF, state))){
+		if((n1->next = p_accept(OPEN_PAREN_CHAR, state))){
+			if((n1->next->next = type_name(state))){
+				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+					return (struct parser_node *)create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
 				}else{
 					assert(0 && "Expected CLOSE_PAREN_CHAR.\n");
 					return (struct parser_node *)0;
@@ -3843,8 +3844,8 @@ struct parser_node * unary_expression(struct parser_state * parser_state){
 				assert(0 && "Expected IDENTIFIER.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = unary_expression(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
+		}else if((n1->next = unary_expression(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, UNARY_EXPRESSION);
 		}else {
 			assert(0 && "Expected OPEN_PAREN_CHAR or uary expression.\n");
 			return (struct parser_node *)0;
@@ -3855,18 +3856,18 @@ struct parser_node * unary_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * cast_expression(struct parser_state * parser_state){
+struct parser_node * cast_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build cast_expression\n");
-	if((n1 = unary_expression(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CAST_EXPRESSION);
-	}else if((n1 = p_accept(OPEN_PAREN_CHAR, parser_state))){
-		if((n1->next = type_name(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-				if((n1->next->next->next = cast_expression(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CAST_EXPRESSION);
+	if((n1 = unary_expression(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CAST_EXPRESSION);
+	}else if((n1 = p_accept(OPEN_PAREN_CHAR, state))){
+		if((n1->next = type_name(state))){
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+				if((n1->next->next->next = cast_expression(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CAST_EXPRESSION);
 				}else{
-					printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
+					printf("Parser could not continue on line %d of file %s\n", state->line_number, state->c_lexer_state->c.filename);
 					assert(0 && "Fatal. Expected cast_expression\n");
 				}
 			}else{
@@ -3882,30 +3883,30 @@ struct parser_node * cast_expression(struct parser_state * parser_state){
 	return (struct parser_node *)0;
 }
 
-struct parser_node * multiplicative_expression_rest(struct parser_state * parser_state){
+struct parser_node * multiplicative_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build multiplicative_expression_rest\n");
-	if(!((n1 = p_accept(MULTIPLY_CHAR, parser_state)) || (n1 = p_accept(DIVIDE_CHAR, parser_state)) || (n1 = p_accept(PERCENT_CHAR, parser_state)))){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, MULTIPLICATIVE_EXPRESSION_REST);
+	if(!((n1 = p_accept(MULTIPLY_CHAR, state)) || (n1 = p_accept(DIVIDE_CHAR, state)) || (n1 = p_accept(PERCENT_CHAR, state)))){
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, MULTIPLICATIVE_EXPRESSION_REST);
 	}
-	if(!(n1->next = cast_expression(parser_state))){
+	if(!(n1->next = cast_expression(state))){
 		assert(0 && "Expected cast expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = multiplicative_expression_rest(parser_state))){
+	if(!(n1->next->next = multiplicative_expression_rest(state))){
 		assert(0 && "Expected multiplicative_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, MULTIPLICATIVE_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, MULTIPLICATIVE_EXPRESSION_REST);
 }
 
-struct parser_node * multiplicative_expression(struct parser_state * parser_state){
+struct parser_node * multiplicative_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build multiplicative_expression\n");
-	if((n1 = cast_expression(parser_state))){
-		if((n1->next = multiplicative_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, MULTIPLICATIVE_EXPRESSION);
+	if((n1 = cast_expression(state))){
+		if((n1->next = multiplicative_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, MULTIPLICATIVE_EXPRESSION);
 		}else{
 			assert(0 && "Expected multiplicative_expression_rest\n");
 			return (struct parser_node *)0;
@@ -3916,30 +3917,30 @@ struct parser_node * multiplicative_expression(struct parser_state * parser_stat
 	}
 }
 
-struct parser_node * additive_expression_rest(struct parser_state * parser_state){
+struct parser_node * additive_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build additive_expression_rest\n");
-	if(!((n1 = p_accept(PLUS_CHAR, parser_state)) || (n1 = p_accept(MINUS_CHAR, parser_state)))){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, ADDITIVE_EXPRESSION_REST);
+	if(!((n1 = p_accept(PLUS_CHAR, state)) || (n1 = p_accept(MINUS_CHAR, state)))){
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, ADDITIVE_EXPRESSION_REST);
 	}
-	if(!(n1->next = multiplicative_expression(parser_state))){
+	if(!(n1->next = multiplicative_expression(state))){
 		assert(0 && "Expected multiplicative_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = additive_expression_rest(parser_state))){
+	if(!(n1->next->next = additive_expression_rest(state))){
 		assert(0 && "Expected additive_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ADDITIVE_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ADDITIVE_EXPRESSION_REST);
 }
 
-struct parser_node * additive_expression(struct parser_state * parser_state){
+struct parser_node * additive_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build additive_expression\n");
-	if((n1 = multiplicative_expression(parser_state))){
-		if((n1->next = additive_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ADDITIVE_EXPRESSION);
+	if((n1 = multiplicative_expression(state))){
+		if((n1->next = additive_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ADDITIVE_EXPRESSION);
 		}else{
 			assert(0 && "Expected additive_expression_rest\n");
 			return (struct parser_node *)0;
@@ -3950,30 +3951,30 @@ struct parser_node * additive_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * shift_expression_rest(struct parser_state * parser_state){
+struct parser_node * shift_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build shift_expression_rest\n");
-	if(!((n1 = p_accept(LEFT_OP, parser_state)) || (n1 = p_accept(RIGHT_OP, parser_state)))){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, SHIFT_EXPRESSION_REST);
+	if(!((n1 = p_accept(LEFT_OP, state)) || (n1 = p_accept(RIGHT_OP, state)))){
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, SHIFT_EXPRESSION_REST);
 	}
-	if(!(n1->next = additive_expression(parser_state))){
+	if(!(n1->next = additive_expression(state))){
 		assert(0 && "Expected additive_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = shift_expression_rest(parser_state))){
+	if(!(n1->next->next = shift_expression_rest(state))){
 		assert(0 && "Expected shift_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SHIFT_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SHIFT_EXPRESSION_REST);
 }
 
-struct parser_node * shift_expression(struct parser_state * parser_state){
+struct parser_node * shift_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build shift_expression\n");
-	if((n1 = additive_expression(parser_state))){
-		if((n1->next = shift_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SHIFT_EXPRESSION);
+	if((n1 = additive_expression(state))){
+		if((n1->next = shift_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SHIFT_EXPRESSION);
 		}else{
 			assert(0 && "Expected shift_expression_rest\n");
 			return (struct parser_node *)0;
@@ -3984,35 +3985,35 @@ struct parser_node * shift_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * relational_expression_rest(struct parser_state * parser_state){
+struct parser_node * relational_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build relational_expression_rest\n");
 	if(!(
-		(n1 = p_accept(OPEN_ANGLE_BRACKET_CHAR, parser_state)) ||
-		(n1 = p_accept(CLOSE_ANGLE_BRACKET_CHAR, parser_state)) ||
-		(n1 = p_accept(LE_OP, parser_state)) ||
-		(n1 = p_accept(GE_OP, parser_state))
+		(n1 = p_accept(OPEN_ANGLE_BRACKET_CHAR, state)) ||
+		(n1 = p_accept(CLOSE_ANGLE_BRACKET_CHAR, state)) ||
+		(n1 = p_accept(LE_OP, state)) ||
+		(n1 = p_accept(GE_OP, state))
 	)){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, RELATIONAL_EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, RELATIONAL_EXPRESSION_REST);
 	}
-	if(!(n1->next = shift_expression(parser_state))){
+	if(!(n1->next = shift_expression(state))){
 		assert(0 && "Expected shift_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = relational_expression_rest(parser_state))){
+	if(!(n1->next->next = relational_expression_rest(state))){
 		assert(0 && "Expected relational_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, RELATIONAL_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, RELATIONAL_EXPRESSION_REST);
 }
 
-struct parser_node * relational_expression(struct parser_state * parser_state){
+struct parser_node * relational_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build relational_expression\n");
-	if((n1 = shift_expression(parser_state))){
-		if((n1->next = relational_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, RELATIONAL_EXPRESSION);
+	if((n1 = shift_expression(state))){
+		if((n1->next = relational_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, RELATIONAL_EXPRESSION);
 		}else{
 			assert(0 && "Expected relational_expression_rest\n");
 			return (struct parser_node *)0;
@@ -4023,33 +4024,33 @@ struct parser_node * relational_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * equality_expression_rest(struct parser_state * parser_state){
+struct parser_node * equality_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build equality_expression_rest\n");
 	if(!(
-		(n1 = p_accept(EQ_OP, parser_state)) ||
-		(n1 = p_accept(NE_OP, parser_state))
+		(n1 = p_accept(EQ_OP, state)) ||
+		(n1 = p_accept(NE_OP, state))
 	)){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, EQUALITY_EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, EQUALITY_EXPRESSION_REST);
 	}
-	if(!(n1->next = relational_expression(parser_state))){
+	if(!(n1->next = relational_expression(state))){
 		assert(0 && "Expected relational_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = equality_expression_rest(parser_state))){
+	if(!(n1->next->next = equality_expression_rest(state))){
 		assert(0 && "Expected equality_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EQUALITY_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EQUALITY_EXPRESSION_REST);
 }
 
-struct parser_node * equality_expression(struct parser_state * parser_state){
+struct parser_node * equality_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build equality_expression\n");
-	if((n1 = relational_expression(parser_state))){
-		if((n1->next = equality_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EQUALITY_EXPRESSION);
+	if((n1 = relational_expression(state))){
+		if((n1->next = equality_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EQUALITY_EXPRESSION);
 		}else{
 			assert(0 && "Expected equality_expression_rest\n");
 			return (struct parser_node *)0;
@@ -4060,32 +4061,32 @@ struct parser_node * equality_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * and_expression_rest(struct parser_state * parser_state){
+struct parser_node * and_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build and_expression_rest\n");
 	if(!(
-		(n1 = p_accept(AMPERSAND_CHAR, parser_state))
+		(n1 = p_accept(AMPERSAND_CHAR, state))
 	)){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, AND_EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, AND_EXPRESSION_REST);
 	}
-	if(!(n1->next = equality_expression(parser_state))){
+	if(!(n1->next = equality_expression(state))){
 		assert(0 && "Expected equality_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = and_expression_rest(parser_state))){
+	if(!(n1->next->next = and_expression_rest(state))){
 		assert(0 && "Expected and_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, AND_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, AND_EXPRESSION_REST);
 }
 
-struct parser_node * and_expression(struct parser_state * parser_state){
+struct parser_node * and_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build and_expression\n");
-	if((n1 = equality_expression(parser_state))){
-		if((n1->next = and_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, AND_EXPRESSION);
+	if((n1 = equality_expression(state))){
+		if((n1->next = and_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, AND_EXPRESSION);
 		}else{
 			assert(0 && "Expected and_expression_rest\n");
 			return (struct parser_node *)0;
@@ -4096,32 +4097,32 @@ struct parser_node * and_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * exclusive_or_expression_rest(struct parser_state * parser_state){
+struct parser_node * exclusive_or_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build exclusive_or_expression_rest\n");
 	if(!(
-		(n1 = p_accept(CARET_CHAR, parser_state))
+		(n1 = p_accept(CARET_CHAR, state))
 	)){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, EXCLUSIVE_OR_EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, EXCLUSIVE_OR_EXPRESSION_REST);
 	}
-	if(!(n1->next = and_expression(parser_state))){
+	if(!(n1->next = and_expression(state))){
 		assert(0 && "Expected and_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = exclusive_or_expression_rest(parser_state))){
+	if(!(n1->next->next = exclusive_or_expression_rest(state))){
 		assert(0 && "Expected exclusive_or_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXCLUSIVE_OR_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXCLUSIVE_OR_EXPRESSION_REST);
 }
 
-struct parser_node * exclusive_or_expression(struct parser_state * parser_state){
+struct parser_node * exclusive_or_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build exclusive_or_expression\n");
-	if((n1 = and_expression(parser_state))){
-		if((n1->next = exclusive_or_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXCLUSIVE_OR_EXPRESSION);
+	if((n1 = and_expression(state))){
+		if((n1->next = exclusive_or_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXCLUSIVE_OR_EXPRESSION);
 		}else{
 			assert(0 && "Expected exclusive_or_expression_rest\n");
 			return (struct parser_node *)0;
@@ -4132,32 +4133,32 @@ struct parser_node * exclusive_or_expression(struct parser_state * parser_state)
 	}
 }
 
-struct parser_node * inclusive_or_expression_rest(struct parser_state * parser_state){
+struct parser_node * inclusive_or_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build inclusive_or_expression_rest\n");
 	if(!(
-		(n1 = p_accept(PIPE_CHAR, parser_state))
+		(n1 = p_accept(PIPE_CHAR, state))
 	)){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, INCLUSIVE_OR_EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, INCLUSIVE_OR_EXPRESSION_REST);
 	}
-	if(!(n1->next = exclusive_or_expression(parser_state))){
+	if(!(n1->next = exclusive_or_expression(state))){
 		assert(0 && "Expected exclusive_or_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = inclusive_or_expression_rest(parser_state))){
+	if(!(n1->next->next = inclusive_or_expression_rest(state))){
 		assert(0 && "Expected inclusive_or_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INCLUSIVE_OR_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INCLUSIVE_OR_EXPRESSION_REST);
 }
 
-struct parser_node * inclusive_or_expression(struct parser_state * parser_state){
+struct parser_node * inclusive_or_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build inclusive_or_expression\n");
-	if((n1 = exclusive_or_expression(parser_state))){
-		if((n1->next = inclusive_or_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INCLUSIVE_OR_EXPRESSION);
+	if((n1 = exclusive_or_expression(state))){
+		if((n1->next = inclusive_or_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INCLUSIVE_OR_EXPRESSION);
 		}else{
 			assert(0 && "Expected inclusive_or_expression_rest\n");
 			return (struct parser_node *)0;
@@ -4168,32 +4169,32 @@ struct parser_node * inclusive_or_expression(struct parser_state * parser_state)
 	}
 }
 
-struct parser_node * logical_and_expression_rest(struct parser_state * parser_state){
+struct parser_node * logical_and_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build logical_and_expression_rest\n");
 	if(!(
-		(n1 = p_accept(AND_OP, parser_state))
+		(n1 = p_accept(AND_OP, state))
 	)){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, LOGICAL_AND_EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, LOGICAL_AND_EXPRESSION_REST);
 	}
-	if(!(n1->next = inclusive_or_expression(parser_state))){
+	if(!(n1->next = inclusive_or_expression(state))){
 		assert(0 && "Expected inclusive_or_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = logical_and_expression_rest(parser_state))){
+	if(!(n1->next->next = logical_and_expression_rest(state))){
 		assert(0 && "Expected logical_and_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LOGICAL_AND_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LOGICAL_AND_EXPRESSION_REST);
 }
 
-struct parser_node * logical_and_expression(struct parser_state * parser_state){
+struct parser_node * logical_and_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build logical_and_expression\n");
-	if((n1 = inclusive_or_expression(parser_state))){
-		if((n1->next = logical_and_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LOGICAL_AND_EXPRESSION);
+	if((n1 = inclusive_or_expression(state))){
+		if((n1->next = logical_and_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LOGICAL_AND_EXPRESSION);
 		}else{
 			assert(0 && "Expected logical_and_expression_rest\n");
 			return (struct parser_node *)0;
@@ -4204,32 +4205,32 @@ struct parser_node * logical_and_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * logical_or_expression_rest(struct parser_state * parser_state){
+struct parser_node * logical_or_expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build logical_or_expression_rest\n");
 	if(!(
-		(n1 = p_accept(OR_OP, parser_state))
+		(n1 = p_accept(OR_OP, state))
 	)){
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, LOGICAL_OR_EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, LOGICAL_OR_EXPRESSION_REST);
 	}
-	if(!(n1->next = logical_and_expression(parser_state))){
+	if(!(n1->next = logical_and_expression(state))){
 		assert(0 && "Expected logical_and_expression.\n");
 		return (struct parser_node *)0;
 	}
-	if(!(n1->next->next = logical_or_expression_rest(parser_state))){
+	if(!(n1->next->next = logical_or_expression_rest(state))){
 		assert(0 && "Expected logical_or_expression_rest.\n");
 		return (struct parser_node *)0;
 	}
-	return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LOGICAL_OR_EXPRESSION_REST);
+	return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LOGICAL_OR_EXPRESSION_REST);
 }
 
-struct parser_node * logical_or_expression(struct parser_state * parser_state){
+struct parser_node * logical_or_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build logical_or_expression\n");
-	if((n1 = logical_and_expression(parser_state))){
-		if((n1->next = logical_or_expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LOGICAL_OR_EXPRESSION);
+	if((n1 = logical_and_expression(state))){
+		if((n1->next = logical_or_expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LOGICAL_OR_EXPRESSION);
 		}else{
 			assert(0 && "Expected logical_or_expression_rest\n");
 			return (struct parser_node *)0;
@@ -4240,15 +4241,15 @@ struct parser_node * logical_or_expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * conditional_expression(struct parser_state * parser_state){
+struct parser_node * conditional_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build conditional_expression\n");
-	if((n1 = logical_or_expression(parser_state))){
-		if((n1->next = p_accept(QUESTION_MARK_CHAR, parser_state))){
-			if((n1->next->next = expression(parser_state))){
-				if((n1->next->next->next = p_accept(COLON_CHAR, parser_state))){
-					if((n1->next->next->next->next = conditional_expression(parser_state))){
-						return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CONDITIONAL_EXPRESSION);
+	if((n1 = logical_or_expression(state))){
+		if((n1->next = p_accept(QUESTION_MARK_CHAR, state))){
+			if((n1->next->next = expression(state))){
+				if((n1->next->next->next = p_accept(COLON_CHAR, state))){
+					if((n1->next->next->next->next = conditional_expression(state))){
+						return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CONDITIONAL_EXPRESSION);
 					}else{
 						assert(0 && "FATAL! Expected conditional_expression.\n");
 					}
@@ -4259,7 +4260,7 @@ struct parser_node * conditional_expression(struct parser_state * parser_state){
 				assert(0 && "FATAL! Expected expression.\n");
 			}
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CONDITIONAL_EXPRESSION);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CONDITIONAL_EXPRESSION);
 		}
 	}else{
 		parser_progress("Expected logical_or_expression.\n");
@@ -4268,72 +4269,72 @@ struct parser_node * conditional_expression(struct parser_state * parser_state){
 	return (struct parser_node *)0;
 }
 
-struct parser_node * assignment_operator(struct parser_state * parser_state){
+struct parser_node * assignment_operator(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build assignment_operator\n");
-	if((n1 = p_accept(EQUALS_CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(MUL_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(DIV_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(MOD_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(ADD_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(SUB_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(LEFT_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(RIGHT_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(AND_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(XOR_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
-	}else if((n1 = p_accept(OR_ASSIGN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	if((n1 = p_accept(EQUALS_CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(MUL_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(DIV_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(MOD_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(ADD_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(SUB_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(LEFT_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(RIGHT_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(AND_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(XOR_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
+	}else if((n1 = p_accept(OR_ASSIGN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_OPERATOR);
 	}else{
 		parser_progress("Expected assignment operator.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * assignment_expression(struct parser_state * parser_state){
+struct parser_node * assignment_expression(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build assignment_expression\n");
 
-	if((n1 = unary_expression(parser_state))){
-		if((n1->next = assignment_operator(parser_state))){	
-			if((n1->next->next = assignment_expression(parser_state))){	
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_EXPRESSION);
+	if((n1 = unary_expression(state))){
+		if((n1->next = assignment_operator(state))){	
+			if((n1->next->next = assignment_expression(state))){	
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_EXPRESSION);
 			}else{
 				parser_progress("Expected assignment expression, putting tokens back.\n");
-				backtrack(parser_state, checkpoint);
+				backtrack(state, checkpoint);
 			}
 		}else{
 			parser_progress("Expected assignment operator, putting tokens back.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 		}
 	}
 
-	if((n1 = conditional_expression(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_EXPRESSION);
+	if((n1 = conditional_expression(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ASSIGNMENT_EXPRESSION);
 	}else{
 		parser_progress("Expected conditional_expression.\n");
-		backtrack(parser_state, checkpoint);
+		backtrack(state, checkpoint);
 	}
 	return (struct parser_node *)0;
 }
 
-struct parser_node * expression_rest(struct parser_state * parser_state){
+struct parser_node * expression_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build expression_rest\n");
-	if((n1 = p_accept(COMMA_CHAR, parser_state))){
-		if((n1->next = assignment_expression(parser_state))){
-			if((n1->next->next = expression_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXPRESSION_REST);
+	if((n1 = p_accept(COMMA_CHAR, state))){
+		if((n1->next = assignment_expression(state))){
+			if((n1->next->next = expression_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXPRESSION_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected expression_rest.\n");
 			}
@@ -4341,17 +4342,17 @@ struct parser_node * expression_rest(struct parser_state * parser_state){
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected assignment_expression.\n");
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, EXPRESSION_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, EXPRESSION_REST);
 	}
 }
 
-struct parser_node * expression(struct parser_state * parser_state){
+struct parser_node * expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build expression\n");
-	if((n1 = assignment_expression(parser_state))){
-		if((n1->next = expression_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXPRESSION);
+	if((n1 = assignment_expression(state))){
+		if((n1->next = expression_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXPRESSION);
 		}else{
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected expression_rest.\n");
 		}
@@ -4361,32 +4362,32 @@ struct parser_node * expression(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * constant_expression(struct parser_state * parser_state){
+struct parser_node * constant_expression(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build constant_expression\n");
-	if((n1 = conditional_expression(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CONSTANT_EXPRESSION);
+	if((n1 = conditional_expression(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, CONSTANT_EXPRESSION);
 	}else{
 		parser_progress("Expected expression.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * expression_statement(struct parser_state * parser_state){
+struct parser_node * expression_statement(struct parser_state * state){
 	struct parser_node * n1;
 	struct parser_node * n2;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build expression_statement\n");
 
-	if((n1 = p_accept(SEMICOLON_CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXPRESSION_STATEMENT);
-	}else if((n1 = expression(parser_state))){
-		if((n2 = p_accept(SEMICOLON_CHAR, parser_state))){
+	if((n1 = p_accept(SEMICOLON_CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXPRESSION_STATEMENT);
+	}else if((n1 = expression(state))){
+		if((n2 = p_accept(SEMICOLON_CHAR, state))){
 			n1->next = n2;
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXPRESSION_STATEMENT);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXPRESSION_STATEMENT);
 		}else{
 			parser_progress("Expected semicolon in expression statement.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -4395,55 +4396,55 @@ struct parser_node * expression_statement(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * statement(struct parser_state * parser_state){
+struct parser_node * statement(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build statement\n");
-	if((n1 = labeled_statement(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
-	}else if((n1 = compound_statement(parser_state, (struct parser_node *)0))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
-	}else if((n1 = expression_statement(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
-	}else if((n1 = selection_statement(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
-	}else if((n1 = iteration_statement(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
-	}else if((n1 = jump_statement(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
+	if((n1 = labeled_statement(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
+	}else if((n1 = compound_statement(state, (struct parser_node *)0))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
+	}else if((n1 = expression_statement(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
+	}else if((n1 = selection_statement(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
+	}else if((n1 = iteration_statement(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
+	}else if((n1 = jump_statement(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT);
 	}else{
 		parser_progress("Expected statement.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * statement_list_rest(struct parser_state * parser_state){
+struct parser_node * statement_list_rest(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build statement_list_rest\n");
-	if((n1 = statement(parser_state))){
-		if((n1->next = statement_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT_LIST_REST);
+	if((n1 = statement(state))){
+		if((n1->next = statement_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT_LIST_REST);
 		}else{
 			parser_progress("Expected statement_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, STATEMENT_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, STATEMENT_LIST_REST);
 	}
 }
 
-struct parser_node * statement_list(struct parser_state * parser_state){
+struct parser_node * statement_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build statement_list\n");
-	if((n1 = statement(parser_state))){
-		if((n1->next = statement_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT_LIST);
+	if((n1 = statement(state))){
+		if((n1->next = statement_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STATEMENT_LIST);
 		}else{
 			parser_progress("Expected statement_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -4452,21 +4453,21 @@ struct parser_node * statement_list(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * compound_statement(struct parser_state * parser_state, struct parser_node * possible_declarator){
+struct parser_node * compound_statement(struct parser_state * state, struct parser_node * possible_declarator){
 	struct parser_node * n1;
 	parser_progress("Attempting to build compound_statement\n");
-	if((n1 = p_accept(OPEN_BRACE_CHAR, parser_state))){
-		push_operation(parser_state, INCREMENT_SCOPE_DEPTH, (void*)0);
+	if((n1 = p_accept(OPEN_BRACE_CHAR, state))){
+		push_operation(state, INCREMENT_SCOPE_DEPTH, (void*)0);
 		if(possible_declarator){
 			if(possible_declarator->type == DECLARATION_LIST){
 				/*  For K&R C style function */
 			}else if(possible_declarator->type == DECLARATOR){
 				/* If possible_declarator is set, it will be a declarator or declaration_list from a function.  Declare the params in this scope. */
-				struct parser_node * copy = copy_parser_node_children_only(parser_state->memory_pool_collection, possible_declarator);
+				struct parser_node * copy = copy_parser_node_children_only(state->memory_pool_collection, possible_declarator);
 				struct parser_node * abstract;
 				struct parser_node * parameter_type_list;
 				assert(copy->type == DECLARATOR);
-				abstract = convert_declarator_to_abstract_declarator(parser_state->memory_pool_collection, copy);
+				abstract = convert_declarator_to_abstract_declarator(state->memory_pool_collection, copy);
 				parameter_type_list = get_parameter_type_list_from_abstract_declarator(abstract);
 				if(parameter_type_list){
 					struct parser_node * parameter_declaration = (struct parser_node *)0;
@@ -4474,46 +4475,46 @@ struct parser_node * compound_statement(struct parser_state * parser_state, stru
 					struct namespace_object * prev_obj = (struct namespace_object *)0;
 					while((parameter_declaration = get_nth_parameter_declaration_from_parameter_type_list(parameter_type_list, param_index))){
 						struct first_and_last_namespace_object fl;
-						fl = manage_generic_declaration(parser_state, parameter_declaration, (struct normalized_declaration_set *)0, 0, PARAMETER, prev_obj, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0);
+						fl = manage_generic_declaration(state, parameter_declaration, (struct normalized_declaration_set *)0, 0, PARAMETER, prev_obj, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0);
 						prev_obj = fl.last;
 						param_index++;
 					}
 				}
 				/*  We have to delete this after we're done using the parser state  */
-				push_operation(parser_state, CREATE_PARSER_NODE_TREE, (void*)abstract);
+				push_operation(state, CREATE_PARSER_NODE_TREE, (void*)abstract);
 			}else{
 				assert(0 && "Not expected");
 			}
 		}
-		if((n1->next = statement_list(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
-				push_operation(parser_state, DECREMENT_SCOPE_DEPTH, (void*)0);
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, COMPOUND_STATEMENT);
+		if((n1->next = statement_list(state))){
+			if((n1->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
+				push_operation(state, DECREMENT_SCOPE_DEPTH, (void*)0);
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, COMPOUND_STATEMENT);
 			}else{
-				printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
+				printf("Parser could not continue on line %d of file %s\n", state->line_number, state->c_lexer_state->c.filename);
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_BRACE_CHAR.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = declaration_list(parser_state, (struct namespace_object *)0))){
-			if((n1->next->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
-				push_operation(parser_state, DECREMENT_SCOPE_DEPTH, (void*)0);
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, COMPOUND_STATEMENT);
-			}else if((n1->next->next = statement_list(parser_state))){
-				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
-					push_operation(parser_state, DECREMENT_SCOPE_DEPTH, (void*)0);
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, COMPOUND_STATEMENT);
+		}else if((n1->next = declaration_list(state, (struct namespace_object *)0))){
+			if((n1->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
+				push_operation(state, DECREMENT_SCOPE_DEPTH, (void*)0);
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, COMPOUND_STATEMENT);
+			}else if((n1->next->next = statement_list(state))){
+				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
+					push_operation(state, DECREMENT_SCOPE_DEPTH, (void*)0);
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, COMPOUND_STATEMENT);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_BRACE_CHAR.\n");
 					return (struct parser_node *)0;
 				}
 			}else{
-				printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
+				printf("Parser could not continue on line %d of file %s\n", state->line_number, state->c_lexer_state->c.filename);
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement list or }.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
-			push_operation(parser_state, DECREMENT_SCOPE_DEPTH, (void*)0);
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, COMPOUND_STATEMENT);
+		}else if((n1->next = p_accept(CLOSE_BRACE_CHAR, state))){
+			push_operation(state, DECREMENT_SCOPE_DEPTH, (void*)0);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, COMPOUND_STATEMENT);
 		}else{
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement_list or CLOSE_BRACE_CHAR.\n");
 			return (struct parser_node *)0;
@@ -4525,65 +4526,65 @@ struct parser_node * compound_statement(struct parser_state * parser_state, stru
 }
 
 
-struct parser_node * type_qualifier(struct parser_state * parser_state){
+struct parser_node * type_qualifier(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build type_qualifier\n");
-	if((n1 = p_accept(CONST, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_QUALIFIER);
-	}else if((n1 = p_accept(VOLATILE, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_QUALIFIER);
+	if((n1 = p_accept(CONST, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_QUALIFIER);
+	}else if((n1 = p_accept(VOLATILE, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_QUALIFIER);
 	}else {
 		parser_progress("Expected type_qualifier.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * storage_class_specifier(struct parser_state * parser_state){
+struct parser_node * storage_class_specifier(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build storage_class_specifier\n");
-	if((n1 = p_accept(TYPEDEF, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
-	}else if((n1 = p_accept(EXTERN, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
-	}else if((n1 = p_accept(STATIC, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
-	}else if((n1 = p_accept(AUTO, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
-	}else if((n1 = p_accept(REGISTER, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
+	if((n1 = p_accept(TYPEDEF, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
+	}else if((n1 = p_accept(EXTERN, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
+	}else if((n1 = p_accept(STATIC, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
+	}else if((n1 = p_accept(AUTO, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
+	}else if((n1 = p_accept(REGISTER, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
 	}else {
 		parser_progress("Expected type_qualifier.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * enumerator(struct parser_state * parser_state){
+struct parser_node * enumerator(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build enumerator\n");
-	if((n1 = p_accept(IDENTIFIER, parser_state))){
-		if((n1->next = p_accept(EQUALS_CHAR, parser_state))){
-			if((n1->next->next = constant_expression(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUMERATOR);
+	if((n1 = p_accept(IDENTIFIER, state))){
+		if((n1->next = p_accept(EQUALS_CHAR, state))){
+			if((n1->next->next = constant_expression(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUMERATOR);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Required identifier.  Cannot continue.\n");
 				return (struct parser_node *)0;
 			}
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUMERATOR);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUMERATOR);
 		}
 	}else{
-		buffered_printf(parser_state->buffered_output, "Required identifier.  Cannot continue.\n");
+		buffered_printf(state->buffered_output, "Required identifier.  Cannot continue.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * enumerator_list_rest(struct parser_state * parser_state){
+struct parser_node * enumerator_list_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build enumerator_list_rest\n");
-	if((n1 = p_accept(COMMA_CHAR, parser_state))){
-		if((n1->next = enumerator(parser_state))){
-			if((n1->next->next = enumerator_list_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUMERATOR_LIST_REST);
+	if((n1 = p_accept(COMMA_CHAR, state))){
+		if((n1->next = enumerator(state))){
+			if((n1->next->next = enumerator_list_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUMERATOR_LIST_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Required enumerator list rest.  Cannot continue.\n");
 				return (struct parser_node *)0;
@@ -4593,37 +4594,37 @@ struct parser_node * enumerator_list_rest(struct parser_state * parser_state){
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, ENUMERATOR_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, ENUMERATOR_LIST_REST);
 	}
 }
 
-struct parser_node * enumerator_list(struct parser_state * parser_state){
+struct parser_node * enumerator_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build enumerator_list\n");
-	if((n1 = enumerator(parser_state))){
-		if((n1->next = enumerator_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUMERATOR_LIST);
+	if((n1 = enumerator(state))){
+		if((n1->next = enumerator_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUMERATOR_LIST);
 		}else{
-			buffered_printf(parser_state->buffered_output,"Required enumerator list rest.  Cannot continue.\n");
-			backtrack(parser_state, checkpoint);
+			buffered_printf(state->buffered_output,"Required enumerator list rest.  Cannot continue.\n");
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		buffered_printf(parser_state->buffered_output,"Required enumerator.  Cannot continue.\n");
+		buffered_printf(state->buffered_output,"Required enumerator.  Cannot continue.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * enum_specifier(struct parser_state * parser_state){
+struct parser_node * enum_specifier(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build enum_specifier\n");
-	if((n1 = p_accept(ENUM, parser_state))){
-		if((n1->next = p_accept(OPEN_BRACE_CHAR, parser_state))){
-			if((n1->next->next = enumerator_list(parser_state))){
-				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUM_SPECIFIER);
+	if((n1 = p_accept(ENUM, state))){
+		if((n1->next = p_accept(OPEN_BRACE_CHAR, state))){
+			if((n1->next->next = enumerator_list(state))){
+				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUM_SPECIFIER);
 				} else {
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Required CLOSE_BRACE_CHAR.  Cannot continue.\n");
 					return (struct parser_node *)0;
@@ -4632,11 +4633,11 @@ struct parser_node * enum_specifier(struct parser_state * parser_state){
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Required ENUMERATOR_LIST.  Cannot continue.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = p_accept(IDENTIFIER, parser_state))){
-			if((n1->next->next = p_accept(OPEN_BRACE_CHAR, parser_state))){
-				if((n1->next->next->next = enumerator_list(parser_state))){
-					if((n1->next->next->next->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
-						return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUM_SPECIFIER);
+		}else if((n1->next = p_accept(IDENTIFIER, state))){
+			if((n1->next->next = p_accept(OPEN_BRACE_CHAR, state))){
+				if((n1->next->next->next = enumerator_list(state))){
+					if((n1->next->next->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
+						return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUM_SPECIFIER);
 					} else {
 						assert(0 && "FATAL_COMPILE_FAILURE!!! Required CLOSE_BRACE_CHAR.  Cannot continue.\n");
 						return (struct parser_node *)0;
@@ -4646,7 +4647,7 @@ struct parser_node * enum_specifier(struct parser_state * parser_state){
 					return (struct parser_node *)0;
 				}
 			}else{
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUM_SPECIFIER);
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUM_SPECIFIER);
 			}
 		}else {
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Required OPEN_BRACE_CHAR or IDENTIFIER cannot continue.\n");
@@ -4658,69 +4659,69 @@ struct parser_node * enum_specifier(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * struct_or_union(struct parser_state * parser_state){
+struct parser_node * struct_or_union(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build struct_or_union\n");
-	if((n1 = p_accept(STRUCT, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION);
-	}else if((n1 = p_accept(UNION, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION);
+	if((n1 = p_accept(STRUCT, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION);
+	}else if((n1 = p_accept(UNION, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION);
 	}else {
 		parser_progress("Expected struct_or_union.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * type_specifier(struct parser_state * parser_state){
+struct parser_node * type_specifier(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build type_specifier\n");
-	if((n1 = p_accept(VOID, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(CHAR, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(SHORT, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(INT, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(LONG, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(FLOAT, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(DOUBLE, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(SIGNED, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(UNSIGNED, parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = struct_or_union_specifier(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = enum_specifier(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = p_accept(IDENTIFIER, parser_state))){
+	if((n1 = p_accept(VOID, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(CHAR, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(SHORT, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(INT, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(LONG, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(FLOAT, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(DOUBLE, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(SIGNED, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(UNSIGNED, state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = struct_or_union_specifier(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = enum_specifier(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+	}else if((n1 = p_accept(IDENTIFIER, state))){
 		/*  This identifier can only be treated as a type if it has been declared with a typedef.  */
-		unsigned char * ident = copy_string(n1->c_lexer_token->first_byte, n1->c_lexer_token->last_byte, parser_state->memory_pool_collection);
+		unsigned char * ident = copy_string(n1->c_lexer_token->first_byte, n1->c_lexer_token->last_byte, state->memory_pool_collection);
 		struct namespace_object * obj;
 		struct scope_level * scope;
 		struct normalized_declaration_element * element;
 		struct type_description * type_description = (struct type_description *)0;
-		scope = parser_state->top_scope;
-		descend_scope(&scope, parser_state->current_scope_depth);
-		obj = get_namespace_object_from_closest_namespace(ident, IDENTIFIER_NAMESPACE, scope, 0, parser_state->memory_pool_collection);
+		scope = state->top_scope;
+		descend_scope(&scope, state->current_scope_depth);
+		obj = get_namespace_object_from_closest_namespace(ident, IDENTIFIER_NAMESPACE, scope, 0, state->memory_pool_collection);
 		if(obj){
 			element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
-			type_description = create_type_description_from_normalized_declaration_element(parser_state->memory_pool_collection, element, n1, scope, LVALUE);
+			type_description = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, n1, scope, LVALUE);
 		}
 		if(obj && count_specifiers(type_description, TYPEDEF)){
-			destroy_type_description(parser_state->memory_pool_collection, type_description);
-			heap_memory_pool_free(parser_state->memory_pool_collection->heap_pool, ident);
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
+			destroy_type_description(state->memory_pool_collection, type_description);
+			heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 		}else{
 			if(type_description){
-				destroy_type_description(parser_state->memory_pool_collection, type_description);
+				destroy_type_description(state->memory_pool_collection, type_description);
 			}
-			backtrack(parser_state, checkpoint);
-			heap_memory_pool_free(parser_state->memory_pool_collection->heap_pool, ident);
+			backtrack(state, checkpoint);
+			heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 			parser_progress("Identifier not typedefed type.  Putting back tokens.\n");
 			return (struct parser_node *)0;
 		}
@@ -4730,26 +4731,26 @@ struct parser_node * type_specifier(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * declaration_specifiers(struct parser_state * parser_state){
+struct parser_node * declaration_specifiers(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build declaration_specifiers\n");
-	if((n1 = storage_class_specifier(parser_state))){
-		if((n1->next = declaration_specifiers(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
+	if((n1 = storage_class_specifier(state))){
+		if((n1->next = declaration_specifiers(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
 		}
-	}else if((n1 = type_specifier(parser_state))){
-		if((n1->next = declaration_specifiers(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
+	}else if((n1 = type_specifier(state))){
+		if((n1->next = declaration_specifiers(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
 		}
-	}else if((n1 = type_qualifier(parser_state))){
-		if((n1->next = declaration_specifiers(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
+	}else if((n1 = type_qualifier(state))){
+		if((n1->next = declaration_specifiers(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
 		}
 	}else{
 		parser_progress("Expected a declaration_specifiers.\n");
@@ -4757,40 +4758,40 @@ struct parser_node * declaration_specifiers(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * init_declarator_list_rest(struct parser_state * parser_state){
+struct parser_node * init_declarator_list_rest(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build init_declarator_list_rest\n");
-	if((n1 = p_accept(COMMA_CHAR, parser_state))){
-		if((n1->next = init_declarator(parser_state))){
-			if((n1->next->next = init_declarator_list_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR_LIST_REST);
+	if((n1 = p_accept(COMMA_CHAR, state))){
+		if((n1->next = init_declarator(state))){
+			if((n1->next->next = init_declarator_list_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR_LIST_REST);
 			}else{
 				parser_progress("Expected a init_declarator_list_rest.\n");
-				backtrack(parser_state, checkpoint);
+				backtrack(state, checkpoint);
 				return (struct parser_node *)0;
 			}
 		}else{
 			parser_progress("Expected a init_declarator.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, INIT_DECLARATOR_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, INIT_DECLARATOR_LIST_REST);
 	}
 }
 
-struct parser_node * init_declarator_list(struct parser_state * parser_state){
+struct parser_node * init_declarator_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build init_declarator_list\n");
-	if((n1 = init_declarator(parser_state))){
-		if((n1->next = init_declarator_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR_LIST);
+	if((n1 = init_declarator(state))){
+		if((n1->next = init_declarator_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR_LIST);
 		}else{
 			parser_progress("Expected a init_declarator_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -4799,24 +4800,24 @@ struct parser_node * init_declarator_list(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * declaration(struct parser_state * parser_state){
+struct parser_node * declaration(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build declaration\n");
-	if((n1 = declaration_specifiers(parser_state))){
-		if((n1->next = init_declarator_list(parser_state))){
-			if((n1->next->next = p_accept(SEMICOLON_CHAR, parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION);
+	if((n1 = declaration_specifiers(state))){
+		if((n1->next = init_declarator_list(state))){
+			if((n1->next->next = p_accept(SEMICOLON_CHAR, state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION);
 			}else{
 				parser_progress("Expected a SEMICOLON_CHAR in declaration.\n");
-				backtrack(parser_state, checkpoint);
+				backtrack(state, checkpoint);
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = p_accept(SEMICOLON_CHAR, parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION);
+		}else if((n1->next = p_accept(SEMICOLON_CHAR, state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION);
 		}else{
 			parser_progress("Expected a SEMICOLON_CHAR.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -4825,52 +4826,52 @@ struct parser_node * declaration(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * declaration_list_rest(struct parser_state * parser_state, struct namespace_object * previous_object, struct first_and_last_namespace_object * fl_all){
+struct parser_node * declaration_list_rest(struct parser_state * state, struct namespace_object * previous_object, struct first_and_last_namespace_object * fl_all){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build declaration_list_rest\n");
-	if((n1 = declaration(parser_state))){
+	if((n1 = declaration(state))){
 		struct first_and_last_namespace_object fl_rest; /*  First and last object of all later declarations */
-		struct first_and_last_namespace_object fl_current = manage_generic_declaration(parser_state, n1, (struct normalized_declaration_set*)0, 0, LOCAL, previous_object, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0); /*  First and last object of current declaration */
+		struct first_and_last_namespace_object fl_current = manage_generic_declaration(state, n1, (struct normalized_declaration_set*)0, 0, LOCAL, previous_object, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0); /*  First and last object of current declaration */
 		fl_rest.first = (struct namespace_object *)0;
 		fl_rest.last = (struct namespace_object *)0;
-		if((n1->next = declaration_list_rest(parser_state, fl_current.last, &fl_rest))){
+		if((n1->next = declaration_list_rest(state, fl_current.last, &fl_rest))){
 			if(fl_current.last && fl_rest.last){
 				/* The point of this exercise it to be able to point to the next one */
 				struct namespace_object_change * c = (struct namespace_object_change *)malloc(sizeof(struct namespace_object_change));
 				c->target = fl_current.last;
 				c->old_obj = fl_current.last->next;
 				c->new_obj = fl_rest.first;
-				push_operation(parser_state, SET_NEXT_NAMESPACE_OBJECT, (void*)c);
+				push_operation(state, SET_NEXT_NAMESPACE_OBJECT, (void*)c);
 				fl_current.last = fl_rest.last; 
 			}
 			fl_all->first = fl_current.first ? fl_current.first : fl_rest.first;
 			fl_all->last = fl_rest.last ? fl_rest.last : fl_current.last;
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_LIST_REST);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_LIST_REST);
 		}else{
 			parser_progress("Expected a declaration_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, DECLARATION_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, DECLARATION_LIST_REST);
 	}
 }
 
-struct parser_node * declaration_list(struct parser_state * parser_state, struct namespace_object * previous_object){
+struct parser_node * declaration_list(struct parser_state * state, struct namespace_object * previous_object){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build declaration_list\n");
-	if((n1 = declaration(parser_state))){
+	if((n1 = declaration(state))){
 		struct scope_level * scope;
 		struct first_and_last_namespace_object fl_rest; /*  First and last object of all later declarations */
-		struct first_and_last_namespace_object fl_current = manage_generic_declaration(parser_state, n1, (struct normalized_declaration_set*)0, 0, LOCAL, previous_object, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0); /*  First and last object of current declaration */
+		struct first_and_last_namespace_object fl_current = manage_generic_declaration(state, n1, (struct normalized_declaration_set*)0, 0, LOCAL, previous_object, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0); /*  First and last object of current declaration */
 		fl_rest.first = (struct namespace_object *)0;
 		fl_rest.last = (struct namespace_object *)0;
-		scope = parser_state->top_scope;
-		descend_scope(&scope, parser_state->current_scope_depth);
-		if((n1->next = declaration_list_rest(parser_state, fl_current.last, &fl_rest))){
+		scope = state->top_scope;
+		descend_scope(&scope, state->current_scope_depth);
+		if((n1->next = declaration_list_rest(state, fl_current.last, &fl_rest))){
 			scope->first_local_object = fl_current.first ? fl_current.first : fl_rest.first; /*  This block scope will need to keep track of the first local it has */
 			if(fl_current.last && fl_rest.last){
 				/* The point of this exercise it to be able to point to the next one */
@@ -4878,13 +4879,13 @@ struct parser_node * declaration_list(struct parser_state * parser_state, struct
 				c->target = fl_current.last;
 				c->old_obj = fl_current.last->next;
 				c->new_obj = fl_rest.first;
-				push_operation(parser_state, SET_NEXT_NAMESPACE_OBJECT, (void*)c);
+				push_operation(state, SET_NEXT_NAMESPACE_OBJECT, (void*)c);
 				fl_current.last = fl_rest.last; 
 			}
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_LIST);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_LIST);
 		}else{
 			parser_progress("Expected a declaration_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -4893,40 +4894,40 @@ struct parser_node * declaration_list(struct parser_state * parser_state, struct
 	}
 }
 
-struct parser_node * identifier_list_rest(struct parser_state * parser_state){
+struct parser_node * identifier_list_rest(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build identifier_list_rest\n");
-	if((n1 = p_accept(COMMA_CHAR, parser_state))){
-		if((n1->next = p_accept(IDENTIFIER, parser_state))){
-			if((n1->next->next = identifier_list_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, IDENTIFIER_LIST_REST);
+	if((n1 = p_accept(COMMA_CHAR, state))){
+		if((n1->next = p_accept(IDENTIFIER, state))){
+			if((n1->next->next = identifier_list_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, IDENTIFIER_LIST_REST);
 			}else{
 				parser_progress("Expected a IDENTIFIER_LIST_REST.\n");
-				backtrack(parser_state, checkpoint);
+				backtrack(state, checkpoint);
 				return (struct parser_node *)0;
 			}
 		}else{
 			parser_progress("Expected an IDENTIFIER.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, IDENTIFIER_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, IDENTIFIER_LIST_REST);
 	}
 }
 
-struct parser_node * identifier_list(struct parser_state * parser_state){
+struct parser_node * identifier_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build identifier_list\n");
-	if((n1 = p_accept(IDENTIFIER, parser_state))){
-		if((n1->next = identifier_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, IDENTIFIER_LIST);
+	if((n1 = p_accept(IDENTIFIER, state))){
+		if((n1->next = identifier_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, IDENTIFIER_LIST);
 		}else{
 			parser_progress("Expected a IDENTIFIER_LIST.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -4935,14 +4936,14 @@ struct parser_node * identifier_list(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * direct_declarator_rest(struct parser_state * parser_state){
+struct parser_node * direct_declarator_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build direct_declarator_rest\n");
-	if((n1 = p_accept(OPEN_SQUARE_BRACKET_CHAR,parser_state))){
-		if((n1->next = constant_expression(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR,parser_state))){
-				if((n1->next->next->next = direct_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
+	if((n1 = p_accept(OPEN_SQUARE_BRACKET_CHAR,state))){
+		if((n1->next = constant_expression(state))){
+			if((n1->next->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR,state))){
+				if((n1->next->next->next = direct_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_declarator_rest.\n");
 					return (struct parser_node *)0;
@@ -4951,9 +4952,9 @@ struct parser_node * direct_declarator_rest(struct parser_state * parser_state){
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_SQUARE_BRACKET_CHAR.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR,parser_state))){
-			if((n1->next->next = direct_declarator_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
+		}else if((n1->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR,state))){
+			if((n1->next->next = direct_declarator_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_declarator_rest.\n");
 				return (struct parser_node *)0;
@@ -4962,24 +4963,24 @@ struct parser_node * direct_declarator_rest(struct parser_state * parser_state){
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected a constant expression or a CLOSE_SQUARE_BRACKET_CHAR.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(OPEN_PAREN_CHAR,parser_state))){
-		if((n1->next = parameter_type_list(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR,parser_state))){
-				if((n1->next->next->next = direct_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
+	}else if((n1 = p_accept(OPEN_PAREN_CHAR,state))){
+		if((n1->next = parameter_type_list(state))){
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR,state))){
+				if((n1->next->next->next = direct_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_declarator_rest.\n");
 					return (struct parser_node *)0;
 				}
 			}else{
-				printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
+				printf("Parser could not continue on line %d of file %s\n", state->line_number, state->c_lexer_state->c.filename);
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected a CLOSE_PAREN.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = identifier_list(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR,parser_state))){
-				if((n1->next->next->next = direct_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
+		}else if((n1->next = identifier_list(state))){
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR,state))){
+				if((n1->next->next->next = direct_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_declarator_rest.\n");
 					return (struct parser_node *)0;
@@ -4988,52 +4989,52 @@ struct parser_node * direct_declarator_rest(struct parser_state * parser_state){
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected a CLOSE_PAREN.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = p_accept(CLOSE_PAREN_CHAR,parser_state))){
-			if((n1->next->next = direct_declarator_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
+		}else if((n1->next = p_accept(CLOSE_PAREN_CHAR,state))){
+			if((n1->next->next = direct_declarator_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_declarator_rest.\n");
 				return (struct parser_node *)0;
 			}
 		}else{
-			printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
+			printf("Parser could not continue on line %d of file %s\n", state->line_number, state->c_lexer_state->c.filename);
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected a CLOSE_PAREN.\n");
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, DIRECT_DECLARATOR_REST);
 	}
 }
 
-struct parser_node * type_qualifier_list_rest(struct parser_state * parser_state){
+struct parser_node * type_qualifier_list_rest(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build type_qualifier_list_rest\n");
-	if((n1 = type_qualifier(parser_state))){
-		if((n1->next = type_qualifier_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_QUALIFIER_LIST_REST);
+	if((n1 = type_qualifier(state))){
+		if((n1->next = type_qualifier_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_QUALIFIER_LIST_REST);
 		}else{
 			parser_progress("Expected type_qualifier_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, TYPE_QUALIFIER_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, TYPE_QUALIFIER_LIST_REST);
 	}
 }
 
-struct parser_node * type_qualifier_list(struct parser_state * parser_state){
+struct parser_node * type_qualifier_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build type_qualifier_list\n");
-	if((n1 = type_qualifier(parser_state))){
-		if((n1->next = type_qualifier_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_QUALIFIER_LIST);
+	if((n1 = type_qualifier(state))){
+		if((n1->next = type_qualifier_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_QUALIFIER_LIST);
 		}else{
 			parser_progress("Expected type_qualifier_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5043,20 +5044,20 @@ struct parser_node * type_qualifier_list(struct parser_state * parser_state){
 }
 
 
-struct parser_node * pointer(struct parser_state * parser_state){
+struct parser_node * pointer(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build pointer\n");
-	if((n1 = p_accept(MULTIPLY_CHAR, parser_state))){
-		if((n1->next = type_qualifier_list(parser_state))){
-			if((n1->next->next = pointer(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POINTER);
+	if((n1 = p_accept(MULTIPLY_CHAR, state))){
+		if((n1->next = type_qualifier_list(state))){
+			if((n1->next->next = pointer(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POINTER);
 			}else{
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POINTER);
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POINTER);
 			}
-		}else if ((n1->next = pointer(parser_state))) {
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POINTER);
+		}else if ((n1->next = pointer(state))) {
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POINTER);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POINTER);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, POINTER);
 		}
 	}else{
 		parser_progress("Expected *.\n");
@@ -5064,22 +5065,22 @@ struct parser_node * pointer(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * direct_declarator(struct parser_state * parser_state){
+struct parser_node * direct_declarator(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build direct_declarator\n");
-	if((n1 = p_accept(IDENTIFIER, parser_state))){
-		if((n1->next = direct_declarator_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR);
+	if((n1 = p_accept(IDENTIFIER, state))){
+		if((n1->next = direct_declarator_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR);
 		}else{
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected a direct declarator rest.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(OPEN_PAREN_CHAR, parser_state))){
-		if((n1->next = declarator(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-				if((n1->next->next->next = direct_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR);
+	}else if((n1 = p_accept(OPEN_PAREN_CHAR, state))){
+		if((n1->next = declarator(state))){
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+				if((n1->next->next->next = direct_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_DECLARATOR);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct declarator rest.\n");
 					return (struct parser_node *)0;
@@ -5089,7 +5090,7 @@ struct parser_node * direct_declarator(struct parser_state * parser_state){
 				return (struct parser_node *)0;
 			}
 		}else{
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5100,33 +5101,33 @@ struct parser_node * direct_declarator(struct parser_state * parser_state){
 
 
 
-struct parser_node * declarator(struct parser_state * parser_state){
+struct parser_node * declarator(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build declarator\n");
-	if((n1 = pointer(parser_state))){
-		if((n1->next = direct_declarator(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATOR);
+	if((n1 = pointer(state))){
+		if((n1->next = direct_declarator(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATOR);
 		}else{
 			parser_progress("Expected a direct declarator.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = direct_declarator(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATOR);
+	}else if((n1 = direct_declarator(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATOR);
 	}else{
 		parser_progress("Expected a pointer or direct declarator.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * initializer_list_rest(struct parser_state * parser_state){
+struct parser_node * initializer_list_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build initializer_list_rest\n");
-	if((n1 = p_accept(COMMA_CHAR,parser_state))){
-		if((n1->next = initializer(parser_state))){
-			if((n1->next->next = initializer_list_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER_LIST_REST);
+	if((n1 = p_accept(COMMA_CHAR,state))){
+		if((n1->next = initializer(state))){
+			if((n1->next->next = initializer_list_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER_LIST_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected initializer_list_rest.\n");
 				return (struct parser_node *)0;
@@ -5136,21 +5137,21 @@ struct parser_node * initializer_list_rest(struct parser_state * parser_state){
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, INITIALIZER_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, INITIALIZER_LIST_REST);
 	}
 }
 
-struct parser_node * initializer_list(struct parser_state * parser_state){
+struct parser_node * initializer_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build initializer_list\n");
-	if((n1 = initializer(parser_state))){
-		if((n1->next = initializer_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER_LIST);
+	if((n1 = initializer(state))){
+		if((n1->next = initializer_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER_LIST);
 		}else{
 			parser_progress("Expected initializer_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5159,18 +5160,18 @@ struct parser_node * initializer_list(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * initializer(struct parser_state * parser_state){
+struct parser_node * initializer(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build initializer\n");
-	if((n1 = assignment_expression(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER);
-	}else if((n1 = p_accept(OPEN_BRACE_CHAR, parser_state))){
-		if((n1->next = initializer_list(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER);
-			}else if((n1->next->next = p_accept(COMMA_CHAR, parser_state))){
-				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR, parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER);
+	if((n1 = assignment_expression(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER);
+	}else if((n1 = p_accept(OPEN_BRACE_CHAR, state))){
+		if((n1->next = initializer_list(state))){
+			if((n1->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER);
+			}else if((n1->next->next = p_accept(COMMA_CHAR, state))){
+				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INITIALIZER);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected }.\n");
 					return (struct parser_node *)0;
@@ -5189,19 +5190,19 @@ struct parser_node * initializer(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * init_declarator(struct parser_state * parser_state){
+struct parser_node * init_declarator(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build init_declarator\n");
-	if((n1 = declarator(parser_state))){
-		if((n1->next = p_accept(EQUALS_CHAR, parser_state))){
-			if((n1->next->next = initializer(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR);
+	if((n1 = declarator(state))){
+		if((n1->next = p_accept(EQUALS_CHAR, state))){
+			if((n1->next->next = initializer(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected initializer.\n");
 				return (struct parser_node *)0;
 			}
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR);
 		}
 	}else{
 		parser_progress("Expected declarator in init declarator.\n");
@@ -5209,23 +5210,23 @@ struct parser_node * init_declarator(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * struct_declarator(struct parser_state * parser_state){
+struct parser_node * struct_declarator(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build struct_declarator\n");
-	if((n1 = declarator(parser_state))){
-		if((n1->next = p_accept(COLON_CHAR, parser_state))){
-			if((n1->next->next = constant_expression(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
+	if((n1 = declarator(state))){
+		if((n1->next = p_accept(COLON_CHAR, state))){
+			if((n1->next->next = constant_expression(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected constant_expression.\n");
 				return (struct parser_node *)0;
 			}
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
 		}
-	}else if((n1 = p_accept(COLON_CHAR, parser_state))){
-		if((n1->next = constant_expression(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
+	}else if((n1 = p_accept(COLON_CHAR, state))){
+		if((n1->next = constant_expression(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
 		}else{
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected constant_expression.\n");
 			return (struct parser_node *)0;
@@ -5236,13 +5237,13 @@ struct parser_node * struct_declarator(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * struct_declarator_list_rest(struct parser_state * parser_state){
+struct parser_node * struct_declarator_list_rest(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build struct_declarator_list_rest\n");
-	if((n1 = p_accept(COMMA_CHAR, parser_state))){
-		if((n1->next = struct_declarator(parser_state))){
-			if((n1->next->next = struct_declarator_list_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR_LIST_REST);
+	if((n1 = p_accept(COMMA_CHAR, state))){
+		if((n1->next = struct_declarator(state))){
+			if((n1->next->next = struct_declarator_list_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR_LIST_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected struct_declarator_list_rest.\n");
 				return (struct parser_node *)0;
@@ -5252,22 +5253,22 @@ struct parser_node * struct_declarator_list_rest(struct parser_state * parser_st
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, STRUCT_DECLARATOR_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, STRUCT_DECLARATOR_LIST_REST);
 	}
 }
 
 
-struct parser_node * struct_declarator_list(struct parser_state * parser_state){
+struct parser_node * struct_declarator_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build struct_declarator_list\n");
-	if((n1 = struct_declarator(parser_state))){
-		if((n1->next = struct_declarator_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR_LIST);
+	if((n1 = struct_declarator(state))){
+		if((n1->next = struct_declarator_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR_LIST);
 		}else{
 			parser_progress("Expected struct_declarator_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5276,20 +5277,20 @@ struct parser_node * struct_declarator_list(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * specifier_qualifier_list(struct parser_state * parser_state){
+struct parser_node * specifier_qualifier_list(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build specifier_qualifier_list\n");
-	if((n1 = type_specifier(parser_state))){
-		if((n1->next = specifier_qualifier_list(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SPECIFIER_QUALIFIER_LIST);
+	if((n1 = type_specifier(state))){
+		if((n1->next = specifier_qualifier_list(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SPECIFIER_QUALIFIER_LIST);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SPECIFIER_QUALIFIER_LIST);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SPECIFIER_QUALIFIER_LIST);
 		}
-	}else if((n1 = type_qualifier(parser_state))){
-		if((n1->next = specifier_qualifier_list(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SPECIFIER_QUALIFIER_LIST);
+	}else if((n1 = type_qualifier(state))){
+		if((n1->next = specifier_qualifier_list(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SPECIFIER_QUALIFIER_LIST);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SPECIFIER_QUALIFIER_LIST);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SPECIFIER_QUALIFIER_LIST);
 		}
 	}else{
 		parser_progress("Expected type specifier or type qualifier.\n");
@@ -5297,22 +5298,22 @@ struct parser_node * specifier_qualifier_list(struct parser_state * parser_state
 	}
 }
 
-struct parser_node * struct_declaration(struct parser_state * parser_state){
+struct parser_node * struct_declaration(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build struct_declaration\n");
-	if((n1 = specifier_qualifier_list(parser_state))){
-		if((n1->next = struct_declarator_list(parser_state))){
-			if((n1->next->next = p_accept(SEMICOLON_CHAR,parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATION);
+	if((n1 = specifier_qualifier_list(state))){
+		if((n1->next = struct_declarator_list(state))){
+			if((n1->next->next = p_accept(SEMICOLON_CHAR,state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATION);
 			}else{
 				parser_progress("Expected SEMICOLON_CHAR.\n");
-				backtrack(parser_state, checkpoint);
+				backtrack(state, checkpoint);
 				return (struct parser_node *)0;
 			}
 		}else{
 			parser_progress("Expected struct_declarator_list.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5321,35 +5322,35 @@ struct parser_node * struct_declaration(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * struct_declaration_list_rest(struct parser_state * parser_state){
+struct parser_node * struct_declaration_list_rest(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build struct_declaration_list_rest\n");
-	if((n1 = struct_declaration(parser_state))){
-		if((n1->next = struct_declaration_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATION_LIST_REST);
+	if((n1 = struct_declaration(state))){
+		if((n1->next = struct_declaration_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATION_LIST_REST);
 		}else{
 			parser_progress("Expected struct_declaration_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, STRUCT_DECLARATION_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, STRUCT_DECLARATION_LIST_REST);
 	}
 }
 
 
-struct parser_node * struct_declaration_list(struct parser_state * parser_state){
+struct parser_node * struct_declaration_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build struct_declaration_list\n");
-	if((n1 = struct_declaration(parser_state))){
-		if((n1->next = struct_declaration_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATION_LIST);
+	if((n1 = struct_declaration(state))){
+		if((n1->next = struct_declaration_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATION_LIST);
 		}else{
 			parser_progress("Expected struct_declaration_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5358,16 +5359,16 @@ struct parser_node * struct_declaration_list(struct parser_state * parser_state)
 	}
 }
 
-struct parser_node * struct_or_union_specifier(struct parser_state * parser_state){
+struct parser_node * struct_or_union_specifier(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build struct_or_union_specifier\n");
-	if((n1 = struct_or_union(parser_state))){
-		if((n1->next = p_accept(IDENTIFIER,parser_state))){
-			if((n1->next->next = p_accept(OPEN_BRACE_CHAR,parser_state))){
-				if((n1->next->next->next = struct_declaration_list(parser_state))){
-					if((n1->next->next->next->next = p_accept(CLOSE_BRACE_CHAR,parser_state))){
-						return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
+	if((n1 = struct_or_union(state))){
+		if((n1->next = p_accept(IDENTIFIER,state))){
+			if((n1->next->next = p_accept(OPEN_BRACE_CHAR,state))){
+				if((n1->next->next->next = struct_declaration_list(state))){
+					if((n1->next->next->next->next = p_accept(CLOSE_BRACE_CHAR,state))){
+						return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
 					}else{
 						assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_BRACE_CHAR.\n");
 						return (struct parser_node *)0;
@@ -5377,12 +5378,12 @@ struct parser_node * struct_or_union_specifier(struct parser_state * parser_stat
 					return (struct parser_node *)0;
 				}
 			}else{
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
 			}
-		}else if((n1->next = p_accept(OPEN_BRACE_CHAR,parser_state))){
-			if((n1->next->next = struct_declaration_list(parser_state))){
-				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR,parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
+		}else if((n1->next = p_accept(OPEN_BRACE_CHAR,state))){
+			if((n1->next->next = struct_declaration_list(state))){
+				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR,state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_BRACE_CHAR.\n");
 					return (struct parser_node *)0;
@@ -5393,7 +5394,7 @@ struct parser_node * struct_or_union_specifier(struct parser_state * parser_stat
 			}
 		}else{
 			parser_progress("Expected IDENTIFIER or open brace char.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5402,16 +5403,16 @@ struct parser_node * struct_or_union_specifier(struct parser_state * parser_stat
 	}
 }
 
-struct parser_node * parameter_declaration(struct parser_state * parser_state){
+struct parser_node * parameter_declaration(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build parameter_declaration\n");
-	if((n1 = declaration_specifiers(parser_state))){
-		if((n1->next = declarator(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_DECLARATION);
-		}else if((n1->next = abstract_declarator(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_DECLARATION);
+	if((n1 = declaration_specifiers(state))){
+		if((n1->next = declarator(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_DECLARATION);
+		}else if((n1->next = abstract_declarator(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_DECLARATION);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_DECLARATION);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_DECLARATION);
 		}
 	}else{
 		parser_progress("Expected parameter_declaration.\n");
@@ -5419,40 +5420,40 @@ struct parser_node * parameter_declaration(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * parameter_list_rest(struct parser_state * parser_state){
+struct parser_node * parameter_list_rest(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build parameter_list_rest\n");
-	if((n1 = p_accept(COMMA_CHAR, parser_state))){
-		if((n1->next = parameter_declaration(parser_state))){
-			if((n1->next->next = parameter_list_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_LIST_REST);
+	if((n1 = p_accept(COMMA_CHAR, state))){
+		if((n1->next = parameter_declaration(state))){
+			if((n1->next->next = parameter_list_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_LIST_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected parameter_list_rest, (in parameter_list_rest).\n");
 				return (struct parser_node *)0;
 			}
 		}else{
 			/* Re-wind back over the ',' that we accepted */
-			backtrack(parser_state, checkpoint);
-			n1 = make_epsilon(parser_state);
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_LIST_REST);
+			backtrack(state, checkpoint);
+			n1 = make_epsilon(state);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_LIST_REST);
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, PARAMETER_LIST_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, PARAMETER_LIST_REST);
 	}
 }
 
-struct parser_node * parameter_list(struct parser_state * parser_state){
+struct parser_node * parameter_list(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build parameter_list\n");
-	if((n1 = parameter_declaration(parser_state))){
-		if((n1->next = parameter_list_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_LIST);
+	if((n1 = parameter_declaration(state))){
+		if((n1->next = parameter_list_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_LIST);
 		}else{
 			parser_progress("Expected parameter_list_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5461,19 +5462,19 @@ struct parser_node * parameter_list(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * parameter_type_list(struct parser_state * parser_state){
+struct parser_node * parameter_type_list(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build parameter_type_list\n");
-	if((n1 = parameter_list(parser_state))){
-		if((n1->next = p_accept(COMMA_CHAR, parser_state))){
-			if((n1->next->next = p_accept(ELLIPSIS, parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_TYPE_LIST);
+	if((n1 = parameter_list(state))){
+		if((n1->next = p_accept(COMMA_CHAR, state))){
+			if((n1->next->next = p_accept(ELLIPSIS, state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_TYPE_LIST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected parameter_list_rest.\n");
 				return (struct parser_node *)0;
 			}
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_TYPE_LIST);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_TYPE_LIST);
 		}
 	}else{
 		parser_progress("Expected parameter_list.\n");
@@ -5483,22 +5484,22 @@ struct parser_node * parameter_type_list(struct parser_state * parser_state){
 
 
 
-struct parser_node * direct_abstract_declarator_rest(struct parser_state * parser_state){
+struct parser_node * direct_abstract_declarator_rest(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build direct_abstract_declarator_rest\n");
-	if((n1 = p_accept(OPEN_PAREN_CHAR, parser_state))){
-		if((n1->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-			if((n1->next->next = direct_abstract_declarator_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
+	if((n1 = p_accept(OPEN_PAREN_CHAR, state))){
+		if((n1->next = p_accept(CLOSE_PAREN_CHAR, state))){
+			if((n1->next->next = direct_abstract_declarator_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = parameter_type_list(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-				if((n1->next->next->next = direct_abstract_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
+		}else if((n1->next = parameter_type_list(state))){
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+				if((n1->next->next->next = direct_abstract_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 					return (struct parser_node *)0;
@@ -5508,21 +5509,21 @@ struct parser_node * direct_abstract_declarator_rest(struct parser_state * parse
 				return (struct parser_node *)0;
 			}
 		}else{
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(OPEN_SQUARE_BRACKET_CHAR, parser_state))){
-		if((n1->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, parser_state))){
-			if((n1->next->next = direct_abstract_declarator_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
+	}else if((n1 = p_accept(OPEN_SQUARE_BRACKET_CHAR, state))){
+		if((n1->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, state))){
+			if((n1->next->next = direct_abstract_declarator_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = constant_expression(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, parser_state))){
-				if((n1->next->next->next = direct_abstract_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
+		}else if((n1->next = constant_expression(state))){
+			if((n1->next->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, state))){
+				if((n1->next->next->next = direct_abstract_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 					return (struct parser_node *)0;
@@ -5532,30 +5533,30 @@ struct parser_node * direct_abstract_declarator_rest(struct parser_state * parse
 				return (struct parser_node *)0;
 			}
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR_REST);
 	}
 }
 
 
-struct parser_node * direct_abstract_declarator(struct parser_state * parser_state){
+struct parser_node * direct_abstract_declarator(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build direct_abstract_declarator\n");
-	if((n1 = p_accept(OPEN_PAREN_CHAR, parser_state))){
-		if((n1->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-			if((n1->next->next = direct_abstract_declarator_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
+	if((n1 = p_accept(OPEN_PAREN_CHAR, state))){
+		if((n1->next = p_accept(CLOSE_PAREN_CHAR, state))){
+			if((n1->next->next = direct_abstract_declarator_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = parameter_type_list(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-				if((n1->next->next->next = direct_abstract_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
+		}else if((n1->next = parameter_type_list(state))){
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+				if((n1->next->next->next = direct_abstract_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 					return (struct parser_node *)0;
@@ -5564,10 +5565,10 @@ struct parser_node * direct_abstract_declarator(struct parser_state * parser_sta
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_PAREN_CHAR.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = abstract_declarator(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-				if((n1->next->next->next = direct_abstract_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
+		}else if((n1->next = abstract_declarator(state))){
+			if((n1->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+				if((n1->next->next->next = direct_abstract_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 					return (struct parser_node *)0;
@@ -5577,20 +5578,20 @@ struct parser_node * direct_abstract_declarator(struct parser_state * parser_sta
 				return (struct parser_node *)0;
 			}
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
 		}
-	}else if((n1 = p_accept(OPEN_SQUARE_BRACKET_CHAR, parser_state))){
-		if((n1->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, parser_state))){
-			if((n1->next->next = direct_abstract_declarator_rest(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
+	}else if((n1 = p_accept(OPEN_SQUARE_BRACKET_CHAR, state))){
+		if((n1->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, state))){
+			if((n1->next->next = direct_abstract_declarator_rest(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = constant_expression(parser_state))){
-			if((n1->next->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, parser_state))){
-				if((n1->next->next->next = direct_abstract_declarator_rest(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
+		}else if((n1->next = constant_expression(state))){
+			if((n1->next->next = p_accept(CLOSE_SQUARE_BRACKET_CHAR, state))){
+				if((n1->next->next->next = direct_abstract_declarator_rest(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected direct_abstract_declarator_rest.\n");
 					return (struct parser_node *)0;
@@ -5600,7 +5601,7 @@ struct parser_node * direct_abstract_declarator(struct parser_state * parser_sta
 				return (struct parser_node *)0;
 			}
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DIRECT_ABSTRACT_DECLARATOR);
 		}
 	}else{
 		parser_progress("Expected OPEN_SQUARE_BRACKET_CHAR or OPEN_PAREN_CHAR.\n");
@@ -5608,14 +5609,14 @@ struct parser_node * direct_abstract_declarator(struct parser_state * parser_sta
 	}
 }
 
-struct parser_node * type_name(struct parser_state * parser_state){
+struct parser_node * type_name(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build type_name\n");
-	if((n1 = specifier_qualifier_list(parser_state))){
-		if((n1->next = abstract_declarator(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_NAME);
+	if((n1 = specifier_qualifier_list(state))){
+		if((n1->next = abstract_declarator(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_NAME);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_NAME);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_NAME);
 		}
 	}else{
 		parser_progress("Expected specifier_qualifier_list.\n");
@@ -5624,45 +5625,45 @@ struct parser_node * type_name(struct parser_state * parser_state){
 }
 
 
-struct parser_node * abstract_declarator(struct parser_state * parser_state){
+struct parser_node * abstract_declarator(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build abstract_declarator\n");
-	if((n1 = pointer(parser_state))){
-		if((n1->next = direct_abstract_declarator(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ABSTRACT_DECLARATOR);
+	if((n1 = pointer(state))){
+		if((n1->next = direct_abstract_declarator(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ABSTRACT_DECLARATOR);
 		}else{
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ABSTRACT_DECLARATOR);
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ABSTRACT_DECLARATOR);
 		}
-	}else if((n1 = direct_abstract_declarator(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ABSTRACT_DECLARATOR);
+	}else if((n1 = direct_abstract_declarator(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ABSTRACT_DECLARATOR);
 	}else{
 		parser_progress("Expected abstract_declarator.\n");
 		return (struct parser_node *)0;
 	}
 }
 
-struct parser_node * labeled_statement(struct parser_state * parser_state){
+struct parser_node * labeled_statement(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build labeled_statement\n");
-	if((n1 = p_accept(IDENTIFIER,parser_state))){
-		if((n1->next = p_accept(COLON_CHAR, parser_state))){
-			if((n1->next->next = statement(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LABELED_STATEMENT);
+	if((n1 = p_accept(IDENTIFIER,state))){
+		if((n1->next = p_accept(COLON_CHAR, state))){
+			if((n1->next->next = statement(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LABELED_STATEMENT);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement.\n");
 				return (struct parser_node *)0;
 			}
 		}else{
 			parser_progress("Assuming not a label, resetting position.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(CASE,parser_state))){
-		if((n1->next = constant_expression(parser_state))){
-			if((n1->next->next = p_accept(COLON_CHAR, parser_state))){
-				if((n1->next->next->next = statement(parser_state))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LABELED_STATEMENT);
+	}else if((n1 = p_accept(CASE,state))){
+		if((n1->next = constant_expression(state))){
+			if((n1->next->next = p_accept(COLON_CHAR, state))){
+				if((n1->next->next->next = statement(state))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LABELED_STATEMENT);
 				}else{
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement.\n");
 					return (struct parser_node *)0;
@@ -5675,10 +5676,10 @@ struct parser_node * labeled_statement(struct parser_state * parser_state){
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected COLON_CHAR.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(DEFAULT,parser_state))){
-		if((n1->next = p_accept(COLON_CHAR, parser_state))){
-			if((n1->next->next = statement(parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LABELED_STATEMENT);
+	}else if((n1 = p_accept(DEFAULT,state))){
+		if((n1->next = p_accept(COLON_CHAR, state))){
+			if((n1->next->next = statement(state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, LABELED_STATEMENT);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement.\n");
 				return (struct parser_node *)0;
@@ -5693,30 +5694,30 @@ struct parser_node * labeled_statement(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * selection_statement(struct parser_state * parser_state){
+struct parser_node * selection_statement(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build selection_statement\n");
-	if((n1 = p_accept(IF,parser_state))){
-		if((n1->next = p_accept(OPEN_PAREN_CHAR, parser_state))){
-			if((n1->next->next = expression(parser_state))){
-				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-					if((n1->next->next->next->next = statement(parser_state))){
-						if((n1->next->next->next->next->next = p_accept(ELSE, parser_state))){
-							if((n1->next->next->next->next->next->next = statement(parser_state))){
-								return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SELECTION_STATEMENT);
+	if((n1 = p_accept(IF,state))){
+		if((n1->next = p_accept(OPEN_PAREN_CHAR, state))){
+			if((n1->next->next = expression(state))){
+				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+					if((n1->next->next->next->next = statement(state))){
+						if((n1->next->next->next->next->next = p_accept(ELSE, state))){
+							if((n1->next->next->next->next->next->next = statement(state))){
+								return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SELECTION_STATEMENT);
 							}else{
 								assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement after else.\n");
 								return (struct parser_node *)0;
 							}
 						}else{
-							return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SELECTION_STATEMENT);
+							return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SELECTION_STATEMENT);
 						}
 					}else{
 						assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement after if.\n");
 						return (struct parser_node *)0;
 					}
 				}else{
-					printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
+					printf("Parser could not continue on line %d of file %s\n", state->line_number, state->c_lexer_state->c.filename);
 					assert(0 && "FATAL_COMPILE_FAILURE!!! Expected CLOSE_PAREN_CHAR.\n");
 					return (struct parser_node *)0;
 				}
@@ -5728,12 +5729,12 @@ struct parser_node * selection_statement(struct parser_state * parser_state){
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected OPEN_PAREN_CHAR.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(SWITCH, parser_state))){
-		if((n1->next = p_accept(OPEN_PAREN_CHAR, parser_state))){
-			if((n1->next->next = expression(parser_state))){
-				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-					if((n1->next->next->next->next = statement(parser_state))){
-						return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SELECTION_STATEMENT);
+	}else if((n1 = p_accept(SWITCH, state))){
+		if((n1->next = p_accept(OPEN_PAREN_CHAR, state))){
+			if((n1->next->next = expression(state))){
+				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+					if((n1->next->next->next->next = statement(state))){
+						return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, SELECTION_STATEMENT);
 					}else{
 						assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement.\n");
 						return (struct parser_node *)0;
@@ -5756,15 +5757,15 @@ struct parser_node * selection_statement(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * iteration_statement(struct parser_state * parser_state){
+struct parser_node * iteration_statement(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build iteration_statement\n");
-	if((n1 = p_accept(WHILE,parser_state))){
-		if((n1->next = p_accept(OPEN_PAREN_CHAR, parser_state))){
-			if((n1->next->next = expression(parser_state))){
-				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-					if((n1->next->next->next->next = statement(parser_state))){
-						return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ITERATION_STATEMENT);
+	if((n1 = p_accept(WHILE,state))){
+		if((n1->next = p_accept(OPEN_PAREN_CHAR, state))){
+			if((n1->next->next = expression(state))){
+				if((n1->next->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+					if((n1->next->next->next->next = statement(state))){
+						return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ITERATION_STATEMENT);
 					}else{
 						assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement.\n");
 						return (struct parser_node *)0;
@@ -5781,14 +5782,14 @@ struct parser_node * iteration_statement(struct parser_state * parser_state){
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected OPEN_PAREN_CHAR for while.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(DO,parser_state))){
-		if((n1->next = statement(parser_state))){
-			if((n1->next->next = p_accept(WHILE, parser_state))){
-				if((n1->next->next->next = p_accept(OPEN_PAREN_CHAR, parser_state))){
-					if((n1->next->next->next->next = expression(parser_state))){
-						if((n1->next->next->next->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-							if((n1->next->next->next->next->next->next = p_accept(SEMICOLON_CHAR, parser_state))){
-								return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ITERATION_STATEMENT);
+	}else if((n1 = p_accept(DO,state))){
+		if((n1->next = statement(state))){
+			if((n1->next->next = p_accept(WHILE, state))){
+				if((n1->next->next->next = p_accept(OPEN_PAREN_CHAR, state))){
+					if((n1->next->next->next->next = expression(state))){
+						if((n1->next->next->next->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+							if((n1->next->next->next->next->next->next = p_accept(SEMICOLON_CHAR, state))){
+								return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ITERATION_STATEMENT);
 							}else{
 								assert(0 && "FATAL_COMPILE_FAILURE!!! Expected SEMICOLON_CHAR.\n");
 								return (struct parser_node *)0;
@@ -5813,21 +5814,21 @@ struct parser_node * iteration_statement(struct parser_state * parser_state){
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(FOR,parser_state))){
-		if((n1->next = p_accept(OPEN_PAREN_CHAR,parser_state))){
-			if((n1->next->next = expression_statement(parser_state))){
-				if((n1->next->next->next = expression_statement(parser_state))){
-					if((n1->next->next->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-						if((n1->next->next->next->next->next = statement(parser_state))){
-							return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ITERATION_STATEMENT);
+	}else if((n1 = p_accept(FOR,state))){
+		if((n1->next = p_accept(OPEN_PAREN_CHAR,state))){
+			if((n1->next->next = expression_statement(state))){
+				if((n1->next->next->next = expression_statement(state))){
+					if((n1->next->next->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+						if((n1->next->next->next->next->next = statement(state))){
+							return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ITERATION_STATEMENT);
 						}else{
 							assert(0 && "FATAL_COMPILE_FAILURE!!! Expected expression or statement.\n");
 							return (struct parser_node *)0;
 						}
-					}else if((n1->next->next->next->next = expression(parser_state))){
-						if((n1->next->next->next->next->next = p_accept(CLOSE_PAREN_CHAR, parser_state))){
-							if((n1->next->next->next->next->next->next = statement(parser_state))){
-								return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ITERATION_STATEMENT);
+					}else if((n1->next->next->next->next = expression(state))){
+						if((n1->next->next->next->next->next = p_accept(CLOSE_PAREN_CHAR, state))){
+							if((n1->next->next->next->next->next->next = statement(state))){
+								return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ITERATION_STATEMENT);
 							}else{
 								assert(0 && "FATAL_COMPILE_FAILURE!!! Expected statement.\n");
 								return (struct parser_node *)0;
@@ -5858,13 +5859,13 @@ struct parser_node * iteration_statement(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * jump_statement(struct parser_state * parser_state){
+struct parser_node * jump_statement(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build jump_statement\n");
-	if((n1 = p_accept(GOTO,parser_state))){
-		if((n1->next = p_accept(IDENTIFIER, parser_state))){
-			if((n1->next->next = p_accept(SEMICOLON_CHAR, parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
+	if((n1 = p_accept(GOTO,state))){
+		if((n1->next = p_accept(IDENTIFIER, state))){
+			if((n1->next->next = p_accept(SEMICOLON_CHAR, state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected SEMICOLON_CHAR.\n");
 				return (struct parser_node *)0;
@@ -5873,26 +5874,26 @@ struct parser_node * jump_statement(struct parser_state * parser_state){
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected IDENTIFIER.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(CONTINUE,parser_state))){
-		if((n1->next= p_accept(SEMICOLON_CHAR, parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
+	}else if((n1 = p_accept(CONTINUE,state))){
+		if((n1->next= p_accept(SEMICOLON_CHAR, state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
 		}else{
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected SEMICOLON_CHAR.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(BREAK,parser_state))){
-		if((n1->next= p_accept(SEMICOLON_CHAR, parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
+	}else if((n1 = p_accept(BREAK,state))){
+		if((n1->next= p_accept(SEMICOLON_CHAR, state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
 		}else{
 			assert(0 && "FATAL_COMPILE_FAILURE!!! Expected SEMICOLON_CHAR.\n");
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = p_accept(RETURN,parser_state))){
-		if((n1->next = p_accept(SEMICOLON_CHAR, parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
-		}else if((n1->next = expression(parser_state))){
-			if((n1->next->next = p_accept(SEMICOLON_CHAR, parser_state))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
+	}else if((n1 = p_accept(RETURN,state))){
+		if((n1->next = p_accept(SEMICOLON_CHAR, state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
+		}else if((n1->next = expression(state))){
+			if((n1->next->next = p_accept(SEMICOLON_CHAR, state))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, JUMP_STATEMENT);
 			}else{
 				assert(0 && "FATAL_COMPILE_FAILURE!!! Expected SEMICOLON_CHAR.\n");
 				return (struct parser_node *)0;
@@ -5907,46 +5908,46 @@ struct parser_node * jump_statement(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * function_definition(struct parser_state * parser_state){
+struct parser_node * function_definition(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build function_definition\n");
-	if((n1 = declaration_specifiers(parser_state))){
-		if((n1->next = declarator(parser_state))){
-			if((n1->next->next = declaration_list(parser_state, (struct namespace_object *)0))){
-				if((n1->next->next->next = compound_statement(parser_state, n1->next->next))){
-					return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, FUNCTION_DEFINITION);
+	if((n1 = declaration_specifiers(state))){
+		if((n1->next = declarator(state))){
+			if((n1->next->next = declaration_list(state, (struct namespace_object *)0))){
+				if((n1->next->next->next = compound_statement(state, n1->next->next))){
+					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, FUNCTION_DEFINITION);
 				}else{
 					parser_progress("Expected compound_statement.\n");
-					backtrack(parser_state, checkpoint);
+					backtrack(state, checkpoint);
 					return (struct parser_node *)0;
 				}
-			}else if((n1->next->next = compound_statement(parser_state, n1->next))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, FUNCTION_DEFINITION);
+			}else if((n1->next->next = compound_statement(state, n1->next))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, FUNCTION_DEFINITION);
 			}else{
 				parser_progress("Expected compound_statement or declaration_list for function definition.\n");
-				backtrack(parser_state, checkpoint);
+				backtrack(state, checkpoint);
 				return (struct parser_node *)0;
 			}
 		}else{
-			backtrack(parser_state, checkpoint);
-			buffered_printf(parser_state->buffered_output,"Unable to complete function definition, putting back tokens line %d.\n", parser_state->line_number);
+			backtrack(state, checkpoint);
+			buffered_printf(state->buffered_output,"Unable to complete function definition, putting back tokens line %d.\n", state->line_number);
 			return (struct parser_node *)0;
 		}
-	}else if((n1 = declarator(parser_state))){
-		if((n1->next = declaration_list(parser_state, (struct namespace_object *)0))){
-			if((n1->next->next = compound_statement(parser_state, n1->next))){
-				return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, FUNCTION_DEFINITION);
+	}else if((n1 = declarator(state))){
+		if((n1->next = declaration_list(state, (struct namespace_object *)0))){
+			if((n1->next->next = compound_statement(state, n1->next))){
+				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, FUNCTION_DEFINITION);
 			}else{
 				parser_progress("Expected compound_statement.\n");
-				backtrack(parser_state, checkpoint);
+				backtrack(state, checkpoint);
 				return (struct parser_node *)0;
 			}
-		}else if((n1->next = compound_statement(parser_state, n1))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, FUNCTION_DEFINITION);
+		}else if((n1->next = compound_statement(state, n1))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, FUNCTION_DEFINITION);
 		}else{
-			backtrack(parser_state, checkpoint);
-			buffered_printf(parser_state->buffered_output,"Unable to complete function definition, putting back tokens line %d..\n", parser_state->line_number);
+			backtrack(state, checkpoint);
+			buffered_printf(state->buffered_output,"Unable to complete function definition, putting back tokens line %d..\n", state->line_number);
 			return (struct parser_node *)0;
 		}
 	}else{
@@ -5955,13 +5956,13 @@ struct parser_node * function_definition(struct parser_state * parser_state){
 	}
 }
 
-struct parser_node * external_declaration(struct parser_state * parser_state){
+struct parser_node * external_declaration(struct parser_state * state){
 	struct parser_node * n1;
 	parser_progress("Attempting to build external_declaration\n");
-	if((n1 = declaration(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXTERNAL_DECLARATION);
-	}else if((n1 = function_definition(parser_state))){
-		return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXTERNAL_DECLARATION);
+	if((n1 = declaration(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXTERNAL_DECLARATION);
+	}else if((n1 = function_definition(state))){
+		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, EXTERNAL_DECLARATION);
 	}else{
 		parser_progress("Expected external declaration.\n");
 		return (struct parser_node *)0;
@@ -5972,56 +5973,56 @@ struct normalized_declaration_element * get_most_recently_added_declaration_elem
 	return struct_normalized_declaration_element_ptr_list_get(&o->elements, struct_normalized_declaration_element_ptr_list_size(&o->elements) -1);
 }
 
-struct parser_node * translation_unit_rest(struct parser_state * parser_state){
+struct parser_node * translation_unit_rest(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build translation_unit_rest\n");
-	if((n1 = external_declaration(parser_state))){
-		struct first_and_last_namespace_object fl = manage_generic_declaration(parser_state, n1, (struct normalized_declaration_set *)0, 0, GLOBAL, (struct namespace_object *)0, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0);
+	if((n1 = external_declaration(state))){
+		struct first_and_last_namespace_object fl = manage_generic_declaration(state, n1, (struct normalized_declaration_set *)0, 0, GLOBAL, (struct namespace_object *)0, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0);
 		if(fl.first && get_most_recently_added_declaration_element_from_object(fl.first)->normalized_declaration_set->set->type == FUNCTION_DEFINITION){
-			struct scope_level * scope = get_last_function_namespace_scope(parser_state);
+			struct scope_level * scope = get_last_function_namespace_scope(state);
 			struct current_function_change * change = (struct current_function_change *)malloc(sizeof(struct current_function_change));
 			change->target = scope;
 			change->old_obj = scope->current_function;
 			change->new_obj = fl.first;
-			push_operation(parser_state, SET_CURRENT_FUNCTION, (void*)change);
+			push_operation(state, SET_CURRENT_FUNCTION, (void*)change);
 		}
-		if((n1->next = translation_unit_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TRANSLATION_UNIT_REST);
+		if((n1->next = translation_unit_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TRANSLATION_UNIT_REST);
 		}else{
 			parser_progress("Expected translation_unit_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		struct parser_node * n = make_epsilon(parser_state);
-		return create_parser_node(parser_state, (struct parser_node *)0, n, (struct c_lexer_token*)0, TRANSLATION_UNIT_REST);
+		struct parser_node * n = make_epsilon(state);
+		return create_parser_node(state, (struct parser_node *)0, n, (struct c_lexer_token*)0, TRANSLATION_UNIT_REST);
 	}
 }
 
-struct parser_node * translation_unit(struct parser_state * parser_state){
+struct parser_node * translation_unit(struct parser_state * state){
 	struct parser_node * n1;
-	unsigned int checkpoint = struct_parser_operation_stack_size(&parser_state->operation_stack);
+	unsigned int checkpoint = struct_parser_operation_stack_size(&state->operation_stack);
 	parser_progress("Attempting to build translation_unit\n");
-	if((n1 = external_declaration(parser_state))){
-		struct first_and_last_namespace_object fl = manage_generic_declaration(parser_state, n1, (struct normalized_declaration_set *)0, 0, GLOBAL, (struct namespace_object *)0, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0);
+	if((n1 = external_declaration(state))){
+		struct first_and_last_namespace_object fl = manage_generic_declaration(state, n1, (struct normalized_declaration_set *)0, 0, GLOBAL, (struct namespace_object *)0, (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0);
 		if(fl.first && get_most_recently_added_declaration_element_from_object(fl.first)->normalized_declaration_set->set->type == FUNCTION_DEFINITION){
-			struct scope_level * scope = get_last_function_namespace_scope(parser_state);
+			struct scope_level * scope = get_last_function_namespace_scope(state);
 			struct current_function_change * change = (struct current_function_change *)malloc(sizeof(struct current_function_change));
 			change->target = scope;
 			change->old_obj = scope->current_function;
 			change->new_obj = fl.first;
-			push_operation(parser_state, SET_CURRENT_FUNCTION, (void*)change);
+			push_operation(state, SET_CURRENT_FUNCTION, (void*)change);
 		}
-		if((n1->next = translation_unit_rest(parser_state))){
-			return create_parser_node(parser_state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TRANSLATION_UNIT);
+		if((n1->next = translation_unit_rest(state))){
+			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TRANSLATION_UNIT);
 		}else{
 			parser_progress("Expected translation_unit_rest.\n");
-			backtrack(parser_state, checkpoint);
+			backtrack(state, checkpoint);
 			return (struct parser_node *)0;
 		}
 	}else{
-		printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
+		printf("Parser could not continue on line %d of file %s\n", state->line_number, state->c_lexer_state->c.filename);
 		assert(0 && "Expected external declaration.\n");
 		return (struct parser_node *)0;
 	}
@@ -6185,41 +6186,41 @@ struct type_description * copy_type_description(struct memory_pool_collection * 
 	return create_type_description_from_normalized_declarator_and_specifiers(m, type->declarator, type->specifiers, type->context, type->source_scope_level, type->value_type, type->source_element);
 }
 
-int parse(struct parser_state * parser_state){
+int parse(struct parser_state * state){
 	unsigned int print_scope_active = 0;
-	parser_state->top_node = translation_unit(parser_state);
+	state->top_node = translation_unit(state);
 
-	if(parser_state->tokens_position != struct_c_lexer_token_ptr_list_size(&parser_state->c_lexer_state->tokens)){
-		printf("Parser could not continue on line %d of file %s\n", parser_state->line_number, parser_state->c_lexer_state->c.filename);
+	if(state->tokens_position != struct_c_lexer_token_ptr_list_size(&state->c_lexer_state->tokens)){
+		printf("Parser could not continue on line %d of file %s\n", state->line_number, state->c_lexer_state->c.filename);
 		assert(0);
 	}
 
-	assert(parser_state->top_node && "Parsing FAILED.\n");
+	assert(state->top_node && "Parsing FAILED.\n");
 	if(print_scope_active){
-		print_scope_level(parser_state, parser_state->top_scope, 0);
+		print_scope_level(state, state->top_scope, 0);
 	}
 	return 0;
 }
 
-void create_parser_state(struct parser_state * parser_state, struct memory_pool_collection * memory_pool_collection, struct c_lexer_state * c_lexer_state, struct unsigned_char_list * buffered_output, unsigned char * buffer){
-	parser_state->buffered_output = buffered_output;
-	parser_state->memory_pool_collection = memory_pool_collection;
-	parser_state->c_lexer_state = c_lexer_state;
-	parser_state->line_number = 1;
-	parser_state->tokens_position = 0;
-	parser_state->current_scope_depth = 0;
-	parser_state->top_scope = create_empty_scope((struct scope_level *)0);
-	struct_parser_operation_stack_create(&parser_state->operation_stack);
-	parser_state->buff = buffer;
-	unsigned_char_ptr_to_struct_constant_description_ptr_map_create(&parser_state->constant_map);
+void create_parser_state(struct parser_state * state, struct memory_pool_collection * memory_pool_collection, struct c_lexer_state * c_lexer_state, struct unsigned_char_list * buffered_output, unsigned char * buffer){
+	state->buffered_output = buffered_output;
+	state->memory_pool_collection = memory_pool_collection;
+	state->c_lexer_state = c_lexer_state;
+	state->line_number = 1;
+	state->tokens_position = 0;
+	state->current_scope_depth = 0;
+	state->top_scope = create_empty_scope((struct scope_level *)0);
+	struct_parser_operation_stack_create(&state->operation_stack);
+	state->buff = buffer;
+	unsigned_char_ptr_to_struct_constant_description_ptr_map_create(&state->constant_map);
 }
 
-void destroy_parser_state(struct parser_state * parser_state){
+void destroy_parser_state(struct parser_state * state){
 	/* Undo every operation that was used to build up the entire parser state */
-	backtrack(parser_state, 0);
-	destroy_empty_scope(parser_state->top_scope);
-	struct_parser_operation_stack_destroy(&parser_state->operation_stack);
-	unsigned_char_ptr_to_struct_constant_description_ptr_map_destroy(&parser_state->constant_map);
+	backtrack(state, 0);
+	destroy_empty_scope(state->top_scope);
+	struct_parser_operation_stack_destroy(&state->operation_stack);
+	unsigned_char_ptr_to_struct_constant_description_ptr_map_destroy(&state->constant_map);
 }
 
 const char ** get_node_type_names(void){

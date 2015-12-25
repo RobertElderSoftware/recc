@@ -1,28 +1,34 @@
-#ifndef __TYPES_LINKER_struct_linker_symbol_h__
-#define __TYPES_LINKER_struct_linker_symbol_h__
+#ifndef TYPES_LINKER_struct_linker_symbol_h__
+#define TYPES_LINKER_struct_linker_symbol_h__
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
+#ifndef TYPES_LINKER_struct_l2_item_h__
+#include "struct_l2_item.h"
+#endif
+
 struct linker_symbol{
+	unsigned int original_l2_item_index;
 	unsigned int is_implemented;
 	unsigned int is_required;
 	unsigned int is_external;
-	unsigned int instruction_index; /* The index of the instruction in its parent linker object. */
+	struct l2_item * l2_item; /* The pointer to the l2_item of the instruction in its parent linker object. */
 	unsigned int observed_as_implemented;  /*  indicates if a corresponding label for that linker object has been found in the file */
 	unsigned int pad;
-	struct linker_object * parent_linker_object;  /*  External symbols need to remember which linker object they belong to. */
+	struct linker_file * parent_linker_file;  /*  External symbols need to remember which linker object they belong to. */
 };
 
 #endif

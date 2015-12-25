@@ -3,7 +3,17 @@
 ;                offset 0x300000.  This will also prevent generated code 
 ;                from accidentally covering these registers after linking.
 OFFSET 0x300000
-sw 0x10;         0x300000 UART1_OUT
-sw 0x10;         0x300010 UART1_IN
-sw 0x10;         0x300020 IRQ_HANDLER
-sw 0x10;         0x300030 TIMER1_PERIOD
+VARIABLE memory_mapped_registers_start memory_mapped_registers_end
+IMPLEMENTS INTERNAL memory_mapped_registers_start
+IMPLEMENTS INTERNAL memory_mapped_registers_end
+memory_mapped_registers_start:
+SW 0x10;         0x300000 UART1_OUT
+SW 0x10;         0x300010 UART1_IN
+SW 0x10;         0x300020 IRQ_HANDLER
+SW 0x10;         0x300030 TIMER1_PERIOD
+SW 0x1;          0x300040 PAGE_POINTER
+SW 0x1;          0x300044 PFE_PAGE_POINTER
+SW 0x1;          0x300048 PFE_PC_VALUE
+SW 0x1;          0x30004C PFE_ACCESS
+SW 0x1;          0x300050 PFE_VIRTUAL
+memory_mapped_registers_end:

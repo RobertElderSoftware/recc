@@ -1,16 +1,17 @@
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
 /*
@@ -58,14 +59,26 @@ void output_filesystem_impl(unsigned char * out_file){
 	}
 
 	fprintf(f, "OFFSET RELOCATABLE;\n");
+	fprintf(f, "VARIABLE globalvar_free_blocks_stack_top __end_globalvar_free_blocks_stack_top;\n");
+	fprintf(f, "VARIABLE globalvar_free_inodes_stack_top __end_globalvar_free_inodes_stack_top;\n");
+	fprintf(f, "VARIABLE globalvar_blocks __end_globalvar_blocks;\n");
+	fprintf(f, "VARIABLE globalvar_inodes __end_globalvar_inodes;\n");
+	fprintf(f, "VARIABLE globalvar_free_blocks __end_globalvar_free_blocks;\n");
+	fprintf(f, "VARIABLE globalvar_free_inodes __end_globalvar_free_inodes;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_free_blocks_stack_top;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_free_blocks_stack_top;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_free_inodes_stack_top;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_free_inodes_stack_top;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_blocks;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_blocks;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_inodes;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_inodes;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_free_blocks;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_free_blocks;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_free_inodes;\n");
-	fprintf(f, "globalvar_free_blocks_stack_top:\ndw 0x%X\n", free_blocks_stack_top);
-	fprintf(f, "globalvar_free_inodes_stack_top:\ndw 0x%X\n", free_inodes_stack_top);
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_free_inodes;\n");
+	fprintf(f, "globalvar_free_blocks_stack_top:\nDW 0x%X\n__end_globalvar_free_blocks_stack_top:\n", free_blocks_stack_top);
+	fprintf(f, "globalvar_free_inodes_stack_top:\nDW 0x%X\n__end_globalvar_free_inodes_stack_top:\n", free_inodes_stack_top);
 	fprintf(f, "globalvar_blocks:\n");
 	for(i = 0; i < free_blocks_stack_top; i++){
 		unsigned int j;
@@ -76,14 +89,15 @@ void output_filesystem_impl(unsigned char * out_file){
 		unsigned int num_ints_data = (blocks[i].header.bytes_used / sizeof(unsigned int)) + ((blocks[i].header.bytes_used % sizeof(unsigned int) == 0) ? 0 : 1);
 		assert(block_header_size % sizeof(unsigned int) == 0);
 		for(j = 0; j < num_ints_header; j++){
-			fprintf(f, "dw 0x%X;  Block %d entry header\n", block_header_int_ptr[j], i);
+			fprintf(f, "DW 0x%X;  Block %d entry header\n", block_header_int_ptr[j], i);
 		}
 		for(j = 0; j < num_ints_data; j++){
-			fprintf(f, "dw 0x%X;  %c%c%c%c\n", block_data_int_ptr[j], printable_character(((unsigned char *)&block_data_int_ptr[j])[3]), printable_character(((unsigned char *)&block_data_int_ptr[j])[2]),printable_character(((unsigned char *)&block_data_int_ptr[j])[1]),printable_character(((unsigned char *)&block_data_int_ptr[j])[0]));
+			fprintf(f, "DW 0x%X;  %c%c%c%c\n", block_data_int_ptr[j], printable_character(((unsigned char *)&block_data_int_ptr[j])[3]), printable_character(((unsigned char *)&block_data_int_ptr[j])[2]),printable_character(((unsigned char *)&block_data_int_ptr[j])[1]),printable_character(((unsigned char *)&block_data_int_ptr[j])[0]));
 		}
-		fprintf(f, "sw 0x%X; Unused region in block %d\n", DATA_WORDS_PER_BLOCK - num_ints_data, i);
+		fprintf(f, "SW 0x%X; Unused region in block %d\n", DATA_WORDS_PER_BLOCK - num_ints_data, i);
 	}
-	fprintf(f, "sw 0x%X;  Space for remaining (%d) unused blocks\n", (unsigned int)((NUM_BLOCKS - free_blocks_stack_top) * sizeof(struct filesystem_block)), NUM_BLOCKS - free_blocks_stack_top);
+	fprintf(f, "SW 0x%X;  Space for remaining (%d) unused blocks\n", (unsigned int)((NUM_BLOCKS - free_blocks_stack_top) * sizeof(struct filesystem_block)), NUM_BLOCKS - free_blocks_stack_top);
+	fprintf(f, "__end_globalvar_blocks:\n");
 	fprintf(f, "globalvar_inodes:\n");
 	for(i = 0; i < free_inodes_stack_top; i++){
 		unsigned int j;
@@ -91,18 +105,21 @@ void output_filesystem_impl(unsigned char * out_file){
 		unsigned int num_ints_inode = sizeof(struct filesystem_inode) / sizeof(unsigned int);
 		assert(sizeof(struct filesystem_inode) % sizeof(unsigned int) == 0);
 		for(j = 0; j < num_ints_inode; j++){
-			fprintf(f, "dw 0x%X;  Inode %d\n", inode_int_ptr[j], i);
+			fprintf(f, "DW 0x%X;  Inode %d\n", inode_int_ptr[j], i);
 		}
 	}
-	fprintf(f, "sw 0x%X;  Space for remaining (%d) unused inodes\n", (unsigned int)((NUM_INODES - free_inodes_stack_top) * sizeof(struct filesystem_inode)), NUM_INODES - free_inodes_stack_top);
+	fprintf(f, "SW 0x%X;  Space for remaining (%d) unused inodes\n", (unsigned int)((NUM_INODES - free_inodes_stack_top) * sizeof(struct filesystem_inode)), NUM_INODES - free_inodes_stack_top);
+	fprintf(f, "__end_globalvar_inodes:\n");
 	fprintf(f, "globalvar_free_blocks:\n");
 	for(i = 0; i < NUM_BLOCKS; i++){
-		fprintf(f, "dw 0x%X;\n", free_blocks[i]);
+		fprintf(f, "DW 0x%X;\n", free_blocks[i]);
 	}
+	fprintf(f, "__end_globalvar_free_blocks:\n");
 	fprintf(f, "globalvar_free_inodes:\n");
 	for(i = 0; i < NUM_INODES; i++){
-		fprintf(f, "dw 0x%X;\n", free_inodes[i]);
+		fprintf(f, "DW 0x%X;\n", free_inodes[i]);
 	}
+	fprintf(f, "__end_globalvar_free_inodes:\n");
 
 	fclose(f);
 	return;
@@ -191,7 +208,7 @@ void create_files(struct unsigned_char_ptr_to_unsigned_char_ptr_map * files, str
 	unsigned_char_ptr_list_destroy(&file_keys);
 }
 
-#define NUM_FILES 281
+#define NUM_FILES 280
 
 void create_filesystem_impl(unsigned char * out_file){
 	unsigned char * root_dir;
@@ -237,7 +254,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"./data-structures/unsigned_int_binary_search.h", "/./data-structures/unsigned_int_binary_search.h"},
 		{"./data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_merge_sort.h"},
 		{"./data-structures/struct_void_ptr_to_unsigned_int_key_value_pair_binary_search.h", "/./data-structures/struct_void_ptr_to_unsigned_int_key_value_pair_binary_search.h"},
-		{"./data-structures/struct_asm_lexer_token_ptr_list.h", "/./data-structures/struct_asm_lexer_token_ptr_list.h"},
+		{"./data-structures/struct_l2_lexer_token_ptr_list.h", "/./data-structures/struct_l2_lexer_token_ptr_list.h"},
 		{"./data-structures/binary_exponential_buffer.h", "/./data-structures/binary_exponential_buffer.h"},
 		{"./data-structures/struct_void_ptr_to_unsigned_int_key_value_pair_merge_sort.h", "/./data-structures/struct_void_ptr_to_unsigned_int_key_value_pair_merge_sort.h"},
 		{"./data-structures/struct_linker_symbol_ptr_list.h", "/./data-structures/struct_linker_symbol_ptr_list.h"},
@@ -246,30 +263,30 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"./data-structures/char_list.h", "/./data-structures/char_list.h"},
 		{"./data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_binary_search.h"},
 		{"./data-structures/struct_scope_level_ptr_list.h", "/./data-structures/struct_scope_level_ptr_list.h"},
-		{"./data-structures/struct_asm_instruction_ptr_list.h", "/./data-structures/struct_asm_instruction_ptr_list.h"},
+		{"./data-structures/struct_l2_item_ptr_list.h", "/./data-structures/struct_l2_item_ptr_list.h"},
 		{"./data-structures/struct_c_lexer_state_ptr_list.h", "/./data-structures/struct_c_lexer_state_ptr_list.h"},
 		{"./data-structures/struct_unsigned_char_list_ptr_list.h", "/./data-structures/struct_unsigned_char_list_ptr_list.h"},
 		{"./data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"},
 		{"./data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_merge_sort.h"},
-		{"./data-structures/struct_asm_lexer_state_ptr_list.h", "/./data-structures/struct_asm_lexer_state_ptr_list.h"},
+		{"./data-structures/struct_l2_lexer_state_ptr_list.h", "/./data-structures/struct_l2_lexer_state_ptr_list.h"},
 		{"./data-structures/unsigned_int_merge_sort.h", "/./data-structures/unsigned_int_merge_sort.h"},
 		{"./data-structures/struct_c_lexer_token_memory_pool.h", "/./data-structures/struct_c_lexer_token_memory_pool.h"},
 		{"./data-structures/unsigned_char_ptr_list.h", "/./data-structures/unsigned_char_ptr_list.h"},
 		{"./data-structures/struct_parser_node_memory_pool.h", "/./data-structures/struct_parser_node_memory_pool.h"},
 		{"./data-structures/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h"},
-		{"./data-structures/struct_preloader_instruction_list.h", "/./data-structures/struct_preloader_instruction_list.h"},
+		{"./data-structures/struct_l0_item_list.h", "/./data-structures/struct_l0_item_list.h"},
 		{"./data-structures/struct_normalized_specifier_ptr_list.h", "/./data-structures/struct_normalized_specifier_ptr_list.h"},
 		{"./data-structures/struct_linker_symbol_memory_pool.h", "/./data-structures/struct_linker_symbol_memory_pool.h"},
 		{"./data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_merge_sort.h"},
 		{"./data-structures/unsigned_char_list.h", "/./data-structures/unsigned_char_list.h"},
-		{"./data-structures/struct_asm_lexer_token_memory_pool.h", "/./data-structures/struct_asm_lexer_token_memory_pool.h"},
-		{"./data-structures/struct_linker_object_ptr_merge_sort.h", "/./data-structures/struct_linker_object_ptr_merge_sort.h"},
+		{"./data-structures/struct_l2_lexer_token_memory_pool.h", "/./data-structures/struct_l2_lexer_token_memory_pool.h"},
+		{"./data-structures/struct_linker_file_ptr_merge_sort.h", "/./data-structures/struct_linker_file_ptr_merge_sort.h"},
 		{"./data-structures/struct_special_macro_definition_ptr_list.h", "/./data-structures/struct_special_macro_definition_ptr_list.h"},
 		{"./data-structures/struct_parser_operation_stack.h", "/./data-structures/struct_parser_operation_stack.h"},
 		{"./data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h", "/./data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h"},
 		{"./data-structures/unsigned_char_ptr_compare.h", "/./data-structures/unsigned_char_ptr_compare.h"},
 		{"./data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_merge_sort.h"},
-		{"./data-structures/struct_linker_object_ptr_list.h", "/./data-structures/struct_linker_object_ptr_list.h"},
+		{"./data-structures/struct_linker_file_ptr_list.h", "/./data-structures/struct_linker_file_ptr_list.h"},
 		{"./data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_binary_search.h"},
 		{"./data-structures/struct_c_lexer_token_ptr_list.h", "/./data-structures/struct_c_lexer_token_ptr_list.h"},
 		{"./data-structures/unsigned_int_stack.h", "/./data-structures/unsigned_int_stack.h"},
@@ -279,7 +296,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"./data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_binary_search.h"},
 		{"./data-structures/struct_c_lexer_token_ptr_compare.h", "/./data-structures/struct_c_lexer_token_ptr_compare.h"},
 		{"./data-structures/struct_preprocessor_if_branch_ptr_list.h", "/./data-structures/struct_preprocessor_if_branch_ptr_list.h"},
-		{"./data-structures/struct_asm_instruction_memory_pool.h", "/./data-structures/struct_asm_instruction_memory_pool.h"},
+		{"./data-structures/struct_l2_item_memory_pool.h", "/./data-structures/struct_l2_item_memory_pool.h"},
 		{"./data-structures/unsigned_int_ptr_list.h", "/./data-structures/unsigned_int_ptr_list.h"},
 		{"./data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h", "/./data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"},
 		{"./data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_binary_search.h"},
@@ -309,9 +326,9 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"./libc/assert.h", "/./libc/assert.h"},
 		{"./libc/filesystem.h", "/./libc/filesystem.h"},
 		{"./recc-implementation/lexer.h", "/./recc-implementation/lexer.h"},
-		{"./recc-implementation/preloader.h", "/./recc-implementation/preloader.h"},
+		{"./recc-implementation/l0_generator.h", "/./recc-implementation/l0_generator.h"},
 		{"./recc-implementation/memory_pool_collection.h", "/./recc-implementation/memory_pool_collection.h"},
-		{"./emulators/javascript/index.html", "/./emulators/javascript/index.html"},
+		{"./emulators/javascript/index.php", "/./emulators/javascript/index.php"},
 		{"./emulators/c/op-cpu.h", "/./emulators/c/op-cpu.h"},
 		{"./builtin/includetest2.h", "/./builtin/includetest2.h"},
 		{"./builtin/includetest1.h", "/./builtin/includetest1.h"},
@@ -323,7 +340,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"recc-implementation/lexer.c", "/recc-implementation/lexer.c"},
 		{"recc-implementation/linker.c", "/recc-implementation/linker.c"},
 		{"recc-implementation/parser.c", "/recc-implementation/parser.c"},
-		{"recc-implementation/preloader.c", "/recc-implementation/preloader.c"},
+		{"recc-implementation/l0_generator.c", "/recc-implementation/l0_generator.c"},
 		{"recc-implementation/preprocessor.c", "/recc-implementation/preprocessor.c"},
 		{"test/c89/basic-operations.c", "/test/c89/basic-operations.c"},
 		{"test/c89/basic-putchar-aa.c", "/test/c89/basic-putchar-aa.c"},
@@ -381,7 +398,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/data-structures/struct_struct_c_lexer_token_ptr_list.h","/types/data-structures/struct_struct_c_lexer_token_ptr_list.h"},
 		{"types/data-structures/unsigned_int.h","/types/data-structures/unsigned_int.h"},
 		{"types/data-structures/struct_struct_namespace_object_ptr_list.h","/types/data-structures/struct_struct_namespace_object_ptr_list.h"},
-		{"types/data-structures/struct_struct_asm_instruction_ptr_list.h","/types/data-structures/struct_struct_asm_instruction_ptr_list.h"},
+		{"types/data-structures/struct_struct_l2_item_ptr_list.h","/types/data-structures/struct_struct_l2_item_ptr_list.h"},
 		{"types/data-structures/struct_struct_c_lexer_state_ptr_list.h","/types/data-structures/struct_struct_c_lexer_state_ptr_list.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair.h"},
 		{"types/data-structures/struct_struct_normalized_declaration_element_ptr_list.h","/types/data-structures/struct_struct_normalized_declaration_element_ptr_list.h"},
@@ -389,7 +406,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/data-structures/struct_struct_macro_definition_ptr_list.h","/types/data-structures/struct_struct_macro_definition_ptr_list.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair.h"},
-		{"types/data-structures/struct_struct_asm_lexer_state_ptr_list.h","/types/data-structures/struct_struct_asm_lexer_state_ptr_list.h"},
+		{"types/data-structures/struct_struct_l2_lexer_state_ptr_list.h","/types/data-structures/struct_struct_l2_lexer_state_ptr_list.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_map.h","/types/data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_map.h"},
 		{"types/data-structures/struct_char_ptr_list.h","/types/data-structures/struct_char_ptr_list.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair.h"},
@@ -398,7 +415,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/data-structures/struct_struct_preprocessor_if_branch_ptr_list.h","/types/data-structures/struct_struct_preprocessor_if_branch_ptr_list.h"},
 		{"types/data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h","/types/data-structures/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_build_target_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_build_target_ptr_key_value_pair.h"},
-		{"types/data-structures/struct_unsigned_char_ptr_to_struct_linker_object_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_linker_object_ptr_key_value_pair.h"},
+		{"types/data-structures/struct_unsigned_char_ptr_to_struct_linker_file_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_linker_file_ptr_key_value_pair.h"},
 		{"types/data-structures/struct_struct_scope_level_ptr_list.h","/types/data-structures/struct_struct_scope_level_ptr_list.h"},
 		{"types/data-structures/struct_void_ptr_to_unsigned_int_key_value_pair.h","/types/data-structures/struct_void_ptr_to_unsigned_int_key_value_pair.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h"},
@@ -413,8 +430,8 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_build_target_ptr_map.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_build_target_ptr_map.h"},
 		{"types/data-structures/struct_unsigned_int_list.h","/types/data-structures/struct_unsigned_int_list.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair.h"},
-		{"types/data-structures/struct_struct_linker_object_ptr_list.h","/types/data-structures/struct_struct_linker_object_ptr_list.h"},
-		{"types/data-structures/struct_linker_object_ptr.h","/types/data-structures/struct_linker_object_ptr.h"},
+		{"types/data-structures/struct_struct_linker_file_ptr_list.h","/types/data-structures/struct_struct_linker_file_ptr_list.h"},
+		{"types/data-structures/struct_linker_file_ptr.h","/types/data-structures/struct_linker_file_ptr.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_map.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_map.h"},
 		{"types/data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h","/types/data-structures/struct_struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h"},
 		{"types/data-structures/struct_struct_preprocessor_file_context_ptr_list.h","/types/data-structures/struct_struct_preprocessor_file_context_ptr_list.h"},
@@ -423,17 +440,17 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/data-structures/struct_struct_type_description_ptr_list.h","/types/data-structures/struct_struct_type_description_ptr_list.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair.h"},
 		{"types/data-structures/struct_struct_constant_initializer_level_ptr_list.h","/types/data-structures/struct_struct_constant_initializer_level_ptr_list.h"},
-		{"types/data-structures/struct_struct_preloader_instruction_list.h","/types/data-structures/struct_struct_preloader_instruction_list.h"},
+		{"types/data-structures/struct_struct_l0_item_list.h","/types/data-structures/struct_struct_l0_item_list.h"},
 		{"types/data-structures/struct_struct_normalized_specifier_ptr_list.h","/types/data-structures/struct_struct_normalized_specifier_ptr_list.h"},
 		{"types/data-structures/struct_struct_switch_frame_ptr_list.h","/types/data-structures/struct_struct_switch_frame_ptr_list.h"},
-		{"types/data-structures/struct_struct_asm_lexer_token_ptr_list.h","/types/data-structures/struct_struct_asm_lexer_token_ptr_list.h"},
+		{"types/data-structures/struct_struct_l2_lexer_token_ptr_list.h","/types/data-structures/struct_struct_l2_lexer_token_ptr_list.h"},
 		{"types/lexer/struct_common_lexer_state.h","/types/lexer/struct_common_lexer_state.h"},
-		{"types/lexer/struct_asm_lexer_token.h","/types/lexer/struct_asm_lexer_token.h"},
+		{"types/lexer/struct_l2_lexer_token.h","/types/lexer/struct_l2_lexer_token.h"},
 		{"types/lexer/enum_c_token_type.h","/types/lexer/enum_c_token_type.h"},
-		{"types/lexer/enum_asm_token_type.h","/types/lexer/enum_asm_token_type.h"},
+		{"types/lexer/enum_l2_token_type.h","/types/lexer/enum_l2_token_type.h"},
 		{"types/lexer/struct_c_lexer_token.h","/types/lexer/struct_c_lexer_token.h"},
 		{"types/lexer/struct_c_lexer_state.h","/types/lexer/struct_c_lexer_state.h"},
-		{"types/lexer/struct_asm_lexer_state.h","/types/lexer/struct_asm_lexer_state.h"},
+		{"types/lexer/struct_l2_lexer_state.h","/types/lexer/struct_l2_lexer_state.h"},
 		{"types/recc-implementation/struct_heap_memory_pool.h","/types/recc-implementation/struct_heap_memory_pool.h"},
 		{"types/preprocessor/struct_macro_definition.h","/types/preprocessor/struct_macro_definition.h"},
 		{"types/preprocessor/struct_preprocessor_file_context.h","/types/preprocessor/struct_preprocessor_file_context.h"},
@@ -450,8 +467,8 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/code_generator/struct_type_traversal.h","/types/code_generator/struct_type_traversal.h"},
 		{"types/code_generator/enum_copy_method.h","/types/code_generator/enum_copy_method.h"},
 		{"types/code_generator/struct_code_gen_state.h","/types/code_generator/struct_code_gen_state.h"},
-		{"types/linker/struct_asm_instruction.h","/types/linker/struct_asm_instruction.h"},
-		{"types/linker/struct_linker_object.h","/types/linker/struct_linker_object.h"},
+		{"types/linker/struct_l2_item.h","/types/linker/struct_l2_item.h"},
+		{"types/linker/struct_linker_file.h","/types/linker/struct_linker_file.h"},
 		{"types/linker/struct_linker_symbol.h","/types/linker/struct_linker_symbol.h"},
 		{"types/recc-implementation/enum_build_target_type.h","/types/recc-implementation/enum_build_target_type.h"},
 		{"types/parser/enum_normalized_declarator_type.h","/types/parser/enum_normalized_declarator_type.h"},
@@ -479,8 +496,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/parser/struct_parser_state.h","/types/parser/struct_parser_state.h"},
 		{"types/parser/enum_scope_type.h","/types/parser/enum_scope_type.h"},
 		{"types/recc-implementation/struct_memory_pool_collection.h","/types/recc-implementation/struct_memory_pool_collection.h"},
-		{"types/preloader/struct_preloader_instruction.h","/types/preloader/struct_preloader_instruction.h"},
-		{"types/preloader/enum_preloader_instruction_type.h","/types/preloader/enum_preloader_instruction_type.h"},
+		{"emulators/c/struct_l0_item.h","/emulators/c/struct_l0_item.h"},
 		{"types/recc-implementation/struct_build_state.h","/types/recc-implementation/struct_build_state.h"},
 		{"types/recc-implementation/struct_build_target.h","/types/recc-implementation/struct_build_target.h"}
 	};

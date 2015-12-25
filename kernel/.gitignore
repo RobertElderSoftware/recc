@@ -16,6 +16,13 @@
 /queue.l2
 /queue.i
 /kernel.sym
+/kernel_symbols.sym
+/kernel_symbols.l1
+/kernel_symbols.l0.c
+/kernel_symbols.l0.i
+/kernel_symbols.l0.l2
 /recc.o
 /build_kernel
 /build_kernel.o
+/level_1_page_table_entries.i
+/level_1_page_table_entries.l2

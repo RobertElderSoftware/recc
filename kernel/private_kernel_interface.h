@@ -1,30 +1,31 @@
-#ifndef __PRIVATE_KERNEL_INTERFACE_H__
-#define __PRIVATE_KERNEL_INTERFACE_H__
+#ifndef PRIVATE_KERNEL_INTERFACE_H__
+#define PRIVATE_KERNEL_INTERFACE_H__
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
-#ifndef __KERNEL_STATE_H__
+#ifndef KERNEL_STATE_H__
 #include "kernel_state.h"
 #endif
-#ifndef __QUEUE_H_DEFINED__
+#ifndef QUEUE_H_DEFINED__
 #include "queue.h"
 #endif
-#ifndef __USER_PROC_H__
+#ifndef USER_PROC_H__
 #include "user_proc.h"
 #endif
-#ifndef __STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED__
 #include <stdio.h>
 #endif
 
@@ -35,12 +36,14 @@ void add_task_to_ready_queue(struct process_control_block *);
 
 void set_irq_handler(void (*)(void));
 void set_timer_period(unsigned int);
+void set_level_2_page_pointer(unsigned int *);
 void or_into_flags_register(unsigned int);
 void deassert_bits_in_flags_register(unsigned int);
 unsigned int read_flags_register(void);
 unsigned int timer_interrupt_enable(void);
 unsigned int uart1_out_interrupt_enable(void);
 unsigned int uart1_in_interrupt_enable(void);
+unsigned int page_fault_exception_interrupt_enable(void);
 unsigned int init_task_stack(unsigned int **, void (*)(void));
 unsigned int scheduler(void);
 unsigned int k_release_processor(void);

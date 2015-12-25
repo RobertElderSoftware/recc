@@ -4,19 +4,33 @@ DO NOT CREATE PULL REQUESTS FOR THIS PROJECT.  ANY PULL REQUESTS YOU CREATE WILL
 
 Contributing to this project is not currently permitted.
 
-# Overview
+# What Can This Project Do?
 
-This project is a collection of compiler, microkernel and OS tools.  Read more here:
+Project home: http://recc.robertelder.org/
 
-http://recc.robertelder.org/
+-  Describes a tiny CPU spec (the 'One-Page CPU') that can be implemented in less than 500 lines of code.
+-  The CPU supports 14 instructions, context switching, virtual memory, interrupts.
+-  Minimal microkernel (written in C) that runs on the One-Page CPU.
+-  An compiler for a (non-trivial subset) of ANSI C89 that targets the One-Page CPU.
+-  The compiler includes a linker.
+-  Emulators for the One-Page CPU written in 4 different languages: C89, Python, Java, Javascript
+-  Ability to statically compile files from host filesystem into One-Page CPU executables, accessed through 'fopen' (file reading only).
+-  Entire project only depends on C standard library.
 
-This project is unlikely to be interesting or usable by anyone who is not among the most hard-core programmers.  If you enjoy sitting at home, writing code on a Friday night then this project is for you!  Many aspects of the compiler are undocumented and I change them constantly.  This is often because I haven't yet figured out what the best approach is, and I want to avoid creating wasteful documentation that will be wrong shortly in the future.  As I become more confident about what the best approach is, I will add documentation explaining how it works.  If you want to know how something works, the best place to look is in the Makefiles to see how things are being built.
+# Warning
+
+If you want to use this project for something, your best bet is to file a bug asking how you could do it, instead of trying to figure out how to this software.  This way, I get feedback that someone actually wants to use it for something too.
+
+This project is unlikely to be interesting or usable by anyone who is not among the most hard-core programmers.  If you enjoy sitting at home, writing code on a Friday night then this project is for you!  Many aspects of the compiler are undocumented and I change them constantly.  This is often because I haven't yet figured out what the best approach is, and I want to avoid creating wasteful documentation that will be wrong shortly in the future.  As I become more confident about what the best approach is, I will add documentation explaining how it works.  If you want to know how something works, the best place to look is in the Makefiles to see how things are being build.
 
 This project is in a constant state of flux and there is no guarantee provided in terms of backward compatibility (nobody really uses it for anything serious anyway).  The eventual goal will be to move toward standardizing certain things, but for now I tend to use this project as a playground to try out completely new ways of doing things.  Sometimes this works out, and sometimes it doesn't.
+
 
 # License
 
 See LICENSE.txt
+
+You can also find the source code available in a number of other licenses:  http://recc.robertelder.org/other-licenses/
 
 # Developer Set Up
 
@@ -28,15 +42,15 @@ If you want to do full testing of cross compiled code in the browser, it would b
 
 In order to test the compiler on real C code using the Javascript emulator, the following steps take place:
 
-1)  For tests, and executable called 'build_tests' is created.  This executable is a 'compiler' with the test build process hard coded into it.
-2)  The recc executable is used to preprocess .i files from all of the .c files in the 'test' directory.
-3)  The recc executable is used to build .l2 files from all of the .i files in the 'test' directory.
-4)  The recc executable is used to build .l1 files for each test in the 'test' directory.
-5)  .l0.js files are created for each test in the 'test' directory.
-6)  Once all .l0.js files have been built, chrome is envoked directly from the makefile, and chrome is instructed to browse to a url served by localhost, which serves files in the test-api-endpoint directory.  This page contains javascript that interacts with the test API to obtain a list of all available test cases, then run each test and submit the result in the API.  The test result from running the compiled code in the javascript emulator is saved into the 'test' directory.
-7)  Each of the .c files in the 'test' are compiled using (your host compiler) into standard desktop executables.
-8)  The executables created using gcc are then run, and output is saved to the 'test' directory.
-9)  The saved output from javascript and gcc are diff'ed.  If the diff is not empty, the test failed.
+- 1)  For tests, and executable called 'build_tests' is created.  This executable is a 'compiler' with the test build process hard coded into it.
+- 2)  The recc executable is used to preprocess .i files from all of the .c files in the 'test' directory.
+- 3)  The recc executable is used to build .l2 files from all of the .i files in the 'test' directory.
+- 4)  The recc executable is used to build .l1 files for each test in the 'test' directory.
+- 5)  .l0.js files are created for each test in the 'test' directory.
+- 6)  Once all .l0.js files have been built, chrome is envoked directly from the makefile, and chrome is instructed to browse to a url served by localhost, which serves files in the test-api-endpoint directory.  This page contains javascript that interacts with the test API to obtain a list of all available test cases, then run each test and submit the result in the API.  The test result from running the compiled code in the javascript emulator is saved into the 'test' directory.
+- 7)  Each of the .c files in the 'test' are compiled using (your host compiler) into standard desktop executables.
+- 8)  The executables created using gcc are then run, and output is saved to the 'test' directory.
+- 9)  The saved output from javascript and gcc are diff'ed.  If the diff is not empty, the test failed.
 
 To set up the testing API, set up a web server and point it to the root directory of this project.  The API uses php as a scripting language, so you'll need to make sure this is set up to work with your web server.  You may need to adjust permissions on the 'test' directory since php will need to write files that contain test results here.
 
@@ -56,7 +70,7 @@ The following things are supported:
 -  Nearly all arithmetic and logical operators for signed and unsigned types.
 -  nested structure declarations.
 -  function pointers.
--  simple initializers (like int i = 123).
+-  Many initializers (like int arr[2][2] = {{1,2},{1,2}})
 -  Variadic functions with simple word sized arguments.
 -  Pointers.
 -  while () {}
@@ -113,6 +127,6 @@ There are currently emulators for the op-cpu in 4 different languages.  C89, Jav
 
 Then
 
-make run-c-emulator       # Runs the kernel inside the C emulator
-make run-python-emulator  # Runs the kernel inside the Python emulator
-make run-java-emulator    # Runs the kernel inside the Java emulator
+- make run-c-emulator       # Runs the kernel inside the C emulator
+- make run-python-emulator  # Runs the kernel inside the Python emulator
+- make run-java-emulator    # Runs the kernel inside the Java emulator

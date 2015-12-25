@@ -1,97 +1,123 @@
-#ifndef __LINKER_H__
-#define __LINKER_H__
+#ifndef LINKER_H__
+#define LINKER_H__
 /*
-	Copyright 2015 Robert Elder Software Inc.  All rights reserved.
-
-	This software is not currently available under any license, and unauthorized use
-	or copying is not permitted.
-
-	This software will likely be available under a common open source license in the
-	near future.  Licensing is currently pending feedback from a lawyer.  If you have
-	an opinion on this subject you can send it to recc [at] robertelder.org.
-
-	This program comes with ABSOLUTELY NO WARRANTY.  In no event shall Robert Elder
-	Software Inc. be liable for incidental or consequential damages in connection with
-	use of this software.
+    Copyright 2015 Robert Elder Software Inc.
+    
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not 
+    use this file except in compliance with the License.  You may obtain a copy 
+    of the License at
+    
+        http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the 
+    License for the specific language governing permissions and limitations 
+    under the License.
 */
 
-#ifndef __STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED__
 #include <stdio.h>
 #endif
-#ifndef __STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED__
 #include <stdlib.h>
 #endif
-#ifndef __ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED__
 #include <assert.h>
 #endif
-#ifndef __IO_H__
+#ifndef IO_H__
 #include "io.h"
 #endif
-#ifndef __LEXER_H__
+#ifndef LEXER_H__
 #include "lexer.h"
 #endif
-#ifndef __PARSER_H__
+#ifndef PARSER_H__
 #include "parser.h"
 #endif
-#ifndef __LINKER_H__
+#ifndef L2_PARSER_H__
+#include "l2_parser.h"
+#endif
+#ifndef LINKER_H__
 #include "linker.h"
 #endif
-#ifndef __unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list__H__DEFINED__
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef __unsigned_char_ptr_list__H__DEFINED__
+#ifndef unsigned_char_ptr_list__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_list.h"
 #endif
-#ifndef __struct_unsigned_char_list_ptr_list__H__DEFINED__
+#ifndef struct_unsigned_char_list_ptr_list__H__DEFINED__
 #include "../data-structures/struct_unsigned_char_list_ptr_list.h"
 #endif
-#ifndef __struct_asm_instruction_ptr_list__H__DEFINED__
-#include "../data-structures/struct_asm_instruction_ptr_list.h"
+#ifndef struct_l2_item_ptr_list__H__DEFINED__
+#include "../data-structures/struct_l2_item_ptr_list.h"
 #endif
-#ifndef __struct_asm_lexer_state_ptr_list__H__DEFINED__
-#include "../data-structures/struct_asm_lexer_state_ptr_list.h"
-#endif
-#ifndef __struct_linker_object_ptr_list__H__DEFINED__
+#ifndef struct_linker_object_ptr_list__H__DEFINED__
 #include "../data-structures/struct_linker_object_ptr_list.h"
 #endif
-#ifndef __unsigned_char_ptr_to_struct_linker_symbol_ptr_map__H__DEFINED__
+#ifndef struct_l2_lexer_state_ptr_list__H__DEFINED__
+#include "../data-structures/struct_l2_lexer_state_ptr_list.h"
+#endif
+#ifndef struct_l2_parser_state_ptr_list__H__DEFINED__
+#include "../data-structures/struct_l2_parser_state_ptr_list.h"
+#endif
+#ifndef struct_linker_file_ptr_list__H__DEFINED__
+#include "../data-structures/struct_linker_file_ptr_list.h"
+#endif
+#ifndef struct_linker_region_list__H__DEFINED__
+#include "../data-structures/struct_linker_region_list.h"
+#endif
+#ifndef struct_start_end_list__H__DEFINED__
+#include "../data-structures/struct_start_end_list.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_map__H__DEFINED__
 #include "../data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
 #endif
-#ifndef __struct_linker_object_ptr_merge_sort__H__DEFINED__
-#include "../data-structures/struct_linker_object_ptr_merge_sort.h"
+#ifndef struct_linker_file_ptr_merge_sort__H__DEFINED__
+#include "../data-structures/struct_linker_file_ptr_merge_sort.h"
 #endif
-#ifndef __struct_asm_instruction_memory_pool__H__DEFINED__
-#include "../data-structures/struct_asm_instruction_memory_pool.h"
+#ifndef struct_start_end_merge_sort__H__DEFINED__
+#include "../data-structures/struct_start_end_merge_sort.h"
 #endif
-#ifndef __struct_linker_symbol_memory_pool__H__DEFINED__
+#ifndef struct_l2_item_memory_pool__H__DEFINED__
+#include "../data-structures/struct_l2_item_memory_pool.h"
+#endif
+#ifndef struct_linker_symbol_memory_pool__H__DEFINED__
 #include "../data-structures/struct_linker_symbol_memory_pool.h"
 #endif
-#ifndef __TYPES_LINKER_struct_linker_symbol_h__
+#ifndef TYPES_LINKER_struct_linker_symbol_h__
 #include "../types/linker/struct_linker_symbol.h"
 #endif
-#ifndef __TYPES_LINKER_struct_asm_instruction_h__
-#include "../types/linker/struct_asm_instruction.h"
+#ifndef TYPES_LINKER_struct_l2_item_h__
+#include "../types/linker/struct_l2_item.h"
 #endif
-#ifndef __OP_CPU_H__
+#ifndef OP_CPU_H__
 #include "../emulators/c/op-cpu.h"
 #endif
-#ifndef __TYPES_LINKER_struct_linker_state_h__
+#ifndef TYPES_LINKER_struct_linker_state_h__
 #include "../types/linker/struct_linker_state.h"
 #endif
+#ifndef struct_start_end_ptr_compare__H__DEFINED__
+#include "../data-structures/struct_start_end_ptr_compare.h"
+#endif
 
-int do_link(struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum build_target_type);
-struct linker_object * process_assembly(struct linker_state *, struct asm_lexer_state *);
-void set_symbol_instruction_index(struct linker_state *, struct linker_object *, struct asm_lexer_token *, unsigned int);
-void add_internal_linker_symbol(struct linker_state *, struct linker_object *, struct asm_lexer_token *, unsigned int, unsigned int);
-void add_external_linker_symbol(struct linker_state *, struct linker_object *, struct asm_lexer_token *, unsigned int, unsigned int);
-void output_artifacts(struct linker_state *, struct unsigned_char_list *, struct linker_object *, struct unsigned_char_list *, unsigned char *);
-unsigned int get_relative_symbol_offset(struct linker_state *, struct linker_object *, struct linker_symbol *);
-unsigned int get_absolute_symbol_offset(struct linker_state *, unsigned char *, struct linker_object *);
-void verify_symbol_declaration(struct linker_state *, struct linker_object *, struct asm_lexer_token *);
+
+
+int do_link(struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum build_target_type, unsigned char *, unsigned int, unsigned int);
+struct linker_file * create_linker_file(struct linker_state *, struct l2_parser_state *, struct unsigned_char_list *);
+void set_symbol_l2_item_pointer(struct linker_state *, struct linker_file *, struct l2_lexer_token *, struct l2_item *, unsigned int);
+void add_internal_linker_symbol(struct linker_state *, struct linker_file *, struct l2_lexer_token *, unsigned int, unsigned int);
+void add_external_linker_symbol(struct linker_state *, struct linker_file *, struct l2_lexer_token *, unsigned int, unsigned int);
+void output_artifacts(struct linker_state *, struct unsigned_char_list *, struct linker_file *);
+void output_symbols(struct linker_state *, struct linker_file *, struct unsigned_char_list *, unsigned char *);
+unsigned int get_relative_symbol_offset(struct linker_state *, struct linker_file *, struct linker_symbol *, unsigned int *);
+unsigned int get_absolute_symbol_offset(struct linker_state *, unsigned char *, struct linker_file *, unsigned int *);
+void verify_symbol_declaration(struct linker_state *, struct linker_file *, struct l2_lexer_token *);
 void linker_state_destroy(struct linker_state *);
-void linker_state_create(struct linker_state *, struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum build_target_type);
+void linker_state_create(struct linker_state *, struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum build_target_type, unsigned char *, unsigned int, unsigned int);
 void do_link_to_l1(struct linker_state *);
 void do_link_to_l2(struct linker_state *);
 void set_all_post_linking_offsets(struct linker_state *);
+void group_and_page_align_linker_files(struct linker_state *);
 
 #endif

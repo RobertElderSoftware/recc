@@ -3,16 +3,25 @@
 ;                and is responsible for calling the main method and halting
 ;                the processor when returning from main.
 OFFSET 0x0
+FUNCTION __g_entry __end_g_entry
 IMPLEMENTS, REQUIRES EXTERNAL exitmain
 IMPLEMENTS EXTERNAL __g_entry
+IMPLEMENTS EXTERNAL __end_g_entry
 REQUIRES EXTERNAL main
+REQUIRES EXTERNAL __end_globalvar___g_builtin_stack
 __g_entry:
-ll SP 0x2000;    Arbitarily initialize the stack pointer to 0x200000
-shl SP WR;       Shift to 0x20000
-shl SP WR;       Shift to 0x200000
-sub SP SP WR;    Adjust position of stack to just before 0x200000
+add SP PC ZR;    Copy current PC
+beq ZR ZR 1;     Jump over next word
+DW __end_globalvar___g_builtin_stack;  Address of the start of the stack
+add SP SP WR;    Adjust the copied PC value to point at the word to load
+loa SP SP;       Load the value of the stack pointer into SP
+sub SP SP WR;    Adjust position of stack to point inside stack region
 sub SP SP WR;    Space for return value (int)
-ll r1 exitmain;  Load the address of the exit routine.
+add r1 PC ZR;
+beq ZR ZR 1;
+DW exitmain;     Load the address of the exit routine.
+add r1 r1 WR;
+loa r1 r1;
 sto SP r1;       Store the return address on the stack.
 sub SP SP WR;    Move up to frame pointer
 add FP SP ZR;    Copy the stack pointer into the frame pointer.
@@ -22,4 +31,4 @@ exitmain:
 ;                This will halt the processor
 ll r1 0x1;
 add FR FR r1;
-sw 0x100;
+__end_g_entry:

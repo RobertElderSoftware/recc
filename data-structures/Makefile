@@ -12,9 +12,9 @@ data-structures/replace_tool.h: data-structures/binary_exponential_buffer.h
 data-structures/bootstrap.c: data-structures/replace_tool.h
 	@touch data-structures/bootstrap.c
 
-data-structures/bootstrap-datatypes: data-structures/bootstrap.c data-structures/replace_tool.o data-structures/binary_exponential_buffer.o 
-	@$(HOSTCC) data-structures/binary_exponential_buffer.o data-structures/bootstrap.c data-structures/replace_tool.o -o data-structures/bootstrap-datatypes  $(CUSTOM_C89_FLAGS)
-	$(VALGRIND) data-structures/bootstrap-datatypes
+data-structures/bootstrap: data-structures/bootstrap.c data-structures/replace_tool.o data-structures/binary_exponential_buffer.o 
+	@$(HOSTCC) data-structures/binary_exponential_buffer.o data-structures/bootstrap.c data-structures/replace_tool.o -o data-structures/bootstrap $(CUSTOM_C89_FLAGS)
+	$(VALGRIND) data-structures/bootstrap
 
 clean-data-structures: clean-generated-files
-	@rm -f data-structures/*.o data-structures/libgenerated-data-structures.a data-structures/bootstrap-datatypes
+	@rm -f data-structures/*.o data-structures/libgenerated-data-structures.a data-structures/bootstrap

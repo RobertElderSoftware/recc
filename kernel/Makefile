@@ -10,6 +10,7 @@ kernel/build_kernel: kernel/build_kernel.o $(COMPILER_OBJECTS)
 
 kernel/kernel.l1: kernel/build_kernel
 	$(VALGRIND) ./kernel/build_kernel
+	@if [ "`diff kernel/kernel.sym kernel/kernel_symbols.sym | wc -l`" -eq 5 ]; then echo 'Kernel images are same.'; else echo 'Kernel images differ'; exit 1; fi
 
 build-and-test-kernel: kernel/kernel.l1
 	@echo "test/kernel" > test/tests_to_run
@@ -19,4 +20,4 @@ kernel/recc.o: kernel/recc.c recc-implementation/compiler_interface.h
 	@$(HOSTCC) -c kernel/recc.c -o kernel/recc.o $(CUSTOM_C89_FLAGS)
 
 clean-kernel:
-	@rm -f kernel/*.o kernel/*.l2 kernel/*.i
+	@rm -f kernel/build_kernel kernel/*.o kernel/*.l2 kernel/*.i kernel/*.l1 kernel/*.sym kernel/kernel_symbols.l0.c
