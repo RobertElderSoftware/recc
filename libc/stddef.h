@@ -1,5 +1,5 @@
-#ifndef STD_DEF_H_DEFINED__
-#define STD_DEF_H_DEFINED__
+#ifndef STD_DEF_H_DEFINED_
+#define STD_DEF_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

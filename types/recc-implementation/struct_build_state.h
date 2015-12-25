@@ -1,5 +1,5 @@
-#ifndef TYPES_struct_build_state_H__
-#define TYPES_struct_build_state_H__
+#ifndef TYPES_struct_build_state_H_
+#define TYPES_struct_build_state_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -15,10 +15,10 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef TYPES_struct_build_target_H__
+#ifndef TYPES_struct_build_target_H_
 #include "struct_build_target.h"
 #endif
-#ifndef MEMORY_POOL_COLLECTION_H__
+#ifndef MEMORY_POOL_COLLECTION_H_
 #include "memory_pool_collection.h"
 #endif
 

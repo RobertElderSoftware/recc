@@ -1,7 +1,7 @@
 OFFSET RELOCATABLE
-FUNCTION putchar_busy __end_putchar_busy
+FUNCTION putchar_busy _end_putchar_busy
 IMPLEMENTS EXTERNAL putchar_busy
-IMPLEMENTS EXTERNAL __end_putchar_busy
+IMPLEMENTS EXTERNAL _end_putchar_busy
 putchar_busy:
 loa r2 SP;  Load whatever that argument was.
 ;  The bit mask for UART1_OUT ready
@@ -35,4 +35,4 @@ add SP SP WR;
 sto SP ZR;
 ;  Jump back to the place where the function was called
 add PC ZR r1;
-__end_putchar_busy:
+_end_putchar_busy:

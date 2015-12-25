@@ -1,5 +1,5 @@
-#ifndef T0_IDENTIFIER_merge_sort__H__DEFINED__
-#define T0_IDENTIFIER_merge_sort__H__DEFINED__
+#ifndef T0_IDENTIFIER_merge_sort_H_DEFINED_
+#define T0_IDENTIFIER_merge_sort_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -15,10 +15,10 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef TYPES_DATA_STRUCTURES_T0_IDENTIFIER_H__
+#ifndef TYPES_DATA_STRUCTURES_T0_IDENTIFIER_H_
 #include "../types/data-structures/T0_IDENTIFIER.h"
 #endif
-#ifndef STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED_
 #include <stdlib.h>
 #endif
 void T0_IDENTIFIER_merge_sort(T0_LITERAL *, unsigned int, int (*)(T0_LITERAL *, T0_LITERAL *));

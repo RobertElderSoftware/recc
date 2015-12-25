@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_H__
-#define TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_H_
+#define TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -23,7 +23,7 @@ struct unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair{
 	struct namespace_object * value;
 };
 
-#ifndef TYPES_PARSER_struct_namespace_object_H__
+#ifndef TYPES_PARSER_struct_namespace_object_H_
 #include "../../types/parser/struct_namespace_object.h"
 #endif
 

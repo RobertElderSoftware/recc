@@ -1,5 +1,5 @@
-#ifndef TYPES_struct_heap_memory_pool_H__
-#define TYPES_struct_heap_memory_pool_H__
+#ifndef TYPES_struct_heap_memory_pool_H_
+#define TYPES_struct_heap_memory_pool_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef void_ptr_memory_pool__H__DEFINED__
+#ifndef void_ptr_memory_pool_H_DEFINED_
 #include "../../data-structures/void_ptr_memory_pool.h"
 #endif
-#ifndef void_ptr_to_unsigned_int_map__H__DEFINED__
+#ifndef void_ptr_to_unsigned_int_map_H_DEFINED_
 #include "../../data-structures/void_ptr_to_unsigned_int_map.h"
 #endif
 

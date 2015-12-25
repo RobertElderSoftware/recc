@@ -1,5 +1,5 @@
-#ifndef TYPES_LEXER_struct_common_lexer_state_H__
-#define TYPES_LEXER_struct_common_lexer_state_H__
+#ifndef TYPES_LEXER_struct_common_lexer_state_H_
+#define TYPES_LEXER_struct_common_lexer_state_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_struct_memory_pool_collection_H__
+#ifndef TYPES_struct_memory_pool_collection_H_
 #include "../recc-implementation/struct_memory_pool_collection.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_list_H_
 #include "../data-structures/struct_unsigned_char_list.h"
 #endif
 

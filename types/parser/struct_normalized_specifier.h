@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_normalized_specifier_H__
-#define TYPES_PARSER_struct_normalized_specifier_H__
+#ifndef TYPES_PARSER_struct_normalized_specifier_H_
+#define TYPES_PARSER_struct_normalized_specifier_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -17,10 +17,10 @@
 */
 
 
-#ifndef TYPES_PARSER_enum_normalized_specifier_type_H__
+#ifndef TYPES_PARSER_enum_normalized_specifier_type_H_
 #include "enum_normalized_specifier_type.h"
 #endif
-#ifndef TYPES_PARSER_struct_parser_node_H__
+#ifndef TYPES_PARSER_struct_parser_node_H_
 #include "struct_parser_node.h"
 #endif
 

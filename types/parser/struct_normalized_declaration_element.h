@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_normalized_declaration_element_H__
-#define TYPES_PARSER_struct_normalized_declaration_element_H__
+#ifndef TYPES_PARSER_struct_normalized_declaration_element_H_
+#define TYPES_PARSER_struct_normalized_declaration_element_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,13 +16,13 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_struct_normalized_declaration_set_H__
+#ifndef TYPES_PARSER_struct_normalized_declaration_set_H_
 #include "struct_normalized_declaration_set.h"
 #endif
-#ifndef TYPES_PARSER_struct_normalized_declarator_H__
+#ifndef TYPES_PARSER_struct_normalized_declarator_H_
 #include "struct_normalized_declarator.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H_
 #include "../../data-structures/struct_struct_normalized_specifier_ptr_list.h"
 #endif
 

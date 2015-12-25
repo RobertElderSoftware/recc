@@ -1,5 +1,5 @@
-#ifndef OP_CPU_enum_l0_directive_type_H__
-#define OP_CPU_enum_l0_directive_type_H__
+#ifndef OP_CPU_enum_l0_directive_type_H_
+#define OP_CPU_enum_l0_directive_type_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

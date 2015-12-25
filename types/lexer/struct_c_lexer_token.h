@@ -1,5 +1,5 @@
-#ifndef TYPES_LEXER_struct_c_lexer_token_H__
-#define TYPES_LEXER_struct_c_lexer_token_H__
+#ifndef TYPES_LEXER_struct_c_lexer_token_H_
+#define TYPES_LEXER_struct_c_lexer_token_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_enum_c_token_type_H__
+#ifndef TYPES_LEXER_enum_c_token_type_H_
 #include "enum_c_token_type.h"
 #endif
 struct c_lexer_token{

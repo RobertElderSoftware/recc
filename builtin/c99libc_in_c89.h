@@ -1,5 +1,5 @@
-#ifndef BUILTIN_C99LIBC_IN_C89__
-#define BUILTIN_C99LIBC_IN_C89__
+#ifndef BUILTIN_C99LIBC_IN_C89_
+#define BUILTIN_C99LIBC_IN_C89_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

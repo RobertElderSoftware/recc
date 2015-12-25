@@ -1,5 +1,5 @@
-#ifndef ASSERT_H_DEFINED__
-#define ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED_
+#define ASSERT_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -17,13 +17,13 @@
 */
 
 
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
 
 #define assert_stringify_indirect(a) #a
 #define assert_stringify(a) assert_stringify_indirect(a)
 
-#define assert(a) if(!(a)){printf("Assertion failure of expression '"assert_stringify_indirect(a)"' in file "assert_stringify(__FILE__)" on line "assert_stringify(__LINE__)".\n");}
+#define assert(a) if(!(a)){printf("Assertion failure of expression '"assert_stringify_indirect(a)"' in file "assert_stringify(_FILE_)" on line "assert_stringify(_LINE_)".\n");}
 
 #endif

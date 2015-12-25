@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_scope_level_H__
-#define TYPES_PARSER_struct_scope_level_H__
+#ifndef TYPES_PARSER_struct_scope_level_H_
+#define TYPES_PARSER_struct_scope_level_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -17,13 +17,13 @@
 */
 
 
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_list_H_
 #include "../../types/data-structures/struct_unsigned_char_ptr_list.h"
 #endif
-#ifndef TYPES_PARSER_struct_namespace_object_H__
+#ifndef TYPES_PARSER_struct_namespace_object_H_
 #include "struct_namespace_object.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_namespace_object_ptr_map_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_namespace_object_ptr_map_H_
 #include "../../types/data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_map.h"
 #endif
 

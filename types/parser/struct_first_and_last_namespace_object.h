@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_first_and_last_namespace_object_H__
-#define TYPES_PARSER_struct_first_and_last_namespace_object_H__
+#ifndef TYPES_PARSER_struct_first_and_last_namespace_object_H_
+#define TYPES_PARSER_struct_first_and_last_namespace_object_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_struct_namespace_object_H__
+#ifndef TYPES_PARSER_struct_namespace_object_H_
 #include "struct_namespace_object.h"
 #endif
 

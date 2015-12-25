@@ -1,5 +1,5 @@
-#ifndef TYPES_LEXER_enum_l2_token_type_H__
-#define TYPES_LEXER_enum_l2_token_type_H__
+#ifndef TYPES_LEXER_enum_l2_token_type_H_
+#define TYPES_LEXER_enum_l2_token_type_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

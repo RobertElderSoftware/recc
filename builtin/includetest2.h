@@ -1,5 +1,5 @@
-#ifndef includetest2__h_
-#define includetest2__h_
+#ifndef includetest2_h_
+#define includetest2_h_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

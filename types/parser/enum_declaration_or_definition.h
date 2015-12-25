@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_declaration_or_definition_H__
-#define TYPES_PARSER_enum_declaration_or_definition_H__
+#ifndef TYPES_PARSER_enum_declaration_or_definition_H_
+#define TYPES_PARSER_enum_declaration_or_definition_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

@@ -1,5 +1,5 @@
-#ifndef REPLACE_TOOL__H__DEFINED__
-#define REPLACE_TOOL__H__DEFINED__
+#ifndef REPLACE_TOOL_H_DEFINED_
+#define REPLACE_TOOL_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

@@ -1,5 +1,5 @@
-#ifndef void_ptr_compare__H__DEFINED__
-#define void_ptr_compare__H__DEFINED__
+#ifndef void_ptr_compare_H_DEFINED_
+#define void_ptr_compare_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef STRING_H_DEFINED__
+#ifndef STRING_H_DEFINED_
 #include <string.h>
 #endif
 

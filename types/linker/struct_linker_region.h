@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_linker_region_h__
-#define TYPES_LINKER_struct_linker_region_h__
+#ifndef TYPES_LINKER_struct_linker_region_h_
+#define TYPES_LINKER_struct_linker_region_h_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

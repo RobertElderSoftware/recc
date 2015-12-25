@@ -1,5 +1,5 @@
-#ifndef SIZE_T_H_DEFINED__
-#define SIZE_T_H_DEFINED__
+#ifndef SIZE_T_H_DEFINED_
+#define SIZE_T_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

@@ -1,5 +1,5 @@
-#ifndef LINKER_H__
-#define LINKER_H__
+#ifndef LINKER_H_
+#define LINKER_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,88 +16,88 @@
     under the License.
 */
 
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
-#ifndef STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED_
 #include <stdlib.h>
 #endif
-#ifndef ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED_
 #include <assert.h>
 #endif
-#ifndef IO_H__
+#ifndef IO_H_
 #include "io.h"
 #endif
-#ifndef LEXER_H__
+#ifndef LEXER_H_
 #include "lexer.h"
 #endif
-#ifndef PARSER_H__
+#ifndef PARSER_H_
 #include "parser.h"
 #endif
-#ifndef L2_PARSER_H__
+#ifndef L2_PARSER_H_
 #include "l2_parser.h"
 #endif
-#ifndef LINKER_H__
+#ifndef LINKER_H_
 #include "linker.h"
 #endif
-#ifndef unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list_H_DEFINED_
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef unsigned_char_ptr_list__H__DEFINED__
+#ifndef unsigned_char_ptr_list_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_list.h"
 #endif
-#ifndef struct_unsigned_char_list_ptr_list__H__DEFINED__
+#ifndef struct_unsigned_char_list_ptr_list_H_DEFINED_
 #include "../data-structures/struct_unsigned_char_list_ptr_list.h"
 #endif
-#ifndef struct_l2_item_ptr_list__H__DEFINED__
+#ifndef struct_l2_item_ptr_list_H_DEFINED_
 #include "../data-structures/struct_l2_item_ptr_list.h"
 #endif
-#ifndef struct_linker_object_ptr_list__H__DEFINED__
+#ifndef struct_linker_object_ptr_list_H_DEFINED_
 #include "../data-structures/struct_linker_object_ptr_list.h"
 #endif
-#ifndef struct_l2_lexer_state_ptr_list__H__DEFINED__
+#ifndef struct_l2_lexer_state_ptr_list_H_DEFINED_
 #include "../data-structures/struct_l2_lexer_state_ptr_list.h"
 #endif
-#ifndef struct_l2_parser_state_ptr_list__H__DEFINED__
+#ifndef struct_l2_parser_state_ptr_list_H_DEFINED_
 #include "../data-structures/struct_l2_parser_state_ptr_list.h"
 #endif
-#ifndef struct_linker_file_ptr_list__H__DEFINED__
+#ifndef struct_linker_file_ptr_list_H_DEFINED_
 #include "../data-structures/struct_linker_file_ptr_list.h"
 #endif
-#ifndef struct_linker_region_list__H__DEFINED__
+#ifndef struct_linker_region_list_H_DEFINED_
 #include "../data-structures/struct_linker_region_list.h"
 #endif
-#ifndef struct_start_end_list__H__DEFINED__
+#ifndef struct_start_end_list_H_DEFINED_
 #include "../data-structures/struct_start_end_list.h"
 #endif
-#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_map_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
 #endif
-#ifndef struct_linker_file_ptr_merge_sort__H__DEFINED__
+#ifndef struct_linker_file_ptr_merge_sort_H_DEFINED_
 #include "../data-structures/struct_linker_file_ptr_merge_sort.h"
 #endif
-#ifndef struct_start_end_merge_sort__H__DEFINED__
+#ifndef struct_start_end_merge_sort_H_DEFINED_
 #include "../data-structures/struct_start_end_merge_sort.h"
 #endif
-#ifndef struct_l2_item_memory_pool__H__DEFINED__
+#ifndef struct_l2_item_memory_pool_H_DEFINED_
 #include "../data-structures/struct_l2_item_memory_pool.h"
 #endif
-#ifndef struct_linker_symbol_memory_pool__H__DEFINED__
+#ifndef struct_linker_symbol_memory_pool_H_DEFINED_
 #include "../data-structures/struct_linker_symbol_memory_pool.h"
 #endif
-#ifndef TYPES_LINKER_struct_linker_symbol_h__
+#ifndef TYPES_LINKER_struct_linker_symbol_h_
 #include "../types/linker/struct_linker_symbol.h"
 #endif
-#ifndef TYPES_LINKER_struct_l2_item_h__
+#ifndef TYPES_LINKER_struct_l2_item_h_
 #include "../types/linker/struct_l2_item.h"
 #endif
-#ifndef OP_CPU_H__
+#ifndef OP_CPU_H_
 #include "../emulators/c/op-cpu.h"
 #endif
-#ifndef TYPES_LINKER_struct_linker_state_h__
+#ifndef TYPES_LINKER_struct_linker_state_h_
 #include "../types/linker/struct_linker_state.h"
 #endif
-#ifndef struct_start_end_ptr_compare__H__DEFINED__
+#ifndef struct_start_end_ptr_compare_H_DEFINED_
 #include "../data-structures/struct_start_end_ptr_compare.h"
 #endif
 

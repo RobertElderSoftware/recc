@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_scope_type_H__
-#define TYPES_PARSER_enum_scope_type_H__
+#ifndef TYPES_PARSER_enum_scope_type_H_
+#define TYPES_PARSER_enum_scope_type_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

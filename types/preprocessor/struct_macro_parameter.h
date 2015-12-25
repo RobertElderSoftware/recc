@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_macro_parameter_H__
-#define TYPES_PREPROCESSOR_struct_macro_parameter_H__
+#ifndef TYPES_PREPROCESSOR_struct_macro_parameter_H_
+#define TYPES_PREPROCESSOR_struct_macro_parameter_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

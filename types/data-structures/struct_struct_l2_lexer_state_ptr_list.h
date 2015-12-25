@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_l2_lexer_state_ptr_list_H__
-#define TYPES_DATA_STRUCTURES_struct_struct_l2_lexer_state_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_l2_lexer_state_ptr_list_H_
+#define TYPES_DATA_STRUCTURES_struct_struct_l2_lexer_state_ptr_list_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
+#ifndef BINARY_EXPONENTIAL_BUFFER_H_DEFINED_
 #include "../../data-structures/binary_exponential_buffer.h"
 #endif
-#ifndef TYPES_LEXER_struct_l2_lexer_state_h__
+#ifndef TYPES_LEXER_struct_l2_lexer_state_h_
 #include "../../types/lexer/struct_l2_lexer_state.h"
 #endif
 

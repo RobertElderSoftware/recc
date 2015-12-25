@@ -59,26 +59,26 @@ void output_filesystem_impl(unsigned char * out_file){
 	}
 
 	fprintf(f, "OFFSET RELOCATABLE;\n");
-	fprintf(f, "VARIABLE globalvar_free_blocks_stack_top __end_globalvar_free_blocks_stack_top;\n");
-	fprintf(f, "VARIABLE globalvar_free_inodes_stack_top __end_globalvar_free_inodes_stack_top;\n");
-	fprintf(f, "VARIABLE globalvar_blocks __end_globalvar_blocks;\n");
-	fprintf(f, "VARIABLE globalvar_inodes __end_globalvar_inodes;\n");
-	fprintf(f, "VARIABLE globalvar_free_blocks __end_globalvar_free_blocks;\n");
-	fprintf(f, "VARIABLE globalvar_free_inodes __end_globalvar_free_inodes;\n");
+	fprintf(f, "VARIABLE globalvar_free_blocks_stack_top _end_globalvar_free_blocks_stack_top;\n");
+	fprintf(f, "VARIABLE globalvar_free_inodes_stack_top _end_globalvar_free_inodes_stack_top;\n");
+	fprintf(f, "VARIABLE globalvar_blocks _end_globalvar_blocks;\n");
+	fprintf(f, "VARIABLE globalvar_inodes _end_globalvar_inodes;\n");
+	fprintf(f, "VARIABLE globalvar_free_blocks _end_globalvar_free_blocks;\n");
+	fprintf(f, "VARIABLE globalvar_free_inodes _end_globalvar_free_inodes;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_free_blocks_stack_top;\n");
-	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_free_blocks_stack_top;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL _end_globalvar_free_blocks_stack_top;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_free_inodes_stack_top;\n");
-	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_free_inodes_stack_top;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL _end_globalvar_free_inodes_stack_top;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_blocks;\n");
-	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_blocks;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL _end_globalvar_blocks;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_inodes;\n");
-	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_inodes;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL _end_globalvar_inodes;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_free_blocks;\n");
-	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_free_blocks;\n");
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL _end_globalvar_free_blocks;\n");
 	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL globalvar_free_inodes;\n");
-	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL __end_globalvar_free_inodes;\n");
-	fprintf(f, "globalvar_free_blocks_stack_top:\nDW 0x%X\n__end_globalvar_free_blocks_stack_top:\n", free_blocks_stack_top);
-	fprintf(f, "globalvar_free_inodes_stack_top:\nDW 0x%X\n__end_globalvar_free_inodes_stack_top:\n", free_inodes_stack_top);
+	fprintf(f, "IMPLEMENTS, REQUIRES EXTERNAL _end_globalvar_free_inodes;\n");
+	fprintf(f, "globalvar_free_blocks_stack_top:\nDW 0x%X\n_end_globalvar_free_blocks_stack_top:\n", free_blocks_stack_top);
+	fprintf(f, "globalvar_free_inodes_stack_top:\nDW 0x%X\n_end_globalvar_free_inodes_stack_top:\n", free_inodes_stack_top);
 	fprintf(f, "globalvar_blocks:\n");
 	for(i = 0; i < free_blocks_stack_top; i++){
 		unsigned int j;
@@ -97,7 +97,7 @@ void output_filesystem_impl(unsigned char * out_file){
 		fprintf(f, "SW 0x%X; Unused region in block %d\n", DATA_WORDS_PER_BLOCK - num_ints_data, i);
 	}
 	fprintf(f, "SW 0x%X;  Space for remaining (%d) unused blocks\n", (unsigned int)((NUM_BLOCKS - free_blocks_stack_top) * sizeof(struct filesystem_block)), NUM_BLOCKS - free_blocks_stack_top);
-	fprintf(f, "__end_globalvar_blocks:\n");
+	fprintf(f, "_end_globalvar_blocks:\n");
 	fprintf(f, "globalvar_inodes:\n");
 	for(i = 0; i < free_inodes_stack_top; i++){
 		unsigned int j;
@@ -109,17 +109,17 @@ void output_filesystem_impl(unsigned char * out_file){
 		}
 	}
 	fprintf(f, "SW 0x%X;  Space for remaining (%d) unused inodes\n", (unsigned int)((NUM_INODES - free_inodes_stack_top) * sizeof(struct filesystem_inode)), NUM_INODES - free_inodes_stack_top);
-	fprintf(f, "__end_globalvar_inodes:\n");
+	fprintf(f, "_end_globalvar_inodes:\n");
 	fprintf(f, "globalvar_free_blocks:\n");
 	for(i = 0; i < NUM_BLOCKS; i++){
 		fprintf(f, "DW 0x%X;\n", free_blocks[i]);
 	}
-	fprintf(f, "__end_globalvar_free_blocks:\n");
+	fprintf(f, "_end_globalvar_free_blocks:\n");
 	fprintf(f, "globalvar_free_inodes:\n");
 	for(i = 0; i < NUM_INODES; i++){
 		fprintf(f, "DW 0x%X;\n", free_inodes[i]);
 	}
-	fprintf(f, "__end_globalvar_free_inodes:\n");
+	fprintf(f, "_end_globalvar_free_inodes:\n");
 
 	fclose(f);
 	return;

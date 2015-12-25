@@ -1,5 +1,5 @@
-#ifndef TYPES_CODE_GENERATOR_struct_type_traversal_H__
-#define TYPES_CODE_GENERATOR_struct_type_traversal_H__
+#ifndef TYPES_CODE_GENERATOR_struct_type_traversal_H_
+#define TYPES_CODE_GENERATOR_struct_type_traversal_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,13 +16,13 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_enum_type_class_H__
+#ifndef TYPES_PARSER_enum_type_class_H_
 #include "../../types/parser/enum_type_class.h"
 #endif
-#ifndef TYPES_PARSER_struct_type_description_H__
+#ifndef TYPES_PARSER_struct_type_description_H_
 #include "../../types/parser/struct_type_description.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_type_traversal_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_type_traversal_ptr_list_H_
 #include "../../types/data-structures/struct_struct_type_traversal_ptr_list.h"
 #endif
 

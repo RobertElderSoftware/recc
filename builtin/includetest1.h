@@ -25,7 +25,7 @@
 #ifndef boo
 putchar('a');
 #endif
-#ifndef foofds__
+#ifndef foofds_
 putchar('o');
 #endif
 

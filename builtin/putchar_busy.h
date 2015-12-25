@@ -1,5 +1,5 @@
-#ifndef PUTCHAR_BUSY_H_DEFINED__
-#define PUTCHAR_BUSY_H_DEFINED__
+#ifndef PUTCHAR_BUSY_H_DEFINED_
+#define PUTCHAR_BUSY_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

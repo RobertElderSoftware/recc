@@ -1,5 +1,5 @@
-#ifndef COMPILER_INTERFACE_H__
-#define COMPILER_INTERFACE_H__
+#ifndef COMPILER_INTERFACE_H_
+#define COMPILER_INTERFACE_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,61 +16,61 @@
     under the License.
 */
 
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
-#ifndef STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED_
 #include <stdlib.h>
 #endif
-#ifndef PREPROCESSOR_H__
+#ifndef PREPROCESSOR_H_
 #include "preprocessor.h"
 #endif
-#ifndef LEXER_H__
+#ifndef LEXER_H_
 #include "lexer.h"
 #endif
-#ifndef PARSER_H__
+#ifndef PARSER_H_
 #include "parser.h"
 #endif
-#ifndef LINKER_H__
+#ifndef LINKER_H_
 #include "linker.h"
 #endif
-#ifndef GENERATE_CODE__ 
+#ifndef GENERATE_CODE_ 
 #include "code_generator.h"
 #endif
-#ifndef unsigned_char_ptr_list__H__DEFINED__
+#ifndef unsigned_char_ptr_list_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_list.h"
 #endif
-#ifndef unsigned_char_ptr_to_struct_build_target_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_struct_build_target_ptr_map_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_to_struct_build_target_ptr_map.h"
 #endif
-#ifndef unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list_H_DEFINED_
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef struct_c_lexer_token_memory_pool__H__DEFINED__
+#ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
 #include "../data-structures/struct_c_lexer_token_memory_pool.h"
 #endif
-#ifndef struct_l2_lexer_token_memory_pool__H__DEFINED__
+#ifndef struct_l2_lexer_token_memory_pool_H_DEFINED_
 #include "../data-structures/struct_l2_lexer_token_memory_pool.h"
 #endif
-#ifndef struct_parser_node_memory_pool__H__DEFINED__
+#ifndef struct_parser_node_memory_pool_H_DEFINED_
 #include "../data-structures/struct_parser_node_memory_pool.h"
 #endif
-#ifndef struct_type_description_memory_pool__H__DEFINED__
+#ifndef struct_type_description_memory_pool_H_DEFINED_
 #include "../data-structures/struct_type_description_memory_pool.h"
 #endif
-#ifndef MEMORY_POOL_COLLECTION_H__
+#ifndef MEMORY_POOL_COLLECTION_H_
 #include "memory_pool_collection.h"
 #endif
-#ifndef TYPES_struct_build_target_H__
+#ifndef TYPES_struct_build_target_H_
 #include "../types/recc-implementation/struct_build_target.h"
 #endif
-#ifndef TYPES_struct_build_state_H__
+#ifndef TYPES_struct_build_state_H_
 #include "../types/recc-implementation/struct_build_state.h"
 #endif
-#ifndef L0_GENERATOR_H__
+#ifndef L0_GENERATOR_H_
 #include "l0_generator.h"
 #endif
-#ifndef FILESYSTEM_COMPILER_H__
+#ifndef FILESYSTEM_COMPILER_H_
 #include "../recc-implementation/filesystem_compiler.h"
 #endif
 

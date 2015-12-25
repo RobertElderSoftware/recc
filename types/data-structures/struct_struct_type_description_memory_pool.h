@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_type_description_memory_pool_H__
-#define TYPES_DATA_STRUCTURES_struct_type_description_memory_pool_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_type_description_memory_pool_H_
+#define TYPES_DATA_STRUCTURES_struct_type_description_memory_pool_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_DATA_STRUCTURES_struct_void_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_void_ptr_list_H_
 #include "struct_void_ptr_list.h"
 #endif
-#ifndef TYPES_PARSER_struct_type_description_H__
+#ifndef TYPES_PARSER_struct_type_description_H_
 #include "../../types/parser/struct_type_description.h"
 #endif
 

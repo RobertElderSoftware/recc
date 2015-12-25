@@ -1,5 +1,5 @@
-#ifndef USER_PROC_H__
-#define USER_PROC_H__
+#ifndef USER_PROC_H_
+#define USER_PROC_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,16 +16,16 @@
     under the License.
 */
 
-#ifndef QUEUE_H_DEFINED__
+#ifndef QUEUE_H_DEFINED_
 #include "queue.h"
 #endif
-#ifndef PUBLIC_KERNEL_INTERFACE_H__
+#ifndef PUBLIC_KERNEL_INTERFACE_H_
 #include "public_kernel_interface.h"
 #endif
-#ifndef ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED_
 #include <assert.h>
 #endif
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
 

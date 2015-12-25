@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_parser_node_H__
-#define TYPES_PARSER_struct_parser_node_H__
+#ifndef TYPES_PARSER_struct_parser_node_H_
+#define TYPES_PARSER_struct_parser_node_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_enum_node_type_H__
+#ifndef TYPES_PARSER_enum_node_type_H_
 #include "enum_node_type.h"
 #endif
-#ifndef TYPES_LEXER_struct_c_lexer_token_H__
+#ifndef TYPES_LEXER_struct_c_lexer_token_H_
 #include "../../types/lexer/struct_c_lexer_token.h"
 #endif
 

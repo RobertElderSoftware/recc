@@ -1,5 +1,5 @@
-#ifndef TYPES_struct_l1_build_info_H__
-#define TYPES_struct_l1_build_info_H__
+#ifndef TYPES_struct_l1_build_info_H_
+#define TYPES_struct_l1_build_info_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

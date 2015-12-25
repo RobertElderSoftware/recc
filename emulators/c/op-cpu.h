@@ -1,5 +1,5 @@
-#ifndef OP_CPU_H__
-#define OP_CPU_H__
+#ifndef OP_CPU_H_
+#define OP_CPU_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

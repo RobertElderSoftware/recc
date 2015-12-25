@@ -1,5 +1,5 @@
-#ifndef PREPROCESSOR_H__
-#define PREPROCESSOR_H__ 
+#ifndef PREPROCESSOR_H_
+#define PREPROCESSOR_H_ 
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,82 +16,82 @@
     under the License.
 */
 
-#ifndef ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED_
 #include <assert.h>
 #endif
-#ifndef LEXER_H__
+#ifndef LEXER_H_
 #include "lexer.h"
 #endif
-#ifndef STRING_H_DEFINED__
+#ifndef STRING_H_DEFINED_
 #include <string.h>
 #endif
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
-#ifndef STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED_
 #include <stdlib.h>
 #endif
-#ifndef IO_H__
+#ifndef IO_H_
 #include "io.h"
 #endif
-#ifndef unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list_H_DEFINED_
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef struct_preprocessor_if_branch_ptr_list__H__DEFINED__
+#ifndef struct_preprocessor_if_branch_ptr_list_H_DEFINED_
 #include "../data-structures/struct_preprocessor_if_branch_ptr_list.h"
 #endif
-#ifndef struct_struct_c_lexer_token_ptr_list_ptr_list__H__DEFINED__
+#ifndef struct_struct_c_lexer_token_ptr_list_ptr_list_H_DEFINED_
 #include "../data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h"
 #endif
-#ifndef unsigned_char_ptr_to_unsigned_char_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_unsigned_char_ptr_map_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
 #endif
-#ifndef unsigned_char_ptr_to_struct_macro_definition_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_struct_macro_definition_ptr_map_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h"
 #endif
-#ifndef unsigned_char_ptr_to_struct_special_macro_definition_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h"
 #endif
-#ifndef struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map__H__DEFINED__
+#ifndef struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_H_DEFINED_
 #include "../data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"
 #endif
-#ifndef struct_c_lexer_token_ptr_to_unsigned_char_ptr_map__H__DEFINED__
+#ifndef struct_c_lexer_token_ptr_to_unsigned_char_ptr_map_H_DEFINED_
 #include "../data-structures/struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h"
 #endif
-#ifndef struct_unsigned_char_list_ptr_list__H__DEFINED__
+#ifndef struct_unsigned_char_list_ptr_list_H_DEFINED_
 #include "../data-structures/struct_unsigned_char_list_ptr_list.h"
 #endif
-#ifndef struct_c_lexer_state_ptr_list__H__DEFINED__
+#ifndef struct_c_lexer_state_ptr_list_H_DEFINED_
 #include "../data-structures/struct_c_lexer_state_ptr_list.h"
 #endif
-#ifndef struct_preprocessor_file_context_ptr_list__H__DEFINED__
+#ifndef struct_preprocessor_file_context_ptr_list_H_DEFINED_
 #include "../data-structures/struct_preprocessor_file_context_ptr_list.h"
 #endif
-#ifndef struct_preprocessor_macro_level_ptr_list__H__DEFINED__
+#ifndef struct_preprocessor_macro_level_ptr_list_H_DEFINED_
 #include "../data-structures/struct_preprocessor_macro_level_ptr_list.h"
 #endif
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_macro_level_H__
+#ifndef TYPES_PREPROCESSOR_struct_preprocessor_macro_level_H_
 #include "../types/preprocessor/struct_preprocessor_macro_level.h"
 #endif
-#ifndef TYPES_PREPROCESSOR_struct_special_macro_definition_H__
+#ifndef TYPES_PREPROCESSOR_struct_special_macro_definition_H_
 #include "../types/preprocessor/struct_special_macro_definition.h"
 #endif
-#ifndef TYPES_PREPROCESSOR_struct_macro_parameter_H__
+#ifndef TYPES_PREPROCESSOR_struct_macro_parameter_H_
 #include "../types/preprocessor/struct_macro_parameter.h"
 #endif
-#ifndef TYPES_PREPROCESSOR_struct_macro_definition_H__
+#ifndef TYPES_PREPROCESSOR_struct_macro_definition_H_
 #include "../types/preprocessor/struct_macro_definition.h"
 #endif
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_if_branch_H__
+#ifndef TYPES_PREPROCESSOR_struct_preprocessor_if_branch_H_
 #include "../types/preprocessor/struct_preprocessor_if_branch.h"
 #endif
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_file_context_H__
+#ifndef TYPES_PREPROCESSOR_struct_preprocessor_file_context_H_
 #include "../types/preprocessor/struct_preprocessor_file_context.h"
 #endif
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_state_H__
+#ifndef TYPES_PREPROCESSOR_struct_preprocessor_state_H_
 #include "../types/preprocessor/struct_preprocessor_state.h"
 #endif
-#ifndef unsigned_char_ptr_compare__H__DEFINED__
+#ifndef unsigned_char_ptr_compare_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_compare.h"
 #endif
 

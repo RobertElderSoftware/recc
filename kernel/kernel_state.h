@@ -1,5 +1,5 @@
-#ifndef KERNEL_STATE_H__
-#define KERNEL_STATE_H__
+#ifndef KERNEL_STATE_H_
+#define KERNEL_STATE_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef QUEUE_H_DEFINED__
+#ifndef QUEUE_H_DEFINED_
 #include "queue.h"
 #endif
 

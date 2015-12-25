@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_type_description_H__
-#define TYPES_PARSER_struct_type_description_H__
+#ifndef TYPES_PARSER_struct_type_description_H_
+#define TYPES_PARSER_struct_type_description_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,22 +16,22 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_enum_value_type_H__
+#ifndef TYPES_PARSER_enum_value_type_H_
 #include "enum_value_type.h"
 #endif
-#ifndef TYPES_PARSER_struct_normalized_declaration_element_H__
+#ifndef TYPES_PARSER_struct_normalized_declaration_element_H_
 #include "struct_normalized_declaration_element.h"
 #endif
-#ifndef TYPES_PARSER_struct_normalized_declarator_H__
+#ifndef TYPES_PARSER_struct_normalized_declarator_H_
 #include "struct_normalized_declarator.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H_
 #include "../../data-structures/struct_struct_normalized_specifier_ptr_list.h"
 #endif
-#ifndef TYPES_PARSER_struct_parser_node_H__
+#ifndef TYPES_PARSER_struct_parser_node_H_
 #include "struct_parser_node.h"
 #endif
-#ifndef TYPES_PARSER_struct_scope_level_H__
+#ifndef TYPES_PARSER_struct_scope_level_H_
 #include "struct_scope_level.h"
 #endif
 

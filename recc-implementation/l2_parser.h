@@ -1,5 +1,5 @@
-#ifndef L2_PARSER_H__
-#define L2_PARSER_H__
+#ifndef L2_PARSER_H_
+#define L2_PARSER_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,25 +16,25 @@
     under the License.
 */
 
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
-#ifndef STDARG_H_DEFINED__
+#ifndef STDARG_H_DEFINED_
 #include <stdarg.h>
 #endif
-#ifndef LEXER_H__
+#ifndef LEXER_H_
 #include "lexer.h"
 #endif
-#ifndef TYPES_PARSER_struct_l2_parser_state_H__
+#ifndef TYPES_PARSER_struct_l2_parser_state_H_
 #include "../types/parser/struct_l2_parser_state.h"
 #endif
-#ifndef struct_l2_lexer_token_ptr_list__H__DEFINED__
+#ifndef struct_l2_lexer_token_ptr_list_H_DEFINED_
 #include "../data-structures/struct_l2_lexer_token_ptr_list.h"
 #endif
-#ifndef struct_l2_parser_operation_stack__H__DEFINED__
+#ifndef struct_l2_parser_operation_stack_H_DEFINED_
 #include "../data-structures/struct_l2_parser_operation_stack.h"
 #endif
-#ifndef struct_l2_parser_node_memory_pool__H__DEFINED__
+#ifndef struct_l2_parser_node_memory_pool_H_DEFINED_
 #include "../data-structures/struct_l2_parser_node_memory_pool.h"
 #endif
 

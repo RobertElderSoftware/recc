@@ -1,5 +1,5 @@
-#ifndef OP_CPU_struct_l0_item_H__
-#define OP_CPU_struct_l0_item_H__
+#ifndef OP_CPU_struct_l0_item_H_
+#define OP_CPU_struct_l0_item_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef OP_CPU_enum_l0_instruction_type_H__
+#ifndef OP_CPU_enum_l0_instruction_type_H_
 #include "enum_l0_instruction_type.h"
 #endif
-#ifndef OP_CPU_enum_l0_directive_type_H__
+#ifndef OP_CPU_enum_l0_directive_type_H_
 #include "enum_l0_directive_type.h"
 #endif
 

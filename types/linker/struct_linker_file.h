@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_linker_file_H__
-#define TYPES_LINKER_struct_linker_file_H__
+#ifndef TYPES_LINKER_struct_linker_file_H_
+#define TYPES_LINKER_struct_linker_file_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,19 +16,19 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_struct_l2_lexer_state_H__
+#ifndef TYPES_LEXER_struct_l2_lexer_state_H_
 #include "../../types/lexer/struct_l2_lexer_state.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_map_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_map_H_
 #include "../../types/data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_l2_item_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_l2_item_ptr_list_H_
 #include "../../types/data-structures/struct_struct_l2_item_ptr_list.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_object_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_object_ptr_list_H_
 #include "../../types/data-structures/struct_struct_linker_object_ptr_list.h"
 #endif
-#ifndef TYPES_LINKER_enum_relocation_type_h__
+#ifndef TYPES_LINKER_enum_relocation_type_h_
 #include "enum_relocation_type.h"
 #endif
 

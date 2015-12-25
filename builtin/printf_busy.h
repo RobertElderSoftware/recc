@@ -1,5 +1,5 @@
-#ifndef BUILTIN_PRINTF_BUSY__
-#define BUILTIN_PRINTF_BUSY__
+#ifndef BUILTIN_PRINTF_BUSY_
+#define BUILTIN_PRINTF_BUSY_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

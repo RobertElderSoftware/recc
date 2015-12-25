@@ -1,5 +1,5 @@
-#ifndef TYPES_CODE_GENERATOR_struct_switch_frame_H__
-#define TYPES_CODE_GENERATOR_struct_switch_frame_H__
+#ifndef TYPES_CODE_GENERATOR_struct_switch_frame_H_
+#define TYPES_CODE_GENERATOR_struct_switch_frame_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_int_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_int_list_H_
 #include "../../types/data-structures/struct_unsigned_int_list.h"
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
-#define BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
+#ifndef BINARY_EXPONENTIAL_BUFFER_H_DEFINED_
+#define BINARY_EXPONENTIAL_BUFFER_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED_
 #include <assert.h>
 #endif
-#ifndef STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED_
 #include <stdlib.h>
 #endif
 

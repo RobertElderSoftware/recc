@@ -1,5 +1,5 @@
-#ifndef TYPES_CODE_GENERATOR_struct_constant_initializer_level_H__
-#define TYPES_CODE_GENERATOR_struct_constant_initializer_level_H__
+#ifndef TYPES_CODE_GENERATOR_struct_constant_initializer_level_H_
+#define TYPES_CODE_GENERATOR_struct_constant_initializer_level_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_CODE_GENERATOR_struct_compile_time_constant_H__
+#ifndef TYPES_CODE_GENERATOR_struct_compile_time_constant_H_
 #include "struct_compile_time_constant.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_constant_initializer_level_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_constant_initializer_level_ptr_list_H_
 #include "../../types/data-structures/struct_struct_constant_initializer_level_ptr_list.h"
 #endif
 

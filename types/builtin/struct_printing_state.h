@@ -1,5 +1,5 @@
-#ifndef TYPES_BUILTIN_struct_printing_state_H__
-#define TYPES_BUILTIN_struct_printing_state_H__
+#ifndef TYPES_BUILTIN_struct_printing_state_H_
+#define TYPES_BUILTIN_struct_printing_state_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_macro_level_H__
-#define TYPES_PREPROCESSOR_struct_preprocessor_macro_level_H__
+#ifndef TYPES_PREPROCESSOR_struct_preprocessor_macro_level_H_
+#define TYPES_PREPROCESSOR_struct_preprocessor_macro_level_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_struct_c_lexer_token_H__
+#ifndef TYPES_LEXER_struct_c_lexer_token_H_
 #include "../../types/lexer/struct_c_lexer_token.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_c_lexer_token_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_c_lexer_token_ptr_list_H_
 #include "../../types/data-structures/struct_struct_c_lexer_token_ptr_list.h"
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef struct_start_end_ptr_compare__H__DEFINED__
-#define struct_start_end_ptr_compare__H__DEFINED__
+#ifndef struct_start_end_ptr_compare_H_DEFINED_
+#define struct_start_end_ptr_compare_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LINKER_struct_start_end_H__
+#ifndef TYPES_LINKER_struct_start_end_H_
 #include "../types/linker/struct_start_end.h"
 #endif
 

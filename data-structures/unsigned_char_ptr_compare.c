@@ -13,7 +13,7 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef unsigned_char_ptr_compare__H__DEFINED__
+#ifndef unsigned_char_ptr_compare_H_DEFINED_
 #include "unsigned_char_ptr_compare.h"
 #endif
 int unsigned_char_ptr_compare(unsigned char * a, unsigned char * b){

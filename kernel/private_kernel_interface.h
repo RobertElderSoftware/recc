@@ -1,5 +1,5 @@
-#ifndef PRIVATE_KERNEL_INTERFACE_H__
-#define PRIVATE_KERNEL_INTERFACE_H__
+#ifndef PRIVATE_KERNEL_INTERFACE_H_
+#define PRIVATE_KERNEL_INTERFACE_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,16 +16,16 @@
     under the License.
 */
 
-#ifndef KERNEL_STATE_H__
+#ifndef KERNEL_STATE_H_
 #include "kernel_state.h"
 #endif
-#ifndef QUEUE_H_DEFINED__
+#ifndef QUEUE_H_DEFINED_
 #include "queue.h"
 #endif
-#ifndef USER_PROC_H__
+#ifndef USER_PROC_H_
 #include "user_proc.h"
 #endif
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef STDIO_H_DEFINED__
-#define STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
+#define STDIO_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,16 +16,16 @@
     under the License.
 */
 
-#ifndef COMMON_H_DEFINED__
+#ifndef COMMON_H_DEFINED_
 #include "common.h"
 #endif
-#ifndef STDARG_H_DEFINED__
+#ifndef STDARG_H_DEFINED_
 #include <stdarg.h>
 #endif
-#ifndef PUTCHAR_H_DEFINED__
+#ifndef PUTCHAR_H_DEFINED_
 #include <putchar.h>
 #endif
-#ifndef SIZE_T_H_DEFINED__
+#ifndef SIZE_T_H_DEFINED_
 #include "size_t.h"
 #endif
 
@@ -52,7 +52,7 @@ int fclose(FILE *);
 int getc(FILE *);
 int fputc(int, FILE *);
 
-#ifndef STDLIB_FILESYSTEM_H__
+#ifndef STDLIB_FILESYSTEM_H_
 #include "filesystem.h"
 #endif
 

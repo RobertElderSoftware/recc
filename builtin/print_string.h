@@ -1,5 +1,5 @@
-#ifndef BUILTIN_PRINT_STRING__
-#define BUILTIN_PRINT_STRING__
+#ifndef BUILTIN_PRINT_STRING_
+#define BUILTIN_PRINT_STRING_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

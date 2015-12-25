@@ -1,5 +1,5 @@
-#ifndef TYPES_struct_build_target_H__
-#define TYPES_struct_build_target_H__
+#ifndef TYPES_struct_build_target_H_
+#define TYPES_struct_build_target_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -15,19 +15,19 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef TYPES_enum_build_target_type_H__
+#ifndef TYPES_enum_build_target_type_H_
 #include "enum_build_target_type.h"
 #endif
-#ifndef TYPES_struct_l0_build_info_H__
+#ifndef TYPES_struct_l0_build_info_H_
 #include "struct_l0_build_info.h"
 #endif
-#ifndef TYPES_struct_l1_build_info_H__
+#ifndef TYPES_struct_l1_build_info_H_
 #include "struct_l1_build_info.h"
 #endif
-#ifndef TYPES_struct_l2_build_info_H__
+#ifndef TYPES_struct_l2_build_info_H_
 #include "struct_l2_build_info.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_build_target_ptr_map_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_build_target_ptr_map_H_
 #include "../../types/data-structures/struct_unsigned_char_ptr_to_struct_build_target_ptr_map.h"
 #endif
 

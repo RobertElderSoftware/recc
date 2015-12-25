@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_H__
-#define TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_H_
+#define TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -17,7 +17,7 @@
 */
 
 
-#ifndef TYPES_PARSER_struct_constant_description_H__
+#ifndef TYPES_PARSER_struct_constant_description_H_
 #include "../../types/parser/struct_constant_description.h"
 #endif
 

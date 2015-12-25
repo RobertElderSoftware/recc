@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_l2_parser_state_H__
-#define TYPES_PARSER_struct_l2_parser_state_H__
+#ifndef TYPES_PARSER_struct_l2_parser_state_H_
+#define TYPES_PARSER_struct_l2_parser_state_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,19 +16,19 @@
     under the License.
 */
 
-#ifndef TYPES_struct_memory_pool_collection_H__
+#ifndef TYPES_struct_memory_pool_collection_H_
 #include "../recc-implementation/struct_memory_pool_collection.h"
 #endif
-#ifndef TYPES_LEXER_struct_l2_lexer_state_H__
+#ifndef TYPES_LEXER_struct_l2_lexer_state_H_
 #include "../lexer/struct_l2_lexer_state.h"
 #endif
-#ifndef TYPES_PARSER_struct_l2_parser_node_H__
+#ifndef TYPES_PARSER_struct_l2_parser_node_H_
 #include "struct_l2_parser_node.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_list_H_
 #include "../data-structures/struct_unsigned_char_list.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_l2_parser_operation_stack_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_l2_parser_operation_stack_H_
 #include "../data-structures/struct_struct_l2_parser_operation_stack.h"
 #endif
 

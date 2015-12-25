@@ -1,5 +1,5 @@
-#ifndef QUEUE_H_DEFINED__
-#define QUEUE_H_DEFINED__
+#ifndef QUEUE_H_DEFINED_
+#define QUEUE_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
 #ifndef CORE_DATA_TYPES_H

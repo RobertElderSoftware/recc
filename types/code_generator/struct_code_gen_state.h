@@ -1,5 +1,5 @@
-#ifndef TYPES_CODE_GENERATOR_struct_code_gen_state_H__
-#define TYPES_CODE_GENERATOR_struct_code_gen_state_H__
+#ifndef TYPES_CODE_GENERATOR_struct_code_gen_state_H_
+#define TYPES_CODE_GENERATOR_struct_code_gen_state_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -17,10 +17,10 @@
 */
 
 
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_compile_time_constant_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_compile_time_constant_ptr_list_H_
 #include "../data-structures/struct_struct_compile_time_constant_ptr_list.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_object_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_object_ptr_list_H_
 #include "../../types/data-structures/struct_struct_linker_object_ptr_list.h"
 #endif
 

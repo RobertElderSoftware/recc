@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_file_context_H__
-#define TYPES_PREPROCESSOR_struct_preprocessor_file_context_H__
+#ifndef TYPES_PREPROCESSOR_struct_preprocessor_file_context_H_
+#define TYPES_PREPROCESSOR_struct_preprocessor_file_context_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

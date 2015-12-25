@@ -786,7 +786,7 @@ unsigned char * make_current_file_string(struct preprocessor_state * state){
 
 void evaluate_special_macro(struct preprocessor_state * state, struct special_macro_definition * special_def, struct struct_c_lexer_token_ptr_list * after_expansion){
 	switch(special_def->type){
-		case __LINE__MACRO:{
+		case _LINE_MACRO:{
 			unsigned char * line = make_current_file_line_string(state);
 			unsigned int len = (unsigned int)strlen((char *)line);
 			struct c_lexer_token * tok = struct_c_lexer_token_memory_pool_malloc(state->memory_pool_collection->struct_c_lexer_token_pool);
@@ -796,7 +796,7 @@ void evaluate_special_macro(struct preprocessor_state * state, struct special_ma
 			struct_c_lexer_token_ptr_list_add_end(after_expansion, tok);
 			struct_c_lexer_token_ptr_list_add_end(&state->created_tokens, tok);
 			break;
-		}case __FILE__MACRO:{
+		}case _FILE_MACRO:{
 			unsigned char * file = make_current_file_string(state);
 			unsigned int len = (unsigned int)strlen((char *)file);
 			struct c_lexer_token * tok = struct_c_lexer_token_memory_pool_malloc(state->memory_pool_collection->struct_c_lexer_token_pool);
@@ -1343,8 +1343,8 @@ void add_special_macros(struct preprocessor_state * state, struct unsigned_char_
 	const char * file_macro = "__FILE__";
 	struct special_macro_definition * line_macro_definition = (struct special_macro_definition *)malloc(sizeof(struct special_macro_definition));
 	struct special_macro_definition * file_macro_definition = (struct special_macro_definition *)malloc(sizeof(struct special_macro_definition));
-	line_macro_definition->type = __LINE__MACRO;
-	file_macro_definition->type = __FILE__MACRO;
+	line_macro_definition->type = _LINE_MACRO;
+	file_macro_definition->type = _FILE_MACRO;
 	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_put(map, copy_null_terminated_string((unsigned char *)line_macro, state->memory_pool_collection), line_macro_definition);
 	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_put(map, copy_null_terminated_string((unsigned char *)file_macro, state->memory_pool_collection), file_macro_definition);
 }

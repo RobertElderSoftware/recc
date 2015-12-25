@@ -1,5 +1,5 @@
-#ifndef FILESYSTEM_COMPILER_H__
-#define FILESYSTEM_COMPILER_H__
+#ifndef FILESYSTEM_COMPILER_H_
+#define FILESYSTEM_COMPILER_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,22 +16,22 @@
     under the License.
 */
 
-#ifndef ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED_
 #include <assert.h>
 #endif
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
-#ifndef STDLIB_FILESYSTEM_H__
+#ifndef STDLIB_FILESYSTEM_H_
 #include "../libc/filesystem.h"
 #endif
-#ifndef unsigned_char_ptr_to_unsigned_char_ptr_map__H__DEFINED__
+#ifndef unsigned_char_ptr_to_unsigned_char_ptr_map_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
 #endif
-#ifndef unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list_H_DEFINED_
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef IO_H__
+#ifndef IO_H_
 #include "../recc-implementation/io.h"
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_enum_relocation_type_h__
-#define TYPES_LINKER_enum_relocation_type_h__
+#ifndef TYPES_LINKER_enum_relocation_type_h_
+#define TYPES_LINKER_enum_relocation_type_h_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

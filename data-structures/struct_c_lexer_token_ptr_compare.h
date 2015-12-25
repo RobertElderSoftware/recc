@@ -1,5 +1,5 @@
-#ifndef struct_c_lexer_token_ptr_compare__H__DEFINED__
-#define struct_c_lexer_token_ptr_compare__H__DEFINED__
+#ifndef struct_c_lexer_token_ptr_compare_H_DEFINED_
+#define struct_c_lexer_token_ptr_compare_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_struct_c_lexer_token_H__
+#ifndef TYPES_LEXER_struct_c_lexer_token_H_
 #include "../types/lexer/struct_c_lexer_token.h"
 #endif
 

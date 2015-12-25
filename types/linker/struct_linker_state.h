@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_linker_state_h__
-#define TYPES_LINKER_struct_linker_state_h__
+#ifndef TYPES_LINKER_struct_linker_state_h_
+#define TYPES_LINKER_struct_linker_state_h_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_enum_build_target_type_H__
+#ifndef TYPES_enum_build_target_type_H_
 #include "../../types/recc-implementation/enum_build_target_type.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_region_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_region_list_H_
 #include "../../types/data-structures/struct_struct_linker_region_list.h"
 #endif
 

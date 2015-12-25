@@ -14,4 +14,4 @@
     under the License.
 */
 
-unsigned int __g_builtin_stack[0x40000]; /* 1048576 bytes of stack space (1MB) */
+unsigned int _g_builtin_stack[0x40000]; /* 1048576 bytes of stack space (1MB) */

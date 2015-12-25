@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H__
-#define TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H_
+#define TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef BINARY_EXPONENTIAL_BUFFER__H__DEFINED__
+#ifndef BINARY_EXPONENTIAL_BUFFER_H_DEFINED_
 #include "../../data-structures/binary_exponential_buffer.h"
 #endif
-#ifndef TYPES_PARSER_struct_normalized_specifier_H__
+#ifndef TYPES_PARSER_struct_normalized_specifier_H_
 #include "../../types/parser/struct_normalized_specifier.h"
 #endif
 

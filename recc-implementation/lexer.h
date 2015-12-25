@@ -1,5 +1,5 @@
-#ifndef LEXER_H__
-#define LEXER_H__
+#ifndef LEXER_H_
+#define LEXER_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,34 +16,34 @@
     under the License.
 */
 
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
-#ifndef STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED_
 #include <stdlib.h>
 #endif
-#ifndef IO_H__
+#ifndef IO_H_
 #include "io.h"
 #endif
-#ifndef struct_c_lexer_token_ptr_list__H__DEFINED__
+#ifndef struct_c_lexer_token_ptr_list_H_DEFINED_
 #include "../data-structures/struct_c_lexer_token_ptr_list.h"
 #endif
-#ifndef struct_l2_lexer_token_ptr_list__H__DEFINED__
+#ifndef struct_l2_lexer_token_ptr_list_H_DEFINED_
 #include "../data-structures/struct_l2_lexer_token_ptr_list.h"
 #endif
-#ifndef unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list_H_DEFINED_
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef struct_c_lexer_token_memory_pool__H__DEFINED__
+#ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
 #include "../data-structures/struct_c_lexer_token_memory_pool.h"
 #endif
-#ifndef struct_l2_lexer_token_memory_pool__H__DEFINED__
+#ifndef struct_l2_lexer_token_memory_pool_H_DEFINED_
 #include "../data-structures/struct_l2_lexer_token_memory_pool.h"
 #endif
-#ifndef TYPES_LEXER_struct_c_lexer_state_H__
+#ifndef TYPES_LEXER_struct_c_lexer_state_H_
 #include "../types/lexer/struct_c_lexer_state.h"
 #endif
-#ifndef TYPES_LEXER_struct_l2_lexer_state_H__
+#ifndef TYPES_LEXER_struct_l2_lexer_state_H_
 #include "../types/lexer/struct_l2_lexer_state.h"
 #endif
 

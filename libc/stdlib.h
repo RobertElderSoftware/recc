@@ -1,5 +1,5 @@
-#ifndef STDLIB_H_DEFINED__
-#define STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED_
+#define STDLIB_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -15,7 +15,7 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef SIZE_T_H_DEFINED__
+#ifndef SIZE_T_H_DEFINED_
 #include "size_t.h"
 #endif
 void * malloc(size_t);

@@ -3872,7 +3872,7 @@ void g_init_declarator(struct parser_node * specifiers, struct parser_node * p, 
 
 	if(!is_function(m, abstract_declarator)){
 		const char * start_format = "globalvar_%s";
-		const char * end_format = "__end_globalvar_%s";
+		const char * end_format = "_end_globalvar_%s";
 		if(check_three_children(p, DECLARATOR, TERMINAL, INITIALIZER)){
 			if(is_terminal_c_token_type(second_child(p),EQUALS_CHAR)){
 				if(is_global){
@@ -4778,7 +4778,7 @@ void g_function_definition(struct parser_node * p, struct code_gen_state * state
 	}else if(check_three_children(p, DECLARATION_SPECIFIERS, DECLARATOR, COMPOUND_STATEMENT)){
 		struct parser_node * identifier = get_identifier_from_declarator(p->first_child->next);
 		unsigned char * identifier_str = copy_string(identifier->c_lexer_token->first_byte, identifier->c_lexer_token->last_byte, state->memory_pool_collection);
-		unsigned char * end = create_formatted_string(state->memory_pool_collection, 20, "__end_%s", identifier_str);
+		unsigned char * end = create_formatted_string(state->memory_pool_collection, 20, "_end_%s", identifier_str);
 		implement_external_symbol(state->memory_pool_collection, &state->symbols, identifier_str);
 		implement_external_symbol(state->memory_pool_collection, &state->symbols, end);
 		buffered_printf(state->buffered_output,"%s:\n", identifier_str);
@@ -4841,7 +4841,7 @@ void g_translation_unit(struct parser_node * p, struct code_gen_state * state){
 			struct constant_description * description = struct_constant_description_ptr_list_get(&string_literals, i);
 			unsigned int j;
 			unsigned char * string_literal_identifier_str = create_formatted_string(state->memory_pool_collection, 20, "_%psl", description->native_data);
-			unsigned char * end = create_formatted_string(state->memory_pool_collection, 20, "__end_%psl", description->native_data);
+			unsigned char * end = create_formatted_string(state->memory_pool_collection, 20, "_end_%psl", description->native_data);
 			unsigned int * c = (unsigned int *)description->native_data;
 			buffered_printf(state->buffered_output,"%s:\n", string_literal_identifier_str);
 			assert(description->size_in_bytes % sizeof(unsigned int) == 0);

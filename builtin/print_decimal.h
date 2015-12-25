@@ -1,5 +1,5 @@
-#ifndef BUILTIN_PRINT_DECIMAL__
-#define BUILTIN_PRINT_DECIMAL__
+#ifndef BUILTIN_PRINT_DECIMAL_
+#define BUILTIN_PRINT_DECIMAL_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_region_list_H__
-#define TYPES_DATA_STRUCTURES_struct_struct_linker_region_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_region_list_H_
+#define TYPES_DATA_STRUCTURES_struct_struct_linker_region_list_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LINKER_struct_linker_region_H__
+#ifndef TYPES_LINKER_struct_linker_region_H_
 #include "../../types/linker/struct_linker_region.h"
 #endif
 

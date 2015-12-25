@@ -1,5 +1,5 @@
-#ifndef TYPES_LEXER_struct_c_lexer_state_H__
-#define TYPES_LEXER_struct_c_lexer_state_H__
+#ifndef TYPES_LEXER_struct_c_lexer_state_H_
+#define TYPES_LEXER_struct_c_lexer_state_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_struct_common_lexer_state_H__
+#ifndef TYPES_LEXER_struct_common_lexer_state_H_
 #include "struct_common_lexer_state.h"
 #endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_c_lexer_token_ptr_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_c_lexer_token_ptr_list_H_
 #include "../../types/data-structures/struct_struct_c_lexer_token_ptr_list.h"
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef COMMON_H_DEFINED__
-#define COMMON_H_DEFINED__
+#ifndef COMMON_H_DEFINED_
+#define COMMON_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

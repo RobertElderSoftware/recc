@@ -1,5 +1,5 @@
-#ifndef UNISTD_H_DEFINED__
-#define UNISTD_H_DEFINED__
+#ifndef UNISTD_H_DEFINED_
+#define UNISTD_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
 

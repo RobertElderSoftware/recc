@@ -1,5 +1,5 @@
-#ifndef TYPES_struct_memory_pool_collection_H__
-#define TYPES_struct_memory_pool_collection_H__
+#ifndef TYPES_struct_memory_pool_collection_H_
+#define TYPES_struct_memory_pool_collection_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

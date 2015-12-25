@@ -1,5 +1,5 @@
-#ifndef TYPES_CODE_GENERATOR_struct_compile_time_constant_H__
-#define TYPES_CODE_GENERATOR_struct_compile_time_constant_H__
+#ifndef TYPES_CODE_GENERATOR_struct_compile_time_constant_H_
+#define TYPES_CODE_GENERATOR_struct_compile_time_constant_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -17,10 +17,10 @@
 */
 
 
-#ifndef TYPES_PARSER_struct_constant_description_H__
+#ifndef TYPES_PARSER_struct_constant_description_H_
 #include "../../types/parser/struct_constant_description.h"
 #endif
-#ifndef TYPES_PARSER_struct_normalized_declaration_element_H__
+#ifndef TYPES_PARSER_struct_normalized_declaration_element_H_
 #include "../../types/parser/struct_normalized_declaration_element.h"
 #endif
 

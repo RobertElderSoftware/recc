@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_l2_item_h__
-#define TYPES_LINKER_struct_l2_item_h__
+#ifndef TYPES_LINKER_struct_l2_item_h_
+#define TYPES_LINKER_struct_l2_item_h_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_struct_l2_lexer_token_H__
+#ifndef TYPES_LEXER_struct_l2_lexer_token_H_
 #include "../lexer/struct_l2_lexer_token.h"
 #endif
 

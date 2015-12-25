@@ -13,7 +13,7 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef void_ptr_compare__H__DEFINED__
+#ifndef void_ptr_compare_H_DEFINED_
 #include "void_ptr_compare.h"
 #endif
 

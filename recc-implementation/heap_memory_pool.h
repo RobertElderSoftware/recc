@@ -1,5 +1,5 @@
-#ifndef HEAP_MEMORY_POOL_H__
-#define HEAP_MEMORY_POOL_H__
+#ifndef HEAP_MEMORY_POOL_H_
+#define HEAP_MEMORY_POOL_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,10 +16,10 @@
     under the License.
 */
 
-#ifndef void_ptr_memory_pool__H__DEFINED__
+#ifndef void_ptr_memory_pool_H_DEFINED_
 #include "../data-structures/void_ptr_memory_pool.h"
 #endif
-#ifndef TYPES_struct_heap_memory_pool_H__
+#ifndef TYPES_struct_heap_memory_pool_H_
 #include "../types/recc-implementation/struct_heap_memory_pool.h"
 #endif
 

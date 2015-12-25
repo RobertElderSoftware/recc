@@ -13,7 +13,7 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef struct_start_end_ptr_compare__H__DEFINED__
+#ifndef struct_start_end_ptr_compare_H_DEFINED_
 #include "struct_start_end_ptr_compare.h"
 #endif
 

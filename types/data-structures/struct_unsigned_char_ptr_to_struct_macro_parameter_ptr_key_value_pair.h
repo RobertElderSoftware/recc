@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_H__
-#define TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_H_
+#define TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -17,7 +17,7 @@
 */
 
 
-#ifndef TYPES_PREPROCESSOR_struct_macro_parameter_H__
+#ifndef TYPES_PREPROCESSOR_struct_macro_parameter_H_
 #include "../../types/preprocessor/struct_macro_parameter.h"
 #endif
 

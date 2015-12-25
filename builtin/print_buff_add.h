@@ -1,5 +1,5 @@
-#ifndef BUILTIN_PRINT_BUFF_DEFINED__
-#define BUILTIN_PRINT_BUFF_DEFINED__
+#ifndef BUILTIN_PRINT_BUFF_DEFINED_
+#define BUILTIN_PRINT_BUFF_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

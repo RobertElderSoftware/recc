@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_constant_description_H__
-#define TYPES_PARSER_struct_constant_description_H__
+#ifndef TYPES_PARSER_struct_constant_description_H_
+#define TYPES_PARSER_struct_constant_description_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -17,7 +17,7 @@
 */
 
 
-#ifndef TYPES_PARSER_struct_type_description_H__
+#ifndef TYPES_PARSER_struct_type_description_H_
 #include "struct_type_description.h"
 #endif
 

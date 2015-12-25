@@ -1,5 +1,5 @@
-#ifndef BUILTIN_PRINT_HEXADECIMAL__
-#define BUILTIN_PRINT_HEXADECIMAL__
+#ifndef BUILTIN_PRINT_HEXADECIMAL_
+#define BUILTIN_PRINT_HEXADECIMAL_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

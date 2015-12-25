@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_start_end_list_H__
-#define TYPES_DATA_STRUCTURES_struct_struct_start_end_list_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_start_end_list_H_
+#define TYPES_DATA_STRUCTURES_struct_struct_start_end_list_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LINKER_struct_start_end_h__
+#ifndef TYPES_LINKER_struct_start_end_h_
 #include "../../types/linker/struct_start_end.h"
 #endif
 

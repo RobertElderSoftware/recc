@@ -1,5 +1,5 @@
-#ifndef IO_H__
-#define IO_H__
+#ifndef IO_H_
+#define IO_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,37 +16,37 @@
     under the License.
 */
 
-#ifndef STDLIB_H_DEFINED__
+#ifndef STDLIB_H_DEFINED_
 #include <stdlib.h>
 #endif
-#ifndef STDIO_H_DEFINED__
+#ifndef STDIO_H_DEFINED_
 #include <stdio.h>
 #endif
-#ifndef STDARG_H_DEFINED__
+#ifndef STDARG_H_DEFINED_
 #include <stdarg.h>
 #endif
-#ifndef ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED_
 #include <assert.h>
 #endif
-#ifndef STRING_H_DEFINED__
+#ifndef STRING_H_DEFINED_
 #include <string.h>
 #endif
-#ifndef unsigned_char_list__H__DEFINED__
+#ifndef unsigned_char_list_H_DEFINED_
 #include "../data-structures/unsigned_char_list.h"
 #endif
-#ifndef unsigned_char_ptr_list__H__DEFINED__
+#ifndef unsigned_char_ptr_list_H_DEFINED_
 #include "../data-structures/unsigned_char_ptr_list.h"
 #endif
-#ifndef MEMORY_POOL_COLLECTION_H__
+#ifndef MEMORY_POOL_COLLECTION_H_
 #include "memory_pool_collection.h"
 #endif
-#ifndef HEAP_MEMORY_POOL_H__
+#ifndef HEAP_MEMORY_POOL_H_
 #include "heap_memory_pool.h"
 #endif
-#ifndef TYPES_BUILTIN_struct_printing_state_H__
+#ifndef TYPES_BUILTIN_struct_printing_state_H_
 #include "../types/builtin/struct_printing_state.h"
 #endif
-#ifndef BUILTIN_C99LIBC_IN_C89__
+#ifndef BUILTIN_C99LIBC_IN_C89_
 #include "../builtin/c99libc_in_c89.h"
 #endif
 

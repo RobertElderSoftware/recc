@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_void_ptr_to_unsigned_int_key_value_pair_H__
-#define TYPES_DATA_STRUCTURES_struct_void_ptr_to_unsigned_int_key_value_pair_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_void_ptr_to_unsigned_int_key_value_pair_H_
+#define TYPES_DATA_STRUCTURES_struct_void_ptr_to_unsigned_int_key_value_pair_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     

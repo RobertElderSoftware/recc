@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_H__
-#define TYPES_DATA_STRUCTURES_struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_H__
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_H_
+#define TYPES_DATA_STRUCTURES_struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_struct_c_lexer_token_h__
+#ifndef TYPES_LEXER_struct_c_lexer_token_h_
 #include "../../types/lexer/struct_c_lexer_token.h"
 #endif
 

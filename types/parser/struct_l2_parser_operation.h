@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_l2_parser_operation_H__
-#define TYPES_PARSER_struct_l2_parser_operation_H__
+#ifndef TYPES_PARSER_struct_l2_parser_operation_H_
+#define TYPES_PARSER_struct_l2_parser_operation_H_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -16,7 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_enum_l2_parser_operation_type_H__
+#ifndef TYPES_PARSER_enum_l2_parser_operation_type_H_
 #include "enum_l2_parser_operation_type.h"
 #endif
 

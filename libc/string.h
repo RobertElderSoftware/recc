@@ -1,5 +1,5 @@
-#ifndef STRING_H_DEFINED__
-#define STRING_H_DEFINED__
+#ifndef STRING_H_DEFINED_
+#define STRING_H_DEFINED_
 /*
     Copyright 2015 Robert Elder Software Inc.
     
@@ -15,10 +15,10 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef SIZE_T_H_DEFINED__
+#ifndef SIZE_T_H_DEFINED_
 #include "size_t.h"
 #endif
-#ifndef ASSERT_H_DEFINED__
+#ifndef ASSERT_H_DEFINED_
 #include <assert.h>
 #endif
 size_t strlen(const char *);
