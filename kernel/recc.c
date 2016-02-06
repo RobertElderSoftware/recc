@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -47,6 +47,7 @@ void register_kernel_objects(struct build_state * state){
 	register_l2_file(state, "kernel/l2/kernel_interface.l2", "RELOCATABLE");
 	register_l2_file(state, "kernel/l2/putchar_nobusy.l2", "RELOCATABLE");
 	register_l2_file(state, "kernel/l2/getchar_nobusy.l2", "RELOCATABLE");
+	register_l2_file(state, "kernel/l2/putchar_busy.l2", "RELOCATABLE");
         register_c_to_l2(state, "kernel/filesystem");
         register_c_to_l2(state, "kernel/putchar");
         register_c_to_l2(state, "kernel/main");
@@ -55,6 +56,7 @@ void register_kernel_objects(struct build_state * state){
         register_c_to_l2(state, "kernel/kernel_impl");
         register_c_to_l2(state, "kernel/level_1_page_table_entries");
         register_c_to_l2(state, "kernel/user_proc");
+        register_c_to_l2(state, "kernel/printf_busy");
 
 	register_dependency(state, "kernel/kernel.l1", "builtin/libbuiltin.l2");
 	register_dependency(state, "kernel/kernel.l1", "builtin/l2/memory_mapped_registers.l2");
@@ -67,6 +69,7 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/heap_memory_pool.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/io.l2");
+	register_dependency(state, "kernel/kernel.l1", "recc-implementation/regex_engine.l2");
 	register_dependency(state, "kernel/kernel.l1", "libc/getcwd.l2");
 	register_dependency(state, "kernel/kernel.l1", "libc/string.l2");
 	register_dependency(state, "kernel/kernel.l1", "libc/filesystem.l2");
@@ -76,6 +79,7 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel.l1", "libc/printf.l2");
 	register_dependency(state, "kernel/kernel.l1", "libc/malloc.l2");
 
+	register_dependency(state, "kernel/kernel.l1", "kernel/printf_busy.l2");
 	register_dependency(state, "kernel/kernel.l1", "kernel/filesystem.l2");
 	register_dependency(state, "kernel/kernel.l1", "kernel/putchar.l2");
 	register_dependency(state, "kernel/kernel.l1", "kernel/main.l2");
@@ -87,6 +91,7 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel.l1", "kernel/l2/kernel_interface.l2");
 	register_dependency(state, "kernel/kernel.l1", "kernel/l2/putchar_nobusy.l2");
 	register_dependency(state, "kernel/kernel.l1", "kernel/l2/getchar_nobusy.l2");
+	register_dependency(state, "kernel/kernel.l1", "kernel/l2/putchar_busy.l2");
 
 	/*  List of symbols and regions in the kernel, to be compiled into the kernel */
 	register_dependency(state, "kernel/kernel.l1", "kernel/kernel_symbols.l0.l2");
@@ -102,6 +107,7 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/heap_memory_pool.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/io.l2");
+	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/regex_engine.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "libc/getcwd.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "libc/string.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "libc/filesystem.l2");
@@ -111,6 +117,7 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel_symbols.l1", "libc/printf.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "libc/malloc.l2");
 
+	register_dependency(state, "kernel/kernel_symbols.l1", "kernel/printf_busy.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "kernel/filesystem.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "kernel/putchar.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "kernel/main.l2");
@@ -122,4 +129,5 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel_symbols.l1", "kernel/l2/kernel_interface.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "kernel/l2/putchar_nobusy.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "kernel/l2/getchar_nobusy.l2");
+	register_dependency(state, "kernel/kernel_symbols.l1", "kernel/l2/putchar_busy.l2");
 }

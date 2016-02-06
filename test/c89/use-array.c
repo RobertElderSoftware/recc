@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -15,6 +15,10 @@
 */
 
 #include <stdio.h>
+
+enum en_one_two {ONE, TWO};
+
+static enum en_one_two one_two_array[2] = {ONE, TWO};
 
 extern unsigned char data[6][5];
 
@@ -145,6 +149,8 @@ int main(void){
 	struct food f;
 	struct food g;
 	int arr1[4];
+	putchar('a' + one_two_array[0]);
+	putchar('a' + one_two_array[1]);
 	f.a = 'a';
 	f.b = 'b';
 	f.c = 'c';

@@ -1,7 +1,5 @@
-RECC_BUILTIN=builtin/print_buff_add.o builtin/extern_test.o builtin/print_bits.o builtin/c99libc_in_c89.o builtin/print_hexadecimal.o builtin/print_string.o builtin/print_decimal.o builtin/random.o builtin/signed_division.o builtin/signed_greater_than.o builtin/signed_greater_than_or_equal_to.o builtin/signed_less_than.o builtin/signed_less_than_or_equal_to.o builtin/signed_modulo.o
-
-recc-implementation/librecc.a: recc-implementation/compiler_interface.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/l2_parser.o $(DATA_STRUCTURES_OBJECT_FILES) $(RECC_BUILTIN)
-	@ar -rcs recc-implementation/librecc.a recc-implementation/compiler_interface.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/l2_parser.o $(DATA_STRUCTURES_OBJECT_FILES) $(RECC_BUILTIN)
+recc-implementation/librecc.a: recc-implementation/regex_engine.o recc-implementation/compiler_interface.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/l2_parser.o $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
+	@ar -rcs recc-implementation/librecc.a recc-implementation/regex_engine.o recc-implementation/compiler_interface.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/l2_parser.o $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
 recc-implementation/recc.o: recc-implementation/recc.c
 	@$(HOSTCC) -c recc-implementation/recc.c -o recc-implementation/recc.o $(CUSTOM_C89_FLAGS)
 
@@ -10,6 +8,9 @@ recc-implementation/compiler_interface.o: recc-implementation/compiler_interface
 
 recc-implementation/lexer.h: data-structures/bootstrap recc-implementation/io.h
 	@touch recc-implementation/lexer.h
+
+recc-implementation/regex_engine.o: data-structures/bootstrap recc-implementation/regex_engine.h recc-implementation/regex_engine.c
+	@$(HOSTCC) -c recc-implementation/regex_engine.c -o recc-implementation/regex_engine.o $(CUSTOM_C89_FLAGS)
 
 recc-implementation/lexer.o: recc-implementation/lexer.h recc-implementation/lexer.c
 	@$(HOSTCC) -c recc-implementation/lexer.c -o recc-implementation/lexer.o $(CUSTOM_C89_FLAGS)

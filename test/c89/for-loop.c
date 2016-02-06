@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -42,6 +42,9 @@ int output(void){
         unsigned int j;
         unsigned int k;
         unsigned int count = 17;
+        char c1 = 'a';
+        char c2 = 'x';
+        char c3 = 'T';
 
 	i = 0;
 
@@ -431,6 +434,40 @@ label1:
 	case 2:		putchar('0' + (int)i);
 	case 1:		putchar('0' + (int)i);
 		} while(--i > 0);
+	}
+
+
+	switch(c1){
+		case 'a':{
+			putchar('a');
+			break;
+		}default:{
+			putchar('d');
+		}
+	}
+
+	switch(c2){
+		case 'a':{
+			putchar('a');
+			break;
+		}case 'T':{
+			putchar('T');
+			break;
+		}default:{
+			putchar('d');
+		}
+	}
+
+	switch(c3){
+		case 'a':{
+			putchar('a');
+			break;
+		}case 'T':{
+			putchar('T');
+			break;
+		}default:{
+			putchar('d');
+		}
 	}
 
 	return 0;

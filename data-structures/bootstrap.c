@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -516,7 +516,7 @@ int main(void){
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct l2_parser_state *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct linker_file *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct linker_symbol *");
-	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct type_description *");
+	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct type_description_reference");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct constant_description *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct constant_initializer_level *");
 	create_specific_type("list", "T0_IDENTIFIER_", 1, "struct compile_time_constant *");
@@ -563,6 +563,8 @@ int main(void){
 
 	create_specific_type("binary_search", "T0_IDENTIFIER_", 1, "unsigned int");
 
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct regex_computation_node");
+	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct regex_parser_node");
 	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct c_lexer_token");
 	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct parser_node");
 	create_specific_type("memory_pool", "T0_IDENTIFIER_", 1, "struct l2_parser_node");

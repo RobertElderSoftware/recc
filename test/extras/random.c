@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -38,7 +38,7 @@ unsigned int get_input_space_partitioned_random(void){
 		}case 2:{
 			return (unsigned int)1;
 		}case 3:{
-			return (unsigned int)4294967295;
+			return 4294967295u;
 		}case 4:{
 			return get_random() % (unsigned int)300;
 		}default:{

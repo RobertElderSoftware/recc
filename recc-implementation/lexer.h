@@ -1,7 +1,7 @@
 #ifndef LEXER_H_
 #define LEXER_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -46,13 +46,17 @@
 #ifndef TYPES_LEXER_struct_l2_lexer_state_H_
 #include "../types/lexer/struct_l2_lexer_state.h"
 #endif
+#ifndef REGEX_ENGINE_H_
+#include "regex_engine.h"
+#endif
 
 
 int lex_c(struct c_lexer_state *);
-int lex_asm(struct l2_lexer_state *, unsigned char *, unsigned char *, unsigned int);
+int lex_asm(struct l2_lexer_state *);
 void create_c_lexer_state(struct c_lexer_state *, struct unsigned_char_list *, struct memory_pool_collection *, unsigned char *, unsigned char *, unsigned int);
 void destroy_c_lexer_state(struct c_lexer_state *);
 void destroy_l2_lexer_state(struct l2_lexer_state *);
+void create_l2_lexer_state(struct l2_lexer_state * state, struct unsigned_char_list *, struct memory_pool_collection *, unsigned char *, unsigned char *, unsigned int);
 const char ** get_c_token_type_names(void);
 const char ** get_l2_token_type_names(void);
 unsigned int count_newlines_in_comment(struct c_lexer_token *);

@@ -1,5 +1,7 @@
+#ifndef TYPES_REGEX_ENGINE_struct_regex_compiler_error_H_
+#define TYPES_REGEX_ENGINE_struct_regex_compiler_error_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -14,14 +16,17 @@
     under the License.
 */
 
-int main(int, char * []);
-int main_argv_indirect(void);
+#ifndef TYPES_REGEX_ENGINE_enum_regex_compiler_error_type_H_
+#include "enum_regex_compiler_error_type.h"
+#endif
 
-int main_argv_indirect(void){
-	/*  Call the 'real' main method with arguments */
-	int argc = 1;
-	char * argv[2];
-	argv[0] = (char *)"./test/c89/main_with_parameters.exec"; /*  Currently used for a specific unit test. */
-	argv[1] = (char *)0;
-	return main(argc, argv);
-}
+struct regex_compiler_error;
+struct regex_compiler_error{
+	struct regex_compiler_error * next;
+	enum regex_compiler_error_type type;
+	unsigned int error_raised;
+	unsigned int character_index_of_error;
+	unsigned int pad;
+};
+
+#endif

@@ -1,7 +1,7 @@
 #ifndef TYPES_CODE_GENERATOR_struct_type_traversal_H_
 #define TYPES_CODE_GENERATOR_struct_type_traversal_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -19,15 +19,15 @@
 #ifndef TYPES_PARSER_enum_type_class_H_
 #include "../../types/parser/enum_type_class.h"
 #endif
-#ifndef TYPES_PARSER_struct_type_description_H_
-#include "../../types/parser/struct_type_description.h"
+#ifndef TYPES_PARSER_struct_type_description_reference_H_
+#include "../../types/parser/struct_type_description_reference.h"
 #endif
 #ifndef TYPES_DATA_STRUCTURES_struct_type_traversal_ptr_list_H_
 #include "../../types/data-structures/struct_struct_type_traversal_ptr_list.h"
 #endif
 
 struct type_traversal{
-	struct type_description * type_description;
+	struct type_description_reference type_description;
 	struct struct_type_traversal_ptr_list children;
 	unsigned int arity; /* For arrays */
 	unsigned int arrays_as_pointers; /* For arrays */

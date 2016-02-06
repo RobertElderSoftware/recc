@@ -1,7 +1,7 @@
 #ifndef TYPES_CODE_GENERATOR_struct_code_gen_state_H_
 #define TYPES_CODE_GENERATOR_struct_code_gen_state_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -30,7 +30,7 @@ struct code_gen_state{
 	struct namespace_object * current_function;
 	struct struct_switch_frame_ptr_list switch_frames; /*  Used for keeping track of the case labels under switches */
 	struct unsigned_int_list scope_index_list;
-	struct struct_type_description_ptr_list type_stack;
+	struct struct_type_description_reference_list type_stack;
 	struct unsigned_char_list * buffered_output;
 	struct unsigned_char_list * buffered_symbol_table;
 	struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map symbols;

@@ -1,7 +1,7 @@
-#include "includetest2.h"
-#include "includetest2.h"
+#ifndef BUILTIN_PRINTF_BUSY_
+#define BUILTIN_PRINTF_BUSY_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -15,21 +15,9 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#include "includetest2.h"
-#include "includetest2.h"
-#include "includetest2.h"
-#include "includetest2.h"
 
-#define def1
-#define boo 345
-#ifndef boo
-putchar('a');
+#include "../libc/stdio.h"
+
+int printf_busy(const char * fmt, ...);
+int vprintf_busy(const char * fmt, va_list va);
 #endif
-#ifndef foofds_
-putchar('o');
-#endif
-
-
-putchar('a');
-putchar('b');
-putchar('c');

@@ -1,3 +1,4 @@
+include test/extras/Makefile
 include test/c89/Makefile
 include test/c99/Makefile
 
@@ -20,11 +21,21 @@ RECC_L1= $(ALL_SOURCES:.c=.l1)
 RECC_L0= $(ALL_SOURCES:.c=.l0.js)
 JS_OUTPUT= $(ALL_SOURCES:.c=.jsoutput)
 
-REQUIRED_BUILTIN_OBJECTS=builtin/print_buff_add.o builtin/extern_test.o builtin/print_bits.o builtin/c99libc_in_c89.o builtin/print_hexadecimal.o builtin/print_string.o builtin/print_decimal.o builtin/random.o builtin/signed_division.o builtin/signed_greater_than.o builtin/signed_greater_than_or_equal_to.o builtin/signed_less_than.o builtin/signed_less_than_or_equal_to.o builtin/signed_modulo.o
+TESTING_EXTRAS_OBJECTS=test/extras/extern_test.o test/extras/random.o
+
+error-on-valgrind-problems: test/scripts/throw-error-on-problems-in-valgrind-log.sh
+	./test/scripts/throw-error-on-problems-in-valgrind-log.sh
+
+test/regex_engine_stress_test.o: test/regex_engine_stress_test.c
+	@$(HOSTCC) -c test/regex_engine_stress_test.c -o test/regex_engine_stress_test.o $(CUSTOM_C89_FLAGS)
+
+regex-engine-stress-test: recc-implementation/librecc.a test/regex_engine_stress_test.o
+	@$(HOSTCC) -o test/regex_engine_stress_test test/regex_engine_stress_test.o recc-implementation/librecc.a $(CUSTOM_C89_FLAGS)
+	@$(VALGRIND) ./test/regex_engine_stress_test
 
 #  Can change based on make file variable values
 remove-previous-test-list:
-	rm -f test/tests_to_run
+	@rm -f test/tests_to_run
 
 test/build_tests: test/build_tests.o $(COMPILER_OBJECTS)
 	@$(HOSTCC) -o test/build_tests test/build_tests.o $(COMPILER_OBJECTS) $(CUSTOM_C89_FLAGS)
@@ -59,15 +70,15 @@ $(JS_OUTPUT): js-output
 
 js-output: run-build-tests test/tests_to_run
 #  The use of this data dir will make the browser tests blocking if there is already a chrome window open.
-	@google-chrome "http://localhost/emulators/javascript/" --user-data-dir="emulators/javascript/chrome/data-dir" > /dev/null 2>&1
+	@chromium-browser "http://localhost/emulators/javascript/" --load-extension=emulators/javascript/chrome/chrome-plugin/ --user-data-dir="emulators/javascript/chrome/data-dir" > /dev/null 2>&1
 
-$(ALL_EXECUTABLES): $(REQUIRED_BUILTIN_OBJECTS) $(COMPILER_OBJECTS)
+$(ALL_EXECUTABLES): $(TESTING_EXTRAS_OBJECTS) $(COMPILER_OBJECTS)
 
 %.output: %.exec
 	@./$< > $@ 2>&1 || true #  This commands never errors, even if the gcc executable does.
 
 %.diff: %.output %.jsoutput
-	@diff $< $(word 2,$^) > $@ || >&2 echo "\033[0;31mTest Failure for "$<" \033[0m"
+	@diff $< $(word 2,$^) > $@ || (echo "\033[0;31mTest Failure for "$<" \033[0m"; echo "Test Failure for "$<"" >> logs/test-failures.log)
 
-clean-tests:
-	@rm -f test/build_tests test/custom_build_targets.c test/build_tests.c test/tests_to_run test/*.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS)
+clean-tests: clean-test-extras
+	@rm -f test/build_tests test/custom_build_targets.c test/build_tests.c test/tests_to_run test/*.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS) test/regex_engine_unit_tests

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -592,12 +592,7 @@ struct linker_file * create_linker_file(struct linker_state * state, struct l2_p
 }
 
 void buffered_token_output(struct unsigned_char_list * buffer, struct l2_lexer_token * t){
-	unsigned char * c = t->first_byte;
-	while(c != t->last_byte) {
-		buffered_printf(buffer, "%c", *c);
-		c++;
-	}
-	buffered_printf(buffer, "%c", *c);
+	add_string_to_buffer(buffer, t->first_byte, t->last_byte);
 }
 
 unsigned int get_relative_symbol_offset(struct linker_state * state, struct linker_file * linker_file, struct linker_symbol * symbol, unsigned int * found){
@@ -689,7 +684,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 					if(symbol && !symbol->is_external){
 						buffered_printf(file_output, "_%p", symbol);
 					}
-					buffered_printf(file_output, ":\n");
+					buffered_puts(file_output, ":\n");
 					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 				}else{
 					/*  Don't output anything */
@@ -697,43 +692,43 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 				break;
 			}case L2_ADD:; case L2_SUB:; case L2_MUL:; case L2_AND:; case L2_OR:; case L2_DIV:{
 				buffered_token_output(file_output, instruction->op_token);
-				buffered_printf(file_output, " ");
+				buffered_puts(file_output, " ");
 				buffered_token_output(file_output, instruction->rx_token);
-				buffered_printf(file_output, " ");
+				buffered_puts(file_output, " ");
 				buffered_token_output(file_output, instruction->ry_token);
-				buffered_printf(file_output, " ");
+				buffered_puts(file_output, " ");
 				buffered_token_output(file_output, instruction->rz_token);
 				if(state->build_target_type == BUILD_TARGET_L2_FILE){
-					buffered_printf(file_output, ";");
+					buffered_puts(file_output, ";");
 				}
-				buffered_printf(file_output, "\n");
+				buffered_puts(file_output, "\n");
 				break;
 			}case L2_LOA:; case L2_STO :; case L2_NOT:; case L2_SHR:; case L2_SHL:{
 				buffered_token_output(file_output, instruction->op_token);
-				buffered_printf(file_output, " ");
+				buffered_puts(file_output, " ");
 				buffered_token_output(file_output, instruction->rx_token);
-				buffered_printf(file_output, " ");
+				buffered_puts(file_output, " ");
 				buffered_token_output(file_output, instruction->ry_token);
 				if(state->build_target_type == BUILD_TARGET_L2_FILE){
-					buffered_printf(file_output, ";");
+					buffered_puts(file_output, ";");
 				}
-				buffered_printf(file_output, "\n");
+				buffered_puts(file_output, "\n");
 				break;
 			}case L2_LL:{
 				unsigned int hex_value = parse_hexidecimal_string(instruction->number_token);
 				buffered_token_output(file_output, instruction->op_token);
-				buffered_printf(file_output, " ");
+				buffered_puts(file_output, " ");
 				buffered_token_output(file_output, instruction->rx_token);
-				buffered_printf(file_output, " ");
+				buffered_puts(file_output, " ");
 				if(!(hex_value <= MAX_LL_CONSTANT)){
 					printf("LL constant too large: %X on line %d in file %s\n", hex_value, linker_file->current_line, linker_file->l2_lexer_state->c.filename);
 					assert(0);
 				}
 				buffered_printf(file_output, "0x%X", hex_value);
 				if(state->build_target_type == BUILD_TARGET_L2_FILE){
-					buffered_printf(file_output, ";");
+					buffered_puts(file_output, ";");
 				}
-				buffered_printf(file_output, "\n");
+				buffered_puts(file_output, "\n");
 				break;
 			}case L2_BEQ:;  case L2_BLT:{
 				if(instruction->identifier_token && state->build_target_type == BUILD_TARGET_L1_FILE){
@@ -742,19 +737,19 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 					unsigned int absolute_offset = get_absolute_symbol_offset(state, ident, linker_file, &found);
 					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 					buffered_token_output(file_output, instruction->op_token);
-					buffered_printf(file_output, " ");
+					buffered_puts(file_output, " ");
 					buffered_token_output(file_output, instruction->rx_token);
-					buffered_printf(file_output, " ");
+					buffered_puts(file_output, " ");
 					buffered_token_output(file_output, instruction->ry_token);
-					buffered_printf(file_output, " ");
-					buffered_printf(file_output, "1");
-					buffered_printf(file_output, "\n");
-					buffered_printf(file_output, "beq ZR ZR 2\n"); /* If we're not going to branch, skip the 2 far jump l2_items */
-					buffered_printf(file_output, "loa PC PC\n");
+					buffered_puts(file_output, " ");
+					buffered_puts(file_output, "1");
+					buffered_puts(file_output, "\n");
+					buffered_puts(file_output, "beq ZR ZR 2\n"); /* If we're not going to branch, skip the 2 far jump l2_items */
+					buffered_puts(file_output, "loa PC PC\n");
 					if(found){
 						buffered_printf(file_output, "DW 0x%X\n", absolute_offset * 4);
 					}else{
-						buffered_printf(file_output, "UNRESOLVED 0x0\n");
+						buffered_puts(file_output, "UNRESOLVED 0x0\n");
 						printf("Leaving symbol %s unresolved in output file %s.\n", ident, state->out_file);
 					}
 				}else if(instruction->identifier_token && state->build_target_type == BUILD_TARGET_L2_FILE){
@@ -762,33 +757,33 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 					struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, ident) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, ident) : (struct linker_symbol *)0;
 					buffered_token_output(file_output, instruction->op_token);
 					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
-					buffered_printf(file_output, " ");
+					buffered_puts(file_output, " ");
 					buffered_token_output(file_output, instruction->rx_token);
-					buffered_printf(file_output, " ");
+					buffered_puts(file_output, " ");
 					buffered_token_output(file_output, instruction->ry_token);
-					buffered_printf(file_output, " ");
+					buffered_puts(file_output, " ");
 					buffered_token_output(file_output, instruction->identifier_token);
 					if(symbol && !symbol->is_external){
 						buffered_printf(file_output, "_%p", symbol);
 					}
-					buffered_printf(file_output, ";\n");
+					buffered_puts(file_output, ";\n");
 				}else{
 					unsigned int constant_value = parse_decimal_string(instruction->number_token);
 					buffered_token_output(file_output, instruction->op_token);
-					buffered_printf(file_output, " ");
+					buffered_puts(file_output, " ");
 					buffered_token_output(file_output, instruction->rx_token);
-					buffered_printf(file_output, " ");
+					buffered_puts(file_output, " ");
 					buffered_token_output(file_output, instruction->ry_token);
-					buffered_printf(file_output, " ");
+					buffered_puts(file_output, " ");
 					if(instruction->number_token_is_negative){
-						buffered_printf(file_output, "-");
+						buffered_puts(file_output, "-");
 					}
 					assert(constant_value <= MAX_BRANCH_POS || (instruction->number_token_is_negative && constant_value <= MAX_BRANCH_NEG));
 					buffered_printf(file_output, "%i", constant_value);
 					if(state->build_target_type == BUILD_TARGET_L2_FILE){
-						buffered_printf(file_output, ";");
+						buffered_puts(file_output, ";");
 					}
-					buffered_printf(file_output, "\n");
+					buffered_puts(file_output, "\n");
 				}
 				break;
 			}case L2_DW:{
@@ -800,7 +795,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 					if(found){
 						buffered_printf(file_output, "DW 0x%X", absolute_offset * 4);
 					}else{
-						buffered_printf(file_output, "UNRESOLVED 0x0");
+						buffered_puts(file_output, "UNRESOLVED 0x0");
 						printf("Leaving symbol %s unresolved in output file %s.\n", ident, state->out_file);
 					}
 
@@ -808,38 +803,38 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 				}else if(instruction->identifier_token && state->build_target_type == BUILD_TARGET_L2_FILE){
 					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
 					struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, ident) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, ident) : (struct linker_symbol *)0;
-					buffered_printf(file_output, "DW ");
+					buffered_puts(file_output, "DW ");
 					buffered_token_output(file_output, instruction->identifier_token);
 					if(symbol && !symbol->is_external){
 						buffered_printf(file_output, "_%p", symbol);
 					}
 					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 				}else{
-					buffered_printf(file_output, "DW ");
+					buffered_puts(file_output, "DW ");
 					buffered_token_output(file_output, instruction->number_token);
 				}
 				if(state->build_target_type == BUILD_TARGET_L2_FILE){
-					buffered_printf(file_output, ";");
+					buffered_puts(file_output, ";");
 				}
-				buffered_printf(file_output, "\n");
+				buffered_puts(file_output, "\n");
 				break;
 			}case L2_UNRESOLVED:{
-				buffered_printf(file_output, "UNRESOLVED ");
+				buffered_puts(file_output, "UNRESOLVED ");
 				buffered_token_output(file_output, instruction->number_token);
-				buffered_printf(file_output, "\n");
+				buffered_puts(file_output, "\n");
 				break;
 			}case L2_SW:{
 				buffered_token_output(file_output, instruction->op_token);
-				buffered_printf(file_output, " ");
+				buffered_puts(file_output, " ");
 				if(instruction->identifier_token){
 					assert(0 && "Unexpected lablel with skip words instruction.");
 				}else{
 					buffered_token_output(file_output, instruction->number_token);
 				}
 				if(state->build_target_type == BUILD_TARGET_L2_FILE){
-					buffered_printf(file_output, ";");
+					buffered_puts(file_output, ";");
 				}
-				buffered_printf(file_output, "\n");
+				buffered_puts(file_output, "\n");
 				break;
 			}default:{
 				assert(0 && "Unknown instruction type.");
@@ -1285,11 +1280,11 @@ void do_link_to_l2(struct linker_state * state){
 			unsigned char * key = unsigned_char_ptr_list_get(&internal_symbols, j);
 			struct linker_symbol * sym = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&file->internal_symbols, key);
 			if(sym->is_required && sym->is_implemented){
-				buffered_printf(&state->file_output, "REQUIRES, IMPLEMENTS");
+				buffered_puts(&state->file_output, "REQUIRES, IMPLEMENTS");
 			}else if(sym->is_required){
-				buffered_printf(&state->file_output, "REQUIRES");
+				buffered_puts(&state->file_output, "REQUIRES");
 			}else if(sym->is_implemented){
-				buffered_printf(&state->file_output, "IMPLEMENTS");
+				buffered_puts(&state->file_output, "IMPLEMENTS");
 			}else{
 				assert(0 && "Not expected.");
 			}
@@ -1302,11 +1297,11 @@ void do_link_to_l2(struct linker_state * state){
 		unsigned char * key = unsigned_char_ptr_list_get(&external_symbols, i);
 		struct linker_symbol * sym = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&state->external_symbols, key);
 		if(sym->is_required && sym->is_implemented){
-			buffered_printf(&state->file_output, "REQUIRES, IMPLEMENTS");
+			buffered_puts(&state->file_output, "REQUIRES, IMPLEMENTS");
 		}else if(sym->is_required){
-			buffered_printf(&state->file_output, "REQUIRES");
+			buffered_puts(&state->file_output, "REQUIRES");
 		}else if(sym->is_implemented){
-			buffered_printf(&state->file_output, "IMPLEMENTS");
+			buffered_puts(&state->file_output, "IMPLEMENTS");
 		}else{
 			assert(0 && "Not expected.");
 		}
@@ -1343,10 +1338,8 @@ int do_link(struct memory_pool_collection * memory_pool_collection, struct unsig
 		unsigned_char_list_create(&tmp);
 		add_file_to_buffer(file_input, (char*)unsigned_char_ptr_list_get(state.in_files, i));
 
-		l2_lexer_state->c.memory_pool_collection = state.memory_pool_collection;
-		l2_lexer_state->c.buffered_output = &state.l2_lexer_output;
-
-		lex_asm(l2_lexer_state, unsigned_char_ptr_list_get(state.in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
+		create_l2_lexer_state(l2_lexer_state, &state.l2_lexer_output, state.memory_pool_collection, unsigned_char_ptr_list_get(state.in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
+		lex_asm(l2_lexer_state);
 		create_l2_parser_state(l2_parser_state, memory_pool_collection, l2_lexer_state, &tmp, unsigned_char_list_data(file_input));
 		parse_l2(l2_parser_state);
 		printf("Linker parsed input file %d '%s'.\n", i, (char *)unsigned_char_ptr_list_get(state.in_files, i));

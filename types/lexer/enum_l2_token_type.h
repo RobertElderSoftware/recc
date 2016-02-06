@@ -1,7 +1,7 @@
 #ifndef TYPES_LEXER_enum_l2_token_type_H_
 #define TYPES_LEXER_enum_l2_token_type_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -15,6 +15,8 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
+
+#define NUM_L2_TOKEN_TYPES 43
 
 enum l2_token_type {
 	L2_SPACE,

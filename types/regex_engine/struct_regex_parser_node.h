@@ -1,7 +1,7 @@
-#ifndef BUILTIN_PRINTF_BUSY_
-#define BUILTIN_PRINTF_BUSY_
+#ifndef TYPES_REGEX_ENGINE_struct_regex_parser_node_H_
+#define TYPES_REGEX_ENGINE_struct_regex_parser_node_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -16,8 +16,19 @@
     under the License.
 */
 
-#include "../libc/stdio.h"
+#ifndef TYPES_REGEX_ENGINE_enum_regex_parser_node_type_H_
+#include "enum_regex_parser_node_type.h"
+#endif
 
-int printf_busy(const char * fmt, ...);
-int vprintf_busy(const char * fmt, va_list va);
+struct regex_parser_node;
+struct regex_parser_node{
+	struct regex_parser_node * next;
+	struct regex_parser_node * first_child;
+	enum regex_parser_node_type type;
+	unsigned char c;
+	unsigned char pad1;
+	unsigned char pad2;
+	unsigned char pad3;
+};
+
 #endif

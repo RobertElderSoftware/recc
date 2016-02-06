@@ -1,7 +1,3 @@
-run-kernel:
-	@echo "test/kernel" > test/tests_to_run
-	@google-chrome "http://localhost/emulators/javascript/?kernel_mode=1" --user-data-dir="emulators/javascript/chrome/data-dir" > /dev/null 2>&1
-
 kernel/build_kernel.o: kernel/build_kernel.c recc-implementation/compiler_interface.h
 	@$(HOSTCC) -c kernel/build_kernel.c -o kernel/build_kernel.o $(CUSTOM_C89_FLAGS)
 
@@ -14,10 +10,12 @@ kernel/kernel.l1: kernel/build_kernel
 
 build-and-test-kernel: kernel/kernel.l1
 	@echo "test/kernel" > test/tests_to_run
-	@google-chrome "http://localhost/emulators/javascript/?kernel_mode=1" --user-data-dir="emulators/javascript/chrome/data-dir" > /dev/null 2>&1
+	@chromium-browser "http://localhost/emulators/javascript/?kernel_mode=1" --load-extension=emulators/javascript/chrome/chrome-plugin/ --user-data-dir="emulators/javascript/chrome/data-dir" > /dev/null 2>&1
 
 kernel/recc.o: kernel/recc.c recc-implementation/compiler_interface.h
 	@$(HOSTCC) -c kernel/recc.c -o kernel/recc.o $(CUSTOM_C89_FLAGS)
 
+kernel: build-and-test-kernel
+
 clean-kernel:
-	@rm -f kernel/build_kernel kernel/*.o kernel/*.l2 kernel/*.i kernel/*.l1 kernel/*.sym kernel/kernel_symbols.l0.c
+	@rm -f kernel/build_kernel kernel/*.o kernel/*.l2 kernel/*.i kernel/*.l1 kernel/*.sym kernel/kernel_symbols.l0.c test/kernel.jsoutput test/kernel.l0.js

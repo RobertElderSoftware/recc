@@ -1,7 +1,7 @@
 #ifndef TYPES_struct_memory_pool_collection_H_
 #define TYPES_struct_memory_pool_collection_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -16,7 +16,17 @@
     under the License.
 */
 
+#ifndef TYPES_REGEX_ENGINE_struct_regex_matcher_state_H_
+#include "../regex_engine/struct_regex_matcher_state.h"
+#endif
+
 struct memory_pool_collection{
+	struct regex_compiler_state ** l2_token_regexes;
+	struct regex_matcher_state l2_token_matcher;
+	struct regex_compiler_state ** c_token_regexes;
+	struct regex_matcher_state c_token_matcher;
+	struct struct_regex_computation_node_memory_pool * struct_regex_computation_node_pool;
+	struct struct_regex_parser_node_memory_pool * struct_regex_parser_node_pool;
 	struct struct_l2_lexer_token_memory_pool * struct_l2_lexer_token_pool;
 	struct struct_c_lexer_token_memory_pool * struct_c_lexer_token_pool;
 	struct struct_parser_node_memory_pool * struct_parser_node_pool;

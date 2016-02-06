@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -92,7 +92,7 @@ const char * register_dependency(struct build_state * state, const char * parent
 		}
 
 		if(!unsigned_char_ptr_to_struct_build_target_ptr_map_exists(&state->targets, child_key)){
-			printf("Dependency child %s was not registered.\n", child_key);
+			printf("Dependency child %s was not registered.  Required by parent %s.\n", child_key, parent_key);
 		}
 		
 		assert(0 && "Parent or child was not registered..");
@@ -181,7 +181,7 @@ void construct_build_target(struct build_state * state, const char * target){
 		}
 		unsigned_char_ptr_list_destroy(&keys);
 	}else{
-		printf("Can't build %s.  Target does not exist.", target);
+		printf("Can't build:  Target '%s' does not exist.", target);
 		assert(0 && "Unsatisfied dependency.");
 	}
 }

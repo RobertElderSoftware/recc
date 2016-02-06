@@ -2,7 +2,7 @@ BUILTIN_SOURCES=$(wildcard builtin/*.c)
 
 BUILTIN_OBJECTS=$(BUILTIN_SOURCES:.c=.o)
 
-%.o: %.c
+builtin/%.o: builtin/%.c
 	@$(HOSTCC) -c $< -o $@ $(CUSTOM_C89_FLAGS)
 
 builtin/recc.o: builtin/recc.c recc-implementation/compiler_interface.h

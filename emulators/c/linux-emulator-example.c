@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -50,11 +50,19 @@ struct termios * terminal_setup(void){
         return original;
 }
 
+struct ll_item{
+	struct ll_item * next;
+	unsigned int c;
+	unsigned int pad;
+};
+
 int main(void){
 	struct virtual_machine * vm;
 	unsigned int output;
         unsigned char c;
 	struct termios * original = terminal_setup();
+	struct ll_item * first_item = (struct ll_item *)0;
+	struct ll_item * last_item = (struct ll_item *)0;
 
 	vm = vm_create(data);
 	printf("Kernel image has been loaded. All input is now being handled by the emulator (including Ctrl+c).\n");
@@ -67,7 +75,28 @@ int main(void){
 		}
 
 		if(read(STDIN_FILENO, &c, 1) > 0){
-			vm_putc(vm, c);
+			/*  Add item to the end of the list */
+			struct ll_item * new_item = malloc(sizeof(struct ll_item));
+			new_item->c = c;
+			new_item->next = (struct ll_item *)0;
+			if(first_item){
+				last_item->next = new_item;
+			}else{
+				first_item = new_item;
+			}
+			last_item = new_item;
+		}
+
+		if(first_item){
+			if(!vm_putc(vm, first_item->c)){
+				/*  Take first item off of linked list */
+				struct ll_item * tmp_item = first_item;
+				first_item = first_item->next;
+				free(tmp_item);
+				if(!first_item){
+					last_item = (struct ll_item *)0;
+				}
+			}
 		}
 		step(vm);
 	}

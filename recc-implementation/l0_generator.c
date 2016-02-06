@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -516,7 +516,7 @@ static void output_to_l0_file(struct l0_generator_state * l0_generator_state, ch
 	/*  TODO: currently assuming that sizeof(unsigned int) == 4 */
 	unsigned int num_l0_items = 2; /*  One for image size directive and one for num items */
 	unsigned int num_memory_words = count_l2_file_image_size(l0_generator_state->l2_parser_state.top_node, &num_l0_items);
-	unsigned int image_size = image_size = 4 * num_memory_words;
+	unsigned int image_size = 4 * num_memory_words;
 	FILE * out = fopen(out_file, "w");
 
 	output_start_end(variable_name, out, language);
@@ -544,12 +544,10 @@ struct l0_generator_state * l0_generator_state_create(struct memory_pool_collect
 	unsigned_char_list_create(&lexer_output);
 	unsigned_char_list_create(&file_input);
 
-	l0_generator_state->l2_lexer_state.c.memory_pool_collection = m;
-	l0_generator_state->l2_lexer_state.c.buffered_output = &lexer_output;
-
 	add_file_to_buffer(&file_input, (char *)in_file);
 
-	lex_asm(&l0_generator_state->l2_lexer_state, in_file, (unsigned char *)unsigned_char_list_data(&file_input), unsigned_char_list_size(&file_input));
+	create_l2_lexer_state(&l0_generator_state->l2_lexer_state, &lexer_output, m, in_file, (unsigned char *)unsigned_char_list_data(&file_input), unsigned_char_list_size(&file_input));
+	lex_asm(&l0_generator_state->l2_lexer_state);
 	create_l2_parser_state(&l0_generator_state->l2_parser_state, m, &l0_generator_state->l2_lexer_state, &parser_output, (unsigned char *)unsigned_char_list_data(&file_input));
 	parse_l2(&l0_generator_state->l2_parser_state);
 

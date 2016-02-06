@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -26,6 +26,8 @@ void register_data_structures_objects(struct build_state * state){
         register_c_to_l2(state, "data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_binary_search");
         register_c_to_l2(state, "data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_merge_sort");
         register_c_to_l2(state, "data-structures/void_ptr_memory_pool");
+        register_c_to_l2(state, "data-structures/struct_regex_computation_node_memory_pool");
+        register_c_to_l2(state, "data-structures/struct_regex_parser_node_memory_pool");
         register_c_to_l2(state, "data-structures/struct_linker_symbol_memory_pool");
         register_c_to_l2(state, "data-structures/struct_l2_item_memory_pool");
         register_c_to_l2(state, "data-structures/struct_type_description_memory_pool");
@@ -55,7 +57,7 @@ void register_data_structures_objects(struct build_state * state){
         register_c_to_l2(state, "data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map");
         register_c_to_l2(state, "data-structures/struct_switch_frame_ptr_list");
         register_c_to_l2(state, "data-structures/struct_type_traversal_ptr_list");
-        register_c_to_l2(state, "data-structures/struct_type_description_ptr_list");
+        register_c_to_l2(state, "data-structures/struct_type_description_reference_list");
         register_c_to_l2(state, "data-structures/struct_constant_initializer_level_ptr_list");
         register_c_to_l2(state, "data-structures/struct_c_lexer_state_ptr_list");
         register_c_to_l2(state, "data-structures/struct_unsigned_char_list_ptr_list");
@@ -96,6 +98,8 @@ void register_data_structures_objects(struct build_state * state){
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_binary_search.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_merge_sort.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/void_ptr_memory_pool.l2");
+        register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_regex_computation_node_memory_pool.l2");
+        register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_regex_parser_node_memory_pool.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_linker_symbol_memory_pool.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_l2_item_memory_pool.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_type_description_memory_pool.l2");
@@ -125,7 +129,7 @@ void register_data_structures_objects(struct build_state * state){
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_switch_frame_ptr_list.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_type_traversal_ptr_list.l2");
-        register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_type_description_ptr_list.l2");
+        register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_type_description_reference_list.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_constant_initializer_level_ptr_list.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_c_lexer_state_ptr_list.l2");
         register_dependency(state, "data-structures/libdata-structures.l2", "data-structures/struct_unsigned_char_list_ptr_list.l2");

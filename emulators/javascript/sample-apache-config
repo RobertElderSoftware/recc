@@ -1,0 +1,23 @@
+<VirtualHost *:80>
+	ServerAdmin webmaster@localhost
+
+	DocumentRoot RECC_ROOT_FOLDER_HERE
+	<Directory />
+		Options FollowSymLinks
+		AllowOverride None
+	</Directory>
+	<Directory "RECC_ROOT_FOLDER_HERE">
+		Options Indexes FollowSymLinks MultiViews
+		AllowOverride None
+		Order allow,deny
+		allow from all
+		Require all granted
+	</Directory>
+
+	ErrorLog ${APACHE_LOG_DIR}/error-recc.log
+
+	LogLevel warn
+
+	CustomLog ${APACHE_LOG_DIR}/access-recc.log combined
+
+</VirtualHost>

@@ -81,8 +81,8 @@
 /struct_linker_file_ptr_list.h
 /struct_linker_symbol_ptr_list.c
 /struct_linker_symbol_ptr_list.h
-/struct_type_description_ptr_list.c
-/struct_type_description_ptr_list.h
+/struct_type_description_reference_list.c
+/struct_type_description_reference_list.h
 /struct_constant_description_ptr_list.c
 /struct_constant_description_ptr_list.h
 /struct_constant_initializer_level_ptr_list.c
@@ -165,6 +165,10 @@
 /struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_binary_search.h
 /unsigned_int_binary_search.c
 /unsigned_int_binary_search.h
+/struct_regex_computation_node_memory_pool.c
+/struct_regex_computation_node_memory_pool.h
+/struct_regex_parser_node_memory_pool.c
+/struct_regex_parser_node_memory_pool.h
 /struct_c_lexer_token_memory_pool.c
 /struct_c_lexer_token_memory_pool.h
 /struct_parser_node_memory_pool.c

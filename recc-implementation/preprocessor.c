@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -164,6 +164,7 @@ enum directive_type get_directive_type(struct preprocessor_state * state, struct
 		rtn = IFDEF_DIRECTIVE;
 	}else{
 		rtn = DEFINE_DIRECTIVE;
+		printf("Directive is \"%s\".\n", str);
 		assert(0 && "Unknown preprocessor directive.");
 	}
 	heap_memory_pool_free(state->memory_pool_collection->heap_pool, str);
@@ -542,13 +543,10 @@ void make_trimmed_arg_list(struct struct_c_lexer_token_ptr_list * trimmed_arg_li
 	unsigned int observed_first_non_whitespace = 0;
 	/*  Obtain the index of the last non-whitespace token */
 	if(struct_c_lexer_token_ptr_list_size(arg_list)){
-		for(i = struct_c_lexer_token_ptr_list_size(arg_list) -1; ;i--){
+		for(i = struct_c_lexer_token_ptr_list_size(arg_list); i-- > 0;){
 			struct c_lexer_token * tok = struct_c_lexer_token_ptr_list_get(arg_list, i);
 			if(!(tok->type == SPACE)){
 				end_index = i;
-				break;
-			}
-			if(i == 0){
 				break;
 			}
 		}
@@ -834,11 +832,8 @@ unsigned int process_identifier_if_macro(struct preprocessor_state * state, stru
 		evaluate_special_macro(state, special_def, &after_expansion);
 		if(struct_c_lexer_token_ptr_list_size(&after_expansion)){
 			unsigned int i;
-			for(i = struct_c_lexer_token_ptr_list_size(&after_expansion) -1; ; i--){
+			for(i = struct_c_lexer_token_ptr_list_size(&after_expansion); i-- > 0;){
 				put_back_token(state, output_tokens, struct_c_lexer_token_ptr_list_get(&after_expansion, i), macro_expansion_levels);
-				if(i == 0){
-					break;
-				}
 			}
 		}
 		struct_c_lexer_token_ptr_list_destroy(&after_expansion);
@@ -864,12 +859,9 @@ unsigned int process_identifier_if_macro(struct preprocessor_state * state, stru
 			unsigned_char_ptr_to_struct_macro_definition_ptr_map_put(&state->disabled_macros, disabled_key, macro_def);
 
 			if(num_definition_tokens){
-				for(i = num_definition_tokens -1; ; i--){
+				for(i = num_definition_tokens; i-- > 0;){
 					struct c_lexer_token * tok = struct_c_lexer_token_ptr_list_get(&macro_def->definition_tokens, i);
 					put_back_token(state, output_tokens, tok, macro_expansion_levels);
-					if(i == 0){
-						break;
-					}
 				}
 			}
 

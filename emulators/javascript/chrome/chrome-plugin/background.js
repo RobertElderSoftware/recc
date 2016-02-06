@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -13,7 +13,12 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-chrome.runtime.onMessage.addListener(
+
+
+/*  Account for API changes. */
+var theRuntime = (typeof chrome.runtime === 'undefined') ? chrome.extension : chrome.runtime;
+
+theRuntime.onMessage.addListener(
   function(request, sender, sendResponse) {
     if (request.greeting == "hello"){
       chrome.tabs.query({'active': true, 'windowId': chrome.windows.WINDOW_ID_CURRENT},

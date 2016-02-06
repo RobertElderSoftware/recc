@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -300,7 +300,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"./data-structures/unsigned_int_ptr_list.h", "/./data-structures/unsigned_int_ptr_list.h"},
 		{"./data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h", "/./data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"},
 		{"./data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_binary_search.h"},
-		{"./data-structures/struct_type_description_ptr_list.h", "/./data-structures/struct_type_description_ptr_list.h"},
+		{"./data-structures/struct_type_description_reference_list.h", "/./data-structures/struct_type_description_reference_list.h"},
 		{"./data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h", "/./data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"},
 		{"./data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_binary_search.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_binary_search.h"},
 		{"./data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_merge_sort.h", "/./data-structures/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_merge_sort.h"},
@@ -330,9 +330,9 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"./recc-implementation/memory_pool_collection.h", "/./recc-implementation/memory_pool_collection.h"},
 		{"./emulators/javascript/index.php", "/./emulators/javascript/index.php"},
 		{"./emulators/c/op-cpu.h", "/./emulators/c/op-cpu.h"},
-		{"./builtin/includetest2.h", "/./builtin/includetest2.h"},
-		{"./builtin/includetest1.h", "/./builtin/includetest1.h"},
-		{"builtin/l2/putchar_busy.l2", "/builtin/l2/putchar_busy.l2"},
+		{"./test/extras/includetest2.h", "/test/extras/includetest2.h"},
+		{"./test/extras/includetest1.h", "/test/extras/includetest1.h"},
+		{"kernel/l2/putchar_busy.l2", "/kernel/l2/putchar_busy.l2"},
 		{"./recc-implementation/preprocessor.h", "/./recc-implementation/preprocessor.h"},
 		{"./recc-implementation/code_generator.h", "/./recc-implementation/code_generator.h"},
 		{"recc-implementation/code_generator.c", "/recc-implementation/code_generator.c"},
@@ -437,7 +437,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/data-structures/struct_struct_preprocessor_file_context_ptr_list.h","/types/data-structures/struct_struct_preprocessor_file_context_ptr_list.h"},
 		{"types/data-structures/struct_struct_type_traversal_ptr_list.h","/types/data-structures/struct_struct_type_traversal_ptr_list.h"},
 		{"types/data-structures/struct_void_ptr_to_unsigned_int_map.h","/types/data-structures/struct_void_ptr_to_unsigned_int_map.h"},
-		{"types/data-structures/struct_struct_type_description_ptr_list.h","/types/data-structures/struct_struct_type_description_ptr_list.h"},
+		{"types/data-structures/struct_struct_type_description_reference_list.h","/types/data-structures/struct_struct_type_description_reference_list.h"},
 		{"types/data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair.h","/types/data-structures/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair.h"},
 		{"types/data-structures/struct_struct_constant_initializer_level_ptr_list.h","/types/data-structures/struct_struct_constant_initializer_level_ptr_list.h"},
 		{"types/data-structures/struct_struct_l0_item_list.h","/types/data-structures/struct_struct_l0_item_list.h"},

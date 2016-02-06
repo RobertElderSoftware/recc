@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -65,7 +65,18 @@ int vprintf(const char * fmt, va_list va){
 				}
 			}else{
 
-				assert(0 && "Print buffer too small.");
+				char try4[1000];
+				unsigned int chars_required = vsnprintf(&try4[0], 1000, fmt, va);
+				char * result4 = &try4[0];
+				if(chars_required < 1000){
+					while(*result4){
+						putchar(*result4);
+						result4++;
+					}
+				}else{
+
+					assert(0 && "Print buffer too small.");
+				}
 			}
 		}
 	}

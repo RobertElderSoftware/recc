@@ -5,6 +5,8 @@
 /kernel_impl.l2
 /kernel_state.l2
 /kernel_state.i
+/printf_busy.l2
+/printf_busy.i
 /putchar.l2
 /putchar.i
 /main.l2

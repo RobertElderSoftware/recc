@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -39,6 +39,15 @@ unsigned char * create_formatted_string(struct memory_pool_collection * m, unsig
 	va_end(try2);
 	va_end(try1);
 	return rtn;
+}
+
+void buffered_puts(struct unsigned_char_list * list, const char * str){
+	unsigned char * data;
+	unsigned int size_before = binary_exponential_buffer_size(&list->buffer);
+	unsigned int length = (unsigned int)strlen((char *)str);
+	binary_exponential_buffer_increment(&list->buffer, length);
+	data = (unsigned char *)binary_exponential_buffer_data(&list->buffer);
+	memcpy(&data[size_before], str, length);
 }
 
 void buffered_printf(struct unsigned_char_list * list, const char* format, ...){
@@ -136,10 +145,12 @@ unsigned char * copy_string(unsigned char * start, unsigned char * end, struct m
 }
 
 void add_string_to_buffer(struct unsigned_char_list * buffer, unsigned char * start, unsigned char * end){
-	unsigned char * i;
-	for(i = start; i < (end + 1); i++){
-		buffered_printf(buffer,"%c", *i);
-	}
+	unsigned char * data;
+	unsigned int size_before = binary_exponential_buffer_size(&buffer->buffer);
+	unsigned int token_size = 1u + (unsigned int)(end - start);
+	binary_exponential_buffer_increment(&buffer->buffer, token_size);
+	data = (unsigned char *)binary_exponential_buffer_data(&buffer->buffer);
+	memcpy(&data[size_before], start, token_size);
 }
 
 int unsigned_strcmp(unsigned char * a, unsigned char * b){

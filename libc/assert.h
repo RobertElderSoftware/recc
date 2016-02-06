@@ -1,7 +1,7 @@
 #ifndef ASSERT_H_DEFINED_
 #define ASSERT_H_DEFINED_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -24,6 +24,6 @@
 #define assert_stringify_indirect(a) #a
 #define assert_stringify(a) assert_stringify_indirect(a)
 
-#define assert(a) if(!(a)){printf("Assertion failure of expression '"assert_stringify_indirect(a)"' in file "assert_stringify(_FILE_)" on line "assert_stringify(_LINE_)".\n");}
+#define assert(a) if(!(a)){printf("Assertion failure of expression '"assert_stringify_indirect(a)"' in file "assert_stringify(__FILE__)" on line "assert_stringify(__LINE__)".\n");}
 
 #endif

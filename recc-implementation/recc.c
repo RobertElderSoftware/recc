@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -30,4 +30,5 @@ void register_compiler_objects(struct build_state * state){
 	register_c_to_l2(state, "recc-implementation/lexer");
 	register_c_to_l2(state, "recc-implementation/heap_memory_pool");
 	register_c_to_l2(state, "recc-implementation/memory_pool_collection");
+	register_c_to_l2(state, "recc-implementation/regex_engine");
 }

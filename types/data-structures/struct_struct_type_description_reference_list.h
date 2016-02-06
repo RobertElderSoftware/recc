@@ -1,7 +1,7 @@
-#ifndef includetest2_h_
-#define includetest2_h_
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_type_description_reference_ptr_list_H_
+#define TYPES_DATA_STRUCTURES_struct_struct_type_description_reference_ptr_list_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -16,6 +16,15 @@
     under the License.
 */
 
-putchar('a');
-putchar('c');
+#ifndef BINARY_EXPONENTIAL_BUFFER_H_DEFINED_
+#include "../../data-structures/binary_exponential_buffer.h"
+#endif
+#ifndef TYPES_PARSER_struct_type_description_reference_H_
+#include "../../types/parser/struct_type_description_reference.h"
+#endif
+
+struct struct_type_description_reference_list{
+	struct binary_exponential_buffer buffer;
+};
+
 #endif

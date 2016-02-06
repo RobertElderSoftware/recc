@@ -1,7 +1,7 @@
 #ifndef TYPES_LEXER_struct_common_lexer_state_H_
 #define TYPES_LEXER_struct_common_lexer_state_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -22,8 +22,13 @@
 #ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_list_H_
 #include "../data-structures/struct_unsigned_char_list.h"
 #endif
+#ifndef TYPES_REGEX_ENGINE_struct_regex_matcher_state_H_
+#include "../regex_engine/struct_regex_matcher_state.h"
+#endif
 
 struct common_lexer_state {
+	struct regex_compiler_state ** compiler_states;
+	struct regex_matcher_state matcher;
 	unsigned char * buf;
 	unsigned char * filename;
 	struct memory_pool_collection * memory_pool_collection;

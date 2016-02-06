@@ -1,7 +1,7 @@
 #ifndef MEMORY_POOL_COLLECTION_H_
 #define MEMORY_POOL_COLLECTION_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -16,6 +16,12 @@
     under the License.
 */
 
+#ifndef struct_regex_computation_node_memory_pool_H_DEFINED_
+#include "../data-structures/struct_regex_computation_node_memory_pool.h"
+#endif
+#ifndef struct_regex_parser_node_memory_pool_H_DEFINED_
+#include "../data-structures/struct_regex_parser_node_memory_pool.h"
+#endif
 #ifndef struct_parser_node_memory_pool_H_DEFINED_
 #include "../data-structures/struct_parser_node_memory_pool.h"
 #endif
@@ -42,6 +48,15 @@
 #endif
 #ifndef TYPES_struct_memory_pool_collection_H_
 #include "../types/recc-implementation/struct_memory_pool_collection.h"
+#endif
+#ifndef TYPES_LEXER_enum_c_token_type_H_
+#include "../types/lexer/enum_c_token_type.h"
+#endif
+#ifndef TYPES_LEXER_enum_l2_token_type_H_
+#include "../types/lexer/enum_l2_token_type.h"
+#endif
+#ifndef REGEX_ENGINE_H_
+#include "regex_engine.h"
 #endif
 
 void memory_pool_collection_create(struct memory_pool_collection *);

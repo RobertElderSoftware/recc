@@ -1,5 +1,5 @@
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -22,9 +22,6 @@ void register_builtin_objects(struct build_state * state){
 	/*  Builtin items */
 	register_l2_file(state, "builtin/l2/memory_mapped_registers.l2", "RELOCATABLE");
 	register_l2_file(state, "builtin/l2/mainstub.l2",                "RELOCATABLE");
-	register_l2_file(state, "builtin/l2/mainstub_div_zero_test.l2",  "RELOCATABLE");
-	register_l2_file(state, "builtin/l2/mainstub_argv_indirect.l2",  "RELOCATABLE");
-	register_l2_file(state, "builtin/l2/putchar_busy.l2",            "RELOCATABLE");
 
 	register_c_to_l2(state, "builtin/signed_division");
 	register_c_to_l2(state, "builtin/signed_greater_than_or_equal_to");
@@ -37,12 +34,7 @@ void register_builtin_objects(struct build_state * state){
 	register_c_to_l2(state, "builtin/print_string");
 	register_c_to_l2(state, "builtin/print_buff_add");
 	register_c_to_l2(state, "builtin/print_bits");
-	register_c_to_l2(state, "builtin/printf_busy");
-	register_c_to_l2(state, "builtin/random");
 	register_c_to_l2(state, "builtin/stack");
-	register_c_to_l2(state, "builtin/extern_test");
-	register_c_to_l2(state, "builtin/main_argv_indirect");
-	register_c_to_l2(state, "builtin/main_div_zero_test");
 	register_c_to_l2(state, "builtin/c99libc_in_c89");
 
 	register_l2_file(state, "builtin/libbuiltin.l2", "RELOCATABLE");
@@ -59,8 +51,5 @@ void register_builtin_objects(struct build_state * state){
         register_dependency(state, "builtin/libbuiltin.l2", "builtin/print_string.l2");
         register_dependency(state, "builtin/libbuiltin.l2", "builtin/print_buff_add.l2");
         register_dependency(state, "builtin/libbuiltin.l2", "builtin/print_bits.l2");
-        register_dependency(state, "builtin/libbuiltin.l2", "builtin/l2/putchar_busy.l2");
-        register_dependency(state, "builtin/libbuiltin.l2", "builtin/random.l2");
         register_dependency(state, "builtin/libbuiltin.l2", "builtin/stack.l2");
-        register_dependency(state, "builtin/libbuiltin.l2", "builtin/printf_busy.l2");
 }

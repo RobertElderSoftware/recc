@@ -1,6 +1,3 @@
-build-stdlib: recc
-	$(VALGRIND) ./recc libc/build-script libc/new-build-script
-
 libc/filesystem.h: data-structures/bootstrap
 	@touch libc/filesystem.h
 

@@ -1,5 +1,7 @@
+#ifndef TYPES_REGEX_ENGINE_struct_regex_match_H_
+#define TYPES_REGEX_ENGINE_struct_regex_match_H_
 /*
-    Copyright 2015 Robert Elder Software Inc.
+    Copyright 2016 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -14,21 +16,11 @@
     under the License.
 */
 
-extern unsigned int global_1;
-extern unsigned int global_2;
-
-extern unsigned int test_arr[3];
-
-unsigned int global_1;
-unsigned int global_2 = 3;
-
-unsigned int test_arr[3];
-
-struct bootest{
-	unsigned int arr[4];
-	unsigned int k;	
+struct regex_match;
+struct regex_match{
+	struct regex_computation_node * match_node;
+	unsigned int length;
+	unsigned int first_match;
 };
 
-extern struct bootest global_struct_test;
-
-struct bootest global_struct_test;
+#endif

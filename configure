@@ -1,0 +1,51 @@
+#! /bin/bash
+
+#  Don't attempt to catch errors in this script because it tries to throw errors
+#  and detect them to determine what options to use when building recc.
+
+CONFIG_MAK_FILE=config.mak
+
+touch ${CONFIG_MAK_FILE}
+rm ${CONFIG_MAK_FILE}
+
+echo "--- BEGIN running configuration tests... ---"
+echo "If you see errors below, they have been thrown on purpose in order "
+echo "to detect what configurations are available on your system."
+
+SUPPORTED_GCC_WARNING_FLAGS=
+SUPPORTED_CLANG_WARNING_FLAGS=
+SUPPORTED_CLANGPP_WARNING_FLAGS=
+
+POSSIBLE_GCC_WARNING_FLAGS="-W -Wextra -Wall -Werror -pedantic -Wmissing-prototypes -Wold-style-definition"
+POSSIBLE_CLANG_WARNING_FLAGS="-ferror-limit=10 -W -Wextra -Wall -Werror -Weverything -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral -Wno-loop-analysis -Wno-disabled-macro-expansion -Wno-unused-macros"
+POSSIBLE_CLANGPP_WARNING_FLAGS="-ferror-limit=10 -W -Wextra -Weverything -Wall -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral -Wno-loop-analysis -Wno-implicit-fallthrough -Wno-constant-logical-operand"
+
+gcc --version > /dev/null
+if [ "$?" -ne 0 ]; then echo "gcc must be installed.";  exit 1; fi
+
+for FLAG in ${POSSIBLE_GCC_WARNING_FLAGS}; do
+	echo "int main(void){return 0;}" | gcc ${FLAG} -o /dev/null -xc -
+	if [ "$?" -eq 0 ]; then SUPPORTED_GCC_WARNING_FLAGS="${SUPPORTED_GCC_WARNING_FLAGS} ${FLAG}"; fi
+done
+
+for FLAG in ${POSSIBLE_CLANG_WARNING_FLAGS}; do
+	echo "int main(void){return 0;}" | clang ${FLAG} -o /dev/null -xc -
+	if [ "$?" -eq 0 ]; then SUPPORTED_CLANG_WARNING_FLAGS="${SUPPORTED_CLANG_WARNING_FLAGS} ${FLAG}"; fi
+done
+
+for FLAG in ${POSSIBLE_CLANGPP_WARNING_FLAGS}; do
+	echo "int main(void){return 0;}" | clang ${FLAG} -o /dev/null -xc -
+	if [ "$?" -eq 0 ]; then SUPPORTED_CLANGPP_WARNING_FLAGS="${SUPPORTED_CLANGPP_WARNING_FLAGS} ${FLAG}"; fi
+done
+
+echo "Able to use these gcc warning flags: '${SUPPORTED_GCC_WARNING_FLAGS}'"
+echo "Able to use these clang warning flags: '${SUPPORTED_CLANG_WARNING_FLAGS}'"
+echo "Able to use these clang++ warning flags: '${SUPPORTED_CLANGPP_WARNING_FLAGS}'"
+
+echo "SUPPORTED_GCC_WARNING_FLAGS=${SUPPORTED_GCC_WARNING_FLAGS}" >> ${CONFIG_MAK_FILE}
+echo "SUPPORTED_CLANG_WARNING_FLAGS=${SUPPORTED_CLANG_WARNING_FLAGS}" >> ${CONFIG_MAK_FILE}
+echo "SUPPORTED_CLANGPP_WARNING_FLAGS=${SUPPORTED_CLANGPP_WARNING_FLAGS}" >> ${CONFIG_MAK_FILE}
+
+echo "--- END running configuration tests. ---"
+
+mkdir -p logs
