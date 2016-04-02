@@ -55,19 +55,6 @@ endif
 endif
 endif
 
-test: run-tests
-
-COMPILER_OBJECTS=libc/filesystem.o test/recc.o data-structures/recc.o libc/recc.o kernel/recc.o builtin/recc.o recc-implementation/recc.o recc-implementation/librecc.a
-
-include builtin/Makefile
-include demos/brainfuck-cpp/Makefile
-include kernel/Makefile
-include data-structures/Makefile
-include recc-implementation/Makefile
-include test/Makefile
-include libc/Makefile
-include emulators/Makefile
-
 help:
 	@echo "What would you like to make?"
 	@echo ""
@@ -80,6 +67,19 @@ help:
 	@echo "6) make run-python-emulator       - Attempts to run the kernel in the Python emulator."
 	@echo "7) make test                      - Attempts to run unit tests in chrome (requires that testing API is set up)."
 	@echo "8) make kernel                    - Attempts to run the kernel in chrome (requires that testing API is set up)."
+
+test: run-tests
+
+COMPILER_OBJECTS=libc/filesystem.o test/recc.o data-structures/recc.o libc/recc.o kernel/recc.o builtin/recc.o recc-implementation/recc.o recc-implementation/librecc.a
+
+include builtin/Makefile
+include demos/brainfuck-cpp/Makefile
+include kernel/Makefile
+include data-structures/Makefile
+include recc-implementation/Makefile
+include test/Makefile
+include libc/Makefile
+include emulators/Makefile
 
 
 clean: clean-recc-implementation clean-data-structures clean-tests clean-builtins clean-stdlib clean-kernel clean-emulators clean-brainfuck-cpp
