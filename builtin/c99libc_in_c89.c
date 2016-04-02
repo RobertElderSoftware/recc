@@ -43,6 +43,9 @@ unsigned int c89_vsnprintf(char * buf, size_t n, const char * fmt, va_list va){
 				}case 'i':{
 					print_decimal(&ps, va_arg(va, int));
 					break;
+				}case 'u':{
+					print_unsigned_decimal(&ps, va_arg(va, unsigned int));
+					break;
 				}case 'p':{
 					print_buff_add(&ps, '0');
 					print_buff_add(&ps, 'x');

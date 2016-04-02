@@ -1481,7 +1481,7 @@ void compare_function_argument_type(struct code_gen_state * state, struct parser
 	}
 	param_type = copy_type_description(state->memory_pool_collection, tmp_param_type);
 	param_type.t->value_type = top_type.t->value_type;
-	param_type.t->source_scope_level = state->parser_state->top_scope;
+	param_type.t->source_scope_level = state->parser_state->type_engine->top_scope;
 	param_type.t->context = top_type.t->context;
 	param_type.t->source_element = top_type.t->source_element;
 
@@ -3026,7 +3026,7 @@ void go_down_scope(struct code_gen_state * state){
 	/*  We'll now be descending into the next scope */
 	if(unsigned_int_list_size(&state->scope_index_list) == 0){
 		/* Will be 0 if this scope was actually a struct/enum/union defintion */
-		state->current_function = parser_state->top_scope->scopes[state->next_scope_index]->current_function;
+		state->current_function = parser_state->type_engine->top_scope->scopes[state->next_scope_index]->current_function;
 	}
 	unsigned_int_list_add_end(&state->scope_index_list, state->next_scope_index);
 	state->next_scope_index = 0;
@@ -3035,7 +3035,7 @@ void go_down_scope(struct code_gen_state * state){
 
 struct scope_level * get_current_scope_level(struct code_gen_state * state){
 	unsigned int i;
-	struct scope_level * current_scope = state->parser_state->top_scope;
+	struct scope_level * current_scope = state->parser_state->type_engine->top_scope;
 	for(i = 0; i < unsigned_int_list_size(&state->scope_index_list); i++){
 		/*  Traverse down to the current one */
 		current_scope = current_scope->scopes[unsigned_int_list_get(&state->scope_index_list, i)];
@@ -3849,7 +3849,7 @@ void g_init_declarator(struct parser_node * specifiers, struct parser_node * p, 
 	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements -1);
 	type_description = create_type_description_from_normalized_declaration_element(m, element, p, obj->scope_level, LVALUE);
 	convert_to_untypedefed_type_description(m, type_description);
-	is_global = obj->scope_level == state->parser_state->top_scope;
+	is_global = obj->scope_level == state->parser_state->type_engine->top_scope;
 
 	abstract_declarator = create_abstract_declarator_from_normalized_declarator(m, element->normalized_declarator);
 
@@ -5032,7 +5032,9 @@ int do_code_generation(struct memory_pool_collection * memory_pool_collection, u
 	if(rtn){
 		printf("Lexical analysis failed during code generation of %s\n", in_file);
 	}else{
-		create_parser_state(&parser_state, memory_pool_collection, &c_lexer_state, &generated_code, unsigned_char_list_data(&preprocessed_input));
+		struct type_engine_state type_engine;
+		create_type_engine_state(&type_engine, memory_pool_collection);
+		create_parser_state(&parser_state, memory_pool_collection, &c_lexer_state, &generated_code, unsigned_char_list_data(&preprocessed_input), &type_engine);
 		if(parse(&parser_state)){
 			printf("Parsing failed during code generation of %s\n", in_file);
 		}else{
@@ -5088,6 +5090,7 @@ int do_code_generation(struct memory_pool_collection * memory_pool_collection, u
 			destroy_code_gen_state(&state);
 		}
 		destroy_parser_state(&parser_state);
+		destroy_type_engine_state(&type_engine);
 	}
 	destroy_c_lexer_state(&c_lexer_state);
 	unsigned_char_list_destroy(&buffered_symbol_table);

@@ -265,10 +265,11 @@ int main(void){
 
 	printf("%d %d\n", ((int)-97) / ((int)97), (int)-97);
 	
-	for(i = 0; i < 10; i++){
-		for(j = 0; j < 10; j++){
+	for(i = 0; i < 26; i++){
+		for(j = 0; j < 26; j++){
 
 
+			printf("%u %u %u\n", array1[i], array2[j], array1[i] * array2[j]);
 			printf("%X %X %X\n", array1[i], array2[j], array1[i] * array2[j]);
 			if(array2[j] != 0){
 				printf("%X\n", array2[j]);
@@ -276,6 +277,9 @@ int main(void){
 			printf("%X\n", array1[i] - array2[j]);
 			printf("%X\n", array1[i] - array2[j]);
 			printf("%X\n", array2[j]);
+			printf("%u\n", array1[i] - array2[j]);
+			printf("%u\n", array1[i] - array2[j]);
+			printf("%u\n", array2[j]);
 		}
 	}
 

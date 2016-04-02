@@ -19,4 +19,5 @@
 #include "../types/builtin/struct_printing_state.h"
 
 void print_decimal(struct printing_state *, int);
+void print_unsigned_decimal(struct printing_state *, unsigned int);
 #endif

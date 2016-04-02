@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_unsigned_char_ptr_to_struct_constant_description_ptr_map_H_
-#define TYPES_DATA_STRUCTURES_unsigned_char_ptr_to_struct_constant_description_ptr_map_H_
+#ifndef TYPES_PARSER_struct_parser_checkpoint_H_
+#define TYPES_PARSER_struct_parser_checkpoint_H_
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,16 +16,10 @@
     under the License.
 */
 
-#ifndef BINARY_EXPONENTIAL_BUFFER_H_DEFINED_
-#include "data-structures/binary_exponential_buffer.h"
-#endif
-#ifndef TYPES_PARSER_struct_constant_description_H_
-#include "../parser/struct_constant_description.h"
-#endif
 
-struct unsigned_char_ptr_to_struct_constant_description_ptr_map{
-	struct binary_exponential_buffer key_value_pairs;
-	int (*compare)(unsigned char *, struct constant_description *);
+struct parser_checkpoint{
+	unsigned int parser_operation_checkpoint;
+	unsigned int type_engine_checkpoint;
 };
 
 #endif

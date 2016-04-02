@@ -26,12 +26,22 @@ TESTING_EXTRAS_OBJECTS=test/extras/extern_test.o test/extras/random.o
 error-on-valgrind-problems: test/scripts/throw-error-on-problems-in-valgrind-log.sh
 	./test/scripts/throw-error-on-problems-in-valgrind-log.sh
 
+error-on-test-failure-problems: test/scripts/throw-error-on-problems-in-test-failure-log.sh
+	./test/scripts/throw-error-on-problems-in-test-failure-log.sh
+
 test/regex_engine_stress_test.o: test/regex_engine_stress_test.c
 	@$(HOSTCC) -c test/regex_engine_stress_test.c -o test/regex_engine_stress_test.o $(CUSTOM_C89_FLAGS)
+
+test/type_engine_stress_test.o: test/type_engine_stress_test.c
+	@$(HOSTCC) -c test/type_engine_stress_test.c -o test/type_engine_stress_test.o $(CUSTOM_C89_FLAGS)
 
 regex-engine-stress-test: recc-implementation/librecc.a test/regex_engine_stress_test.o
 	@$(HOSTCC) -o test/regex_engine_stress_test test/regex_engine_stress_test.o recc-implementation/librecc.a $(CUSTOM_C89_FLAGS)
 	@$(VALGRIND) ./test/regex_engine_stress_test
+
+type-engine-stress-test: recc-implementation/librecc.a test/type_engine_stress_test.o
+	@$(HOSTCC) -o test/type_engine_stress_test test/type_engine_stress_test.o recc-implementation/librecc.a $(CUSTOM_C89_FLAGS)
+	@$(VALGRIND) ./test/type_engine_stress_test
 
 #  Can change based on make file variable values
 remove-previous-test-list:
@@ -78,7 +88,7 @@ $(ALL_EXECUTABLES): $(TESTING_EXTRAS_OBJECTS) $(COMPILER_OBJECTS)
 	@./$< > $@ 2>&1 || true #  This commands never errors, even if the gcc executable does.
 
 %.diff: %.output %.jsoutput
-	@diff $< $(word 2,$^) > $@ || (echo "\033[0;31mTest Failure for "$<" \033[0m"; echo "Test Failure for "$<"" >> logs/test-failures.log)
+	@diff $< $(word 2,$^) > $@ || (echo "\033[0;31mTest Failure for "$<" \033[0m"; echo "Test Failure for "$<"" >> logs/test-failures.log; cat $@ >> logs/test-failures.log)
 
 clean-tests: clean-test-extras
-	@rm -f test/build_tests test/custom_build_targets.c test/build_tests.c test/tests_to_run test/*.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS) test/regex_engine_unit_tests
+	@rm -f test/build_tests test/custom_build_targets.c test/build_tests.c test/tests_to_run test/*.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS) test/type_engine_stress_test test/regex_engine_stress_test

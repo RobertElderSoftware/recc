@@ -1,5 +1,5 @@
-#ifndef TYPES_DATA_STRUCTURES_unsigned_char_ptr_to_struct_constant_description_ptr_map_H_
-#define TYPES_DATA_STRUCTURES_unsigned_char_ptr_to_struct_constant_description_ptr_map_H_
+#ifndef TYPES_DATA_STRUCTURES_struct_struct_parser_node_ptr_to_unsigned_int_key_value_pair_H_
+#define TYPES_DATA_STRUCTURES_struct_struct_parser_node_ptr_to_unsigned_int_key_value_pair_H_
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,16 +16,10 @@
     under the License.
 */
 
-#ifndef BINARY_EXPONENTIAL_BUFFER_H_DEFINED_
-#include "data-structures/binary_exponential_buffer.h"
-#endif
-#ifndef TYPES_PARSER_struct_constant_description_H_
-#include "../parser/struct_constant_description.h"
-#endif
-
-struct unsigned_char_ptr_to_struct_constant_description_ptr_map{
-	struct binary_exponential_buffer key_value_pairs;
-	int (*compare)(unsigned char *, struct constant_description *);
+struct struct_parser_node_ptr_to_unsigned_int_key_value_pair{
+	struct parser_node * key;
+	unsigned int value;
+	unsigned int pad;
 };
 
 #endif

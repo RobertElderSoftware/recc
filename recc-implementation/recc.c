@@ -31,4 +31,5 @@ void register_compiler_objects(struct build_state * state){
 	register_c_to_l2(state, "recc-implementation/heap_memory_pool");
 	register_c_to_l2(state, "recc-implementation/memory_pool_collection");
 	register_c_to_l2(state, "recc-implementation/regex_engine");
+	register_c_to_l2(state, "recc-implementation/type_engine");
 }

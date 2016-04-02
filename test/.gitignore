@@ -17,3 +17,4 @@
 /*.output
 /*.exec
 /regex_engine_stress_test
+/type_engine_stress_test

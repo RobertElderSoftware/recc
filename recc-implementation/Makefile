@@ -1,5 +1,5 @@
-recc-implementation/librecc.a: recc-implementation/regex_engine.o recc-implementation/compiler_interface.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/l2_parser.o $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
-	@ar -rcs recc-implementation/librecc.a recc-implementation/regex_engine.o recc-implementation/compiler_interface.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/l2_parser.o $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
+recc-implementation/librecc.a: recc-implementation/type_engine.o recc-implementation/regex_engine.o recc-implementation/compiler_interface.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/l2_parser.o $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
+	@ar -rcs recc-implementation/librecc.a recc-implementation/type_engine.o recc-implementation/regex_engine.o recc-implementation/compiler_interface.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/l2_parser.o $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
 recc-implementation/recc.o: recc-implementation/recc.c
 	@$(HOSTCC) -c recc-implementation/recc.c -o recc-implementation/recc.o $(CUSTOM_C89_FLAGS)
 
@@ -11,6 +11,9 @@ recc-implementation/lexer.h: data-structures/bootstrap recc-implementation/io.h
 
 recc-implementation/regex_engine.o: data-structures/bootstrap recc-implementation/regex_engine.h recc-implementation/regex_engine.c
 	@$(HOSTCC) -c recc-implementation/regex_engine.c -o recc-implementation/regex_engine.o $(CUSTOM_C89_FLAGS)
+
+recc-implementation/type_engine.o: data-structures/bootstrap recc-implementation/type_engine.h recc-implementation/type_engine.c
+	@$(HOSTCC) -c recc-implementation/type_engine.c -o recc-implementation/type_engine.o $(CUSTOM_C89_FLAGS)
 
 recc-implementation/lexer.o: recc-implementation/lexer.h recc-implementation/lexer.c
 	@$(HOSTCC) -c recc-implementation/lexer.c -o recc-implementation/lexer.o $(CUSTOM_C89_FLAGS)

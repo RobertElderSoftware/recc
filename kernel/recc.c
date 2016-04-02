@@ -70,6 +70,7 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/io.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/regex_engine.l2");
+	register_dependency(state, "kernel/kernel.l1", "recc-implementation/type_engine.l2");
 	register_dependency(state, "kernel/kernel.l1", "libc/getcwd.l2");
 	register_dependency(state, "kernel/kernel.l1", "libc/string.l2");
 	register_dependency(state, "kernel/kernel.l1", "libc/filesystem.l2");
@@ -108,6 +109,7 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/io.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/regex_engine.l2");
+	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/type_engine.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "libc/getcwd.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "libc/string.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "libc/filesystem.l2");

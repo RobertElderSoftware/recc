@@ -56,6 +56,7 @@ int do_compile(void){
 		struct unsigned_char_list input_characters;
 		int rtn = 0;
 		struct parser_state parser_state;
+		struct type_engine_state type_engine;
 		struct unsigned_char_list generated_code;
 		struct unsigned_char_list lexer_output;
 		struct unsigned_char_list buffered_symbol_table;
@@ -95,7 +96,8 @@ int do_compile(void){
 
 		printf("Begin parsing:\n");
 		
-		create_parser_state(&parser_state, &memory_pool_collection, &c_lexer_state, &generated_code, unsigned_char_list_data(&preprocssed_characters));
+		create_type_engine_state(&type_engine, &memory_pool_collection);
+		create_parser_state(&parser_state, &memory_pool_collection, &c_lexer_state, &generated_code, unsigned_char_list_data(&preprocssed_characters), &type_engine);
 		if(parse(&parser_state)){
 			printf("Parsing failed.\n");
 		}else{
@@ -125,6 +127,7 @@ int do_compile(void){
 		unsigned_char_list_destroy(&lexer_output);
 		destroy_code_gen_state(&code_gen_state);
 		destroy_parser_state(&parser_state);
+		destroy_type_engine_state(&type_engine);
 		destroy_preprocessor_state(preprocessor_state);
 		unsigned_char_list_destroy(&preprocssed_characters);
 		destroy_c_lexer_state(&c_lexer_state);
