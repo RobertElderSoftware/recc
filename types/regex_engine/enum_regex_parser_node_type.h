@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_enum_regex_parser_node_type_H_
-#define TYPES_REGEX_ENGINE_enum_regex_parser_node_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -37,4 +37,4 @@ enum regex_parser_node_type{
 	REGEX_EPSILON
 };
 
-#endif
+

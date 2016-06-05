@@ -82,41 +82,56 @@ enum type_engine_bitfield_or_declarator_kind{
 	TYPE_ENGINE_BITFIELD_AND_DECLARATOR
 };
 
+enum type_engine_struct_or_union_specifier_kind{
+	TYPE_ENGINE_STRUCT_SPECIFIER,
+	TYPE_ENGINE_UNION_SPECIFIER
+};
+
+enum type_engine_union_specifier_kind{
+	TYPE_ENGINE_ANONYMOUS_UNION,
+	TYPE_ENGINE_NAMED_UNION
+};
+
+enum type_engine_struct_specifier_kind{
+	TYPE_ENGINE_ANONYMOUS_STRUCT,
+	TYPE_ENGINE_NAMED_STRUCT
+};
+
 #ifndef LEXER_H_
 #include "lexer.h"
 #endif
 #ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_memory_pool.h"
+#include "../generated/struct_c_lexer_token_memory_pool.h"
 #endif
 #ifndef struct_parser_node_memory_pool_H_DEFINED_
-#include "../data-structures/struct_parser_node_memory_pool.h"
+#include "../generated/struct_parser_node_memory_pool.h"
 #endif
 #ifndef TYPES_PARSER_enum_type_class_H_
-#include "../types/parser/enum_type_class.h"
+#include "../generated/enum_type_class.h"
 #endif
 #ifndef TYPES_PARSER_struct_type_description_H_
-#include "../types/parser/struct_type_description.h"
+#include "../generated/struct_type_description.h"
 #endif
 #ifndef TYPES_PARSER_struct_type_description_reference_H_
-#include "../types/parser/struct_type_description_reference.h"
+#include "../generated/struct_type_description_reference.h"
 #endif
 #ifndef TYPES_struct_memory_pool_collection_H_
-#include "../types/recc-implementation/struct_memory_pool_collection.h"
+#include "../generated/struct_memory_pool_collection.h"
 #endif
 #ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
+#include "../generated/unsigned_char_list.h"
 #endif
 #ifndef struct_c_lexer_token_list_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_list.h"
+#include "../generated/struct_c_lexer_token_list.h"
 #endif
 #ifndef struct_normalized_specifier_ptr_list_H_DEFINED_
-#include "../data-structures/struct_normalized_specifier_ptr_list.h"
+#include "../generated/struct_normalized_specifier_ptr_list.h"
 #endif
 #ifndef struct_normalized_declarator_ptr_list_H_DEFINED_
-#include "../data-structures/struct_normalized_declarator_ptr_list.h"
+#include "../generated/struct_normalized_declarator_ptr_list.h"
 #endif
 #ifndef struct_normalized_declaration_element_ptr_list_H_DEFINED_
-#include "../data-structures/struct_normalized_declaration_element_ptr_list.h"
+#include "../generated/struct_normalized_declaration_element_ptr_list.h"
 #endif
 #ifndef IO_H_
 #include "io.h"
@@ -125,37 +140,79 @@ enum type_engine_bitfield_or_declarator_kind{
 #include <stdio.h>
 #endif
 #ifndef TYPES_PARSER_enum_scope_type_H_
-#include "../types/parser/enum_scope_type.h"
+#include "../generated/enum_scope_type.h"
+#endif
+#ifndef struct_generic_list_item_list_H_DEFINED_
+#include "../generated/struct_generic_list_item_list.h"
 #endif
 #ifndef struct_parser_node_ptr_list_H_DEFINED_
-#include "../data-structures/struct_parser_node_ptr_list.h"
+#include "../generated/struct_parser_node_ptr_list.h"
 #endif
 #ifndef unsigned_int_list_H_DEFINED_
-#include "../data-structures/unsigned_int_list.h"
+#include "../generated/unsigned_int_list.h"
 #endif
 #ifndef unsigned_char_ptr_to_struct_namespace_object_ptr_map_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h"
+#include "../generated/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h"
 #endif
 #ifndef struct_c_lexer_token_to_unsigned_int_map_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_to_unsigned_int_map.h"
+#include "../generated/struct_c_lexer_token_to_unsigned_int_map.h"
+#endif
+#ifndef unsigned_int_to_void_ptr_map_H_DEFINED_
+#include "../generated/unsigned_int_to_void_ptr_map.h"
 #endif
 #ifndef unsigned_int_to_unsigned_int_map_H_DEFINED_
-#include "../data-structures/unsigned_int_to_unsigned_int_map.h"
+#include "../generated/unsigned_int_to_unsigned_int_map.h"
 #endif
 #ifndef struct_parser_node_ptr_to_unsigned_int_map_H_DEFINED_
-#include "../data-structures/struct_parser_node_ptr_to_unsigned_int_map.h"
+#include "../generated/struct_parser_node_ptr_to_unsigned_int_map.h"
+#endif
+#ifndef struct_generic_list_item_to_unsigned_int_map_H_DEFINED_
+#include "../generated/struct_generic_list_item_to_unsigned_int_map.h"
+#endif
+#ifndef struct_scope_level_ptr_to_unsigned_int_map_H_DEFINED_
+#include "../generated/struct_scope_level_ptr_to_unsigned_int_map.h"
 #endif
 #ifndef TYPES_struct_memory_pool_collection_H_
-#include "../types/recc-implementation/struct_memory_pool_collection.h"
+#include "../generated/struct_memory_pool_collection.h"
 #endif
 #ifndef TYPES_TYPE_ENGINE_struct_type_engine_state_H_
-#include "../types/type_engine/struct_type_engine_state.h"
+#include "../generated/struct_type_engine_state.h"
 #endif
 #ifndef TYPES_TYPE_ENGINE_enum_type_engine_operation_type_H_
-#include "../types/type_engine/enum_type_engine_operation_type.h"
+#include "../generated/enum_type_engine_operation_type.h"
+#endif
+#ifndef TYPES_TYPE_ENGINE_struct_identifier_from_declarator_H_
+#include "../generated/struct_identifier_from_declarator.h"
+#endif
+#ifndef TYPES_TYPE_ENGINE_struct_struct_or_union_definition_H_
+#include "../generated/struct_struct_or_union_definition.h"
 #endif
 #ifndef TYPES_PARSER_enum_add_or_remove_H_
-#include "../types/parser/enum_add_or_remove.h"
+#include "../generated/enum_add_or_remove.h"
+#endif
+#ifndef struct_parser_node_ptr_to_unsigned_int_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/struct_parser_node_ptr_to_unsigned_int_key_value_pair_compare.h"
+#endif
+#ifndef unsigned_int_to_unsigned_int_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_int_to_unsigned_int_key_value_pair_compare.h"
+#endif
+#ifndef struct_generic_list_item_to_unsigned_int_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/struct_generic_list_item_to_unsigned_int_key_value_pair_compare.h"
+#endif
+#ifndef struct_parser_node_ptr_to_unsigned_int_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/struct_parser_node_ptr_to_unsigned_int_key_value_pair_compare.h"
+#endif
+#ifndef struct_scope_level_ptr_to_unsigned_int_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/struct_scope_level_ptr_to_unsigned_int_key_value_pair_compare.h"
+#endif
+#ifndef struct_c_lexer_token_to_unsigned_int_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/struct_c_lexer_token_to_unsigned_int_key_value_pair_compare.h"
+#endif
+#ifndef unsigned_int_to_void_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_int_to_void_ptr_key_value_pair_compare.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare.h"
 #endif
 
 struct parser_node * destroy_parser_node_tree_and_c_lexer_tokens(struct memory_pool_collection *, struct parser_node *);
@@ -221,7 +278,7 @@ void validate_specifier_token_type(enum c_token_type);
 int normalized_specifier_ptr_cmp(struct normalized_specifier *, struct normalized_specifier *);
 struct normalized_declarator * make_array_brackets(struct memory_pool_collection *);
 unsigned char * get_specifier_string(enum c_token_type);
-struct scope_level * create_empty_scope(struct scope_level *);
+struct scope_level * create_empty_scope(struct type_engine_state *, struct scope_level *, enum scope_level_type);
 void destroy_empty_scope(struct scope_level *);
 
 void create_type_engine_state(struct type_engine_state *, struct memory_pool_collection *);
@@ -230,11 +287,12 @@ void undo_type_engine_operation(struct type_engine_state *, unsigned int);
 void backtrack_type_engine(struct type_engine_state *, unsigned int);
 unsigned int type_engine_checkpoint(struct type_engine_state *);
 
-void increment_scope_depth(struct type_engine_state *);
+struct parser_node * associate_parser_node_with_scope_level(struct type_engine_state *, struct scope_level *, struct parser_node *);
+struct scope_level * increment_scope_depth(struct type_engine_state *, enum scope_level_type);
 void decrement_scope_depth(struct type_engine_state *);
-void manage_new_scope(struct scope_level *, unsigned int, enum add_or_remove);
-void remove_scope(struct scope_level *);
-void add_scope(struct scope_level *);
+void manage_new_scope(struct type_engine_state *, struct scope_level *, unsigned int, enum add_or_remove, enum scope_level_type);
+struct scope_level * get_parser_scope_level_h(struct scope_level *, unsigned int);
+struct scope_level * get_parser_scope_level(struct type_engine_state *);
 unsigned int get_type_engine_id_for_simple_specifier(struct type_engine_state *, enum c_token_type);
 unsigned int get_type_engine_id_for_identifier(struct type_engine_state *, struct c_lexer_token *);
 unsigned int get_type_engine_id_for_simple_qualifier(struct type_engine_state *, enum c_token_type);
@@ -257,14 +315,27 @@ unsigned int get_type_engine_id_for_bitfield_or_declarator(struct type_engine_st
 unsigned int get_type_engine_id_for_general_type(struct type_engine_state *, unsigned int, unsigned int);
 unsigned int get_type_engine_general_type_list_item_id(struct type_engine_state *, enum type_engine_general_type_list_item_kind, unsigned int, unsigned int);
 unsigned int get_type_engine_id_for_general_type_list_begin(struct type_engine_state *);
+unsigned int get_type_engine_id_for_struct_or_union_specifier(struct type_engine_state *, enum type_engine_struct_or_union_specifier_kind, unsigned int);
+unsigned int get_type_engine_id_for_union_specifier(struct type_engine_state *, enum type_engine_union_specifier_kind, unsigned int);
+unsigned int get_type_engine_id_for_struct_specifier(struct type_engine_state *, enum type_engine_struct_specifier_kind, unsigned int);
+unsigned int get_type_engine_id_for_scoped_struct_or_union_specifier(struct type_engine_state *, unsigned int, unsigned int);
+unsigned int get_type_engine_id_for_scope_level(struct type_engine_state *, struct scope_level *);
+struct declaration_namespace * create_declaration_namespace(struct type_engine_state *);
+void add_ordered_general_type_to_declaration_namespace(struct type_engine_state *, struct declaration_namespace *, unsigned int);
+void add_identifier_id_to_declaration_namespace(struct type_engine_state *, struct declaration_namespace *, unsigned int, unsigned int);
+unsigned int add_struct_or_union_definition(struct type_engine_state *, struct declaration_namespace *, unsigned int, struct scope_level *);
+unsigned int consume_next_anonymous_tag_id_in_current_parser_scope(struct type_engine_state *);
+unsigned int add_named_struct_or_union_declaration(struct type_engine_state *, unsigned int, unsigned int, struct scope_level *);
+struct scope_level * get_scope_of_closest_struct_or_union_tag_declaration(struct type_engine_state *, struct scope_level *, unsigned int);
+
 void print_general_type_list(struct type_engine_state *, unsigned char *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type, unsigned int);
 void print_general_type_list_item(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_pointer_part(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_function_part(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_array_part(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
-void print_type_specifier_details(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
-void print_type_specifier_or_qualifier_list_item(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
-void print_declarator_part_list_item(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
+void print_all_type_specifiers(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
+void print_type_specifier_or_qualifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
+void print_declarator_part(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_declarator_in_spiral_rule_order(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_bitfield_or_declarator(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_type_engine_state(struct type_engine_state *, struct unsigned_char_list *);
@@ -272,5 +343,10 @@ void print_type_qualifier(struct type_engine_state *, struct unsigned_char_list 
 void print_storage_class_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_specifier_or_qualifier_list(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_declarator_in_visual_order(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type, unsigned int);
+void print_struct_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
+void print_union_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
+void print_struct_or_union_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
+void print_scoped_struct_or_union_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
+void print_identifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 
 #endif

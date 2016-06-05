@@ -1,5 +1,5 @@
-#ifndef TYPES_struct_heap_memory_pool_H_
-#define TYPES_struct_heap_memory_pool_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,12 +16,7 @@
     under the License.
 */
 
-#ifndef void_ptr_memory_pool_H_DEFINED_
-#include "../../data-structures/void_ptr_memory_pool.h"
-#endif
-#ifndef void_ptr_to_unsigned_int_map_H_DEFINED_
-#include "../../data-structures/void_ptr_to_unsigned_int_map.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 #define NUM_HEAP_POOLS 20
 
@@ -29,5 +24,3 @@ struct heap_memory_pool{
 	struct void_ptr_to_unsigned_int_map contiguous_heap_bock_entries; /*  Stores pointers that can be used to deduce which pool similar pointers came from*/
 	struct void_ptr_memory_pool heap_pools[NUM_HEAP_POOLS];
 };
-
-#endif

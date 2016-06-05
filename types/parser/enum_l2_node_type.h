@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_l2_node_type_H_
-#define TYPES_PARSER_enum_l2_node_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -48,4 +48,4 @@ enum l2_node_type{
 	L2_PERMISSION_DIRECTIVE
 };
 
-#endif
+

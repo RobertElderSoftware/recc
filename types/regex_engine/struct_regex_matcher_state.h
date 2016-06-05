@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_struct_regex_matcher_state_H_
-#define TYPES_REGEX_ENGINE_struct_regex_matcher_state_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,12 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_REGEX_ENGINE_struct_regex_compiler_state_H_
-#include "struct_regex_compiler_state.h"
-#endif
-#ifndef TYPES_REGEX_ENGINE_struct_regex_match_H_
-#include "struct_regex_match.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct regex_matcher_state{
 	unsigned int * next_occupied_list;     /*  Describes whether a node is in the 'next' list of things to compute */
@@ -38,5 +33,3 @@ struct regex_matcher_state{
 	unsigned int * num_optimized_possible_matches; /*  Used as an optimization of pre-computed possible matches based on the first character */
 	unsigned int ** optimized_match_ids; /*  Use for optimization */
 };
-
-#endif

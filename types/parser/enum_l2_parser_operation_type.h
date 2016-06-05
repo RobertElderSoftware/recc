@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_l2_parser_operation_type_H_
-#define TYPES_PARSER_enum_l2_parser_operation_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -22,4 +22,4 @@ enum l2_parser_operation_type{
 	L2_ADVANCE_PARSER_POSITION
 };
 
-#endif
+

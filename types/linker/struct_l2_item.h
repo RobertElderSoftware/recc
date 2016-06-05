@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_l2_item_h_
-#define TYPES_LINKER_struct_l2_item_h_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,9 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_struct_l2_lexer_token_H_
-#include "../lexer/struct_l2_lexer_token.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct l2_item{
 	struct l2_lexer_token * op_token;
@@ -32,5 +30,3 @@ struct l2_item{
 	unsigned int pre_linking_offset; /* The offset (in # of 4 byte words) of this instruction before moving symbols around in a linker object */
 	unsigned int pad;
 };
-
-#endif

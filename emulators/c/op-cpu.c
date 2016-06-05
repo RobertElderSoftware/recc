@@ -28,7 +28,7 @@ void setup_virtual_machine(struct virtual_machine *);
 static unsigned int translate_virtual_address_to_linear(struct virtual_machine *, unsigned int, unsigned int, unsigned int, unsigned int *);
 static void do_page_fault_exception(struct virtual_machine *, unsigned int, unsigned int, unsigned int, unsigned int);
 
-static void do_page_fault_exception(struct virtual_machine * vm, unsigned int virtual, unsigned int access, unsigned int origin_pc, unsigned int level_2_page_pointer){
+static void do_page_fault_exception(struct virtual_machine * vm, unsigned int virtual_a, unsigned int access, unsigned int origin_pc, unsigned int level_2_page_pointer){
 	/*  Before asserting page fault exception, make sure that it is not already asserted, otherwise
 	    that means we're handling a page fault exception and we encountered another page fault exception */
 	assert(!(vm->registeruint32[FR_index] & PAGE_FAULT_EXCEPTION_ASSERTED_BIT));
@@ -37,10 +37,10 @@ static void do_page_fault_exception(struct virtual_machine * vm, unsigned int vi
 	vm->memoryuint32[PFE_PAGE_POINTER / sizeof(unsigned int)] = level_2_page_pointer;
 	vm->memoryuint32[PFE_PC_VALUE / sizeof(unsigned int)] = origin_pc;
 	vm->memoryuint32[PFE_ACCESS / sizeof(unsigned int)] = access;
-	vm->memoryuint32[PFE_VIRTUAL / sizeof(unsigned int)] = virtual;
+	vm->memoryuint32[PFE_VIRTUAL / sizeof(unsigned int)] = virtual_a;
 }
 
-static unsigned int translate_virtual_address_to_linear(struct virtual_machine * vm, unsigned int virtual, unsigned int access, unsigned int origin_pc, unsigned int * linear){
+static unsigned int translate_virtual_address_to_linear(struct virtual_machine * vm, unsigned int virtual_a, unsigned int access, unsigned int origin_pc, unsigned int * linear){
 	if(vm->registeruint32[FR_index] & PAGEING_ENABLE_BIT){ /*  Only translate if paging exception is enabled */
 		/*  Virtual Address = 32 bits:
 		    <LEVEL_2_PAGE_TABLE_NUM_BITS bits for level 2 page index>...
@@ -48,9 +48,9 @@ static unsigned int translate_virtual_address_to_linear(struct virtual_machine *
 		    <OP_CPU_PAGE_SIZE_NUM_BITS bits for offset in page>
 		*/
 		unsigned int level_2_page_table_pointer = vm->memoryuint32[PAGE_POINTER / sizeof(unsigned int)];
-		unsigned int level_2_index = (virtual & LEVEL_2_PAGE_TABLE_INDEX_MASK) >> (LEVEL_1_PAGE_TABLE_NUM_BITS + OP_CPU_PAGE_SIZE_NUM_BITS);
-		unsigned int level_1_index = (virtual & LEVEL_1_PAGE_TABLE_INDEX_MASK) >> OP_CPU_PAGE_SIZE_NUM_BITS;
-		unsigned int offset = (virtual & PAGE_OFFSET_MASK);
+		unsigned int level_2_index = (virtual_a & LEVEL_2_PAGE_TABLE_INDEX_MASK) >> (LEVEL_1_PAGE_TABLE_NUM_BITS + OP_CPU_PAGE_SIZE_NUM_BITS);
+		unsigned int level_1_index = (virtual_a & LEVEL_1_PAGE_TABLE_INDEX_MASK) >> OP_CPU_PAGE_SIZE_NUM_BITS;
+		unsigned int offset = (virtual_a & PAGE_OFFSET_MASK);
 		unsigned int level_2_page_table_entry = vm->memoryuint32[(level_2_page_table_pointer / sizeof(unsigned int)) + level_2_index];
 		/*  Make sure this level 2 page table entry is valid */
 		if(level_2_page_table_entry & LEVEL_2_PAGE_TABLE_ENTRY_INITIALIZED){
@@ -59,19 +59,19 @@ static unsigned int translate_virtual_address_to_linear(struct virtual_machine *
 			/*  Make sure we have access to this level 1 page table entry, and that it is valid */
 			if((level_1_page_table_entry & access) && (level_1_page_table_entry & LEVEL_2_PAGE_TABLE_ENTRY_INITIALIZED)){
 				unsigned int linear_address_page = level_1_page_table_entry & (LEVEL_1_PAGE_TABLE_INDEX_MASK | LEVEL_2_PAGE_TABLE_INDEX_MASK);
-				assert(virtual == (linear_address_page + offset)); /*  Remove this to support non-identity mappings */
+				assert(virtual_a == (linear_address_page + offset)); /*  Remove this to support non-identity mappings */
 				*linear = linear_address_page + offset;
 				return 0;
 			}else{
-				do_page_fault_exception(vm, virtual, access, origin_pc, level_2_page_table_pointer);
+				do_page_fault_exception(vm, virtual_a, access, origin_pc, level_2_page_table_pointer);
 				return 1;
 			}
 		}else{
-			do_page_fault_exception(vm, virtual, access, origin_pc, level_2_page_table_pointer);
+			do_page_fault_exception(vm, virtual_a, access, origin_pc, level_2_page_table_pointer);
 			return 1;
 		}
 	}else{
-		*linear = virtual;
+		*linear = virtual_a;
 		return 0;
 	}
 }
@@ -258,7 +258,7 @@ void step(struct virtual_machine * vm){
 }
 
 struct virtual_machine * vm_create(unsigned char data[][5]){
-	struct virtual_machine * vm = malloc(sizeof(struct virtual_machine));
+	struct virtual_machine * vm = (struct virtual_machine *)malloc(sizeof(struct virtual_machine));
 	unsigned int num_l0_items = ((unsigned int)data[0][1] << 24u) + ((unsigned int)data[0][2] << 16u) + ((unsigned int)data[0][3] << 8u) + (unsigned int)data[0][4];
 	unsigned int image_size_bytes = ((unsigned int)data[1][1] << 24u) + ((unsigned int)data[1][2] << 16u) + ((unsigned int)data[1][3] << 8u) + (unsigned int)data[1][4];
 	unsigned int starting_offset = ((unsigned int)data[2][1] << 24u) + ((unsigned int)data[2][2] << 16u) + ((unsigned int)data[2][3] << 8u) + (unsigned int)data[2][4];
@@ -273,8 +273,8 @@ struct virtual_machine * vm_create(unsigned char data[][5]){
 	vm->cycles_executed = 0;
 	vm->num_memory_words = image_size_bytes / sizeof(unsigned int);
 	vm->num_registers = 1u << BITS_PER_REGISTER;
-	vm->memoryuint32 = malloc(vm->num_memory_words * sizeof(unsigned int));
-	vm->registeruint32 = malloc(vm->num_registers * sizeof(unsigned int));
+	vm->memoryuint32 = (unsigned int *)malloc(vm->num_memory_words * sizeof(unsigned int));
+	vm->registeruint32 = (unsigned int *)malloc(vm->num_registers * sizeof(unsigned int));
 
 	/*  Initialize registers */
 	for(i = 0; i < 17; i++){

@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_namespace_object_H_
-#define TYPES_PARSER_struct_namespace_object_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,22 +16,9 @@
     under the License.
 */
 
+struct namespace_object;
 
-#ifndef unsigned_char_ptr_to_struct_namespace_object_ptr_map_H_DEFINED_
-#include "../../data-structures/unsigned_char_ptr_to_struct_namespace_object_ptr_map.h"
-#endif
-#ifndef struct_normalized_declaration_element_ptr_list_H_DEFINED_
-#include "../../data-structures/struct_normalized_declaration_element_ptr_list.h"
-#endif
-#ifndef TYPES_PARSER_struct_scope_level_H_
-#include "struct_scope_level.h"
-#endif
-#ifndef TYPES_PARSER_struct_namespace_object_H_
-#include "struct_namespace_object.h"
-#endif
-#ifndef TYPES_PARSER_enum_object_location_H_
-#include "enum_object_location.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct namespace_object{
 	struct unsigned_char_ptr_to_struct_namespace_object_ptr_map * children;
@@ -44,5 +31,3 @@ struct namespace_object{
 	int offset;
 	unsigned int pad;
 };
-
-#endif

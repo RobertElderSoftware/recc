@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_linker_symbol_h_
-#define TYPES_LINKER_struct_linker_symbol_h_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,9 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LINKER_struct_l2_item_h_
-#include "struct_l2_item.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct linker_symbol{
 	unsigned int original_l2_item_index;
@@ -30,5 +28,3 @@ struct linker_symbol{
 	unsigned int pad;
 	struct linker_file * parent_linker_file;  /*  External symbols need to remember which linker object they belong to. */
 };
-
-#endif

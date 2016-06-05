@@ -17,8 +17,8 @@ SUPPORTED_CLANG_WARNING_FLAGS=
 SUPPORTED_CLANGPP_WARNING_FLAGS=
 
 POSSIBLE_GCC_WARNING_FLAGS="-W -Wextra -Wall -Werror -pedantic -Wmissing-prototypes -Wold-style-definition"
-POSSIBLE_CLANG_WARNING_FLAGS="-ferror-limit=10 -W -Wextra -Wall -Werror -Weverything -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral -Wno-loop-analysis -Wno-disabled-macro-expansion -Wno-unused-macros"
-POSSIBLE_CLANGPP_WARNING_FLAGS="-ferror-limit=10 -W -Wextra -Weverything -Wall -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral -Wno-loop-analysis -Wno-implicit-fallthrough -Wno-constant-logical-operand"
+POSSIBLE_CLANG_WARNING_FLAGS="-ferror-limit=10 -W -Wextra -Wall -Werror -Weverything -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral -Wno-loop-analysis -Wno-disabled-macro-expansion -Wno-unused-macros -Wno-padded -fsanitize=signed-integer-overflow,null,alignment"
+POSSIBLE_CLANGPP_WARNING_FLAGS="-ferror-limit=10 -W -Wextra -Weverything -Wall -pedantic -Wno-switch-enum -Wno-covered-switch-default -Wno-format-nonliteral -Wno-loop-analysis -Wno-implicit-fallthrough -Wno-constant-logical-operand -Wno-padded"
 
 gcc --version > /dev/null
 if [ "$?" -ne 0 ]; then echo "gcc must be installed.";  exit 1; fi

@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_first_and_last_namespace_object_H_
-#define TYPES_PARSER_struct_first_and_last_namespace_object_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,13 +16,9 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_struct_namespace_object_H_
-#include "struct_namespace_object.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct first_and_last_namespace_object{
 	struct namespace_object * first; /* The first namespace occupying namespace object resulting from a set of declarations  */
 	struct namespace_object * last; /* The last ...   */
 };
-
-#endif

@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_add_or_remove_H_
-#define TYPES_PARSER_enum_add_or_remove_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -20,5 +20,3 @@ enum add_or_remove{
         ADD,
         REMOVE
 };
-
-#endif

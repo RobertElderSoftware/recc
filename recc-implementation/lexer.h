@@ -26,25 +26,25 @@
 #include "io.h"
 #endif
 #ifndef struct_c_lexer_token_ptr_list_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_ptr_list.h"
+#include "../generated/struct_c_lexer_token_ptr_list.h"
 #endif
 #ifndef struct_l2_lexer_token_ptr_list_H_DEFINED_
-#include "../data-structures/struct_l2_lexer_token_ptr_list.h"
+#include "../generated/struct_l2_lexer_token_ptr_list.h"
 #endif
 #ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
+#include "../generated/unsigned_char_list.h"
 #endif
 #ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_memory_pool.h"
+#include "../generated/struct_c_lexer_token_memory_pool.h"
 #endif
 #ifndef struct_l2_lexer_token_memory_pool_H_DEFINED_
-#include "../data-structures/struct_l2_lexer_token_memory_pool.h"
+#include "../generated/struct_l2_lexer_token_memory_pool.h"
 #endif
 #ifndef TYPES_LEXER_struct_c_lexer_state_H_
-#include "../types/lexer/struct_c_lexer_state.h"
+#include "../generated/struct_c_lexer_state.h"
 #endif
 #ifndef TYPES_LEXER_struct_l2_lexer_state_H_
-#include "../types/lexer/struct_l2_lexer_state.h"
+#include "../generated/struct_l2_lexer_state.h"
 #endif
 #ifndef REGEX_ENGINE_H_
 #include "regex_engine.h"

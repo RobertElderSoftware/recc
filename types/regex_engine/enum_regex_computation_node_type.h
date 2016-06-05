@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_enum_regex_computation_node_type_H_
-#define TYPES_REGEX_ENGINE_enum_regex_computation_node_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -31,4 +31,4 @@ enum regex_computation_node_type {
 	REGEX_COMP_MATCH
 };
 
-#endif
+

@@ -1,5 +1,5 @@
-#ifndef TYPES_LEXER_struct_l2_lexer_token_H_
-#define TYPES_LEXER_struct_l2_lexer_token_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,9 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_enum_l2_token_type_H_
-#include "enum_l2_token_type.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct l2_lexer_token{
 	unsigned char * first_byte;
@@ -26,5 +24,3 @@ struct l2_lexer_token{
 	enum l2_token_type type;
 	unsigned int pad;
 };
-
-#endif

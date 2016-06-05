@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_linker_state_h_
-#define TYPES_LINKER_struct_linker_state_h_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,12 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_enum_build_target_type_H_
-#include "../../types/recc-implementation/enum_build_target_type.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_region_list_H_
-#include "../../types/data-structures/struct_struct_linker_region_list.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct linker_state{
 	struct struct_linker_region_list regions;
@@ -37,10 +32,8 @@ struct linker_state{
 	unsigned char * symbol_file;
 	unsigned char * out_file;
 	unsigned int starting_offset;
-	enum build_target_type build_target_type;
+	enum entity_type entity_type;
 	unsigned char * offset;
 	unsigned int page_align_permission_regions;
 	unsigned int only_metadata;
 };
-
-#endif

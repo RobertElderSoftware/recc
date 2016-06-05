@@ -16,46 +16,15 @@
     under the License.
 */
 
+#ifndef generated_DIR_parser_generated_includes_DOT_h
+#include "../generated/parser_generated_includes.h"
+#endif
 #ifndef IO_H_
 #include "io.h"
 #endif
 #ifndef LEXER_H_
 #include "lexer.h"
 #endif
-#ifndef unsigned_int_stack_H_DEFINED_
-#include "../data-structures/unsigned_int_stack.h"
-#endif
-#ifndef struct_type_description_reference_list_H_DEFINED_
-#include "../data-structures/struct_type_description_reference_list.h"
-#endif
-#ifndef char_ptr_list_H_DEFINED_
-#include "../data-structures/char_ptr_list.h"
-#endif
-#ifndef struct_parser_operation_stack_H_DEFINED_
-#include "../data-structures/struct_parser_operation_stack.h"
-#endif
-#ifndef struct_normalized_specifier_ptr_list_H_DEFINED_
-#include "../data-structures/struct_normalized_specifier_ptr_list.h"
-#endif
-#ifndef struct_normalized_declarator_ptr_list_H_DEFINED_
-#include "../data-structures/struct_normalized_declarator_ptr_list.h"
-#endif
-#ifndef struct_normalized_declaration_element_ptr_list_H_DEFINED_
-#include "../data-structures/struct_normalized_declaration_element_ptr_list.h"
-#endif
-#ifndef struct_namespace_object_ptr_list_H_DEFINED_
-#include "../data-structures/struct_namespace_object_ptr_list.h"
-#endif
-#ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
-#endif
-#ifndef unsigned_char_ptr_list_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_list.h"
-#endif
-#ifndef unsigned_char_ptr_to_struct_constant_description_ptr_map_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"
-#endif
-
 #ifndef STRING_H_DEFINED_
 #include <string.h>
 #endif
@@ -71,80 +40,14 @@
 #ifndef STDARG_H_DEFINED_
 #include <stdarg.h>
 #endif
-#ifndef struct_parser_node_memory_pool_H_DEFINED_
-#include "../data-structures/struct_parser_node_memory_pool.h"
-#endif
-#ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_memory_pool.h"
-#endif
-#ifndef struct_type_description_memory_pool_H_DEFINED_
-#include "../data-structures/struct_type_description_memory_pool.h"
-#endif
-#ifndef TYPES_PARSER_enum_parser_operation_type_H_
-#include "../types/parser/enum_parser_operation_type.h"
-#endif
-#ifndef TYPES_PARSER_enum_type_class_H_
-#include "../types/parser/enum_type_class.h"
-#endif
-#ifndef TYPES_PARSER_enum_scope_type_H_
-#include "../types/parser/enum_scope_type.h"
-#endif
-#ifndef TYPES_PARSER_enum_add_or_remove_H_
-#include "../types/parser/enum_add_or_remove.h"
-#endif
-#ifndef TYPES_PARSER_enum_declaration_or_definition_H_
-#include "../types/parser/enum_declaration_or_definition.h"
-#endif
-#ifndef TYPES_PARSER_enum_normalized_declaration_type_H_
-#include "../types/parser/enum_normalized_declaration_type.h"
-#endif
-#ifndef TYPES_PARSER_enum_normalized_declarator_type_H_
-#include "../types/parser/enum_normalized_declarator_type.h"
-#endif
-#ifndef TYPES_PARSER_enum_normalized_specifier_type_H_
-#include "../types/parser/enum_normalized_specifier_type.h"
-#endif
-#ifndef TYPES_PARSER_enum_value_type_H_
-#include "../types/parser/enum_value_type.h"
-#endif
-#ifndef TYPES_PARSER_enum_object_location_H_
-#include "../types/parser/enum_object_location.h"
-#endif
-#ifndef TYPES_PARSER_struct_type_description_H_
-#include "../types/parser/struct_type_description.h"
-#endif
-#ifndef TYPES_PARSER_struct_parser_state_H_
-#include "../types/parser/struct_parser_state.h"
-#endif
-#ifndef TYPES_PARSER_struct_normalized_specifier_H_
-#include "../types/parser/struct_normalized_specifier.h"
-#endif
-#ifndef TYPES_PARSER_struct_normalized_declarator_H_
-#include "../types/parser/struct_normalized_declarator.h"
-#endif
-#ifndef TYPES_PARSER_struct_normalized_declaration_set_H_
-#include "../types/parser/struct_normalized_declaration_set.h"
-#endif
-#ifndef TYPES_PARSER_struct_namespace_modification_H_
-#include "../types/parser/struct_namespace_modification.h"
-#endif
-#ifndef TYPES_PARSER_struct_namespace_object_change_H_
-#include "../types/parser/struct_namespace_object_change.h"
-#endif
-#ifndef TYPES_PARSER_struct_first_and_last_namespace_object_H_
-#include "../types/parser/struct_first_and_last_namespace_object.h"
-#endif
-#ifndef TYPES_PARSER_struct_current_function_change_H_
-#include "../types/parser/struct_current_function_change.h"
-#endif
-#ifndef TYPES_PARSER_struct_parser_operation_H_
-#include "../types/parser/struct_parser_operation.h"
-#endif
-#ifndef TYPES_PARSER_struct_parser_checkpoint_H_
-#include "../types/parser/struct_parser_checkpoint.h"
-#endif
 #ifndef TYPE_ENGINE_H_
 #include "type_engine.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_compare.h"
 #endif
 
 void * push_operation(struct parser_state *, enum parser_operation_type, void *);
@@ -235,25 +138,70 @@ struct parser_node * type_qualifier(struct parser_state *, unsigned int *);
 struct parser_node * type_specifier(struct parser_state *, unsigned int *);
 struct parser_node * get_identifier_node(struct parser_state *, unsigned int *);
 struct parser_node * parameter_list(struct parser_state *, unsigned int *);
-struct parser_node * declarator(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * direct_declarator(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * direct_declarator_rest(struct parser_state *, unsigned int, unsigned int *);
+struct parser_node * declarator(struct parser_state *, unsigned int, unsigned int *, struct identifier_from_declarator *);
+struct parser_node * direct_declarator(struct parser_state *, unsigned int, unsigned int *, struct identifier_from_declarator *);
+struct parser_node * direct_declarator_rest(struct parser_state *, unsigned int, unsigned int *, struct identifier_from_declarator *);
 struct parser_node * abstract_declarator(struct parser_state *, unsigned int, unsigned int *);
 struct parser_node * direct_abstract_declarator_rest(struct parser_state *, unsigned int, unsigned int *);
 struct parser_node * direct_abstract_declarator(struct parser_state *, unsigned int, unsigned int *);
 struct parser_node * pointer(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * init_declarator(struct parser_state *, unsigned int *);
-struct parser_node * struct_declarator(struct parser_state *, unsigned int *);
-struct parser_node * struct_declarator_list_rest(struct parser_state *, unsigned int, unsigned int, unsigned int *);
-struct parser_node * struct_declarator_list(struct parser_state *, unsigned int, unsigned int, unsigned int *);
+struct parser_node * init_declarator(struct parser_state *, unsigned int *, struct identifier_from_declarator *);
+struct parser_node * struct_declarator(struct parser_state *, unsigned int *, struct identifier_from_declarator *);
+struct parser_node * struct_declarator_list_rest(struct parser_state *, unsigned int, unsigned int, unsigned int *, struct declaration_namespace *);
+struct parser_node * struct_declarator_list(struct parser_state *, unsigned int, unsigned int, unsigned int *, struct declaration_namespace *);
 struct parser_node * init_declarator_list_rest(struct parser_state *, unsigned int, unsigned int, unsigned int *);
 struct parser_node * init_declarator_list(struct parser_state *, unsigned int, unsigned int, unsigned int *);
 struct parser_node * parameter_declaration(struct parser_state *, unsigned int, unsigned int *);
 struct parser_node * parameter_list_rest(struct parser_state *, unsigned int, unsigned int *);
 struct parser_node * parameter_list(struct parser_state *, unsigned int *);
-struct parser_node * struct_declaration(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * struct_declaration_list_rest(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * struct_declaration_list(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * declaration(struct parser_state *, unsigned int *);
-
+struct parser_node * struct_declaration(struct parser_state *, unsigned int, unsigned int *, struct declaration_namespace *);
+struct parser_node * struct_declaration_list_rest(struct parser_state *, unsigned int, unsigned int *, struct declaration_namespace *);
+struct parser_node * struct_declaration_list(struct parser_state *, unsigned int, unsigned int *, struct declaration_namespace *);
+struct parser_node * declaration(struct parser_state *, unsigned int, unsigned int *);
+struct parser_node * struct_or_union(struct parser_state *, enum type_engine_struct_or_union_specifier_kind *);
+struct parser_node * struct_or_union_specifier(struct parser_state *, unsigned int *, unsigned int);
+struct parser_node * struct_or_union(struct parser_state *, enum type_engine_struct_or_union_specifier_kind *);
+struct parser_node * declaration_list_rest(struct parser_state *, struct namespace_object *, struct first_and_last_namespace_object *, unsigned int, unsigned int*);
+struct parser_node * primary_expression(struct parser_state *);
+struct parser_node * declaration_list(struct parser_state *, struct namespace_object *, unsigned int, unsigned int*);
+struct parser_node * argument_expression_list_rest(struct parser_state *);
+struct parser_node * argument_expression_list(struct parser_state *);
+struct parser_node * postfix_expression_rest(struct parser_state *);
+struct parser_node * postfix_expression(struct parser_state *);
+struct parser_node * unary_expression(struct parser_state *);
+struct parser_node * cast_expression(struct parser_state *);
+struct parser_node * multiplicative_expression_rest(struct parser_state *);
+struct parser_node * multiplicative_expression(struct parser_state *);
+struct parser_node * additive_expression_rest(struct parser_state *);
+struct parser_node * additive_expression(struct parser_state *);
+struct parser_node * shift_expression_rest(struct parser_state *);
+struct parser_node * shift_expression(struct parser_state *);
+struct parser_node * relational_expression_rest(struct parser_state *);
+struct parser_node * relational_expression(struct parser_state *);
+struct parser_node * equality_expression_rest(struct parser_state *);
+struct parser_node * equality_expression(struct parser_state *);
+struct parser_node * and_expression_rest(struct parser_state *);
+struct parser_node * and_expression(struct parser_state *);
+struct parser_node * exclusive_or_expression_rest(struct parser_state *);
+struct parser_node * exclusive_or_expression(struct parser_state *);
+struct parser_node * inclusive_or_expression_rest(struct parser_state *);
+struct parser_node * inclusive_or_expression(struct parser_state *);
+struct parser_node * logical_and_expression_rest(struct parser_state *);
+struct parser_node * logical_and_expression(struct parser_state *);
+struct parser_node * logical_or_expression_rest(struct parser_state *);
+struct parser_node * logical_or_expression(struct parser_state *);
+struct parser_node * compound_statement(struct parser_state *, struct parser_node *, unsigned int);
+struct parser_node * conditional_expression(struct parser_state *);
+struct parser_node * expression(struct parser_state *);
+struct parser_node * expression_rest(struct parser_state *);
+struct parser_node * enumerator(struct parser_state *);
+struct parser_node * enumerator_list_rest(struct parser_state *);
+struct parser_node * enumerator_list(struct parser_state *);
+struct parser_node * enum_specifier(struct parser_state *);
+struct parser_node * initializer_list_rest(struct parser_state *);
+struct parser_node * initializer_list(struct parser_state *);
+struct parser_node * initializer(struct parser_state *);
+void print_parser_error(struct unsigned_char_list *, struct parser_state *, struct parser_error);
+void print_parser_error_description(struct unsigned_char_list *, struct parser_state *, enum parser_error_type);
+void add_parser_error(struct parser_state *, enum parser_error_type);
 #endif

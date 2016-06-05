@@ -25,47 +25,8 @@
 #ifndef PARSER_H_
 #include "parser.h"
 #endif
-#ifndef unsigned_int_list_H_DEFINED_
-#include "../data-structures/unsigned_int_list.h"
-#endif
-#ifndef unsigned_int_stack_H_DEFINED_
-#include "../data-structures/unsigned_int_stack.h"
-#endif
-#ifndef struct_type_description_reference_list_H_DEFINED_
-#include "../data-structures/struct_type_description_reference_list.h"
-#endif
-#ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
-#endif
-#ifndef unsigned_int_ptr_list_H_DEFINED_
-#include "../data-structures/unsigned_int_ptr_list.h"
-#endif
-#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_map_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
-#endif
-#ifndef struct_switch_frame_ptr_list_H_DEFINED_
-#include "../data-structures/struct_switch_frame_ptr_list.h"
-#endif
-#ifndef unsigned_int_stack_H_DEFINED_
-#include "../data-structures/unsigned_int_stack.h"
-#endif
-#ifndef struct_type_description_reference_list_H_DEFINED_
-#include "../data-structures/struct_type_description_reference_list.h"
-#endif
-#ifndef struct_constant_initializer_level_ptr_list_H_DEFINED_
-#include "../data-structures/struct_constant_initializer_level_ptr_list.h"
-#endif
-#ifndef struct_type_traversal_ptr_list_H_DEFINED_
-#include "../data-structures/struct_type_traversal_ptr_list.h"
-#endif
-#ifndef struct_compile_time_constant_ptr_list_H_DEFINED_
-#include "../data-structures/struct_compile_time_constant_ptr_list.h"
-#endif
-#ifndef struct_linker_object_ptr_list_H_DEFINED_
-#include "../data-structures/struct_linker_object_ptr_list.h"
-#endif
-#ifndef char_ptr_list_H_DEFINED_
-#include "../data-structures/char_ptr_list.h"
+#ifndef generated_DIR_code_generator_generated_includes_DOT_h
+#include "../generated/code_generator_generated_includes.h"
 #endif
 #ifndef LINKER_H_
 #include "linker.h"
@@ -82,39 +43,18 @@
 #ifndef STDARG_H_DEFINED_
 #include <stdarg.h>
 #endif
-#ifndef struct_parser_node_memory_pool_H_DEFINED_
-#include "../data-structures/struct_parser_node_memory_pool.h"
-#endif
-#ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_memory_pool.h"
-#endif
-#ifndef struct_linker_symbol_memory_pool_H_DEFINED_
-#include "../data-structures/struct_linker_symbol_memory_pool.h"
-#endif
-#ifndef TYPES_CODE_GENERATOR_struct_code_gen_state_H_
-#include "../types/code_generator/struct_code_gen_state.h"
-#endif
-#ifndef TYPES_CODE_GENERATOR_struct_constant_initializer_level_H_
-#include "../types/code_generator/struct_constant_initializer_level.h"
-#endif
-#ifndef TYPES_CODE_GENERATOR_struct_type_traversal_H_
-#include "../types/code_generator/struct_type_traversal.h"
-#endif
-#ifndef TYPES_CODE_GENERATOR_struct_switch_frame_H_
-#include "../types/code_generator/struct_switch_frame.h"
-#endif
 #ifndef OP_CPU_H_
 #include "../emulators/c/op-cpu.h"
 #endif
-#ifndef TYPES_LEXER_enum_l2_token_type_H_
-#include "../types/lexer/enum_l2_token_type.h"
+#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare.h"
 #endif
 
 
 
 void create_code_gen_state(struct code_gen_state *, struct parser_state *, struct unsigned_char_list *, struct unsigned_char_list *);
 int generate_code(struct code_gen_state *);
-int do_code_generation(struct memory_pool_collection *, unsigned char *, unsigned char *, unsigned char *);
+unsigned int do_code_generation(struct memory_pool_collection *, unsigned char *, unsigned char *, unsigned char *);
 int destroy_code_gen_state(struct code_gen_state *);
 struct compile_time_constant * evaluate_constant_constant_expression(struct code_gen_state *, struct parser_node *);
 unsigned int type_size(struct code_gen_state *, struct type_description_reference, enum value_type, unsigned int, struct scope_level *);
@@ -146,8 +86,8 @@ int is_terminal_c_token_type(struct parser_node *, enum c_token_type);
 
 void function_call(struct parser_node *, struct parser_node *, struct code_gen_state *, struct parser_node *);
 unsigned int get_word_size(void);
-void go_down_scope(struct code_gen_state *);
-void go_up_scope(struct code_gen_state *);
+void exit_scope_for_current_parser_node(struct code_gen_state *, struct parser_node *);
+void update_scope_for_current_parser_node(struct code_gen_state *, struct parser_node *);
 void create_default_return_value(struct code_gen_state *, struct parser_node *, struct parser_node *);
 void do_default_function_return(struct code_gen_state *, struct parser_node *, struct parser_node *);
 void return_from_function(struct code_gen_state *, struct parser_node *);
@@ -176,7 +116,6 @@ void pop(struct code_gen_state *, const char *, enum value_type);
 void push(struct code_gen_state *, const char *, enum value_type);
 void do_signed_operation_function_call(struct code_gen_state *, const char *);
 void manage_local_space(struct code_gen_state *, struct namespace_object *, unsigned);
-struct scope_level * get_current_scope_level(struct code_gen_state *);
 void clear_locals_from_scope(struct code_gen_state *, struct scope_level *);
 void find_child_case_labels(struct code_gen_state *, struct parser_node *, struct switch_frame *);
 void find_child_case_labels_h(struct code_gen_state *, struct parser_node *, struct switch_frame *);
@@ -232,6 +171,7 @@ void g_rest_of_logical_or(struct parser_node *, struct code_gen_state *);
 void g_rest_of_logical_and(struct parser_node *, struct code_gen_state *);
 unsigned int do_specifiers_contain_extern(struct parser_node *, enum c_token_type);
 void compare_function_argument_type(struct code_gen_state *, struct parser_node *, unsigned int, struct parser_node *);
+struct namespace_object * get_current_function(struct code_gen_state *);
 
 
 #endif

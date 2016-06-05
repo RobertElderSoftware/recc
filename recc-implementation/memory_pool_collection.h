@@ -17,43 +17,43 @@
 */
 
 #ifndef struct_regex_computation_node_memory_pool_H_DEFINED_
-#include "../data-structures/struct_regex_computation_node_memory_pool.h"
+#include "../generated/struct_regex_computation_node_memory_pool.h"
 #endif
 #ifndef struct_regex_parser_node_memory_pool_H_DEFINED_
-#include "../data-structures/struct_regex_parser_node_memory_pool.h"
+#include "../generated/struct_regex_parser_node_memory_pool.h"
 #endif
 #ifndef struct_parser_node_memory_pool_H_DEFINED_
-#include "../data-structures/struct_parser_node_memory_pool.h"
+#include "../generated/struct_parser_node_memory_pool.h"
 #endif
 #ifndef struct_l2_parser_node_memory_pool_H_DEFINED_
-#include "../data-structures/struct_l2_parser_node_memory_pool.h"
+#include "../generated/struct_l2_parser_node_memory_pool.h"
 #endif
 #ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_memory_pool.h"
+#include "../generated/struct_c_lexer_token_memory_pool.h"
 #endif
 #ifndef struct_l2_lexer_token_memory_pool_H_DEFINED_
-#include "../data-structures/struct_l2_lexer_token_memory_pool.h"
+#include "../generated/struct_l2_lexer_token_memory_pool.h"
 #endif
 #ifndef struct_type_description_memory_pool_H_DEFINED_
-#include "../data-structures/struct_type_description_memory_pool.h"
+#include "../generated/struct_type_description_memory_pool.h"
 #endif
 #ifndef struct_l2_item_memory_pool_H_DEFINED_
-#include "../data-structures/struct_l2_item_memory_pool.h"
+#include "../generated/struct_l2_item_memory_pool.h"
 #endif
 #ifndef struct_linker_symbol_memory_pool_H_DEFINED_
-#include "../data-structures/struct_linker_symbol_memory_pool.h"
+#include "../generated/struct_linker_symbol_memory_pool.h"
 #endif
 #ifndef HEAP_MEMORY_POOL_H_
 #include "heap_memory_pool.h"
 #endif
 #ifndef TYPES_struct_memory_pool_collection_H_
-#include "../types/recc-implementation/struct_memory_pool_collection.h"
+#include "../generated/struct_memory_pool_collection.h"
 #endif
 #ifndef TYPES_LEXER_enum_c_token_type_H_
-#include "../types/lexer/enum_c_token_type.h"
+#include "../generated/enum_c_token_type.h"
 #endif
 #ifndef TYPES_LEXER_enum_l2_token_type_H_
-#include "../types/lexer/enum_l2_token_type.h"
+#include "../generated/enum_l2_token_type.h"
 #endif
 #ifndef REGEX_ENGINE_H_
 #include "regex_engine.h"

@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_struct_regex_compiler_error_H_
-#define TYPES_REGEX_ENGINE_struct_regex_compiler_error_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,9 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_REGEX_ENGINE_enum_regex_compiler_error_type_H_
-#include "enum_regex_compiler_error_type.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct regex_compiler_error;
 struct regex_compiler_error{
@@ -28,5 +26,3 @@ struct regex_compiler_error{
 	unsigned int character_index_of_error;
 	unsigned int pad;
 };
-
-#endif

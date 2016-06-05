@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_start_end_h_
-#define TYPES_LINKER_struct_start_end_h_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,12 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LINKER_struct_linker_symbol_h_
-#include "struct_linker_symbol.h"
-#endif
-#ifndef TYPES_LINKER_struct_linker_object_h_
-#include "struct_linker_object.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct start_end {
 	struct linker_object * source;
@@ -29,5 +24,3 @@ struct start_end {
 	unsigned int is_start; /*  1 = start offset, = 0 end offset */
 	unsigned int pad;
 };
-
-#endif

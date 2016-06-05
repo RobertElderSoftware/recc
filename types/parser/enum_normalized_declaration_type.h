@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_normalized_declaration_type_H_
-#define TYPES_PARSER_enum_normalized_declaration_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -25,4 +25,4 @@ enum normalized_declaration_type{
         NORMALIZED_ENUMERATOR_LIST
 };
 
-#endif
+

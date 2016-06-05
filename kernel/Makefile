@@ -1,4 +1,4 @@
-kernel/build_kernel.o: kernel/build_kernel.c recc-implementation/compiler_interface.h
+kernel/build_kernel.o: kernel/build_kernel.c recc-implementation/compiler_interface_phase_3.h
 	@$(HOSTCC) -c kernel/build_kernel.c -o kernel/build_kernel.o $(CUSTOM_C89_FLAGS)
 
 kernel/build_kernel: kernel/build_kernel.o $(COMPILER_OBJECTS)
@@ -12,7 +12,7 @@ build-and-test-kernel: kernel/kernel.l1
 	@echo "test/kernel" > test/tests_to_run
 	@chromium-browser "http://localhost/emulators/javascript/?kernel_mode=1" --load-extension=emulators/javascript/chrome/chrome-plugin/ --user-data-dir="emulators/javascript/chrome/data-dir" > /dev/null 2>&1
 
-kernel/recc.o: kernel/recc.c recc-implementation/compiler_interface.h
+kernel/recc.o: kernel/recc.c recc-implementation/compiler_interface_phase_3.h
 	@$(HOSTCC) -c kernel/recc.c -o kernel/recc.o $(CUSTOM_C89_FLAGS)
 
 kernel: build-and-test-kernel

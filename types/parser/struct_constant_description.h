@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_constant_description_H_
-#define TYPES_PARSER_struct_constant_description_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,10 +16,7 @@
     under the License.
 */
 
-
-#ifndef TYPES_PARSER_struct_type_description_reference_H_
-#include "struct_type_description_reference.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct constant_description{
 	struct type_description_reference type_description;
@@ -30,5 +27,3 @@ struct constant_description{
 	enum c_token_type type;
 	unsigned int pad;
 };
-
-#endif

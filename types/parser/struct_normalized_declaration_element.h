@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_normalized_declaration_element_H_
-#define TYPES_PARSER_struct_normalized_declaration_element_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,15 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_struct_normalized_declaration_set_H_
-#include "struct_normalized_declaration_set.h"
-#endif
-#ifndef TYPES_PARSER_struct_normalized_declarator_H_
-#include "struct_normalized_declarator.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H_
-#include "../../data-structures/struct_struct_normalized_specifier_ptr_list.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct normalized_declaration_element{
 	/*  In the normalized_declaration_element, the normalized_declarator can
@@ -35,5 +27,3 @@ struct normalized_declaration_element{
 	struct normalized_declarator * normalized_declarator;
 	struct struct_normalized_specifier_ptr_list * normalized_specifiers;
 };
-
-#endif

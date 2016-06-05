@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_l2_parser_node_H_
-#define TYPES_PARSER_struct_l2_parser_node_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,12 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_enum_l2_node_type_H_
-#include "enum_l2_node_type.h"
-#endif
-#ifndef TYPES_LEXER_struct_l2_lexer_token_H_
-#include "../../types/lexer/struct_l2_lexer_token.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct l2_parser_node;
 
@@ -32,5 +27,3 @@ struct l2_parser_node{
 	enum l2_node_type type;
 	unsigned int pad;
 };
-
-#endif

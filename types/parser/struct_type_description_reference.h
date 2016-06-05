@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_type_description_reference_H_
-#define TYPES_PARSER_struct_type_description_reference_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,12 +16,8 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_struct_type_description_H_
-#include "struct_type_description.h"
-#endif
-
 struct type_description_reference{
         struct type_description * t;
 };
 
-#endif
+

@@ -1,5 +1,5 @@
-#ifndef TYPES_LEXER_enum_l2_token_type_H_
-#define TYPES_LEXER_enum_l2_token_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -63,5 +63,3 @@ enum l2_token_type {
 	L2_DW,
 	L2_SW
 };
-
-#endif

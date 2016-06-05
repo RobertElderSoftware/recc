@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_type_description_H_
-#define TYPES_PARSER_struct_type_description_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,24 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_enum_value_type_H_
-#include "enum_value_type.h"
-#endif
-#ifndef TYPES_PARSER_struct_normalized_declaration_element_H_
-#include "struct_normalized_declaration_element.h"
-#endif
-#ifndef TYPES_PARSER_struct_normalized_declarator_H_
-#include "struct_normalized_declarator.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_normalized_specifier_ptr_list_H_
-#include "../../data-structures/struct_struct_normalized_specifier_ptr_list.h"
-#endif
-#ifndef TYPES_PARSER_struct_parser_node_H_
-#include "struct_parser_node.h"
-#endif
-#ifndef TYPES_PARSER_struct_scope_level_H_
-#include "struct_scope_level.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 /*  A type description is used to keep track of the abstract idea of a single specific 'type' in C 
     as you would see it on any variable that had been declared.  This type description is used to check
@@ -56,5 +39,3 @@ struct type_description{
         enum value_type value_type;
         unsigned int pad;
 };
-
-#endif

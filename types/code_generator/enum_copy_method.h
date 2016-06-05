@@ -1,5 +1,5 @@
-#ifndef TYPES_CODE_GENERATOR_enum_copy_method_H_
-#define TYPES_CODE_GENERATOR_enum_copy_method_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -21,5 +21,3 @@ enum copy_method{
 	REF_COPY,
 	NEW_COPY
 };
-
-#endif

@@ -1,5 +1,5 @@
-#ifndef TYPES_LEXER_enum_c_token_type_H_
-#define TYPES_LEXER_enum_c_token_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -110,5 +110,3 @@ enum c_token_type {
 	QUESTION_MARK_CHAR,
 	NUMBER_SIGN_CHAR
 };
-
-#endif

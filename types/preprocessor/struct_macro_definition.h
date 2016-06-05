@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_macro_definition_H_
-#define TYPES_PREPROCESSOR_struct_macro_definition_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -15,15 +15,8 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef TYPES_PREPROCESSOR_enum_macro_definition_type_H_
-#include "enum_macro_definition_type.h"
-#endif
-#ifndef struct_c_lexer_token_ptr_list_H_DEFINED_
-#include "../../data-structures/struct_c_lexer_token_ptr_list.h"
-#endif
-#ifndef unsigned_char_ptr_to_struct_macro_parameter_ptr_map_H_DEFINED_
-#include "../../data-structures/unsigned_char_ptr_to_struct_macro_parameter_ptr_map.h"
-#endif
+
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct macro_definition{
 	struct struct_c_lexer_token_ptr_list definition_tokens;
@@ -31,5 +24,3 @@ struct macro_definition{
 	enum macro_definition_type type;
 	unsigned int pad;
 };
-
-#endif

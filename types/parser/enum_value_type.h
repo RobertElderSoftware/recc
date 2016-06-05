@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_value_type_H_
-#define TYPES_PARSER_enum_value_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -22,4 +22,4 @@ enum value_type{
         MINIMAL_RVALUE
 };
 
-#endif
+

@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_linker_file_H_
-#define TYPES_LINKER_struct_linker_file_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,21 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_struct_l2_lexer_state_H_
-#include "../../types/lexer/struct_l2_lexer_state.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_map_H_
-#include "../../types/data-structures/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_l2_item_ptr_list_H_
-#include "../../types/data-structures/struct_struct_l2_item_ptr_list.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_object_ptr_list_H_
-#include "../../types/data-structures/struct_struct_linker_object_ptr_list.h"
-#endif
-#ifndef TYPES_LINKER_enum_relocation_type_h_
-#include "enum_relocation_type.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct linker_file{ /*  Represents everything that comes from one translation unit (or assembly file) */
 	struct unsigned_char_list * file_input;
@@ -46,5 +32,3 @@ struct linker_file{ /*  Represents everything that comes from one translation un
 	unsigned int linker_file_post_linking_offset; /* The offset to the instruction of this symbol after considering instructions re-written by the linker */
 	unsigned int pad;
 };
-
-#endif

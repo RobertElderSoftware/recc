@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_parser_state_H_
-#define TYPES_PARSER_struct_parser_state_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -17,15 +17,7 @@
 */
 
 
-#ifndef TYPES_TYPE_ENGINE_struct_type_engine_state_H_
-#include "../type_engine/struct_type_engine_state.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_parser_operation_stack_H_
-#include "../data-structures/struct_struct_parser_operation_stack.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_unsigned_char_ptr_to_struct_constant_description_ptr_map_H_
-#include "../data-structures/struct_unsigned_char_ptr_to_struct_constant_description_ptr_map.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct parser_state{
 	struct type_engine_state * type_engine;
@@ -33,11 +25,10 @@ struct parser_state{
 	struct c_lexer_state * c_lexer_state;
 	struct parser_node * top_node;
 	struct unsigned_char_list * buffered_output;
-	struct struct_parser_operation_stack operation_stack;
+	struct struct_parser_operation_list operation_stack;
 	struct unsigned_char_ptr_to_struct_constant_description_ptr_map constant_map;
+	struct struct_parser_error_list parser_errors;
 	unsigned char * buff;
 	unsigned int tokens_position;
 	unsigned int line_number;
 };
-
-#endif

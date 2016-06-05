@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include "print_buff_add.h"
 #include "print_decimal.h"
-#include "../types/builtin/struct_printing_state.h"
+#include "../generated/struct_printing_state.h"
 
 void print_decimal(struct printing_state * ps, int d){
 	unsigned int leading_zero = 1;

@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_special_macro_definition_H_
-#define TYPES_PREPROCESSOR_struct_special_macro_definition_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -15,12 +15,9 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-#ifndef TYPES_PREPROCESSOR_enum_special_macro_type_H_
-#include "enum_special_macro_type.h"
-#endif
+
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct special_macro_definition{
 	enum special_macro_type type;
 };
-
-#endif

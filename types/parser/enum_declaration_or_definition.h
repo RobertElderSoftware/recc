@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_declaration_or_definition_H_
-#define TYPES_PARSER_enum_declaration_or_definition_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -21,4 +21,4 @@ enum declaration_or_definition{
         FROM_DEFINITION
 };
 
-#endif
+

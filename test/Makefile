@@ -21,8 +21,6 @@ RECC_L1= $(ALL_SOURCES:.c=.l1)
 RECC_L0= $(ALL_SOURCES:.c=.l0.js)
 JS_OUTPUT= $(ALL_SOURCES:.c=.jsoutput)
 
-TESTING_EXTRAS_OBJECTS=test/extras/extern_test.o test/extras/random.o
-
 error-on-valgrind-problems: test/scripts/throw-error-on-problems-in-valgrind-log.sh
 	./test/scripts/throw-error-on-problems-in-valgrind-log.sh
 
@@ -32,16 +30,16 @@ error-on-test-failure-problems: test/scripts/throw-error-on-problems-in-test-fai
 test/regex_engine_stress_test.o: test/regex_engine_stress_test.c
 	@$(HOSTCC) -c test/regex_engine_stress_test.c -o test/regex_engine_stress_test.o $(CUSTOM_C89_FLAGS)
 
-test/type_engine_stress_test.o: test/type_engine_stress_test.c
-	@$(HOSTCC) -c test/type_engine_stress_test.c -o test/type_engine_stress_test.o $(CUSTOM_C89_FLAGS)
+test/parser_stress_test.o: test/parser_stress_test.c
+	@$(HOSTCC) -c test/parser_stress_test.c -o test/parser_stress_test.o $(CUSTOM_C89_FLAGS)
 
 regex-engine-stress-test: recc-implementation/librecc.a test/regex_engine_stress_test.o
 	@$(HOSTCC) -o test/regex_engine_stress_test test/regex_engine_stress_test.o recc-implementation/librecc.a $(CUSTOM_C89_FLAGS)
 	@$(VALGRIND) ./test/regex_engine_stress_test
 
-type-engine-stress-test: recc-implementation/librecc.a test/type_engine_stress_test.o
-	@$(HOSTCC) -o test/type_engine_stress_test test/type_engine_stress_test.o recc-implementation/librecc.a $(CUSTOM_C89_FLAGS)
-	@$(VALGRIND) ./test/type_engine_stress_test
+parser-test: recc-implementation/librecc.a test/parser_stress_test.o
+	@$(HOSTCC) -o test/parser_stress_test test/parser_stress_test.o recc-implementation/librecc.a $(CUSTOM_C89_FLAGS)
+	@$(VALGRIND) ./test/parser_stress_test
 
 #  Can change based on make file variable values
 remove-previous-test-list:
@@ -50,7 +48,7 @@ remove-previous-test-list:
 test/build_tests: test/build_tests.o $(COMPILER_OBJECTS)
 	@$(HOSTCC) -o test/build_tests test/build_tests.o $(COMPILER_OBJECTS) $(CUSTOM_C89_FLAGS)
 
-test/build_tests.o: test/build_tests.c recc-implementation/compiler_interface.h
+test/build_tests.o: test/build_tests.c recc-implementation/compiler_interface_phase_3.h
 	@$(HOSTCC) -c test/build_tests.c -o test/build_tests.o $(CUSTOM_C89_FLAGS)
 
 test/tests_to_run: remove-previous-test-list
@@ -62,7 +60,7 @@ remove-previous-custom-list:
 	@rm -f test/custom_build_targets.c
 
 test/custom_build_targets.c: remove-previous-custom-list
-	@echo "$(addsuffix \\n, $(ALL_TEST_NAMES))" | tr -d ' ' | sed '/^$$/d' | sed 's/.*/\tconstruct_build_target(state, "\0.l0.js");/' > test/custom_build_targets.c
+	@echo "$(addsuffix \\n, $(ALL_TEST_NAMES))" | tr -d ' ' | sed '/^$$/d' | sed 's/.*/\tassert(!construct_entity(state, "\0.l0.js"));/' > test/custom_build_targets.c
 
 test/build_tests.c: test/build_target_template.c test/custom_build_targets.c
 	@cat test/build_target_template.c | sed -e '/GETS_REPLACED_WITH_BUILD_TARGETS/r test/custom_build_targets.c' -e '/GETS_REPLACED_WITH_BUILD_TARGETS/d' > test/build_tests.c
@@ -91,4 +89,4 @@ $(ALL_EXECUTABLES): $(TESTING_EXTRAS_OBJECTS) $(COMPILER_OBJECTS)
 	@diff $< $(word 2,$^) > $@ || (echo "\033[0;31mTest Failure for "$<" \033[0m"; echo "Test Failure for "$<"" >> logs/test-failures.log; cat $@ >> logs/test-failures.log)
 
 clean-tests: clean-test-extras
-	@rm -f test/build_tests test/custom_build_targets.c test/build_tests.c test/tests_to_run test/*.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS) test/type_engine_stress_test test/regex_engine_stress_test
+	@rm -f test/build_tests test/custom_build_targets.c test/build_tests.c test/tests_to_run test/*.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS) test/parser_stress_test test/regex_engine_stress_test

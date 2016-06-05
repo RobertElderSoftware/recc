@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_struct_regex_computation_node_H_
-#define TYPES_REGEX_ENGINE_struct_regex_computation_node_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,12 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_REGEX_ENGINE_enum_regex_computation_node_type_H_
-#include "enum_regex_computation_node_type.h"
-#endif
-#ifndef TYPES_REGEX_ENGINE_struct_character_class_range_H_
-#include "struct_character_class_range.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct regex_computation_node;
 struct regex_computation_node {
@@ -37,5 +32,3 @@ struct regex_computation_node {
 	unsigned char pad2;
 	unsigned char pad3;
 };
-
-#endif

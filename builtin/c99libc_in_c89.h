@@ -22,7 +22,7 @@
 #include "print_string.h"
 #include "print_decimal.h"
 #include "print_hexadecimal.h"
-#include "../types/builtin/struct_printing_state.h"
+#include "../generated/struct_printing_state.h"
 
 unsigned int c89_vsnprintf(char *, size_t, const char *, va_list);
 #endif

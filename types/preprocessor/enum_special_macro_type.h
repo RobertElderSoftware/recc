@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_enum_special_macro_type_H_
-#define TYPES_PREPROCESSOR_enum_special_macro_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -21,4 +21,4 @@ enum special_macro_type{
 	_FILE_MACRO
 };
 
-#endif
+

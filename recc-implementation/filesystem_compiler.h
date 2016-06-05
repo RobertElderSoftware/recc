@@ -26,13 +26,16 @@
 #include "../libc/filesystem.h"
 #endif
 #ifndef unsigned_char_ptr_to_unsigned_char_ptr_map_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
+#include "../generated/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
 #endif
 #ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
+#include "../generated/unsigned_char_list.h"
 #endif
 #ifndef IO_H_
 #include "../recc-implementation/io.h"
+#endif
+#ifndef unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare.h"
 #endif
 
 void output_filesystem_impl(unsigned char *);

@@ -15,7 +15,7 @@
 */
 
 #include "print_buff_add.h"
-#include "../types/builtin/struct_printing_state.h"
+#include "../generated/struct_printing_state.h"
 #include "print_string.h"
 
 void print_string(struct printing_state * ps, const char * c){

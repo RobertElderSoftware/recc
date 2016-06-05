@@ -1,5 +1,5 @@
-#ifndef TYPES_BUILTIN_struct_printing_state_H_
-#define TYPES_BUILTIN_struct_printing_state_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -21,5 +21,3 @@ struct printing_state{
 	unsigned int chars_required;
 	unsigned int buffer_size;
 };
-
-#endif

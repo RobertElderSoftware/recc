@@ -20,7 +20,7 @@
 #include "../builtin/print_string.h"
 #include "../builtin/print_decimal.h"
 #include "../builtin/print_hexadecimal.h"
-#include "../types/builtin/struct_printing_state.h"
+#include "../generated/struct_printing_state.h"
 
 int putchar(int);
 

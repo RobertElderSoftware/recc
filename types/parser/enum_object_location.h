@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_object_location_H_
-#define TYPES_PARSER_enum_object_location_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -24,4 +24,4 @@ enum object_location{
 	PARAMETER
 };
 
-#endif
+

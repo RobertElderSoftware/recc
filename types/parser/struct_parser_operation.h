@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_parser_operation_H_
-#define TYPES_PARSER_struct_parser_operation_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,14 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_enum_parser_operation_type_H_
-#include "enum_parser_operation_type.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct parser_operation{
 	void * data;
 	enum parser_operation_type type;
 	unsigned int pad;
 };
-
-#endif

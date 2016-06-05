@@ -26,16 +26,16 @@
 #include "lexer.h"
 #endif
 #ifndef TYPES_PARSER_struct_l2_parser_state_H_
-#include "../types/parser/struct_l2_parser_state.h"
+#include "../generated/struct_l2_parser_state.h"
 #endif
 #ifndef struct_l2_lexer_token_ptr_list_H_DEFINED_
-#include "../data-structures/struct_l2_lexer_token_ptr_list.h"
+#include "../generated/struct_l2_lexer_token_ptr_list.h"
 #endif
-#ifndef struct_l2_parser_operation_stack_H_DEFINED_
-#include "../data-structures/struct_l2_parser_operation_stack.h"
+#ifndef struct_l2_parser_operation_list_H_DEFINED_
+#include "../generated/struct_l2_parser_operation_list.h"
 #endif
 #ifndef struct_l2_parser_node_memory_pool_H_DEFINED_
-#include "../data-structures/struct_l2_parser_node_memory_pool.h"
+#include "../generated/struct_l2_parser_node_memory_pool.h"
 #endif
 
 int parse_l2(struct l2_parser_state *);

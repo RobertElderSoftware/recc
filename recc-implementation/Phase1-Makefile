@@ -1,0 +1,34 @@
+phase1: recc-implementation/bootstrap_phase_1
+	@$(VALGRIND) recc-implementation/bootstrap_phase_1
+	@echo "Completed phase 1 of bootstrapping process."
+	@make -e -s phase2 DEFERRED_GLOALS="$(DEFERRED_GLOALS)"
+
+recc-implementation/compiler_interface_phase_1.o: recc-implementation/compiler_interface_phase_1.c recc-implementation/compiler_interface_phase_1.h
+	@$(HOSTCC) -c recc-implementation/compiler_interface_phase_1.c -o recc-implementation/compiler_interface_phase_1.o $(CUSTOM_C89_FLAGS)
+
+recc-implementation/bootstrap_phase_1.o: recc-implementation/compiler_interface_phase_1.h
+	@$(HOSTCC) -c recc-implementation/bootstrap_phase_1.c -o recc-implementation/bootstrap_phase_1.o $(CUSTOM_C89_FLAGS)
+
+recc-implementation/bootstrap_phase_1: recc-implementation/compiler_interface_phase_1.o recc-implementation/bootstrap_phase_1.o recc-implementation/libbootstrap.o recc-implementation/binary_exponential_buffer.o recc-implementation/replace_tool.o
+	@$(HOSTCC) recc-implementation/compiler_interface_phase_1.o recc-implementation/bootstrap_phase_1.o recc-implementation/libbootstrap.o recc-implementation/binary_exponential_buffer.o recc-implementation/replace_tool.o -o recc-implementation/bootstrap_phase_1 $(CUSTOM_C89_FLAGS)
+
+recc-implementation/binary_exponential_buffer.o: recc-implementation/binary_exponential_buffer.c
+	@$(HOSTCC) -c recc-implementation/binary_exponential_buffer.c -o recc-implementation/binary_exponential_buffer.o $(CUSTOM_C89_FLAGS)
+
+recc-implementation/binary_exponential_buffer.c: recc-implementation/binary_exponential_buffer.h
+	@touch recc-implementation/binary_exponential_buffer.c
+
+recc-implementation/replace_tool.o: recc-implementation/replace_tool.c
+	@$(HOSTCC) -c recc-implementation/replace_tool.c -o recc-implementation/replace_tool.o $(CUSTOM_C89_FLAGS)
+
+recc-implementation/replace_tool.c: recc-implementation/replace_tool.h
+	@touch recc-implementation/binary_exponential_buffer.c
+
+recc-implementation/replace_tool.h: recc-implementation/binary_exponential_buffer.h
+	@touch recc-implementation/replace_tool.h
+
+recc-implementation/libbootstrap.o: recc-implementation/libbootstrap.c
+	@$(HOSTCC) -c recc-implementation/libbootstrap.c -o recc-implementation/libbootstrap.o $(CUSTOM_C89_FLAGS)
+
+clean-phase-1:
+	@rm -f recc-implementation/bootstrap_phase_1 recc-implementation/*.o generated/*.l2 generated/*.o generated/*.i generated/*.c generated/*.h recc-implementation/file-dependencies-data-structures recc-implementation/library-data-structures recc-implementation/object-data-structures recc-implementation/comparison-functions/*.l2 recc-implementation/comparison-functions/*.i recc-implementation/comparison-functions/*.o

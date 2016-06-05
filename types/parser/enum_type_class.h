@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_type_class_H_
-#define TYPES_PARSER_enum_type_class_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -15,6 +15,8 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
+
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 enum type_class{
 	TYPE_CLASS_CHAR,
@@ -34,4 +36,4 @@ enum type_class{
 	TYPE_CLASS_UNION
 };
 
-#endif
+

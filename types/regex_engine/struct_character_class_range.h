@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_struct_character_class_range_H_
-#define TYPES_REGEX_ENGINE_struct_character_class_range_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -25,5 +25,3 @@ struct character_class_range{
 	unsigned char pad1;
 	unsigned char pad2;
 };
-
-#endif

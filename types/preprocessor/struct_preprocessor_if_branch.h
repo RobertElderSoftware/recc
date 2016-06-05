@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_if_branch_H_
-#define TYPES_PREPROCESSOR_struct_preprocessor_if_branch_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -20,4 +20,4 @@ struct preprocessor_if_branch{
 	unsigned int active;
 };
 
-#endif
+

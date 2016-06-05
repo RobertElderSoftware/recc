@@ -1,5 +1,5 @@
-#ifndef TYPES_L0_GENERATOR_enum_l0_language_type_H_
-#define TYPES_L0_GENERATOR_enum_l0_language_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -22,5 +22,3 @@ enum l0_language_type {
 	PYTHON_LANGUAGE_TYPE,
 	JAVA_LANGUAGE_TYPE
 };
-
-#endif

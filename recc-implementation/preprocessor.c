@@ -54,7 +54,13 @@ unsigned char * convert_filename_to_directory(unsigned char * str){
 
 unsigned int is_in_active_branch(struct preprocessor_state * state){
 	unsigned int size = struct_preprocessor_if_branch_ptr_list_size(&state->preprocessor_if_branches);
-	return size == 0 || struct_preprocessor_if_branch_ptr_list_get(&state->preprocessor_if_branches, size -1)->active;
+	unsigned int i;
+	for(i = 0; i < size; i++){
+		if(!struct_preprocessor_if_branch_ptr_list_get(&state->preprocessor_if_branches, i)->active){
+			return 0;
+		}
+	}
+	return 1;
 }
 
 unsigned int is_non_whitespace_inline_token(struct c_lexer_token * t){
@@ -180,7 +186,7 @@ void process_define_directive(struct preprocessor_state * state, struct struct_c
 	unsigned char * macro_identifier;
 	const char * va_arg_str = "__VA_ARGS__";
 	struct_c_lexer_token_ptr_list_create(&processed_tokens);
-	unsigned_char_ptr_to_struct_macro_parameter_ptr_map_create(&new_macro_definition->function_macro_parameters);
+	unsigned_char_ptr_to_struct_macro_parameter_ptr_map_create(&new_macro_definition->function_macro_parameters, unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare);
 
 	identifier_token = read_until_next_token(state, define_body_tokens, &processed_tokens, macro_expansion_levels);
 	if(!identifier_token){
@@ -255,6 +261,55 @@ void process_define_directive(struct preprocessor_state * state, struct struct_c
 	struct_c_lexer_token_ptr_list_destroy(&processed_tokens);
 }
 
+void shorten_file_path(struct preprocessor_state * state, struct unsigned_char_list * l){
+	/*  Remove unwanted path components like 'abc/..' that make the filepath way too long. */
+	struct unsigned_char_ptr_list path_parts;
+	struct unsigned_char_ptr_list new_path_parts;
+	unsigned char * final_include_path = unsigned_char_list_data(l);
+	unsigned int num_parts;
+	unsigned int new_num_parts;
+	unsigned int i = 0;
+	unsigned_char_ptr_list_create(&path_parts);
+	unsigned_char_ptr_list_create(&new_path_parts);
+	resolve_path_components(final_include_path, &path_parts, state->memory_pool_collection);
+	num_parts = unsigned_char_ptr_list_size(&path_parts);
+	/*  Empty the list so we can re-build the path */
+	unsigned_char_list_destroy(l);
+	unsigned_char_list_create(l);
+	while(i < num_parts){
+		unsigned char * this_part = unsigned_char_ptr_list_get(&path_parts, i);
+		unsigned char * next_part = ((i + 1) < num_parts) ? unsigned_char_ptr_list_get(&path_parts, i + 1) : (unsigned char *)0;
+		if(this_part[0] == '.' && this_part && this_part[1] == 0){
+			/*  Do nothing and just don't add this one because it is a '/./' path */
+		}else if(this_part[0] != '.' && next_part && next_part[0] == '.' && next_part[1] && next_part[1] == '.'){
+			/*  Skip another one ahead because these two are redundant '/def/../' */
+			i++;
+		}else{
+			/*  This part is ok, so add it */
+			unsigned_char_ptr_list_add_end(&new_path_parts, this_part);
+		}
+		i++;
+	}
+	new_num_parts = unsigned_char_ptr_list_size(&new_path_parts);
+	for(i = 0; i < new_num_parts; i++){
+		unsigned char * c = unsigned_char_ptr_list_get(&new_path_parts, i);
+		while(*c){
+			unsigned_char_list_add_end(l, *c);
+			c++;
+		}
+		if(i != (new_num_parts -1)){
+			/*  Not the last part, add a separating / character */
+			unsigned_char_list_add_end(l, '/');
+		}
+	}
+	unsigned_char_list_add_end(l, 0);
+	for(i = 0; i < num_parts; i++){
+		heap_memory_pool_free(state->memory_pool_collection->heap_pool, unsigned_char_ptr_list_get(&path_parts, i));
+	}
+	unsigned_char_ptr_list_destroy(&path_parts);
+	unsigned_char_ptr_list_destroy(&new_path_parts);
+}
+
 void process_include_directive(struct preprocessor_state * state, struct struct_c_lexer_token_ptr_list * output_tokens, struct struct_c_lexer_token_ptr_list * include_body_tokens, struct struct_preprocessor_macro_level_ptr_list * macro_expansion_levels){
 	struct struct_c_lexer_token_ptr_list processed_include_body_tokens;
 	struct struct_c_lexer_token_ptr_list working_tokens;
@@ -317,6 +372,7 @@ void process_include_directive(struct preprocessor_state * state, struct struct_
 	}
 
 	unsigned_char_list_add_end(&file_to_include, 0);
+	shorten_file_path(state, &file_to_include);
 	final_include_path = unsigned_char_list_data(&file_to_include);
 
 	if(!(preprocess_rtn = get_preprocessed_output_from_file(state, final_include_path, &header_tokens))){
@@ -1358,7 +1414,7 @@ void destroy_preprocessor_macro_level(struct preprocessor_macro_level * level, s
 
 struct preprocessor_state * create_preprocessor_state(struct memory_pool_collection * memory_pool_collection){
 	struct preprocessor_state * state = (struct preprocessor_state *)malloc(sizeof(struct preprocessor_state));
-	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_create(&state->special_macros);
+	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_create(&state->special_macros, unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare);
 
 	state->comma_token = (struct c_lexer_token*)malloc(sizeof(struct c_lexer_token));
 	state->comma_token->type = COMMA_CHAR;
@@ -1377,9 +1433,9 @@ struct preprocessor_state * create_preprocessor_state(struct memory_pool_collect
 	struct_c_lexer_state_ptr_list_create(&state->c_lexer_states);
 	struct_c_lexer_token_ptr_list_create(&state->created_tokens);
 	add_special_macros(state, &state->special_macros);
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->disabled_macros);
-	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&state->disabled_tokens);
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->macro_map);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->disabled_macros, unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
+	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&state->disabled_tokens, struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->macro_map, unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
 	return state;
 }
 
@@ -1404,10 +1460,10 @@ int do_preprocess(struct memory_pool_collection * memory_pool_collection, unsign
 	struct unsigned_char_ptr_to_struct_macro_definition_ptr_map disabled_macros;
 	struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map disabled_tokens;
 	struct_c_lexer_token_ptr_list_create(&output_tokens);
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&disabled_macros);
-	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&disabled_tokens);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&disabled_macros, unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
+	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&disabled_tokens, struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare);
 
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&macro_map);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&macro_map, unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
 	if(!(rtn = get_preprocessed_output_from_file(preprocessor_state, in_file, &output_tokens))){
 		unsigned int i;
 		struct unsigned_char_list file_output;

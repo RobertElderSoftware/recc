@@ -34,7 +34,7 @@ struct termios * terminal_setup(void);
 
 struct termios * terminal_setup(void){
 	/*  Change settings to let input be completely processed by the emulator. */
-	struct termios * original = malloc(sizeof(struct termios));
+	struct termios * original = (struct termios *)malloc(sizeof(struct termios));
         struct termios stdio;
 	tcgetattr(STDOUT_FILENO, original);
  
@@ -76,7 +76,7 @@ int main(void){
 
 		if(read(STDIN_FILENO, &c, 1) > 0){
 			/*  Add item to the end of the list */
-			struct ll_item * new_item = malloc(sizeof(struct ll_item));
+			struct ll_item * new_item = (struct ll_item *)malloc(sizeof(struct ll_item));
 			new_item->c = c;
 			new_item->next = (struct ll_item *)0;
 			if(first_item){

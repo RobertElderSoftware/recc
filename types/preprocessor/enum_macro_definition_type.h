@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_enum_macro_definition_type_H_
-#define TYPES_PREPROCESSOR_enum_macro_definition_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -20,5 +20,3 @@ enum macro_definition_type{
 	OBJECT_MACRO,
 	FUNCTION_MACRO
 };
-
-#endif

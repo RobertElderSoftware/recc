@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_file_context_H_
-#define TYPES_PREPROCESSOR_struct_preprocessor_file_context_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -22,4 +22,4 @@ struct preprocessor_file_context{
 	unsigned int pad;
 };
 
-#endif
+

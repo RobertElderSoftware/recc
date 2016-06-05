@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_normalized_declarator_H_
-#define TYPES_PARSER_struct_normalized_declarator_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,12 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_struct_parser_node_H_
-#include "struct_parser_node.h"
-#endif
-#ifndef TYPES_PARSER_enum_normalized_declarator_type_H_
-#include "enum_normalized_declarator_type.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct normalized_declarator{
 	/*  
@@ -31,5 +26,3 @@ struct normalized_declarator{
 	enum normalized_declarator_type type;
 	unsigned int pad;
 };
-
-#endif

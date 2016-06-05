@@ -102,7 +102,7 @@ void output_start_end(char * variable_name, FILE * out, enum l0_language_type la
 			fprintf(out, "%s({\n", variable_name);
 			break;
 		}case PYTHON_LANGUAGE_TYPE:{
-			fprintf(out, "class %s(object):\n    def _init_(self):\n", variable_name);
+			fprintf(out, "class %s(object):\n    def __init__(self):\n", variable_name);
 			break;
 		}case JAVA_LANGUAGE_TYPE:{
 			fprintf(out, "package OpCPU;\nimport java.lang.reflect.Method;\n\nclass %s implements OpCPUDataInterface {\n", variable_name);

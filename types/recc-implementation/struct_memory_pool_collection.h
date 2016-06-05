@@ -1,5 +1,5 @@
-#ifndef TYPES_struct_memory_pool_collection_H_
-#define TYPES_struct_memory_pool_collection_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,9 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_REGEX_ENGINE_struct_regex_matcher_state_H_
-#include "../regex_engine/struct_regex_matcher_state.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct memory_pool_collection{
 	struct regex_compiler_state ** l2_token_regexes;
@@ -36,5 +34,3 @@ struct memory_pool_collection{
 	struct struct_linker_symbol_memory_pool * struct_linker_symbol_pool;
 	struct heap_memory_pool * heap_pool; /*  Used for pooling memory objects of arbitrary size */
 };
-
-#endif

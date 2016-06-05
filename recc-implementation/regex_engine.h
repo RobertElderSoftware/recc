@@ -17,10 +17,10 @@
 */
 
 #ifndef TYPES_REGEX_ENGINE_struct_regex_compiler_state_H_
-#include "../types/regex_engine/struct_regex_compiler_state.h"
+#include "../generated/struct_regex_compiler_state.h"
 #endif
 #ifndef TYPES_REGEX_ENGINE_struct_regex_matcher_state_H_
-#include "../types/regex_engine/struct_regex_matcher_state.h"
+#include "../generated/struct_regex_matcher_state.h"
 #endif
 #ifndef MEMORY_POOL_COLLECTION_H_
 #include "memory_pool_collection.h"

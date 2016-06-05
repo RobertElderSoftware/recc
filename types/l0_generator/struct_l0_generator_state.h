@@ -1,5 +1,5 @@
-#ifndef TYPES_L0_GENERATOR_struct_l0_generator_state_H_
-#define TYPES_L0_GENERATOR_struct_l0_generator_state_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,20 +16,10 @@
     under the License.
 */
 
-#ifndef TYPES_PARSER_struct_l2_parser_state_H_
-#include "../parser/struct_l2_parser_state.h"
-#endif
-#ifndef TYPES_LEXER_struct_l2_lexer_state_H_
-#include "../lexer/struct_l2_lexer_state.h"
-#endif
-#ifndef TYPES_L0_GENERATOR_enum_l0_language_type_H_
-#include "../l0_generator/enum_l0_language_type.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct l0_generator_state {
 	struct l2_lexer_state l2_lexer_state;
 	struct l2_parser_state l2_parser_state;
 	struct memory_pool_collection * memory_pool_collection;
 };
-
-#endif

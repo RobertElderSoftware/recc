@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_enum_parser_operation_type_H_
-#define TYPES_PARSER_enum_parser_operation_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -33,4 +33,4 @@ enum parser_operation_type{
 	SET_CURRENT_FUNCTION
 };
 
-#endif
+

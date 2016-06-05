@@ -13,7 +13,7 @@ emulators/c/kernel.l0.c: emulators/c/build_c_example
 emulators/c/build_c_example: emulators/c/build_c_example.o $(COMPILER_OBJECTS)
 	@$(HOSTCC) $(COMPILER_OBJECTS) emulators/c/build_c_example.o -o emulators/c/build_c_example $(CUSTOM_C89_FLAGS)
 
-emulators/c/build_c_example.o: emulators/c/build_c_example.c recc-implementation/compiler_interface.h
+emulators/c/build_c_example.o: emulators/c/build_c_example.c recc-implementation/compiler_interface_phase_3.h
 	@$(HOSTCC) -c emulators/c/build_c_example.c -o emulators/c/build_c_example.o $(CUSTOM_C89_FLAGS)
 
 emulators/c/linux-emulator-example-data.o: emulators/c/kernel.l0.c

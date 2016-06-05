@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_enum_relocation_type_h_
-#define TYPES_LINKER_enum_relocation_type_h_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -21,5 +21,3 @@ enum relocation_type{
 	RELOCATION_TYPE_END,
 	RELOCATION_TYPE_ADDRESS
 };
-
-#endif

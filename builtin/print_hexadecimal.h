@@ -16,7 +16,7 @@
     under the License.
 */
 
-#include "../types/builtin/struct_printing_state.h"
+#include "../generated/struct_printing_state.h"
 
 void print_hexadecimal(struct printing_state *, unsigned int, unsigned int);
 #endif

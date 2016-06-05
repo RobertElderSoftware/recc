@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_linker_region_h_
-#define TYPES_LINKER_struct_linker_region_h_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -24,4 +24,4 @@ struct linker_region {
 	unsigned int pad;
 };
 
-#endif
+

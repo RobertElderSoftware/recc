@@ -1,5 +1,5 @@
-#ifndef TYPES_CODE_GENERATOR_struct_constant_initializer_level_H_
-#define TYPES_CODE_GENERATOR_struct_constant_initializer_level_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,16 +16,9 @@
     under the License.
 */
 
-#ifndef TYPES_CODE_GENERATOR_struct_compile_time_constant_H_
-#include "struct_compile_time_constant.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_constant_initializer_level_ptr_list_H_
-#include "../../types/data-structures/struct_struct_constant_initializer_level_ptr_list.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct constant_initializer_level{
 	struct compile_time_constant * constant; /*  Will be set only if this is not an initializer list */
 	struct struct_constant_initializer_level_ptr_list children;
 };
-
-#endif

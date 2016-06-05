@@ -16,7 +16,7 @@
 
 #include "print_buff_add.h"
 #include "print_hexadecimal.h"
-#include "../types/builtin/struct_printing_state.h"
+#include "../generated/struct_printing_state.h"
 
 void print_hexadecimal(struct printing_state * ps, unsigned int d, unsigned int letter_offset){
 	unsigned int leading_zero = 1;

@@ -17,10 +17,16 @@
 */
 
 #ifndef void_ptr_memory_pool_H_DEFINED_
-#include "../data-structures/void_ptr_memory_pool.h"
+#include "../generated/void_ptr_memory_pool.h"
 #endif
 #ifndef TYPES_struct_heap_memory_pool_H_
-#include "../types/recc-implementation/struct_heap_memory_pool.h"
+#include "../generated/struct_heap_memory_pool.h"
+#endif
+#ifndef void_ptr_to_unsigned_int_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/void_ptr_to_unsigned_int_key_value_pair_compare.h"
+#endif
+#ifndef void_ptr_to_unsigned_int_map_H_DEFINED_
+#include "../generated/void_ptr_to_unsigned_int_map.h"
 #endif
 
 void heap_memory_pool_create(struct heap_memory_pool *);

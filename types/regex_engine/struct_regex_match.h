@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_struct_regex_match_H_
-#define TYPES_REGEX_ENGINE_struct_regex_match_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -23,4 +23,4 @@ struct regex_match{
 	unsigned int first_match;
 };
 
-#endif
+

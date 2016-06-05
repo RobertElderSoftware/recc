@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_struct_regex_compiler_state_H_
-#define TYPES_REGEX_ENGINE_struct_regex_compiler_state_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,18 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_REGEX_ENGINE_struct_regex_compiler_error_H_
-#include "struct_regex_compiler_error.h"
-#endif
-#ifndef TYPES_REGEX_ENGINE_struct_regex_parser_node_H_
-#include "struct_regex_parser_node.h"
-#endif
-#ifndef TYPES_REGEX_ENGINE_struct_regex_computation_node_H_
-#include "struct_regex_computation_node.h"
-#endif
-#ifndef TYPES_struct_memory_pool_collection_H_
-#include "../recc-implementation/struct_memory_pool_collection.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct regex_compiler_state{
 	struct memory_pool_collection * m; /*  Used for optimizing memory allocation/deallocation */
@@ -40,5 +29,3 @@ struct regex_compiler_state{
 	unsigned int match_id;
 	unsigned int pad;
 };
-
-#endif

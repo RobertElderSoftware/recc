@@ -41,69 +41,74 @@
 #include "linker.h"
 #endif
 #ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
+#include "../generated/unsigned_char_list.h"
 #endif
 #ifndef unsigned_char_ptr_list_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_list.h"
+#include "../generated/unsigned_char_ptr_list.h"
 #endif
 #ifndef struct_unsigned_char_list_ptr_list_H_DEFINED_
-#include "../data-structures/struct_unsigned_char_list_ptr_list.h"
+#include "../generated/struct_unsigned_char_list_ptr_list.h"
 #endif
 #ifndef struct_l2_item_ptr_list_H_DEFINED_
-#include "../data-structures/struct_l2_item_ptr_list.h"
+#include "../generated/struct_l2_item_ptr_list.h"
 #endif
 #ifndef struct_linker_object_ptr_list_H_DEFINED_
-#include "../data-structures/struct_linker_object_ptr_list.h"
+#include "../generated/struct_linker_object_ptr_list.h"
 #endif
 #ifndef struct_l2_lexer_state_ptr_list_H_DEFINED_
-#include "../data-structures/struct_l2_lexer_state_ptr_list.h"
+#include "../generated/struct_l2_lexer_state_ptr_list.h"
 #endif
 #ifndef struct_l2_parser_state_ptr_list_H_DEFINED_
-#include "../data-structures/struct_l2_parser_state_ptr_list.h"
+#include "../generated/struct_l2_parser_state_ptr_list.h"
 #endif
 #ifndef struct_linker_file_ptr_list_H_DEFINED_
-#include "../data-structures/struct_linker_file_ptr_list.h"
+#include "../generated/struct_linker_file_ptr_list.h"
 #endif
 #ifndef struct_linker_region_list_H_DEFINED_
-#include "../data-structures/struct_linker_region_list.h"
+#include "../generated/struct_linker_region_list.h"
 #endif
 #ifndef struct_start_end_list_H_DEFINED_
-#include "../data-structures/struct_start_end_list.h"
+#include "../generated/struct_start_end_list.h"
 #endif
 #ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_map_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
+#include "../generated/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h"
 #endif
 #ifndef struct_linker_file_ptr_merge_sort_H_DEFINED_
-#include "../data-structures/struct_linker_file_ptr_merge_sort.h"
+#include "../generated/struct_linker_file_ptr_merge_sort.h"
 #endif
 #ifndef struct_start_end_merge_sort_H_DEFINED_
-#include "../data-structures/struct_start_end_merge_sort.h"
+#include "../generated/struct_start_end_merge_sort.h"
 #endif
 #ifndef struct_l2_item_memory_pool_H_DEFINED_
-#include "../data-structures/struct_l2_item_memory_pool.h"
+#include "../generated/struct_l2_item_memory_pool.h"
 #endif
 #ifndef struct_linker_symbol_memory_pool_H_DEFINED_
-#include "../data-structures/struct_linker_symbol_memory_pool.h"
+#include "../generated/struct_linker_symbol_memory_pool.h"
 #endif
 #ifndef TYPES_LINKER_struct_linker_symbol_h_
-#include "../types/linker/struct_linker_symbol.h"
+#include "../generated/struct_linker_symbol.h"
 #endif
 #ifndef TYPES_LINKER_struct_l2_item_h_
-#include "../types/linker/struct_l2_item.h"
+#include "../generated/struct_l2_item.h"
 #endif
 #ifndef OP_CPU_H_
 #include "../emulators/c/op-cpu.h"
 #endif
 #ifndef TYPES_LINKER_struct_linker_state_h_
-#include "../types/linker/struct_linker_state.h"
+#include "../generated/struct_linker_state.h"
 #endif
 #ifndef struct_start_end_ptr_compare_H_DEFINED_
-#include "../data-structures/struct_start_end_ptr_compare.h"
+#include "../recc-implementation/comparison-functions/struct_start_end_ptr_compare.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare.h"
 #endif
 
 
-
-int do_link(struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum build_target_type, unsigned char *, unsigned int, unsigned int);
+int do_link(struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum entity_type, unsigned char *, unsigned int, unsigned int);
 struct linker_file * create_linker_file(struct linker_state *, struct l2_parser_state *, struct unsigned_char_list *);
 void set_symbol_l2_item_pointer(struct linker_state *, struct linker_file *, struct l2_lexer_token *, struct l2_item *, unsigned int);
 void add_internal_linker_symbol(struct linker_state *, struct linker_file *, struct l2_lexer_token *, unsigned int, unsigned int);
@@ -114,7 +119,7 @@ unsigned int get_relative_symbol_offset(struct linker_state *, struct linker_fil
 unsigned int get_absolute_symbol_offset(struct linker_state *, unsigned char *, struct linker_file *, unsigned int *);
 void verify_symbol_declaration(struct linker_state *, struct linker_file *, struct l2_lexer_token *);
 void linker_state_destroy(struct linker_state *);
-void linker_state_create(struct linker_state *, struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum build_target_type, unsigned char *, unsigned int, unsigned int);
+void linker_state_create(struct linker_state *, struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum entity_type, unsigned char *, unsigned int, unsigned int);
 void do_link_to_l1(struct linker_state *);
 void do_link_to_l2(struct linker_state *);
 void set_all_post_linking_offsets(struct linker_state *);

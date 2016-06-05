@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_namespace_modification_H_
-#define TYPES_PARSER_struct_namespace_modification_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -28,4 +28,4 @@ struct namespace_modification{
 	int pad;
 };
 
-#endif
+

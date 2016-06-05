@@ -3,3 +3,9 @@
 /*.i
 /librecc.a
 /filesystem_impl.l2
+/bootstrap_phase_1
+/bootstrap_phase_2
+/object-data-structures
+/file-dependencies-data-structures
+/library-data-structures
+/libdata-structures.l2

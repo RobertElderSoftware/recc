@@ -35,64 +35,76 @@
 #include "io.h"
 #endif
 #ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
+#include "../generated/unsigned_char_list.h"
 #endif
 #ifndef struct_preprocessor_if_branch_ptr_list_H_DEFINED_
-#include "../data-structures/struct_preprocessor_if_branch_ptr_list.h"
+#include "../generated/struct_preprocessor_if_branch_ptr_list.h"
 #endif
 #ifndef struct_struct_c_lexer_token_ptr_list_ptr_list_H_DEFINED_
-#include "../data-structures/struct_struct_c_lexer_token_ptr_list_ptr_list.h"
+#include "../generated/struct_struct_c_lexer_token_ptr_list_ptr_list.h"
 #endif
 #ifndef unsigned_char_ptr_to_unsigned_char_ptr_map_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
+#include "../generated/unsigned_char_ptr_to_unsigned_char_ptr_map.h"
 #endif
 #ifndef unsigned_char_ptr_to_struct_macro_definition_ptr_map_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h"
+#include "../generated/unsigned_char_ptr_to_struct_macro_definition_ptr_map.h"
 #endif
 #ifndef unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h"
+#include "../generated/unsigned_char_ptr_to_struct_special_macro_definition_ptr_map.h"
 #endif
 #ifndef struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"
+#include "../generated/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"
 #endif
 #ifndef struct_c_lexer_token_ptr_to_unsigned_char_ptr_map_H_DEFINED_
-#include "../data-structures/struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h"
+#include "../generated/struct_c_lexer_token_ptr_to_unsigned_char_ptr_map.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_macro_parameter_ptr_map_H_DEFINED_
+#include "../generated/unsigned_char_ptr_to_struct_macro_parameter_ptr_map.h"
 #endif
 #ifndef struct_unsigned_char_list_ptr_list_H_DEFINED_
-#include "../data-structures/struct_unsigned_char_list_ptr_list.h"
+#include "../generated/struct_unsigned_char_list_ptr_list.h"
 #endif
 #ifndef struct_c_lexer_state_ptr_list_H_DEFINED_
-#include "../data-structures/struct_c_lexer_state_ptr_list.h"
+#include "../generated/struct_c_lexer_state_ptr_list.h"
 #endif
 #ifndef struct_preprocessor_file_context_ptr_list_H_DEFINED_
-#include "../data-structures/struct_preprocessor_file_context_ptr_list.h"
+#include "../generated/struct_preprocessor_file_context_ptr_list.h"
 #endif
 #ifndef struct_preprocessor_macro_level_ptr_list_H_DEFINED_
-#include "../data-structures/struct_preprocessor_macro_level_ptr_list.h"
+#include "../generated/struct_preprocessor_macro_level_ptr_list.h"
 #endif
 #ifndef TYPES_PREPROCESSOR_struct_preprocessor_macro_level_H_
-#include "../types/preprocessor/struct_preprocessor_macro_level.h"
+#include "../generated/struct_preprocessor_macro_level.h"
 #endif
 #ifndef TYPES_PREPROCESSOR_struct_special_macro_definition_H_
-#include "../types/preprocessor/struct_special_macro_definition.h"
+#include "../generated/struct_special_macro_definition.h"
 #endif
 #ifndef TYPES_PREPROCESSOR_struct_macro_parameter_H_
-#include "../types/preprocessor/struct_macro_parameter.h"
+#include "../generated/struct_macro_parameter.h"
 #endif
 #ifndef TYPES_PREPROCESSOR_struct_macro_definition_H_
-#include "../types/preprocessor/struct_macro_definition.h"
+#include "../generated/struct_macro_definition.h"
 #endif
 #ifndef TYPES_PREPROCESSOR_struct_preprocessor_if_branch_H_
-#include "../types/preprocessor/struct_preprocessor_if_branch.h"
+#include "../generated/struct_preprocessor_if_branch.h"
 #endif
 #ifndef TYPES_PREPROCESSOR_struct_preprocessor_file_context_H_
-#include "../types/preprocessor/struct_preprocessor_file_context.h"
+#include "../generated/struct_preprocessor_file_context.h"
 #endif
 #ifndef TYPES_PREPROCESSOR_struct_preprocessor_state_H_
-#include "../types/preprocessor/struct_preprocessor_state.h"
+#include "../generated/struct_preprocessor_state.h"
 #endif
-#ifndef unsigned_char_ptr_compare_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_compare.h"
+#ifndef unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare.h"
+#endif
+#ifndef unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare.h"
+#endif
+#ifndef struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare_H_DEFINED_
+#include "../recc-implementation/comparison-functions/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare.h"
 #endif
 
 enum search_state{
@@ -162,5 +174,6 @@ void destroy_preprocessor_macro_level(struct preprocessor_macro_level *, struct 
 struct preprocessor_macro_level * create_preprocessor_macro_level(struct macro_definition *, unsigned char *, struct memory_pool_collection *);
 struct c_lexer_token * read_one_token(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_preprocessor_macro_level_ptr_list *);
 void reduce_multiple_whitespace_to_single(struct preprocessor_state *, struct struct_c_lexer_token_ptr_list *, struct struct_c_lexer_token_ptr_list *);
+void shorten_file_path(struct preprocessor_state *, struct unsigned_char_list *);
 
 #endif

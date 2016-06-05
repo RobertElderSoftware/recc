@@ -1,5 +1,5 @@
-#ifndef TYPES_CODE_GENERATOR_struct_code_gen_state_H_
-#define TYPES_CODE_GENERATOR_struct_code_gen_state_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -17,19 +17,13 @@
 */
 
 
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_compile_time_constant_ptr_list_H_
-#include "../data-structures/struct_struct_compile_time_constant_ptr_list.h"
-#endif
-#ifndef TYPES_DATA_STRUCTURES_struct_struct_linker_object_ptr_list_H_
-#include "../../types/data-structures/struct_struct_linker_object_ptr_list.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct code_gen_state{
 	struct parser_state * parser_state;
+	struct scope_level * current_scope;
 	struct memory_pool_collection * memory_pool_collection;
-	struct namespace_object * current_function;
 	struct struct_switch_frame_ptr_list switch_frames; /*  Used for keeping track of the case labels under switches */
-	struct unsigned_int_list scope_index_list;
 	struct struct_type_description_reference_list type_stack;
 	struct unsigned_char_list * buffered_output;
 	struct unsigned_char_list * buffered_symbol_table;
@@ -40,9 +34,5 @@ struct code_gen_state{
 	struct void_ptr_list created_data; /*  the 'created_data' member in the case of compile time constants for sizeof type names */
 	struct struct_linker_object_ptr_list object_declarations;
 	unsigned int condition_index;
-	unsigned int next_scope_index;
 	unsigned int global_var_ptr_index;
-	unsigned int pad;
 };
-
-#endif

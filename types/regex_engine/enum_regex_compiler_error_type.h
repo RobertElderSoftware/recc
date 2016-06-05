@@ -1,5 +1,5 @@
-#ifndef TYPES_REGEX_ENGINE_enum_regex_compiler_error_type_H_
-#define TYPES_REGEX_ENGINE_enum_regex_compiler_error_type_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -28,4 +28,4 @@ enum regex_compiler_error_type{
 	REGEX_ERROR_INVALID_CHARACTER_RANGE
 };
 
-#endif
+

@@ -32,10 +32,10 @@
 #include <string.h>
 #endif
 #ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
+#include "../generated/unsigned_char_list.h"
 #endif
 #ifndef unsigned_char_ptr_list_H_DEFINED_
-#include "../data-structures/unsigned_char_ptr_list.h"
+#include "../generated/unsigned_char_ptr_list.h"
 #endif
 #ifndef MEMORY_POOL_COLLECTION_H_
 #include "memory_pool_collection.h"
@@ -44,7 +44,7 @@
 #include "heap_memory_pool.h"
 #endif
 #ifndef TYPES_BUILTIN_struct_printing_state_H_
-#include "../types/builtin/struct_printing_state.h"
+#include "../generated/struct_printing_state.h"
 #endif
 #ifndef BUILTIN_C99LIBC_IN_C89_
 #include "../builtin/c99libc_in_c89.h"

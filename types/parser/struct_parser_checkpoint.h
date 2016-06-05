@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_parser_checkpoint_H_
-#define TYPES_PARSER_struct_parser_checkpoint_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -22,4 +22,4 @@ struct parser_checkpoint{
 	unsigned int type_engine_checkpoint;
 };
 
-#endif
+

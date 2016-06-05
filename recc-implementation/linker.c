@@ -227,7 +227,7 @@ unsigned int get_l2_item_size(struct linker_state * state, struct l2_item * item
 		return 0;
 	}
 
-	if ((type == L2_BLT || type == L2_BEQ) && item->identifier_token && state->build_target_type == BUILD_TARGET_L1_FILE){ /* Gets re-written for long jumps */
+	if ((type == L2_BLT || type == L2_BEQ) && item->identifier_token && state->entity_type == ENTITY_TYPE_L1_FILE){ /* Gets re-written for long jumps */
 		return 4;
 	}
 
@@ -550,7 +550,7 @@ struct linker_file * create_linker_file(struct linker_state * state, struct l2_p
 	linker_file->l2_parser_state = l2_parser_state;
 	linker_file->l2_lexer_state = l2_parser_state->l2_lexer_state;
 	linker_file->file_input = file_input;
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_file->internal_symbols);
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_file->internal_symbols, unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
 	struct_l2_item_ptr_list_create(&linker_file->l2_items);
 
 	while(current_node->type != L2_EPSILON){
@@ -677,7 +677,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 			/* Uses case statement fallthrough */
 			case L2_COLON_CHAR:{
 				/*  A label */
-				if(instruction->identifier_token && state->build_target_type == BUILD_TARGET_L2_FILE){
+				if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L2_FILE){
 					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
 					struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, ident) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, ident) : (struct linker_symbol *)0;
 					buffered_token_output(file_output, instruction->identifier_token);
@@ -698,7 +698,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 				buffered_token_output(file_output, instruction->ry_token);
 				buffered_puts(file_output, " ");
 				buffered_token_output(file_output, instruction->rz_token);
-				if(state->build_target_type == BUILD_TARGET_L2_FILE){
+				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
 				}
 				buffered_puts(file_output, "\n");
@@ -709,7 +709,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 				buffered_token_output(file_output, instruction->rx_token);
 				buffered_puts(file_output, " ");
 				buffered_token_output(file_output, instruction->ry_token);
-				if(state->build_target_type == BUILD_TARGET_L2_FILE){
+				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
 				}
 				buffered_puts(file_output, "\n");
@@ -725,13 +725,13 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 					assert(0);
 				}
 				buffered_printf(file_output, "0x%X", hex_value);
-				if(state->build_target_type == BUILD_TARGET_L2_FILE){
+				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
 				}
 				buffered_puts(file_output, "\n");
 				break;
 			}case L2_BEQ:;  case L2_BLT:{
-				if(instruction->identifier_token && state->build_target_type == BUILD_TARGET_L1_FILE){
+				if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L1_FILE){
 					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
 					unsigned int found;
 					unsigned int absolute_offset = get_absolute_symbol_offset(state, ident, linker_file, &found);
@@ -752,7 +752,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 						buffered_puts(file_output, "UNRESOLVED 0x0\n");
 						printf("Leaving symbol %s unresolved in output file %s.\n", ident, state->out_file);
 					}
-				}else if(instruction->identifier_token && state->build_target_type == BUILD_TARGET_L2_FILE){
+				}else if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L2_FILE){
 					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
 					struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, ident) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, ident) : (struct linker_symbol *)0;
 					buffered_token_output(file_output, instruction->op_token);
@@ -780,14 +780,14 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 					}
 					assert(constant_value <= MAX_BRANCH_POS || (instruction->number_token_is_negative && constant_value <= MAX_BRANCH_NEG));
 					buffered_printf(file_output, "%i", constant_value);
-					if(state->build_target_type == BUILD_TARGET_L2_FILE){
+					if(state->entity_type == ENTITY_TYPE_L2_FILE){
 						buffered_puts(file_output, ";");
 					}
 					buffered_puts(file_output, "\n");
 				}
 				break;
 			}case L2_DW:{
-				if(instruction->identifier_token && state->build_target_type == BUILD_TARGET_L1_FILE){
+				if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L1_FILE){
 					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
 					unsigned int found;
 					unsigned int absolute_offset = get_absolute_symbol_offset(state, ident, linker_file, &found);
@@ -800,7 +800,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 					}
 
 					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
-				}else if(instruction->identifier_token && state->build_target_type == BUILD_TARGET_L2_FILE){
+				}else if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L2_FILE){
 					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
 					struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, ident) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, ident) : (struct linker_symbol *)0;
 					buffered_puts(file_output, "DW ");
@@ -813,7 +813,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 					buffered_puts(file_output, "DW ");
 					buffered_token_output(file_output, instruction->number_token);
 				}
-				if(state->build_target_type == BUILD_TARGET_L2_FILE){
+				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
 				}
 				buffered_puts(file_output, "\n");
@@ -831,7 +831,7 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 				}else{
 					buffered_token_output(file_output, instruction->number_token);
 				}
-				if(state->build_target_type == BUILD_TARGET_L2_FILE){
+				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
 				}
 				buffered_puts(file_output, "\n");
@@ -858,20 +858,20 @@ void free_symbol_map(struct linker_state * state, struct unsigned_char_ptr_to_st
 	unsigned_char_ptr_list_destroy(&keys);
 }
 
-void linker_state_create(struct linker_state * state, struct memory_pool_collection * memory_pool_collection, struct unsigned_char_ptr_list * in_files, unsigned char * out_file, unsigned char * symbol_file, enum build_target_type build_target_type, unsigned char * offset, unsigned int page_align_permission_regions, unsigned int only_metadata){
+void linker_state_create(struct linker_state * state, struct memory_pool_collection * memory_pool_collection, struct unsigned_char_ptr_list * in_files, unsigned char * out_file, unsigned char * symbol_file, enum entity_type entity_type, unsigned char * offset, unsigned int page_align_permission_regions, unsigned int only_metadata){
 	struct l2_lexer_token t;
 	t.first_byte = offset;
 	t.last_byte = get_null_terminator(offset) -1;
-	state->starting_offset = build_target_type == BUILD_TARGET_L1_FILE ? parse_hexidecimal_string(&t) : 0;
+	state->starting_offset = entity_type == ENTITY_TYPE_L1_FILE ? parse_hexidecimal_string(&t) : 0;
 	state->memory_pool_collection = memory_pool_collection;
 	state->in_files = in_files;
 	state->out_file = out_file;
 	state->symbol_file = symbol_file;
-	state->build_target_type = build_target_type;
+	state->entity_type = entity_type;
 	state->offset = offset;
 	state->page_align_permission_regions = page_align_permission_regions;
 	state->only_metadata = only_metadata;
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&state->external_symbols);
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&state->external_symbols, unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
 
 	unsigned_char_list_create(&state->file_output);
 	unsigned_char_list_create(&state->symbol_output);
@@ -1321,11 +1321,11 @@ void do_link_to_l2(struct linker_state * state){
 	}
 }
 
-int do_link(struct memory_pool_collection * memory_pool_collection, struct unsigned_char_ptr_list * in_files, unsigned char * out_file, unsigned char * symbol_file, enum build_target_type build_target_type, unsigned char * offset, unsigned int page_align_permission_regions, unsigned int only_metadata){
+int do_link(struct memory_pool_collection * memory_pool_collection, struct unsigned_char_ptr_list * in_files, unsigned char * out_file, unsigned char * symbol_file, enum entity_type entity_type, unsigned char * offset, unsigned int page_align_permission_regions, unsigned int only_metadata){
 	unsigned int i;
 	struct linker_state state;
 
-	linker_state_create(&state, memory_pool_collection, in_files, out_file, symbol_file, build_target_type, offset, page_align_permission_regions, only_metadata);
+	linker_state_create(&state, memory_pool_collection, in_files, out_file, symbol_file, entity_type, offset, page_align_permission_regions, only_metadata);
 
 	/*  Load and parse all the linker files */
 	for(i = 0; i < unsigned_char_ptr_list_size(state.in_files); i++){
@@ -1350,11 +1350,11 @@ int do_link(struct memory_pool_collection * memory_pool_collection, struct unsig
 		unsigned_char_list_destroy(&tmp);
 	}
 
-	switch(build_target_type){
-		case BUILD_TARGET_L1_FILE:{
+	switch(entity_type){
+		case ENTITY_TYPE_L1_FILE:{
 			do_link_to_l1(&state);
 			break;
-		}case BUILD_TARGET_L2_FILE:{
+		}case ENTITY_TYPE_L2_FILE:{
 			do_link_to_l2(&state);
 			break;
 		}default:{

@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_preprocessor_state_H_
-#define TYPES_PREPROCESSOR_struct_preprocessor_state_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -31,4 +31,4 @@ struct preprocessor_state{
 	struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map disabled_tokens;
 };
 
-#endif
+

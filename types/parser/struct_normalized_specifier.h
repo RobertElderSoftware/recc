@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_normalized_specifier_H_
-#define TYPES_PARSER_struct_normalized_specifier_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -17,12 +17,7 @@
 */
 
 
-#ifndef TYPES_PARSER_enum_normalized_specifier_type_H_
-#include "enum_normalized_specifier_type.h"
-#endif
-#ifndef TYPES_PARSER_struct_parser_node_H_
-#include "struct_parser_node.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct normalized_specifier{
 	/*  
@@ -33,5 +28,3 @@ struct normalized_specifier{
 	enum normalized_specifier_type type;
 	unsigned int pad;
 };
-
-#endif

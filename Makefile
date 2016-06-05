@@ -1,7 +1,9 @@
+.SUFFIXES:
+.PHONY: test run-make-first kernel
 ifeq ("$(wildcard config.mak)","")
 $(error config.mak does not exist... Run './configure' first.)
 all:
-	@touch /dev/null
+	@:
 else
 include config.mak
 
@@ -55,11 +57,20 @@ endif
 endif
 endif
 
+ifeq ("$(wildcard recc-implementation/bootstrap_phase_2)","")
+include recc-implementation/Makefile
+.DEFAULT:
+	@make -e -s phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
+kernel:
+	@make -e -s phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
+test:
+	@make -e -s phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
+else
+
 help:
 	@echo "What would you like to make?"
 	@echo ""
-	@echo "1) make data-structures/bootstrap - (IMPORTANT) Must be run before anything else in a fresh project to create initial Makefiles."
-	@echo "2) make kernel/build_kernel       - Builds an executable 'kernel/build_kernel', that can build the kernel."
+	@echo "1) make kernel/build_kernel       - Builds an executable 'kernel/build_kernel', that can build the kernel."
 	@echo "2) make test/build_tests          - Builds an executable 'test/build_tests', that can build all tests."
 	@echo "3) make kernel/kernel.l1          - Builds the kernel image (but doesn't try to run it)."
 	@echo "4) make run-c-emulator            - Attempts to run the kernel in the C emulator."
@@ -70,19 +81,20 @@ help:
 
 test: run-tests
 
-COMPILER_OBJECTS=libc/filesystem.o test/recc.o data-structures/recc.o libc/recc.o kernel/recc.o builtin/recc.o recc-implementation/recc.o recc-implementation/librecc.a
+COMPILER_OBJECTS=libc/filesystem.o test/recc.o recc-implementation/phase2_recc.o recc-implementation/phase2_generate.o libc/recc.o kernel/recc.o builtin/recc.o recc-implementation/recc.o recc-implementation/librecc.a
 
 include builtin/Makefile
 include demos/brainfuck-cpp/Makefile
 include kernel/Makefile
-include data-structures/Makefile
+include recc-implementation/library-data-structures
+include recc-implementation/object-data-structures
+include recc-implementation/file-dependencies-data-structures
 include recc-implementation/Makefile
 include test/Makefile
 include libc/Makefile
 include emulators/Makefile
 
-
-clean: clean-recc-implementation clean-data-structures clean-tests clean-builtins clean-stdlib clean-kernel clean-emulators clean-brainfuck-cpp
+clean: clean-recc-implementation clean-tests clean-builtins clean-stdlib clean-kernel clean-emulators clean-brainfuck-cpp
 	@rm -f logs/*
-
+endif
 endif

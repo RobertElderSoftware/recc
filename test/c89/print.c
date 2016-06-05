@@ -15,8 +15,8 @@
 */
 #include <stdarg.h>
 #include <stdio.h>
-#include "../../data-structures/unsigned_int_merge_sort.h"
-#include "../../data-structures/unsigned_int_binary_search.h"
+#include "../../generated/unsigned_int_merge_sort.h"
+#include "../../generated/unsigned_int_binary_search.h"
 
 extern unsigned int global_1;
 extern unsigned int global_2;
@@ -332,7 +332,7 @@ int main(void){
 	}
 	printf("Go through sorts:\n");
 	for(k = 0; k < num_sort; k++){
-		int index = unsigned_int_binary_search(sort_array, sort_array[k], (int)num_sort, cmp_fcn, unsigned_int_BINARY_SEARCH_RETURN_NEG_ONE);
+		int index = unsigned_int_binary_search(sort_array, &sort_array[k], (int)num_sort, cmp_fcn, unsigned_int_BINARY_SEARCH_RETURN_NEG_ONE);
 		if(index != -1){
 			printf("%X\n", sort_array[index]);
 		}else{

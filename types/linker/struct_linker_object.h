@@ -1,5 +1,5 @@
-#ifndef TYPES_LINKER_struct_linker_object_H_
-#define TYPES_LINKER_struct_linker_object_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -16,9 +16,7 @@
     under the License.
 */
 
-#ifndef TYPES_LEXER_enum_l2_token_type_H_
-#include "../../types/lexer/enum_l2_token_type.h"
-#endif
+/*GETS_REPLACED_WITH_INCLUDES*/
 
 struct linker_object{ /*  Represents a function, variable or constant at global scope  */
 	unsigned char * start_label;
@@ -26,5 +24,3 @@ struct linker_object{ /*  Represents a function, variable or constant at global 
 	enum l2_token_type type;
 	unsigned int pad;
 };
-
-#endif

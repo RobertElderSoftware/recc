@@ -141,7 +141,7 @@ struct compile_time_constant * evaluate_constant_sizeof_type_name(struct code_ge
 	sized_type = create_type_description_from_type_name(state->memory_pool_collection, state->parser_state, n);
 	convert_to_untypedefed_type_description(state->memory_pool_collection, sized_type);
 	result_type = add_specifier(state->memory_pool_collection, add_specifier(state->memory_pool_collection, create_empty_type_description(state->memory_pool_collection), UNSIGNED), INT);
-	size = type_size(state, sized_type, MINIMAL_RVALUE, 0, get_current_scope_level(state));
+	size = type_size(state, sized_type, MINIMAL_RVALUE, 0, state->current_scope);
 	rtn = (struct compile_time_constant *)malloc(sizeof(struct compile_time_constant));
 	struct_compile_time_constant_ptr_list_add_end(&state->created_compile_time_constants, rtn);
 	rtn->element = (struct normalized_declaration_element *)0;
@@ -153,7 +153,7 @@ struct compile_time_constant * evaluate_constant_sizeof_type_name(struct code_ge
 	*(rtn->constant_description->native_data) = size;
 	rtn->constant_description->type_description = result_type;
 	rtn->constant_description->type_description.t->value_type = WORD_ALIGNED_RVALUE;
-	rtn->constant_description->type_description.t->source_scope_level = get_current_scope_level(state);
+	rtn->constant_description->type_description.t->source_scope_level = state->current_scope;
 	destroy_type_description(state->memory_pool_collection, sized_type);
 	return rtn;
 }
@@ -185,7 +185,7 @@ struct compile_time_constant * evaluate_constant_identifier(struct code_gen_stat
 	rtn->constant_description = (struct constant_description *)0;
 	rtn->element = (struct normalized_declaration_element *)0;
 
-	obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, get_current_scope_level(state), 0, state->memory_pool_collection);
+	obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, state->current_scope, 0, state->memory_pool_collection);
 	assert(obj);
 	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
 	if(element->normalized_declarator && element->normalized_declarator->type == NORMALIZED_ENUMERATOR){
@@ -1133,7 +1133,7 @@ unsigned int get_local_offset(struct code_gen_state * state, struct namespace_ob
 	of the outer variable.
         */
         unsigned int rtn = 0;
-        struct scope_level * current_scope = get_current_scope_level(state); /* Start adding at the current scope */
+        struct scope_level * current_scope = state->current_scope; /* Start adding at the current scope */
         struct scope_level * variable_scope = obj->scope_level;  /*  And go all the way up to the variable we're loading */
         struct scope_level * in_progress = current_scope;
         while(1){
@@ -1179,7 +1179,7 @@ unsigned int calculate_type_stack_size(struct code_gen_state * state){
 	unsigned total_size = 0;
 	for(i = 0; i < num_types; i++){
 		struct type_description_reference t = struct_type_description_reference_list_get(&state->type_stack, i);
-		unsigned int current_type_size = type_size(state, t, t.t->value_type, 1, get_current_scope_level(state));
+		unsigned int current_type_size = type_size(state, t, t.t->value_type, 1, state->current_scope);
 		total_size += current_type_size;
 		buffered_printf(state->buffered_output, "; Temps type size: %X\n", current_type_size);
 	}
@@ -1193,7 +1193,7 @@ void delete_top_type(struct code_gen_state * state){
 	unsigned int i;
 	assert(struct_type_description_reference_list_size(&state->type_stack));
 	t = struct_type_description_reference_list_pop_end(&state->type_stack);
-	size = type_size(state, t, t.t->value_type, 1, get_current_scope_level(state));
+	size = type_size(state, t, t.t->value_type, 1, state->current_scope);
 	num_words = size / 4;
 	assert(size - (4*num_words) == 0);
 	for(i = 0; i < num_words; i++){
@@ -1236,7 +1236,7 @@ void load_identifier(struct code_gen_state * state, unsigned char * identifier, 
 	unsigned int num_elements;
 	struct normalized_declaration_element * element;
 	struct memory_pool_collection * m = state->memory_pool_collection;
-	obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, get_current_scope_level(state), 0, m);
+	obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, state->current_scope, 0, m);
 	if(!obj){
 		printf("Unknown identifier: %s in file %s.\n", identifier, parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier.");
@@ -1604,7 +1604,7 @@ void function_call(struct parser_node * argument_expression_list, struct parser_
 	struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, fcn_type.t->declarator);
 	struct parser_node * parameter_type_list = get_parameter_type_list_from_abstract_declarator(abstract_declarator);
 	assert(parameter_type_list);
-	word_type.t->source_scope_level = get_current_scope_level(state);
+	word_type.t->source_scope_level = state->current_scope;
 	word_type.t->value_type = WORD_ALIGNED_RVALUE;
 	convert_to_untypedefed_type_description(state->memory_pool_collection, return_type_description);
 
@@ -1891,7 +1891,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * s
 			struct type_description_reference t = add_specifier(state->memory_pool_collection, add_specifier(state->memory_pool_collection, create_empty_type_description(state->memory_pool_collection), UNSIGNED), INT);
 			struct type_description_reference result_description;
 			t.t->value_type = WORD_ALIGNED_RVALUE;
-			t.t->source_scope_level = get_current_scope_level(state);
+			t.t->source_scope_level = state->current_scope;
 			buffered_puts(state->buffered_output,"loa r1 SP;    Lvalue\n");
 			buffered_puts(state->buffered_output,"loa r9 r1;    value before\n");
 			buffered_puts(state->buffered_output,"sub SP SP WR; Push for new lvalue\n");
@@ -1915,7 +1915,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * s
 			struct type_description_reference t = add_specifier(state->memory_pool_collection, add_specifier(state->memory_pool_collection, create_empty_type_description(state->memory_pool_collection), UNSIGNED), INT);
 			struct type_description_reference result_description;
 			t.t->value_type = WORD_ALIGNED_RVALUE;
-			t.t->source_scope_level = get_current_scope_level(state);
+			t.t->source_scope_level = state->current_scope;
 			buffered_puts(state->buffered_output,"loa r1 SP;    Lvalue\n");
 			buffered_puts(state->buffered_output,"loa r9 r1;    value before\n");
 			buffered_puts(state->buffered_output,"sub SP SP WR; Push for new lvalue\n");
@@ -2033,12 +2033,12 @@ void g_unary_expression(struct parser_node * p, struct code_gen_state * state){
 			unsigned int size;
 			sized_type = create_type_description_from_type_name(state->memory_pool_collection, state->parser_state, third_child(p));
 			convert_to_untypedefed_type_description(state->memory_pool_collection, sized_type);
-			size = type_size(state, sized_type, MINIMAL_RVALUE, 0, get_current_scope_level(state));
+			size = type_size(state, sized_type, MINIMAL_RVALUE, 0, state->current_scope);
 			buffered_puts(state->buffered_output,"sub SP SP WR;\n");
 			buffered_printf(state->buffered_output,"ll r1 0x%X;\n", size);
 			buffered_puts(state->buffered_output,"sto SP r1;\n");
 			result_type.t->value_type = WORD_ALIGNED_RVALUE;
-			result_type.t->source_scope_level = get_current_scope_level(state);
+			result_type.t->source_scope_level = state->current_scope;
 			push_type(state, result_type, p);
 			destroy_type_description(state->memory_pool_collection, sized_type);
 		}else{
@@ -2256,7 +2256,7 @@ struct type_description_reference perform_pointer_conversion(struct code_gen_sta
 
 		if(c1 == TYPE_CLASS_POINTER && is_integral_type2){
 			struct type_description_reference dereferenced = create_dereferenced_pointer_type_description_from_type_description(state->memory_pool_collection, t1);
-			unsigned int size = type_size(state, dereferenced, MINIMAL_RVALUE, 0, get_current_scope_level(state));
+			unsigned int size = type_size(state, dereferenced, MINIMAL_RVALUE, 0, state->current_scope);
 			buffered_printf(state->buffered_output,"ll r3 0x%X; Load the arr element size\n", size);
 			buffered_puts(state->buffered_output,"mul r2 r2 r3; Multiply by amount to add or sub\n");
 			push(state, "r2", WORD_ALIGNED_RVALUE);
@@ -2266,7 +2266,7 @@ struct type_description_reference perform_pointer_conversion(struct code_gen_sta
 			return t1;
 		}else if(c2 == TYPE_CLASS_POINTER && is_integral_type1){
 			struct type_description_reference dereferenced = create_dereferenced_pointer_type_description_from_type_description(state->memory_pool_collection, t2);
-			unsigned int size = type_size(state, dereferenced, MINIMAL_RVALUE, 0, get_current_scope_level(state));
+			unsigned int size = type_size(state, dereferenced, MINIMAL_RVALUE, 0, state->current_scope);
 			buffered_printf(state->buffered_output,"ll r3 0x%X; Load the arr element size\n", size);
 			buffered_puts(state->buffered_output,"mul r1 r1 r3; Multiply by amount to add or sub\n");
 			push(state, "r2", WORD_ALIGNED_RVALUE);
@@ -3021,26 +3021,35 @@ void g_statement_list(struct parser_node * p, struct code_gen_state * state){
 	}
 }
 
-void go_down_scope(struct code_gen_state * state){
-	struct parser_state * parser_state = state->parser_state;
-	/*  We'll now be descending into the next scope */
-	if(unsigned_int_list_size(&state->scope_index_list) == 0){
-		/* Will be 0 if this scope was actually a struct/enum/union defintion */
-		state->current_function = parser_state->type_engine->top_scope->scopes[state->next_scope_index]->current_function;
+struct namespace_object * get_current_function(struct code_gen_state * state){
+	struct scope_level * start = state->current_scope;
+	while(!(
+		start->type == SCOPE_LEVEL_TYPE_FUNCTION_SCOPE ||
+		start->type == SCOPE_LEVEL_TYPE_FILE_SCOPE
+	)){
+		start = start->parent_scope;
 	}
-	unsigned_int_list_add_end(&state->scope_index_list, state->next_scope_index);
-	state->next_scope_index = 0;
-
+	if(start->type == SCOPE_LEVEL_TYPE_FUNCTION_SCOPE){
+		return start->current_function;
+	}else{
+		return (struct namespace_object *)0; /*  We're not currently inside any function */
+	}
 }
 
-struct scope_level * get_current_scope_level(struct code_gen_state * state){
-	unsigned int i;
-	struct scope_level * current_scope = state->parser_state->type_engine->top_scope;
-	for(i = 0; i < unsigned_int_list_size(&state->scope_index_list); i++){
-		/*  Traverse down to the current one */
-		current_scope = current_scope->scopes[unsigned_int_list_get(&state->scope_index_list, i)];
+void update_scope_for_current_parser_node(struct code_gen_state * state, struct parser_node * n){
+	/*  If there is a scope level associated with this parser node... */
+	if(struct_parser_node_ptr_to_unsigned_int_map_exists(&state->parser_state->type_engine->parser_node_scope_associations, n)){
+		unsigned int scope_id = struct_parser_node_ptr_to_unsigned_int_map_get(&state->parser_state->type_engine->parser_node_scope_associations, n);
+		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->type_engine->scope_levels, scope_id);
 	}
-	return current_scope;
+}
+
+void exit_scope_for_current_parser_node(struct code_gen_state * state, struct parser_node * n){
+	if(struct_parser_node_ptr_to_unsigned_int_map_exists(&state->parser_state->type_engine->parser_node_scope_associations, n)){
+		unsigned int scope_id = struct_parser_node_ptr_to_unsigned_int_map_get(&state->parser_state->type_engine->parser_node_scope_associations, n);
+		clear_locals_from_scope(state, state->current_scope);
+		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->type_engine->scope_levels, scope_id)->parent_scope;
+	}
 }
 
 void clear_locals_from_scope(struct code_gen_state * state, struct scope_level * l){
@@ -3055,25 +3064,19 @@ void clear_locals_from_scope(struct code_gen_state * state, struct scope_level *
 	}
 }
 
-void go_up_scope(struct code_gen_state * state){
-	clear_locals_from_scope(state, get_current_scope_level(state));
-	state->next_scope_index = 1 + unsigned_int_list_pop_end(&state->scope_index_list);
-	if(unsigned_int_list_size(&state->scope_index_list) == 0){
-		state->current_function = (struct namespace_object *)0; /*  We're not currently inside any function */
-	}
-}
 
 void create_default_return_value(struct code_gen_state * state, struct parser_node * possible_function, struct parser_node * context){
-	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&state->current_function->elements);
-	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&state->current_function->elements, num_elements - 1);
-	struct type_description_reference t = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, context, get_current_scope_level(state), WORD_ALIGNED_RVALUE);
+	struct namespace_object * fun = get_current_function(state);
+	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&fun->elements);
+	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&fun->elements, num_elements - 1);
+	struct type_description_reference t = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, context, state->current_scope, WORD_ALIGNED_RVALUE);
 	struct type_description_reference return_type_description = get_current_function_return_type_description(state->memory_pool_collection, t);
 	unsigned int rtn_val_size;
 	unsigned int num_words;
 	unsigned int i;
         (void)possible_function;
 	convert_to_untypedefed_type_description(state->memory_pool_collection, return_type_description);
-	rtn_val_size = type_size(state, return_type_description, return_type_description.t->value_type, 1, get_current_scope_level(state));
+	rtn_val_size = type_size(state, return_type_description, return_type_description.t->value_type, 1, state->current_scope);
 	num_words = rtn_val_size / 4;
 	for(i = 0; i < num_words; i++){
 		buffered_printf(state->buffered_output,"sub SP SP WR; Creating default rtn value, word %d.\n", i);
@@ -3085,14 +3088,15 @@ void create_default_return_value(struct code_gen_state * state, struct parser_no
 }
 
 void return_from_function(struct code_gen_state * state, struct parser_node * context){
-	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&state->current_function->elements);
-	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&state->current_function->elements, num_elements - 1);
-	struct type_description_reference t = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, context, get_current_scope_level(state), WORD_ALIGNED_RVALUE);
+	struct namespace_object * fun = get_current_function(state);
+	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&fun->elements);
+	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&fun->elements, num_elements - 1);
+	struct type_description_reference t = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, context, state->current_scope, WORD_ALIGNED_RVALUE);
 	struct type_description_reference return_type_description = get_current_function_return_type_description(state->memory_pool_collection, t);
 	unsigned int rtn_val_size;
 	destroy_type_description(state->memory_pool_collection, ensure_top_type_is_r_value(state, context));
 	convert_to_untypedefed_type_description(state->memory_pool_collection, return_type_description);
-	rtn_val_size = type_size(state, return_type_description, return_type_description.t->value_type, 1, get_current_scope_level(state));
+	rtn_val_size = type_size(state, return_type_description, return_type_description.t->value_type, 1, state->current_scope);
         destroy_type_description(state->memory_pool_collection, t);
         /*  SP should now be pointing to the top of the return value */
         buffered_puts(state->buffered_output,"add r1 FP ZR;  r1 points to FP.\n");
@@ -3131,14 +3135,14 @@ void do_default_function_return(struct code_gen_state * state, struct parser_nod
 }
 
 void g_compound_statement(struct parser_node * p, struct code_gen_state * state, struct parser_node * possible_function, unsigned char * evaluate_label, unsigned char * end_label){
+	update_scope_for_current_parser_node(state, p);
 	if(check_four_children(p, TERMINAL, DECLARATION_LIST, STATEMENT_LIST, TERMINAL)){
 		if(
 			is_terminal_c_token_type(first_child(p),OPEN_BRACE_CHAR) &&
 			is_terminal_c_token_type(fourth_child(p),CLOSE_BRACE_CHAR)
 		){
 			struct scope_level * scope;
-			go_down_scope(state);
-			scope = get_current_scope_level(state);
+			scope = state->current_scope;
 			if(evaluate_label){
 				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluate_label);
 			}
@@ -3154,7 +3158,6 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * state,
 			if(end_label){
 				unsigned_char_ptr_list_pop_end(&scope->end_labels);
 			}
-			go_up_scope(state);
 		}else{
 			assert(0 && "Unknown terminals in compound statement.\n");
 		}
@@ -3164,8 +3167,7 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * state,
 			is_terminal_c_token_type(third_child(p),CLOSE_BRACE_CHAR)
 		){
 			struct scope_level * scope;
-			go_down_scope(state);
-			scope = get_current_scope_level(state);
+			scope = state->current_scope;
 			if(evaluate_label){
 				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluate_label);
 			}
@@ -3180,7 +3182,6 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * state,
 			if(end_label){
 				unsigned_char_ptr_list_pop_end(&scope->end_labels);
 			}
-			go_up_scope(state);
 		}else{
 			assert(0 && "Unknown terminals in compound statement.\n");
 		}
@@ -3190,8 +3191,7 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * state,
 			is_terminal_c_token_type(third_child(p),CLOSE_BRACE_CHAR)
 		){
 			struct scope_level * scope;
-			go_down_scope(state);
-			scope = get_current_scope_level(state);
+			scope = state->current_scope;
 			if(evaluate_label){
 				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluate_label);
 			}
@@ -3206,7 +3206,6 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * state,
 			if(end_label){
 				unsigned_char_ptr_list_pop_end(&scope->end_labels);
 			}
-			go_up_scope(state);
 		}else{
 			assert(0 && "Unknown terminals in compound statement.\n");
 		}
@@ -3216,8 +3215,7 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * state,
 			is_terminal_c_token_type(second_child(p),CLOSE_BRACE_CHAR)
 		){
 			struct scope_level * scope;
-			go_down_scope(state);
-			scope = get_current_scope_level(state);
+			scope = state->current_scope;
 			if(evaluate_label){
 				unsigned_char_ptr_list_add_end(&scope->evaluate_labels, evaluate_label);
 			}
@@ -3231,7 +3229,6 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * state,
 			if(end_label){
 				unsigned_char_ptr_list_pop_end(&scope->end_labels);
 			}
-			go_up_scope(state);
 		}else{
 			assert(0 && "Unknown terminals in compound statement.\n");
 		}
@@ -3239,6 +3236,7 @@ void g_compound_statement(struct parser_node * p, struct code_gen_state * state,
 	}else{
 		assert(0 && "Unsupported compound_statement.\n");
 	}
+	exit_scope_for_current_parser_node(state, p);
 }
 
 void g_type_qualifier(struct parser_node * p, struct code_gen_state * state){
@@ -3844,7 +3842,7 @@ void g_init_declarator(struct parser_node * specifiers, struct parser_node * p, 
 	unsigned int is_extern;
 	unsigned int is_typedef;
 	struct parser_node * abstract_declarator;
-	obj = get_namespace_object_from_closest_namespace(identifier_str, IDENTIFIER_NAMESPACE, get_current_scope_level(state), 0, m);
+	obj = get_namespace_object_from_closest_namespace(identifier_str, IDENTIFIER_NAMESPACE, state->current_scope, 0, m);
 	num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
 	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements -1);
 	type_description = create_type_description_from_normalized_declaration_element(m, element, p, obj->scope_level, LVALUE);
@@ -3877,7 +3875,7 @@ void g_init_declarator(struct parser_node * specifiers, struct parser_node * p, 
 						struct struct_type_description_reference_list types;
 						struct_compile_time_constant_ptr_list_create(&constants);
 						struct_type_description_reference_list_create(&types);
-						type_traversal = construct_type_traversal(state, type_description, get_current_scope_level(state), 0);
+						type_traversal = construct_type_traversal(state, type_description, state->current_scope, 0);
 						setup_global_type(state, type_traversal, initializer_level, &constants, &types);
 
 						buffered_printf(state->buffered_output,"%s:\n", name);
@@ -4221,6 +4219,7 @@ void g_abstract_declarator(struct parser_node * p, struct code_gen_state * state
 
 void g_labeled_statement(struct parser_node * p, struct code_gen_state * state){
 	struct memory_pool_collection * m = state->memory_pool_collection;
+	update_scope_for_current_parser_node(state, p);
 	if(check_four_children(p, TERMINAL, CONSTANT_EXPRESSION, TERMINAL, STATEMENT)){
 		if(
 			is_terminal_c_token_type(first_child(p),CASE) &&
@@ -4282,6 +4281,7 @@ void g_labeled_statement(struct parser_node * p, struct code_gen_state * state){
 	}else{
 		assert(0 &&"Expected labeled_statement.\n");
 	}
+	exit_scope_for_current_parser_node(state, p);
 }
 
 
@@ -4360,11 +4360,15 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 			pop(state, "r1", t.t->value_type);
 			destroy_type_description(m, t);
 			buffered_printf(state->buffered_output,"beq r1 ZR %s;\n", false_condition_str);
+			update_scope_for_current_parser_node(state, fifth_child(p));
 			g_statement(fifth_child(p), state, (unsigned char *)0, (unsigned char *)0);
+			exit_scope_for_current_parser_node(state, fifth_child(p));
 			buffered_puts(state->buffered_output,"loa PC PC;\n");
 			buffered_printf(state->buffered_output,"DW %s;\n", after_condition_str);
 			buffered_printf(state->buffered_output,"%s:\n", false_condition_str);
+			update_scope_for_current_parser_node(state, seventh_child(p));
 			g_statement(seventh_child(p), state, (unsigned char *)0, (unsigned char *)0);
+			exit_scope_for_current_parser_node(state, seventh_child(p));
 			buffered_printf(state->buffered_output,"%s:\n", after_condition_str);
 			require_internal_symbol(m, &state->symbols, false_condition_str);
 			implement_internal_symbol(m, &state->symbols, false_condition_str);
@@ -4393,7 +4397,9 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 			pop(state, "r1", t.t->value_type);
 			destroy_type_description(m, t);
 			buffered_printf(state->buffered_output,"beq r1 ZR %s;\n", after_condition_str);
+			update_scope_for_current_parser_node(state, fifth_child(p));
 			g_statement(fifth_child(p), state, (unsigned char *)0, (unsigned char *)0);
+			exit_scope_for_current_parser_node(state, fifth_child(p));
 			buffered_printf(state->buffered_output,"%s:\n", after_condition_str);
 			require_internal_symbol(m, &state->symbols, after_condition_str);
 			implement_internal_symbol(m, &state->symbols, after_condition_str);
@@ -4405,7 +4411,7 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 		){
 			unsigned int cond_index = state->condition_index;
 			unsigned char * after_condition_str = create_formatted_string(m, 20, "_%dac", cond_index);
-			struct scope_level * scope = get_current_scope_level(state);
+			struct scope_level * scope = state->current_scope;
 			unsigned int uses_compound_statement = first_child(fifth_child(p))->type == COMPOUND_STATEMENT;
 			struct switch_frame * frame = (struct switch_frame *)malloc(sizeof(struct switch_frame));
 			unsigned int num_cases;
@@ -4445,12 +4451,14 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 			}
 
 			struct_switch_frame_ptr_list_add_end(&state->switch_frames, frame);
+			update_scope_for_current_parser_node(state, fifth_child(p));
 			if(uses_compound_statement){
 				g_statement(fifth_child(p), state, (unsigned char *)0, after_condition_str);
 			}else{
 				unsigned_char_ptr_list_add_end(&scope->end_labels, after_condition_str);
 				g_statement(fifth_child(p), state, (unsigned char *)0, (unsigned char *)0);
 			}
+			exit_scope_for_current_parser_node(state, fifth_child(p));
 			unsigned_int_list_destroy(&frame->values);
 			free(struct_switch_frame_ptr_list_pop_end(&state->switch_frames));
 
@@ -4486,12 +4494,13 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			unsigned char * startwhile_str = create_formatted_string(m, 20, "_%dsw", cond_index);
 			unsigned char * evaluatewhile_str = create_formatted_string(m, 20, "_%devw", cond_index);
 			unsigned char * endwhile_str = create_formatted_string(m, 20, "_%dew", cond_index);
-			struct scope_level * scope = get_current_scope_level(state);
+			struct scope_level * scope = state->current_scope;
 			unsigned int uses_compound_statement = first_child(second_child(p))->type == COMPOUND_STATEMENT;
 			struct type_description_reference t;
 			(void)scope;
 			state->condition_index = state->condition_index + 1;
 			buffered_printf(state->buffered_output,"%s:\n", startwhile_str);
+			update_scope_for_current_parser_node(state, second_child(p));
 			if(uses_compound_statement){
 				g_statement(second_child(p), state, evaluatewhile_str, endwhile_str);
 			}else{
@@ -4499,6 +4508,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 				unsigned_char_ptr_list_add_end(&scope->end_labels, endwhile_str);
 				g_statement(second_child(p), state, (unsigned char *)0, (unsigned char *)0);
 			}
+			exit_scope_for_current_parser_node(state, second_child(p));
 			buffered_printf(state->buffered_output,"%s:\n", evaluatewhile_str);
 			g_expression(fifth_child(p), state);
 
@@ -4539,7 +4549,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			unsigned char * startfor_str = create_formatted_string(m, 20, "_%dsf", cond_index);
 			unsigned char * endfor_str = create_formatted_string(m, 20, "_%def", cond_index);
 			unsigned char * evaluatefor_str = create_formatted_string(m, 20, "_%devf", cond_index);
-			struct scope_level * scope = get_current_scope_level(state);
+			struct scope_level * scope = state->current_scope;
 			unsigned int uses_compound_statement = first_child(seventh_child(p))->type == COMPOUND_STATEMENT;
 			(void)scope;
 			state->condition_index = state->condition_index + 1;
@@ -4557,6 +4567,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 
 				buffered_printf(state->buffered_output,"beq r1 ZR %s; If not true, skip to end\n", endfor_str);
 			}
+			update_scope_for_current_parser_node(state, seventh_child(p));
 			if(uses_compound_statement){
 				g_statement(seventh_child(p), state, evaluatefor_str, endfor_str);
 			}else{
@@ -4564,6 +4575,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 				unsigned_char_ptr_list_add_end(&scope->end_labels, endfor_str);
 				g_statement(seventh_child(p), state, (unsigned char *)0, (unsigned char *)0);
 			}
+			exit_scope_for_current_parser_node(state, seventh_child(p));
 			buffered_printf(state->buffered_output,"%s:\n", evaluatefor_str);
 			g_expression(fifth_child(p), state);
 			buffered_puts(state->buffered_output,"add SP SP WR; Pop value of statement\n");
@@ -4597,7 +4609,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			unsigned int cond_index = state->condition_index;
 			unsigned char * startfor_str = create_formatted_string(m, 20, "_%dsf", cond_index);
 			unsigned char * endfor_str = create_formatted_string(m, 20, "_%def", cond_index);
-			struct scope_level * scope = get_current_scope_level(state);
+			struct scope_level * scope = state->current_scope;
 			unsigned int uses_compound_statement = first_child(sixth_child(p))->type == COMPOUND_STATEMENT;
 			(void)scope;
 			state->condition_index = state->condition_index + 1;
@@ -4614,6 +4626,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 				destroy_type_description(m, t);
 				buffered_printf(state->buffered_output,"beq r1 ZR %s; If not true, skip to end\n", endfor_str);
 			}
+			update_scope_for_current_parser_node(state, sixth_child(p));
 			if(uses_compound_statement){
 				g_statement(sixth_child(p), state, startfor_str, endfor_str);
 			}else{
@@ -4621,6 +4634,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 				unsigned_char_ptr_list_add_end(&scope->end_labels, endfor_str);
 				g_statement(sixth_child(p), state, (unsigned char *)0, (unsigned char *)0);
 			}
+			exit_scope_for_current_parser_node(state, sixth_child(p));
 			buffered_puts(state->buffered_output,"loa PC PC; Test condition again\n");
 			buffered_printf(state->buffered_output,"DW %s; Test condition again\n", startfor_str);
 			buffered_printf(state->buffered_output,"%s:\n", endfor_str);
@@ -4647,7 +4661,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			unsigned int cond_index = state->condition_index;
 			unsigned char * startwhile_str = create_formatted_string(m, 20, "_%dsw", cond_index);
 			unsigned char * endwhile_str = create_formatted_string(m, 20, "_%dew", cond_index);
-			struct scope_level * scope = get_current_scope_level(state);
+			struct scope_level * scope = state->current_scope;
 			unsigned int uses_compound_statement = first_child(fifth_child(p))->type == COMPOUND_STATEMENT;
 			struct type_description_reference t;
 			(void)scope;
@@ -4660,6 +4674,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			pop(state, "r1", t.t->value_type);
 			destroy_type_description(m, t);
 			buffered_printf(state->buffered_output,"beq r1 ZR %s; If not true, skip to end\n", endwhile_str);
+			update_scope_for_current_parser_node(state, fifth_child(p));
 			if(uses_compound_statement){
 				g_statement(fifth_child(p), state, startwhile_str, endwhile_str);
 			}else{
@@ -4667,6 +4682,7 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 				unsigned_char_ptr_list_add_end(&scope->end_labels, endwhile_str);
 				g_statement(fifth_child(p), state, (unsigned char *)0, (unsigned char *)0);
 			}
+			exit_scope_for_current_parser_node(state, fifth_child(p));
 			buffered_puts(state->buffered_output,"loa PC PC; Test condition again\n");
 			buffered_printf(state->buffered_output,"DW %s; Test condition again\n", startwhile_str);
 			buffered_printf(state->buffered_output,"%s:\n", endwhile_str);
@@ -4717,7 +4733,7 @@ void g_jump_statement(struct parser_node * p, struct code_gen_state * state){
 			is_terminal_c_token_type(second_child(p),SEMICOLON_CHAR)
 		){
 			struct scope_level * current_scope;
-			for(current_scope = get_current_scope_level(state); current_scope != 0; current_scope = current_scope->parent_scope){
+			for(current_scope = state->current_scope; current_scope != 0; current_scope = current_scope->parent_scope){
 				if(unsigned_char_ptr_list_size(&current_scope->evaluate_labels)){
 					unsigned char * label = unsigned_char_ptr_list_get(&current_scope->evaluate_labels, unsigned_char_ptr_list_size(&current_scope->evaluate_labels) -1);
 					clear_locals_from_scope(state, current_scope);
@@ -4734,7 +4750,7 @@ void g_jump_statement(struct parser_node * p, struct code_gen_state * state){
 			is_terminal_c_token_type(second_child(p),SEMICOLON_CHAR)
 		){
 			struct scope_level * current_scope;
-			for(current_scope = get_current_scope_level(state); current_scope != 0; current_scope = current_scope->parent_scope){
+			for(current_scope = state->current_scope; current_scope != 0; current_scope = current_scope->parent_scope){
 				if(unsigned_char_ptr_list_size(&current_scope->end_labels)){
 					unsigned char * label = unsigned_char_ptr_list_get(&current_scope->end_labels, unsigned_char_ptr_list_size(&current_scope->end_labels) -1);
 					clear_locals_from_scope(state, current_scope);
@@ -4918,22 +4934,20 @@ int generate_code(struct code_gen_state * state){
 }
 
 void create_code_gen_state(struct code_gen_state * state, struct parser_state * parser_state, struct unsigned_char_list * buffered_output, struct unsigned_char_list * buffered_symbol_table){
+	state->current_scope = parser_state->type_engine->top_scope;
 	state->memory_pool_collection = parser_state->memory_pool_collection; 
 	state->buffered_output = buffered_output; 
 	state->buffered_symbol_table = buffered_symbol_table; 
 	state->parser_state = parser_state;
-	state->current_function = (struct namespace_object *)0;
 	state->condition_index = 0;
 	state->global_var_ptr_index = 0;
 	struct_switch_frame_ptr_list_create(&state->switch_frames);
-	unsigned_int_list_create(&state->scope_index_list);
-	state->next_scope_index = 0;
 	struct_type_description_reference_list_create(&state->type_stack);
 	struct_constant_initializer_level_ptr_list_create(&state->created_constant_initializer_levels);
 	struct_constant_description_ptr_list_create(&state->created_constant_descriptions);
 	struct_compile_time_constant_ptr_list_create(&state->created_compile_time_constants);
 	void_ptr_list_create(&state->created_data);
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&state->symbols);
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&state->symbols, unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
 	struct_linker_object_ptr_list_create(&state->object_declarations);
 }
 
@@ -4949,7 +4963,6 @@ int destroy_code_gen_state(struct code_gen_state * state){
 		heap_memory_pool_free(state->memory_pool_collection->heap_pool, unsigned_char_ptr_list_get(&keys, i));
 	}
 	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_destroy(&state->symbols);
-	unsigned_int_list_destroy(&state->scope_index_list);
 	struct_type_description_reference_list_destroy(&state->type_stack);
 	unsigned_char_ptr_list_destroy(&keys);
 	struct_switch_frame_ptr_list_destroy(&state->switch_frames);
@@ -4990,8 +5003,8 @@ int destroy_code_gen_state(struct code_gen_state * state){
 	return 0;
 }
 
-int do_code_generation(struct memory_pool_collection * memory_pool_collection, unsigned char * in_file, unsigned char * out_file, unsigned char * offset){
-	int rtn; 
+unsigned int do_code_generation(struct memory_pool_collection * memory_pool_collection, unsigned char * in_file, unsigned char * out_file, unsigned char * offset){
+	unsigned int rtn; 
 	unsigned int g; 
 	struct unsigned_char_list preprocessed_input;
 	struct unsigned_char_list generated_code;
@@ -5000,19 +5013,7 @@ int do_code_generation(struct memory_pool_collection * memory_pool_collection, u
 	struct parser_state parser_state;
 	struct code_gen_state state;
 	struct c_lexer_state c_lexer_state;
-	/*
 
-	Different types of operations on stack:
-	Convert top type to rvalue.  Make lvalue into pointer.
-	Perform char to int sign extension on top type
-	Do copy of type to place at lvalue 
-	Conversion of top types to rvalues
-	Multiply, add divide etc. top two types
-	
-	Must know:  Type of operation to perform.  Type of operation to perform will deduce type sizes.  What about struct assignment?
-	Figure out what to do with copy words.
-	
-	*/
 
 	unsigned_char_list_create(&lexer_output);
 	unsigned_char_list_create(&preprocessed_input);
@@ -5023,7 +5024,7 @@ int do_code_generation(struct memory_pool_collection * memory_pool_collection, u
 
 	create_c_lexer_state(&c_lexer_state, &lexer_output, memory_pool_collection, in_file, unsigned_char_list_data(&preprocessed_input), unsigned_char_list_size(&preprocessed_input));
 	/*  Use the lexer to generate tokens from 'pure c' code (no preprocessor directives) */
-	rtn = lex_c(&c_lexer_state);
+	rtn = (unsigned int)lex_c(&c_lexer_state);
 	for(g = 0; g < unsigned_char_list_size(&lexer_output); g++){
 		printf("%c", unsigned_char_list_get(&lexer_output, g));
 	}
@@ -5035,8 +5036,22 @@ int do_code_generation(struct memory_pool_collection * memory_pool_collection, u
 		struct type_engine_state type_engine;
 		create_type_engine_state(&type_engine, memory_pool_collection);
 		create_parser_state(&parser_state, memory_pool_collection, &c_lexer_state, &generated_code, unsigned_char_list_data(&preprocessed_input), &type_engine);
-		if(parse(&parser_state)){
+		if(parse(&parser_state) || (struct_parser_error_list_size(&parser_state.parser_errors) != 0)){
+			unsigned int i;
+			unsigned int num_errors = struct_parser_error_list_size(&parser_state.parser_errors);
+			struct unsigned_char_list l;
+			unsigned_char_list_create(&l);
 			printf("Parsing failed during code generation of %s\n", in_file);
+			if(num_errors){
+				for(i = 0; i < num_errors; i++){
+					print_parser_error(&l, &parser_state, struct_parser_error_list_get(&parser_state.parser_errors, i));
+				}
+			}
+			for(i = 0; i < unsigned_char_list_size(&l); i++){
+				printf("%c", unsigned_char_list_get(&l, i));
+			}
+			unsigned_char_list_destroy(&l);
+			return 1;
 		}else{
 			create_code_gen_state(&state, &parser_state, &generated_code, &buffered_symbol_table);
 			if(generate_code(&state)){

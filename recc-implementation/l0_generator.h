@@ -20,10 +20,7 @@
 #include "io.h"
 #endif
 #ifndef unsigned_char_list_H_DEFINED_
-#include "../data-structures/unsigned_char_list.h"
-#endif
-#ifndef struct_l0_item_list_H_DEFINED_
-#include "../data-structures/struct_l0_item_list.h"
+#include "../generated/unsigned_char_list.h"
 #endif
 #ifndef STDIO_H_DEFINED_
 #include <stdio.h>
@@ -41,7 +38,7 @@
 #include "../emulators/c/op-cpu.h"
 #endif
 #ifndef TYPES_L0_GENERATOR_struct_l0_generator_state_H_
-#include "../types/l0_generator/struct_l0_generator_state.h"
+#include "../generated/struct_l0_generator_state.h"
 #endif
 
 struct l0_generator_state * l0_generator_state_create(struct memory_pool_collection *, unsigned char *, unsigned char *, unsigned char *, unsigned char *);

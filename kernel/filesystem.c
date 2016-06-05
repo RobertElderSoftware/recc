@@ -17,8 +17,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <assert.h>
-#include "../data-structures/unsigned_char_list.h"
-#include "../data-structures/unsigned_char_ptr_list.h"
+#include "../generated/unsigned_char_list.h"
+#include "../generated/unsigned_char_ptr_list.h"
 #include "../recc-implementation/io.h"
 #include "../recc-implementation/preprocessor.h"
 #include "../recc-implementation/lexer.h"

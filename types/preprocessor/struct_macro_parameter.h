@@ -1,5 +1,5 @@
-#ifndef TYPES_PREPROCESSOR_struct_macro_parameter_H_
-#define TYPES_PREPROCESSOR_struct_macro_parameter_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -21,4 +21,4 @@ struct macro_parameter{
 	unsigned int is_variadic;
 };
 
-#endif
+

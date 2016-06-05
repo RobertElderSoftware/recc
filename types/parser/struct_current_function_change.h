@@ -1,5 +1,5 @@
-#ifndef TYPES_PARSER_struct_current_function_change_H_
-#define TYPES_PARSER_struct_current_function_change_H_
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -21,5 +21,3 @@ struct current_function_change {
 	struct namespace_object * old_obj;
 	struct namespace_object * new_obj;
 };
-
-#endif

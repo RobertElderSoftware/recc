@@ -647,7 +647,7 @@ void * push_l2_operation(struct l2_parser_state * parser_state, enum l2_parser_o
 	struct l2_parser_operation new_operation;
 	new_operation.type = t;
 	new_operation.data = t == L2_ADVANCE_PARSER_POSITION ? struct_l2_parser_node_memory_pool_malloc(parser_state->memory_pool_collection->struct_l2_parser_node_pool) : data;
-	struct_l2_parser_operation_stack_push(&parser_state->operation_stack, new_operation);
+	struct_l2_parser_operation_list_add_end(&parser_state->operation_stack, new_operation);
 	switch(t){
 		case L2_ADVANCE_TOKEN_POSITION:{
 			parser_state->tokens_position = parser_state->tokens_position + 1;
@@ -667,11 +667,11 @@ void * push_l2_operation(struct l2_parser_state * parser_state, enum l2_parser_o
 
 void pop_l2_operation(struct l2_parser_state * parser_state){
 	struct l2_parser_operation poped_operation;
-	if(struct_l2_parser_operation_stack_size(&parser_state->operation_stack) == 0){
+	if(struct_l2_parser_operation_list_size(&parser_state->operation_stack) == 0){
 		assert(0 && "Trying to pop empty operation stack.\n");
 		return;
 	}
-	poped_operation = struct_l2_parser_operation_stack_pop(&parser_state->operation_stack);
+	poped_operation = struct_l2_parser_operation_list_pop_end(&parser_state->operation_stack);
 	
 	switch(poped_operation.type){
 		case L2_ADVANCE_TOKEN_POSITION:{
@@ -690,7 +690,7 @@ void pop_l2_operation(struct l2_parser_state * parser_state){
 }
 
 void l2_backtrack(struct l2_parser_state * parser_state, unsigned int target){
-	while(struct_l2_parser_operation_stack_size(&parser_state->operation_stack) != target){
+	while(struct_l2_parser_operation_list_size(&parser_state->operation_stack) != target){
 		pop_l2_operation(parser_state);
 	}
 }
@@ -712,12 +712,12 @@ void create_l2_parser_state(struct l2_parser_state * state, struct memory_pool_c
 	state->line_number = 1;
 	state->tokens_position = 0;
 	state->buff = buffer;
-	struct_l2_parser_operation_stack_create(&state->operation_stack);
+	struct_l2_parser_operation_list_create(&state->operation_stack);
 }
 
 void destroy_l2_parser_state(struct l2_parser_state * state){
 	l2_backtrack(state, 0);
-	struct_l2_parser_operation_stack_destroy(&state->operation_stack);
+	struct_l2_parser_operation_list_destroy(&state->operation_stack);
 }
 
 const char ** get_l2_node_type_names(void){
