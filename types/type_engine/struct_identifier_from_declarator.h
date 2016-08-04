@@ -19,6 +19,6 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct identifier_from_declarator{
-	unsigned int id;
+	struct identifier_id id;
 	unsigned int initialized;
 };

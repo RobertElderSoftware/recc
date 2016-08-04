@@ -23,7 +23,7 @@
 #include "../generated/struct_heap_memory_pool.h"
 #endif
 #ifndef void_ptr_to_unsigned_int_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/void_ptr_to_unsigned_int_key_value_pair_compare.h"
+#include "../generated/struct_void_ptr_to_unsigned_int_key_value_pair_compare.h"
 #endif
 #ifndef void_ptr_to_unsigned_int_map_H_DEFINED_
 #include "../generated/void_ptr_to_unsigned_int_map.h"

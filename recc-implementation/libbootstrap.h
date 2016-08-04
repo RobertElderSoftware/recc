@@ -30,12 +30,22 @@ struct bootstrap_state{
 };
 
 enum generated_file_type{
-	GENERATED_FILE_TYPE_MAP,
-	GENERATED_FILE_TYPE_LIST,
-	GENERATED_FILE_TYPE_BINARY_SEARCH,
-	GENERATED_FILE_TYPE_MERGE_SORT,
-	GENERATED_FILE_TYPE_KEY_VALUE_PAIR,
-	GENERATED_FILE_TYPE_MEMORY_POOL
+	GENERATED_FILE_TYPE_MAP_HEADER,
+	GENERATED_FILE_TYPE_MAP_ALGORITHM,
+	GENERATED_FILE_TYPE_MAP_TYPE,
+	GENERATED_FILE_TYPE_LIST_HEADER,
+	GENERATED_FILE_TYPE_LIST_ALGORITHM,
+	GENERATED_FILE_TYPE_LIST_TYPE,
+	GENERATED_FILE_TYPE_BINARY_SEARCH_HEADER,
+	GENERATED_FILE_TYPE_BINARY_SEARCH_ALGORITHM,
+	GENERATED_FILE_TYPE_MERGE_SORT_HEADER,
+	GENERATED_FILE_TYPE_MERGE_SORT_ALGORITHM,
+	GENERATED_FILE_TYPE_KEY_VALUE_PAIR_TYPE,
+	GENERATED_FILE_TYPE_MEMORY_POOL_HEADER,
+	GENERATED_FILE_TYPE_MEMORY_POOL_ALGORITHM,
+	GENERATED_FILE_TYPE_MEMORY_POOL_TYPE,
+	GENERATED_FILE_TYPE_COMPARE_ALGORITHM,
+	GENERATED_FILE_TYPE_COMPARE_HEADER
 };
 
 enum templated_file_type{
@@ -93,6 +103,6 @@ void cleanup_files_for_type(struct files_for_type *);
 void make_type_replacement_rules(struct binary_exponential_buffer *, struct binary_exponential_buffer *);
 void make_generated_file(unsigned char *, unsigned char *, unsigned char *, struct binary_exponential_buffer *, struct binary_exponential_buffer *, unsigned int);
 
-struct files_for_type * make_files_for_type(struct bootstrap_state *, enum generated_file_type, struct binary_exponential_buffer, struct binary_exponential_buffer, struct binary_exponential_buffer);
+struct files_for_type * make_files_for_type(enum generated_file_type, const char *, struct binary_exponential_buffer, struct binary_exponential_buffer);
 
 #endif

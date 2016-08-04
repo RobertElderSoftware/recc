@@ -43,5 +43,8 @@
 
 struct l0_generator_state * l0_generator_state_create(struct memory_pool_collection *, unsigned char *, unsigned char *, unsigned char *, unsigned char *);
 void l0_generator_state_destroy(struct l0_generator_state *);
+unsigned int parse_decimal_token(struct l2_lexer_token *);
+unsigned int parse_hexadecimal_token(struct l2_lexer_token *);
+unsigned int get_register_number(struct l2_lexer_token *);
 
 #endif

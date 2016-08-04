@@ -645,6 +645,7 @@ static unsigned char process_hex_digit(struct regex_parser_node * p){
 		return (c - 'A') + 10;
 	}else{
 		assert(0 && "Internal error: Should not happen.");
+		return 0;
 	}
 }
 
@@ -694,6 +695,7 @@ static unsigned char process_non_class_character(struct regex_parser_node * p){
 		return p->c;
 	}else{
 		assert(0 && "Should not happen.");
+		return 0;
 	}
 }
 
@@ -905,6 +907,8 @@ static struct regex_computation_node * apply_postfix_operator(struct regex_compi
 				break;
 			}default:{
 				assert(0 && "Should not happen.");
+				after_n = (struct regex_computation_node *)0;
+				rtn = (struct regex_computation_node *)0;
 			}
 		}
 		/*  If any special paths are null, assume they should be set to the next node */

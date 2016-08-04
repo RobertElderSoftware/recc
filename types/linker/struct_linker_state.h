@@ -36,4 +36,5 @@ struct linker_state{
 	unsigned char * offset;
 	unsigned int page_align_permission_regions;
 	unsigned int only_metadata;
+	unsigned int next_internal_identifier_id;
 };

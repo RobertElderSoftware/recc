@@ -31,26 +31,45 @@ struct binary_exponential_buffer * make_file_path(unsigned char *);
 unsigned char * deep_copy_string(unsigned char *);
 const char * get_file_postfix(enum generated_file_type);
 const char * get_generic_filename_str(enum generated_file_type);
-void add_templated_file(struct files_for_type *, const char *, const char *, const char *, const char *, const char *, const char *, struct binary_exponential_buffer, unsigned int, enum templated_file_type);
+void add_templated_file(struct files_for_type *, unsigned char *, const char *, const char *, const char *, const char *, const char *, struct binary_exponential_buffer, unsigned int, enum templated_file_type);
 void add_generated_file(struct files_for_type *, const char *, const char *, const char *, const char *, enum templated_file_type);
 
-static const char * templates_location = "recc-implementation/templates/";
 static const char * generated_location = "generated/";
 
 const char * get_file_postfix(enum generated_file_type type){
 	switch(type){
-		case GENERATED_FILE_TYPE_MAP:{
+		case GENERATED_FILE_TYPE_MAP_HEADER:{
 			return "map";
-		}case GENERATED_FILE_TYPE_LIST:{
+		}case GENERATED_FILE_TYPE_MAP_ALGORITHM:{
+			return "map";
+		}case GENERATED_FILE_TYPE_MAP_TYPE:{
+			return "map";
+		}case GENERATED_FILE_TYPE_LIST_HEADER:{
 			return "list";
-		}case GENERATED_FILE_TYPE_BINARY_SEARCH:{
+		}case GENERATED_FILE_TYPE_LIST_ALGORITHM:{
+			return "list";
+		}case GENERATED_FILE_TYPE_LIST_TYPE:{
+			return "list";
+		}case GENERATED_FILE_TYPE_BINARY_SEARCH_HEADER:{
 			return "binary_search";
-		}case GENERATED_FILE_TYPE_MERGE_SORT:{
+		}case GENERATED_FILE_TYPE_BINARY_SEARCH_ALGORITHM:{
+			return "binary_search";
+		}case GENERATED_FILE_TYPE_MERGE_SORT_HEADER:{
 			return "merge_sort";
-		}case GENERATED_FILE_TYPE_KEY_VALUE_PAIR:{
+		}case GENERATED_FILE_TYPE_MERGE_SORT_ALGORITHM:{
+			return "merge_sort";
+		}case GENERATED_FILE_TYPE_KEY_VALUE_PAIR_TYPE:{
 			return "key_value_pair";
-		}case GENERATED_FILE_TYPE_MEMORY_POOL:{
+		}case GENERATED_FILE_TYPE_MEMORY_POOL_HEADER:{
 			return "memory_pool";
+		}case GENERATED_FILE_TYPE_MEMORY_POOL_ALGORITHM:{
+			return "memory_pool";
+		}case GENERATED_FILE_TYPE_MEMORY_POOL_TYPE:{
+			return "memory_pool";
+		}case GENERATED_FILE_TYPE_COMPARE_HEADER:{
+			return "compare";
+		}case GENERATED_FILE_TYPE_COMPARE_ALGORITHM:{
+			return "compare";
 		}default:{
 			assert(0);
 			return (const char *)0;
@@ -60,17 +79,37 @@ const char * get_file_postfix(enum generated_file_type type){
 
 const char * get_generic_filename_str(enum generated_file_type type){
 	switch(type){
-		case GENERATED_FILE_TYPE_MAP:{
+		case GENERATED_FILE_TYPE_MAP_HEADER:{
 			return "T0_IDENTIFIER_to_T1_IDENTIFIER_";
-		}case GENERATED_FILE_TYPE_LIST:{
-			return "T0_IDENTIFIER_";
-		}case GENERATED_FILE_TYPE_BINARY_SEARCH:{
-			return "T0_IDENTIFIER_";
-		}case GENERATED_FILE_TYPE_MERGE_SORT:{
-			return "T0_IDENTIFIER_";
-		}case GENERATED_FILE_TYPE_KEY_VALUE_PAIR:{
+		}case GENERATED_FILE_TYPE_MAP_ALGORITHM:{
 			return "T0_IDENTIFIER_to_T1_IDENTIFIER_";
-		}case GENERATED_FILE_TYPE_MEMORY_POOL:{
+		}case GENERATED_FILE_TYPE_MAP_TYPE:{
+			return "T0_IDENTIFIER_to_T1_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_LIST_HEADER:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_LIST_ALGORITHM:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_LIST_TYPE:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_BINARY_SEARCH_HEADER:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_BINARY_SEARCH_ALGORITHM:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_MERGE_SORT_HEADER:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_MERGE_SORT_ALGORITHM:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_KEY_VALUE_PAIR_TYPE:{
+			return "T0_IDENTIFIER_to_T1_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_MEMORY_POOL_HEADER:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_MEMORY_POOL_ALGORITHM:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_MEMORY_POOL_TYPE:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_COMPARE_HEADER:{
+			return "T0_IDENTIFIER_";
+		}case GENERATED_FILE_TYPE_COMPARE_ALGORITHM:{
 			return "T0_IDENTIFIER_";
 		}default:{
 			assert(0);
@@ -79,7 +118,7 @@ const char * get_generic_filename_str(enum generated_file_type type){
 	}
 }
 
-void add_templated_file(struct files_for_type * files_for_type, const char * source_file_prefix, const char * outfile_prefix, const char * file_extension, const char * file_postfix, const char * generic_filename_str, const char * relative_location, struct binary_exponential_buffer header_files, unsigned int is_header, enum templated_file_type type){
+void add_templated_file(struct files_for_type * files_for_type, unsigned char * template_file, const char * outfile_prefix, const char * file_extension, const char * file_postfix, const char * generic_filename_str, const char * relative_location, struct binary_exponential_buffer header_files, unsigned int is_header, enum templated_file_type type){
 
 	/*  Build the filename of the input and output file we want to generate later. */
 	unsigned int i;
@@ -97,9 +136,7 @@ void add_templated_file(struct files_for_type * files_for_type, const char * sou
 	binary_exponential_buffer_create(&f->in_file, sizeof(unsigned char));
 	binary_exponential_buffer_create(&f->out_file, sizeof(unsigned char));
 
-	add_string_to_binary_exponential_buffer((void*)templates_location, &f->in_file);
-	add_string_to_binary_exponential_buffer((void*)source_file_prefix, &f->in_file);
-	add_string_to_binary_exponential_buffer_with_null_terminator((void*)file_postfix, &f->in_file);
+	add_string_to_binary_exponential_buffer_with_null_terminator((void*)template_file, &f->in_file);
 
 	add_string_to_binary_exponential_buffer((void*)generated_location, &filename_context->in_characters);
 	add_string_to_binary_exponential_buffer((void*)outfile_prefix, &filename_context->in_characters);
@@ -167,7 +204,7 @@ void add_generated_file(struct files_for_type * files_for_type, const char * sou
 	replacement_context_destroy(out_filename_context);
 }
 
-struct files_for_type * make_files_for_type(struct bootstrap_state * b, enum generated_file_type type, struct binary_exponential_buffer literal_type_names, struct binary_exponential_buffer type_header_files, struct binary_exponential_buffer algorithm_header_files){
+struct files_for_type * make_files_for_type(enum generated_file_type type, const char * template_file, struct binary_exponential_buffer literal_type_names, struct binary_exponential_buffer headers){
 	struct files_for_type * files_for_type = (struct files_for_type *)malloc(sizeof(struct files_for_type));
 
 	const char * generic_filename_str = get_generic_filename_str(type);
@@ -176,64 +213,28 @@ struct files_for_type * make_files_for_type(struct bootstrap_state * b, enum gen
 	binary_exponential_buffer_create(&files_for_type->replacement_rules, sizeof(struct replacement_rule *));
 	files_for_type->literal_type_names = literal_type_names;
 
-	(void)b;
 	make_type_replacement_rules(&files_for_type->replacement_rules, &files_for_type->literal_type_names);
 
+
+	binary_exponential_buffer_increment(&headers, 1);
+	((unsigned char **)binary_exponential_buffer_data(&headers))[binary_exponential_buffer_size(&headers) -1] = (unsigned char *)"recc-implementation/binary_exponential_buffer.h";
+
 	switch(type){
-		case GENERATED_FILE_TYPE_MAP:{
-			binary_exponential_buffer_increment(&algorithm_header_files, 1);
-			((unsigned char **)binary_exponential_buffer_data(&algorithm_header_files))[binary_exponential_buffer_size(&algorithm_header_files) -1] = (unsigned char *)"recc-implementation/binary_exponential_buffer.h";
-			binary_exponential_buffer_increment(&type_header_files, 1);
-			((unsigned char **)binary_exponential_buffer_data(&type_header_files))[binary_exponential_buffer_size(&type_header_files) -1] = (unsigned char *)"recc-implementation/binary_exponential_buffer.h";
-			add_templated_file(files_for_type, "generic.h.header.", "struct_", ".h", file_postfix, generic_filename_str, "../", type_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_templated_file(files_for_type, "generic.h.", "", ".h", file_postfix, generic_filename_str, "../" , algorithm_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_templated_file(files_for_type, "generic.c.", "", ".c", file_postfix, generic_filename_str, "../", make_beb_list(0), 0, TEMPLATED_FILE_TYPE_C_SOURCE);
+		case GENERATED_FILE_TYPE_MAP_ALGORITHM:; case GENERATED_FILE_TYPE_LIST_ALGORITHM:; case GENERATED_FILE_TYPE_BINARY_SEARCH_ALGORITHM:;
+		 case GENERATED_FILE_TYPE_MERGE_SORT_ALGORITHM:;case GENERATED_FILE_TYPE_MEMORY_POOL_ALGORITHM:;case GENERATED_FILE_TYPE_COMPARE_ALGORITHM:{
+			add_templated_file(files_for_type, (unsigned char *)template_file, "", ".c", file_postfix, generic_filename_str, "../", headers, 0, TEMPLATED_FILE_TYPE_C_SOURCE);
 			add_generated_file(files_for_type, ".c", ".i", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_FILE);
 			add_generated_file(files_for_type, ".i", ".l2", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_TO_L2);
 			add_generated_file(files_for_type, ".c", ".o", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_C_TO_O);
 
 			break;
-		}case GENERATED_FILE_TYPE_LIST:{
-			binary_exponential_buffer_increment(&algorithm_header_files, 1);
-			((unsigned char **)binary_exponential_buffer_data(&algorithm_header_files))[binary_exponential_buffer_size(&algorithm_header_files) -1] = (unsigned char *)"recc-implementation/binary_exponential_buffer.h";
-			binary_exponential_buffer_increment(&type_header_files, 1);
-			((unsigned char **)binary_exponential_buffer_data(&type_header_files))[binary_exponential_buffer_size(&type_header_files) -1] = (unsigned char *)"recc-implementation/binary_exponential_buffer.h";
-			add_templated_file(files_for_type, "generic.h.header.", "struct_", ".h", file_postfix, generic_filename_str, "../", type_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_templated_file(files_for_type, "generic.h.", "", ".h", file_postfix, generic_filename_str, "../" , algorithm_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_templated_file(files_for_type, "generic.c.", "", ".c", file_postfix, generic_filename_str, "../", make_beb_list(0), 0, TEMPLATED_FILE_TYPE_C_SOURCE);
-
-			add_generated_file(files_for_type, ".c", ".i", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_FILE);
-			add_generated_file(files_for_type, ".i", ".l2", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_TO_L2);
-			add_generated_file(files_for_type, ".c", ".o", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_C_TO_O);
+		}case GENERATED_FILE_TYPE_MAP_HEADER:; case GENERATED_FILE_TYPE_LIST_HEADER:; case GENERATED_FILE_TYPE_BINARY_SEARCH_HEADER:;
+		 case GENERATED_FILE_TYPE_MERGE_SORT_HEADER:;case GENERATED_FILE_TYPE_MEMORY_POOL_HEADER:;case GENERATED_FILE_TYPE_COMPARE_HEADER:{
+			add_templated_file(files_for_type, (unsigned char *)template_file, "", ".h", file_postfix, generic_filename_str, "../" , headers, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
 			break;
-		}case GENERATED_FILE_TYPE_BINARY_SEARCH:{
-			add_templated_file(files_for_type, "generic.h.", "", ".h", file_postfix, generic_filename_str, "../" , algorithm_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_templated_file(files_for_type, "generic.c.", "", ".c", file_postfix, generic_filename_str, "../", make_beb_list(0), 0, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_generated_file(files_for_type, ".c", ".i", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_FILE);
-			add_generated_file(files_for_type, ".i", ".l2", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_TO_L2);
-			add_generated_file(files_for_type, ".c", ".o", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_C_TO_O);
-
-			break;
-		}case GENERATED_FILE_TYPE_MERGE_SORT:{
-			add_templated_file(files_for_type, "generic.h.", "", ".h", file_postfix, generic_filename_str, "../" , algorithm_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_templated_file(files_for_type, "generic.c.", "", ".c", file_postfix, generic_filename_str, "../", make_beb_list(0), 0, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_generated_file(files_for_type, ".c", ".i", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_FILE);
-			add_generated_file(files_for_type, ".i", ".l2", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_TO_L2);
-			add_generated_file(files_for_type, ".c", ".o", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_C_TO_O);
-
-			break;
-		}case GENERATED_FILE_TYPE_KEY_VALUE_PAIR:{
-			add_templated_file(files_for_type, "generic.h.header.", "struct_", ".h", file_postfix, generic_filename_str, "../", type_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			break;
-		}case GENERATED_FILE_TYPE_MEMORY_POOL:{
-			binary_exponential_buffer_increment(&algorithm_header_files, 1);
-			((unsigned char **)binary_exponential_buffer_data(&algorithm_header_files))[binary_exponential_buffer_size(&algorithm_header_files) -1] = (unsigned char *)"recc-implementation/binary_exponential_buffer.h";
-			add_templated_file(files_for_type, "generic.h.header.", "struct_", ".h", file_postfix, generic_filename_str, "../", type_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_templated_file(files_for_type, "generic.h.", "", ".h", file_postfix, generic_filename_str, "../" , algorithm_header_files, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_templated_file(files_for_type, "generic.c.", "", ".c", file_postfix, generic_filename_str, "../", make_beb_list(0), 0, TEMPLATED_FILE_TYPE_C_SOURCE);
-			add_generated_file(files_for_type, ".c", ".i", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_FILE);
-			add_generated_file(files_for_type, ".i", ".l2", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_I_TO_L2);
-			add_generated_file(files_for_type, ".c", ".o", file_postfix, generic_filename_str, TEMPLATED_FILE_TYPE_C_TO_O);
+		}case GENERATED_FILE_TYPE_MAP_TYPE:; case GENERATED_FILE_TYPE_LIST_TYPE:;
+		case GENERATED_FILE_TYPE_KEY_VALUE_PAIR_TYPE:; case GENERATED_FILE_TYPE_MEMORY_POOL_TYPE:{
+			add_templated_file(files_for_type, (unsigned char *)template_file, "struct_", ".h", file_postfix, generic_filename_str, "../", headers, 1, TEMPLATED_FILE_TYPE_C_SOURCE);
 
 			break;
 		}default:{

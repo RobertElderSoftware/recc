@@ -43,12 +43,6 @@
 #ifndef TYPE_ENGINE_H_
 #include "type_engine.h"
 #endif
-#ifndef unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare.h"
-#endif
-#ifndef unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_compare.h"
-#endif
 
 void * push_operation(struct parser_state *, enum parser_operation_type, void *);
 void pop_operation(struct parser_state *);
@@ -120,7 +114,7 @@ struct struct_normalized_declaration_element_ptr_list * create_normalized_declar
 void destroy_normalized_declaration_element_list(struct memory_pool_collection *, struct struct_normalized_declaration_element_ptr_list*);
 struct parser_node * get_enumerator_list(struct parser_node *);
 struct namespace_object * get_namespace_object_from_closest_namespace(unsigned char *, enum scope_type, struct scope_level *, unsigned int, struct memory_pool_collection *);
-unsigned char * make_up_identifier(struct normalized_declaration_element *, struct memory_pool_collection *);
+unsigned char * make_up_identifier(struct parser_state *, struct normalized_declaration_element *, struct memory_pool_collection *);
 struct normalized_declarator * make_array_brackets(struct memory_pool_collection *);
 void print_error_with_types(struct c_lexer_state *, struct type_description_reference, struct type_description_reference, struct parser_node *, const char *);
 void print_error_with_type(struct c_lexer_state *, struct type_description_reference, struct parser_node *, const char *);
@@ -129,41 +123,40 @@ struct parser_node * get_nth_parameter_declaration_from_parameter_type_list(stru
 struct parser_node * get_parameter_type_list_from_abstract_declarator(struct parser_node *);
 unsigned int is_function_variadic(struct parser_node *);
 
-struct parser_node * specifier_qualifier_list(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * type_qualifier_list_rest(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * type_qualifier_list(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * declaration_specifiers(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * storage_class_specifier(struct parser_state *, unsigned int *);
-struct parser_node * type_qualifier(struct parser_state *, unsigned int *);
-struct parser_node * type_specifier(struct parser_state *, unsigned int *);
-struct parser_node * get_identifier_node(struct parser_state *, unsigned int *);
-struct parser_node * parameter_list(struct parser_state *, unsigned int *);
-struct parser_node * declarator(struct parser_state *, unsigned int, unsigned int *, struct identifier_from_declarator *);
-struct parser_node * direct_declarator(struct parser_state *, unsigned int, unsigned int *, struct identifier_from_declarator *);
-struct parser_node * direct_declarator_rest(struct parser_state *, unsigned int, unsigned int *, struct identifier_from_declarator *);
-struct parser_node * abstract_declarator(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * direct_abstract_declarator_rest(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * direct_abstract_declarator(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * pointer(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * init_declarator(struct parser_state *, unsigned int *, struct identifier_from_declarator *);
-struct parser_node * struct_declarator(struct parser_state *, unsigned int *, struct identifier_from_declarator *);
-struct parser_node * struct_declarator_list_rest(struct parser_state *, unsigned int, unsigned int, unsigned int *, struct declaration_namespace *);
-struct parser_node * struct_declarator_list(struct parser_state *, unsigned int, unsigned int, unsigned int *, struct declaration_namespace *);
-struct parser_node * init_declarator_list_rest(struct parser_state *, unsigned int, unsigned int, unsigned int *);
-struct parser_node * init_declarator_list(struct parser_state *, unsigned int, unsigned int, unsigned int *);
-struct parser_node * parameter_declaration(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * parameter_list_rest(struct parser_state *, unsigned int, unsigned int *);
-struct parser_node * parameter_list(struct parser_state *, unsigned int *);
-struct parser_node * struct_declaration(struct parser_state *, unsigned int, unsigned int *, struct declaration_namespace *);
-struct parser_node * struct_declaration_list_rest(struct parser_state *, unsigned int, unsigned int *, struct declaration_namespace *);
-struct parser_node * struct_declaration_list(struct parser_state *, unsigned int, unsigned int *, struct declaration_namespace *);
-struct parser_node * declaration(struct parser_state *, unsigned int, unsigned int *);
+struct parser_node * specifier_qualifier_list(struct parser_state *, struct specifier_or_qualifier_list_item_id, struct specifier_or_qualifier_list_item_id *);
+struct parser_node * type_qualifier_list_rest(struct parser_state *, struct specifier_or_qualifier_list_item_id, struct specifier_or_qualifier_list_item_id *);
+struct parser_node * type_qualifier_list(struct parser_state *, struct specifier_or_qualifier_list_item_id, struct specifier_or_qualifier_list_item_id *);
+struct parser_node * declaration_specifiers(struct parser_state *, struct specifier_or_qualifier_list_item_id, struct specifier_or_qualifier_list_item_id *);
+struct parser_node * storage_class_specifier(struct parser_state *, struct storage_class_specifier_id *);
+struct parser_node * type_qualifier(struct parser_state *, struct type_qualifier_id *);
+struct parser_node * type_specifier(struct parser_state *, struct aggregate_specifier_id *);
+struct parser_node * get_identifier_node(struct parser_state *, struct identifier_id *);
+struct parser_node * declarator(struct parser_state *, struct declarator_part_list_item_id, struct declarator_part_list_item_id *, struct identifier_from_declarator *);
+struct parser_node * direct_declarator(struct parser_state *, struct declarator_part_list_item_id, struct declarator_part_list_item_id *, struct identifier_from_declarator *);
+struct parser_node * direct_declarator_rest(struct parser_state *, struct declarator_part_list_item_id, struct declarator_part_list_item_id *, struct identifier_from_declarator *);
+struct parser_node * abstract_declarator(struct parser_state *, struct declarator_part_list_item_id, struct declarator_part_list_item_id *);
+struct parser_node * direct_abstract_declarator_rest(struct parser_state *, struct declarator_part_list_item_id, struct declarator_part_list_item_id *);
+struct parser_node * direct_abstract_declarator(struct parser_state *, struct declarator_part_list_item_id, struct declarator_part_list_item_id *);
+struct parser_node * pointer(struct parser_state *, struct declarator_part_list_item_id, struct declarator_part_list_item_id *);
+struct parser_node * init_declarator(struct parser_state *, struct bitfield_or_declarator_id *, struct identifier_from_declarator *);
+struct parser_node * struct_declarator(struct parser_state *, struct bitfield_or_declarator_id *, struct identifier_from_declarator *);
+struct parser_node * struct_declarator_list_rest(struct parser_state *, struct specifier_or_qualifier_list_item_id, struct general_type_list_item_id, struct general_type_list_item_id *, struct declaration_namespace *);
+struct parser_node * struct_declarator_list(struct parser_state *, struct specifier_or_qualifier_list_item_id, struct general_type_list_item_id, struct general_type_list_item_id *, struct declaration_namespace *);
+struct parser_node * init_declarator_list_rest(struct parser_state *, struct specifier_or_qualifier_list_item_id, struct general_type_list_item_id, struct general_type_list_item_id *);
+struct parser_node * init_declarator_list(struct parser_state *, struct specifier_or_qualifier_list_item_id, struct general_type_list_item_id, struct general_type_list_item_id *);
+struct parser_node * parameter_declaration(struct parser_state *, struct general_type_list_item_id, struct general_type_list_item_id *);
+struct parser_node * parameter_list_rest(struct parser_state *, struct general_type_list_item_id, struct general_type_list_item_id *);
+struct parser_node * parameter_list(struct parser_state *, struct general_type_list_item_id *);
+struct parser_node * struct_declaration(struct parser_state *, struct general_type_list_item_id, struct general_type_list_item_id *, struct declaration_namespace *);
+struct parser_node * struct_declaration_list_rest(struct parser_state *, struct general_type_list_item_id, struct general_type_list_item_id *, struct declaration_namespace *);
+struct parser_node * struct_declaration_list(struct parser_state *, struct general_type_list_item_id, struct general_type_list_item_id *, struct declaration_namespace *);
+struct parser_node * declaration(struct parser_state *, struct general_type_list_item_id, struct general_type_list_item_id *);
 struct parser_node * struct_or_union(struct parser_state *, enum type_engine_struct_or_union_specifier_kind *);
-struct parser_node * struct_or_union_specifier(struct parser_state *, unsigned int *, unsigned int);
+struct parser_node * struct_or_union_specifier(struct parser_state *, struct scoped_struct_or_union_specifier_id *, unsigned int);
 struct parser_node * struct_or_union(struct parser_state *, enum type_engine_struct_or_union_specifier_kind *);
-struct parser_node * declaration_list_rest(struct parser_state *, struct namespace_object *, struct first_and_last_namespace_object *, unsigned int, unsigned int*);
+struct parser_node * declaration_list_rest(struct parser_state *, struct namespace_object *, struct first_and_last_namespace_object *, struct general_type_list_item_id, struct general_type_list_item_id*);
 struct parser_node * primary_expression(struct parser_state *);
-struct parser_node * declaration_list(struct parser_state *, struct namespace_object *, unsigned int, unsigned int*);
+struct parser_node * declaration_list(struct parser_state *, struct namespace_object *, struct general_type_list_item_id , struct general_type_list_item_id*);
 struct parser_node * argument_expression_list_rest(struct parser_state *);
 struct parser_node * argument_expression_list(struct parser_state *);
 struct parser_node * postfix_expression_rest(struct parser_state *);
@@ -201,6 +194,11 @@ struct parser_node * enum_specifier(struct parser_state *);
 struct parser_node * initializer_list_rest(struct parser_state *);
 struct parser_node * initializer_list(struct parser_state *);
 struct parser_node * initializer(struct parser_state *);
+struct parser_node * parameter_type_list(struct parser_state *);
+struct parser_node * labeled_statement(struct parser_state *);
+struct parser_node * selection_statement(struct parser_state *);
+struct parser_node * iteration_statement(struct parser_state *);
+struct parser_node * jump_statement(struct parser_state *);
 void print_parser_error(struct unsigned_char_list *, struct parser_state *, struct parser_error);
 void print_parser_error_description(struct unsigned_char_list *, struct parser_state *, enum parser_error_type);
 void add_parser_error(struct parser_state *, enum parser_error_type);

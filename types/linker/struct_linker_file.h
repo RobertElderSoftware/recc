@@ -19,9 +19,8 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct linker_file{ /*  Represents everything that comes from one translation unit (or assembly file) */
+	unsigned char * source_file;
 	struct unsigned_char_list * file_input;
-	struct l2_parser_state * l2_parser_state;
-	struct l2_lexer_state * l2_lexer_state;
 	struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map internal_symbols;
 	struct struct_linker_object_ptr_list object_declarations;
 	struct struct_l2_item_ptr_list l2_items;

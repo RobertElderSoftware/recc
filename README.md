@@ -11,7 +11,7 @@ Project home: http://recc.robertelder.org/
 -  Describes a tiny CPU spec (the 'One-Page CPU') that can be implemented in less than 500 lines of code.
 -  The CPU supports 14 instructions, context switching, virtual memory, interrupts.
 -  Minimal microkernel (written in C) that runs on the One-Page CPU.
--  An compiler for a (non-trivial subset) of ANSI C89 that targets the One-Page CPU.
+-  A compiler for a (non-trivial subset) of ANSI C89 that targets the One-Page CPU.
 -  The compiler includes a linker.
 -  Emulators for the One-Page CPU written in 4 different languages: C89, Python, Java, Javascript
 -  Ability to statically compile files from host filesystem into One-Page CPU executables, accessed through 'fopen' (file reading only).

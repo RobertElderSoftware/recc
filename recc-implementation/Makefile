@@ -1,13 +1,11 @@
 ifeq ("$(wildcard recc-implementation/bootstrap_phase_1)","")
 include recc-implementation/Phase1-Makefile
-include recc-implementation/comparison-functions/Makefile
 clean: clean-phase-1
 	@:
 else
 ifeq ("$(wildcard recc-implementation/bootstrap_phase_2)","")
 include recc-implementation/Phase2-Makefile
 include recc-implementation/Phase1-Makefile
-include recc-implementation/comparison-functions/Makefile
 include recc-implementation/library-data-structures
 include recc-implementation/object-data-structures
 include recc-implementation/file-dependencies-data-structures
@@ -16,9 +14,8 @@ clean: clean-phase-1 clean-phase-2
 else
 include recc-implementation/Phase2-Makefile
 include recc-implementation/Phase1-Makefile
-include recc-implementation/comparison-functions/Makefile
 
-RECC_IMPLEMENTATION_OBJECTS=recc-implementation/type_engine.o recc-implementation/regex_engine.o recc-implementation/compiler_interface_phase_3.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/libbootstrap.o recc-implementation/l2_parser.o recc-implementation/replace_tool.o recc-implementation/binary_exponential_buffer.o $(COMPARISON_FUNCTION_OBJECTS)
+RECC_IMPLEMENTATION_OBJECTS=recc-implementation/type_engine.o recc-implementation/regex_engine.o recc-implementation/compiler_interface_common.o recc-implementation/compiler_interface_c_compiler_targets.o recc-implementation/compiler_interface_header_targets.o recc-implementation/compiler_interface_phase_3.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o recc-implementation/filesystem_compiler.o recc-implementation/libbootstrap.o recc-implementation/l2_parser.o recc-implementation/replace_tool.o recc-implementation/binary_exponential_buffer.o $(COMPARISON_FUNCTION_OBJECTS)
 
 recc-implementation/librecc.a: $(RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
 	@ar -rcs recc-implementation/librecc.a $(RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
@@ -28,6 +25,9 @@ recc-implementation/recc.o: recc-implementation/recc.c
 
 recc-implementation/compiler_interface_phase_3.o: recc-implementation/compiler_interface_phase_3.c recc-implementation/compiler_interface_phase_3.h
 	@$(HOSTCC) -c recc-implementation/compiler_interface_phase_3.c -o recc-implementation/compiler_interface_phase_3.o $(CUSTOM_C89_FLAGS)
+
+recc-implementation/compiler_interface_c_compiler_targets.o: recc-implementation/compiler_interface_c_compiler_targets.c recc-implementation/compiler_interface_c_compiler_targets.h
+	@$(HOSTCC) -c recc-implementation/compiler_interface_c_compiler_targets.c -o recc-implementation/compiler_interface_c_compiler_targets.o $(CUSTOM_C89_FLAGS)
 
 recc-implementation/lexer.h: recc-implementation/io.h
 	@touch recc-implementation/lexer.h
@@ -105,7 +105,7 @@ recc-implementation/l2_parser.o: recc-implementation/l2_parser.h recc-implementa
 	@$(HOSTCC) -c recc-implementation/l2_parser.c -o recc-implementation/l2_parser.o $(CUSTOM_C89_FLAGS)
 
 clean-recc-implementation: clean-phase-1 clean-phase-2
-	@rm -f recc-implementation/librecc.a recc-implementation/filesystem_impl.l2 recc-implementation/*.o recc-implementation/*.l2 recc-implementation/*.i generated/*.c generated/*.h generated/*.o generated/*.i generated/*.l2
+	@rm -f recc-implementation/librecc.a recc-implementation/filesystem_impl.l2 
 
 endif
 endif

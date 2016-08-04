@@ -19,14 +19,13 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct l2_item{
-	struct l2_lexer_token * op_token;
-	struct l2_lexer_token * rx_token;
-	struct l2_lexer_token * ry_token;
-	struct l2_lexer_token * rz_token;
-	struct l2_lexer_token * identifier_token;
-	struct l2_lexer_token * number_token;
-	unsigned int number_token_is_negative;
+	struct linker_symbol * referenced_linker_symbol;
+	enum l2_token_type op_type;
+	unsigned int rx_number;
+	unsigned int ry_number;
+	unsigned int rz_number;
+	unsigned int number_value;
+	unsigned int number_value_is_negative;
 	unsigned int post_linking_offset; /* The offset (in # of 4 byte words) of this instruction after we've considered instructions that need to be re-written by the linker */
 	unsigned int pre_linking_offset; /* The offset (in # of 4 byte words) of this instruction before moving symbols around in a linker object */
-	unsigned int pad;
 };

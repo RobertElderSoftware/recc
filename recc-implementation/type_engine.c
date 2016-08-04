@@ -15,6 +15,22 @@
 */
 #include "type_engine.h"
 
+
+/*  Private functions:  Do not call externally */
+struct aggregate_specifier_id aggregate_specifier_from_any_specifier_id(struct type_engine_state *, enum type_engine_aggregate_specifier_kind, unsigned int);
+struct specifier_or_qualifier_id get_type_engine_id_for_any_specifier_or_qualifier(struct type_engine_state *, enum type_engine_specifier_or_qualifier_kind, unsigned int);
+struct specifier_or_qualifier_list_item_id get_type_engine_specifier_qualifier_list_id(struct type_engine_state *, enum type_engine_specifier_or_qualifier_list_item_kind, struct specifier_or_qualifier_list_item_id, struct specifier_or_qualifier_id);
+struct declarator_part_list_item_id get_type_engine_declarator_part_list_id(struct type_engine_state *, enum type_engine_declarator_part_list_item_kind, struct declarator_part_list_item_id, struct declarator_part_id);
+struct declarator_part_id get_type_engine_id_for_declarator_part(struct type_engine_state * state, enum type_engine_declarator_part_kind type, unsigned int index);
+struct parameter_list_id get_type_engine_id_for_parameter_list(struct type_engine_state *, enum type_engine_parameter_list_kind, unsigned int);
+struct bitfield_or_declarator_id get_type_engine_id_for_bitfield_or_declarator(struct type_engine_state *, enum type_engine_bitfield_or_declarator_kind, unsigned int);
+struct general_type_list_item_id get_type_engine_general_type_list_item_id(struct type_engine_state *, enum type_engine_general_type_list_item_kind, struct general_type_list_item_id, struct general_type_id);
+struct struct_or_union_specifier_id get_type_engine_id_for_struct_or_union_specifier(struct type_engine_state *, enum type_engine_struct_or_union_specifier_kind, unsigned int);
+struct struct_specifier_id get_aggregate_struct_specifier_id(struct type_engine_state *, enum type_engine_struct_specifier_kind, unsigned int);
+struct union_specifier_id get_aggregate_union_specifier_id(struct type_engine_state *, enum type_engine_union_specifier_kind, unsigned int);
+struct function_part_id get_type_engine_id_for_function_part(struct type_engine_state *, enum type_engine_function_part_kind, unsigned int);
+struct array_part_id get_type_engine_id_for_array_part(struct type_engine_state *, enum type_engine_array_part_kind, unsigned int);
+
 static const char * g_extern_string = "extern";
 static const char * g_static_string = "static";
 static const char * g_auto_string = "auto";
@@ -194,10 +210,12 @@ struct parser_node * convert_abstract_declarator_to_pointer_type(struct memory_p
 					}
 				}default:{
 					assert(0);
+					return (struct parser_node *)0;
 				}
 			}
 		}default:{
 			assert(0);
+			return (struct parser_node *)0;
 		}
 	}
 }
@@ -321,10 +339,12 @@ struct parser_node * convert_abstract_declarator_to_array_type(struct memory_poo
 					}
 				}default:{
 					assert(0);
+					return (struct parser_node *)0;
 				}
 			}
 		}default:{
 			assert(0);
+			return (struct parser_node *)0;
 		}
 	}
 }
@@ -439,10 +459,12 @@ struct parser_node * convert_abstract_declarator_to_function_type(struct memory_
 					}
 				}default:{
 					assert(0);
+					return (struct parser_node *)0;
 				}
 			}
 		}default:{
 			assert(0);
+			return (struct parser_node *)0;
 		}
 	}
 }
@@ -580,6 +602,7 @@ unsigned int is_pointer(struct memory_pool_collection * m, struct parser_node * 
 		}
 	}else{
 		assert(0);
+		return 0;
 	}
 }
 
@@ -611,6 +634,7 @@ unsigned int is_function(struct memory_pool_collection * m, struct parser_node *
 		}
 	}else{
 		assert(0);
+		return 0;
 	}
 }
 
@@ -642,6 +666,7 @@ struct parser_node * get_nth_parameter_declaration_from_parameter_type_list(stru
 			}
 		}default:{
 			assert(0);
+			return (struct parser_node *)0;
 		}
 	}
 }
@@ -676,6 +701,7 @@ struct parser_node * get_parameter_type_list_from_abstract_declarator(struct par
 		}
 	}else{
 		assert(0);
+		return (struct parser_node *)0;
 	}
 }
 
@@ -707,6 +733,7 @@ struct parser_node * get_constant_expression_from_abstract_declarator(struct par
 		}
 	}else{
 		assert(0);
+		return (struct parser_node *)0;
 	}
 }
 
@@ -743,6 +770,7 @@ unsigned int is_function_variadic(struct parser_node * n){
 		}
 	}else{
 		assert(0);
+		return 0;
 	}
 }
 
@@ -772,6 +800,7 @@ unsigned int is_function_k_and_r_c_style(struct parser_node * n){
 		}
 	}else{
 		assert(0);
+		return 0;
 	}
 }
 
@@ -807,6 +836,7 @@ unsigned int is_array(struct memory_pool_collection * m, struct parser_node * n)
 		}
 	}else{
 		assert(0);
+		return 0;
 	}
 }
 
@@ -1271,6 +1301,7 @@ struct namespace_object * get_namespace_object_from_closest_namespace(unsigned c
 				break;
 			}default:{
 				assert(0 && "Not covered.");
+				scope_namespace = (struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *)0;
 			}
 		}
 		current_obj = get_namespace_object_from_scope_namespace_using_string(scope_namespace, ident);
@@ -1461,10 +1492,12 @@ struct c_lexer_token * get_identifier_token_from_declarator(struct parser_node *
 					return get_identifier_token_from_declarator(n->next);
 				}default:{
 					assert(0);
+					return (struct c_lexer_token *)0;
 				}
 			}
 		}default:{
 			assert(0);
+			return (struct c_lexer_token *)0;
 		}
 	}
 }
@@ -1570,10 +1603,12 @@ struct parser_node * convert_declarator_to_abstract_declarator_h(struct memory_p
 					return n;
 				}default:{
 					assert(0);
+					return (struct parser_node *)0;
 				}
 			}
 		}default:{
 			assert(0);
+			return (struct parser_node *)0;
 		}
 	}
 }
@@ -1992,16 +2027,16 @@ unsigned char * get_specifier_string(enum c_token_type t){
 	}
 }
 
-void print_type_qualifier(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int id, enum type_engine_print_type ptype){
-	unsigned int v = unsigned_int_list_get(&state->simple_type_qualifiers, id);
+void print_type_qualifier(struct type_engine_state * state, struct unsigned_char_list * out, struct type_qualifier_id id, enum type_engine_print_type ptype){
+	enum c_token_type v = enum_c_token_type_list_get(&state->simple_type_qualifiers, id.id);
 	(void)ptype;
 	buffered_printf(out, "%s", get_c_token_type_names()[v]);
 }
 
-void print_storage_class_specifier(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int id, enum type_engine_print_type ptype){
-	unsigned int v = unsigned_int_list_get(&state->storage_class_specifiers, id);
+void print_storage_class_specifier(struct type_engine_state * state, struct unsigned_char_list * out, struct storage_class_specifier_id id, enum type_engine_print_type ptype){
+	enum c_token_type t = enum_c_token_type_list_get(&state->storage_class_specifiers, id.id);
 	(void)ptype;
-	buffered_printf(out, "%s", get_c_token_type_names()[v]);
+	buffered_printf(out, "%s", get_c_token_type_names()[t]);
 }
 
 void print_identifier(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
@@ -2014,17 +2049,13 @@ void print_identifier(struct type_engine_state * state, struct unsigned_char_lis
 }
 
 void print_struct_specifier(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int details = unsigned_int_list_get(&state->struct_specifiers, index);
-	enum type_engine_struct_specifier_kind type = (enum type_engine_struct_specifier_kind)((details & 0xC0000000) >> 31);
-	unsigned int sub_index = details & 0x7FFFFFFF;
-	(void)sub_index;
-	(void)ptype;
-	switch(type){
+	struct struct_specifier_details details = struct_struct_specifier_details_list_get(&state->struct_specifiers, index);
+	switch(details.type){
 		case TYPE_ENGINE_NAMED_STRUCT:{
-			print_identifier(state, out, sub_index, ptype);
+			print_identifier(state, out, details.id, ptype);
 			break;
 		}case TYPE_ENGINE_ANONYMOUS_STRUCT:{
-			buffered_printf(out, "Anonymous id %u", sub_index);
+			buffered_printf(out, "Anonymous id %u", details.id);
 			break;
 		}default:{
 			assert(0 && "Not considered.");
@@ -2033,17 +2064,13 @@ void print_struct_specifier(struct type_engine_state * state, struct unsigned_ch
 }
 
 void print_union_specifier(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int details = unsigned_int_list_get(&state->union_specifiers, index);
-	enum type_engine_union_specifier_kind type = (enum type_engine_union_specifier_kind)((details & 0xC0000000) >> 31);
-	unsigned int sub_index = details & 0x7FFFFFFF;
-	(void)sub_index;
-	(void)ptype;
-	switch(type){
+	struct union_specifier_details details = struct_union_specifier_details_list_get(&state->union_specifiers, index);
+	switch(details.type){
 		case TYPE_ENGINE_NAMED_UNION:{
-			print_identifier(state, out, sub_index, ptype);
+			print_identifier(state, out, details.id, ptype);
 			break;
 		}case TYPE_ENGINE_ANONYMOUS_UNION:{
-			buffered_printf(out, "Anonymous id %u", sub_index);
+			buffered_printf(out, "Anonymous id %u", details.id);
 			break;
 		}default:{
 			assert(0 && "Not considered.");
@@ -2052,23 +2079,20 @@ void print_union_specifier(struct type_engine_state * state, struct unsigned_cha
 }
 
 void print_scoped_struct_or_union_specifier(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int details = unsigned_int_list_get(&state->scoped_struct_or_union_specifiers, index);
-	unsigned int sub_index = details & 0xFFFF;
-	print_struct_or_union_specifier(state, out, sub_index, ptype);
+	struct scoped_struct_or_union_specifier_details details = struct_scoped_struct_or_union_specifier_details_list_get(&state->scoped_struct_or_union_specifiers, index);
+	print_struct_or_union_specifier(state, out, details.struct_or_union_specifier_id.id, ptype);
 }
 
 void print_struct_or_union_specifier(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int details = unsigned_int_list_get(&state->struct_or_union_specifiers, index);
-	enum type_engine_struct_or_union_specifier_kind type = (enum type_engine_struct_or_union_specifier_kind)((details & 0xC0000000) >> 31);
-	unsigned int sub_index = details & 0x7FFFFFFF;
-	switch(type){
+	struct struct_or_union_specifier_details details = struct_struct_or_union_specifier_details_list_get(&state->struct_or_union_specifiers, index);
+	switch(details.type){
 		case TYPE_ENGINE_STRUCT_SPECIFIER:{
 			buffered_printf(out, "struct ");
-			print_struct_specifier(state, out, sub_index, ptype);
+			print_struct_specifier(state, out, details.id, ptype);
 			break;
 		}case TYPE_ENGINE_UNION_SPECIFIER:{
 			buffered_printf(out, "union ");
-			print_union_specifier(state, out, sub_index, ptype);
+			print_union_specifier(state, out, details.id, ptype);
 			break;
 		}default:{
 			assert(0 && "Not considered.");
@@ -2076,17 +2100,15 @@ void print_struct_or_union_specifier(struct type_engine_state * state, struct un
 	}
 }
 
-void print_all_type_specifiers(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int details = unsigned_int_list_get(&state->all_type_specifiers, index);
-	enum type_engine_type_specifier_kind type = (enum type_engine_type_specifier_kind)((details & 0xC0000000) >> 30);
-	unsigned int sub_index = details & 0x3FFFFFFF;
-	switch(type){
+void print_aggregate_specifiers(struct type_engine_state * state, struct unsigned_char_list * out, struct aggregate_specifier_id id, enum type_engine_print_type ptype){
+	struct aggregate_specifier_details details = struct_aggregate_specifier_details_list_get(&state->aggregate_specifiers, id.id);
+	switch(details.type){
 		case TYPE_ENGINE_SIMPLE_SPECIFIER:{
 			if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "TYPE_ENGINE_SIMPLE_SPECIFIER:  "); }
-			buffered_printf(out, "%s", get_c_token_type_names()[unsigned_int_list_get(&state->simple_type_specifiers, sub_index)]);
+			buffered_printf(out, "%s", get_c_token_type_names()[enum_c_token_type_list_get(&state->simple_type_specifiers, details.id)]);
 			break;
 		}case TYPE_ENGINE_STRUCT_OR_UNION_SPECIFIER:{
-			print_scoped_struct_or_union_specifier(state, out, sub_index, ptype);
+			print_scoped_struct_or_union_specifier(state, out, details.id, ptype);
 			break;
 		}case TYPE_ENGINE_ENUM_SPECIFIER:{
 			buffered_printf(out, "TYPE_ENGINE_ENUM_SPECIFIER: TODO: enum");
@@ -2100,20 +2122,24 @@ void print_all_type_specifiers(struct type_engine_state * state, struct unsigned
 	}
 }
 
-void print_type_specifier_or_qualifier(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int specifier_or_qualifier_details = unsigned_int_list_get(&state->specifier_or_qualifiers, index);
-	enum type_engine_specifier_or_qualifier_kind specifier_or_qualifier_type = (enum type_engine_specifier_or_qualifier_kind)((specifier_or_qualifier_details & 0xC0000000) >> 30);
-	unsigned int sub_index = specifier_or_qualifier_details & 0x3FFFFFFF;
-	switch(specifier_or_qualifier_type){
+void print_type_specifier_or_qualifier(struct type_engine_state * state, struct unsigned_char_list * out, struct specifier_or_qualifier_id index, enum type_engine_print_type ptype){
+	struct specifier_or_qualifier_details details = struct_specifier_or_qualifier_details_list_get(&state->specifier_or_qualifiers, index.id);
+	switch(details.type){
 		case TYPE_ENGINE_TYPE_SPECIFIER:{
+			struct aggregate_specifier_id id;
 			if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "type specifier: "); }
-			print_all_type_specifiers(state, out, sub_index, ptype);
+			id.id = details.id;
+			print_aggregate_specifiers(state, out, id, ptype);
 			break;
 		}case TYPE_ENGINE_SIMPLE_QUALIFIER:{
-			print_type_qualifier(state, out, sub_index, ptype);
+			struct type_qualifier_id id;
+			id.id = details.id;
+			print_type_qualifier(state, out, id, ptype);
 			break;
 		}case TYPE_ENGINE_STORAGE_CLASS_SPECIFIER:{
-			print_storage_class_specifier(state, out, sub_index, ptype);
+			struct storage_class_specifier_id id;
+			id.id = details.id;
+			print_storage_class_specifier(state, out, id, ptype);
 			break;
 		}default:{
 			assert(0 && "Not considered.");
@@ -2126,8 +2152,10 @@ void print_pointer_part(struct type_engine_state * state, struct unsigned_char_l
 	unsigned int sub_id = details & 0x7FFFFFFF;
 	switch(type){
 		case TYPE_ENGINE_QUALIFIED_POINTER:{
+			struct specifier_or_qualifier_list_item_id a;
+			a.id = sub_id;
 			buffered_printf(out, "*");
-			print_specifier_or_qualifier_list(state, out, sub_id, ptype);
+			print_specifier_or_qualifier_list(state, out, a, ptype);
 			break;
 		}case TYPE_ENGINE_UNQUALIFIED_POINTER:{
 			buffered_printf(out, "*");
@@ -2172,18 +2200,16 @@ void print_array_part(struct type_engine_state * state, struct unsigned_char_lis
 	}
 }
 
-void print_declarator_in_visual_order(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int current_declarator_index, enum type_engine_print_type ptype, unsigned int prev_was_fcn_or_arr){
-	struct generic_list_item details = struct_generic_list_item_list_get(&state->declarator_part_list_items, current_declarator_index);
-	enum type_engine_declarator_part_list_item_kind is_start = (enum type_engine_declarator_part_list_item_kind)((details.data & 0x80000000) >> 31);
-	unsigned int item_id = (details.data & 0x7FFF0000) >> 16;
-	unsigned int prev_id = details.data & 0xFFFF;
-	if(is_start == TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_LIST_START){
+void print_declarator_in_visual_order(struct type_engine_state * state, struct unsigned_char_list * out, struct declarator_part_list_item_id current_declarator_index, enum type_engine_print_type ptype, unsigned int prev_was_fcn_or_arr){
+	struct declarator_part_list_item_details details = struct_declarator_part_list_item_details_list_get(&state->declarator_part_list_items, current_declarator_index.id);
+	struct declarator_part_id item_id = details.item_id;
+	struct declarator_part_list_item_id prev_id = details.prev_id;
+	if(details.type == TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_LIST_START){
 		if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "Start of List.\n"); }
 	}else{
-		unsigned int declarator_part_details = unsigned_int_list_get(&state->declarator_parts, item_id);
-		enum type_engine_declarator_part_kind declarator_part_type = (enum type_engine_declarator_part_kind)((declarator_part_details & 0xC0000000) >> 30);
+		struct declarator_part_details declarator_part_details = struct_declarator_part_details_list_get(&state->declarator_parts, item_id.id);
 		/*  If we have a pointer to a function or an array, we need brackets */
-		switch(declarator_part_type){
+		switch(declarator_part_details.type){
 			case TYPE_ENGINE_FUNCTION_DECLARATOR_PART:; case TYPE_ENGINE_ARRAY_DECLARATOR_PART:{
 				print_declarator_in_visual_order(state, out, prev_id, ptype, 1);
 				print_declarator_part(state, out, item_id, ptype);
@@ -2207,12 +2233,12 @@ void print_declarator_in_visual_order(struct type_engine_state * state, struct u
 	}
 }
 void print_bitfield_or_declarator(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int details = unsigned_int_list_get(&state->bitfield_or_declarators, index);
-	enum type_engine_bitfield_or_declarator_kind kind = (enum type_engine_bitfield_or_declarator_kind)((details & 0xC0000000) >> 30);
-	unsigned int item_id = details & 0x3FFFFFFF;
-	switch(kind){
+	struct bitfield_or_declarator_details details = struct_bitfield_or_declarator_details_list_get(&state->bitfield_or_declarators, index);
+	switch(details.type){
 		case TYPE_ENGINE_ONLY_DECLARATOR:{
-			print_declarator_in_visual_order(state, out, item_id, ptype, 0);
+			struct declarator_part_list_item_id a;
+			a.id = details.id;
+			print_declarator_in_visual_order(state, out, a, ptype, 0);
 			break;
 		}case TYPE_ENGINE_ONLY_BITFIELD:{
 			buffered_printf(out, "TODO: bitfield");
@@ -2226,26 +2252,23 @@ void print_bitfield_or_declarator(struct type_engine_state * state, struct unsig
 	}
 }
 
-void print_declarator_in_spiral_rule_order(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int current_declarator_index, enum type_engine_print_type ptype){
-	struct generic_list_item details = struct_generic_list_item_list_get(&state->declarator_part_list_items, current_declarator_index);
-	enum type_engine_declarator_part_list_item_kind is_start = (enum type_engine_declarator_part_list_item_kind)((details.data & 0x80000000) >> 31);
-	unsigned int item_id = (details.data & 0x7FFF0000) >> 16;
-	unsigned int prev_id = details.data & 0xFFFF;
-	if(is_start == TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_LIST_START){
+void print_declarator_in_spiral_rule_order(struct type_engine_state * state, struct unsigned_char_list * out, struct declarator_part_list_item_id current_declarator_index, enum type_engine_print_type ptype){
+	struct declarator_part_list_item_details details = struct_declarator_part_list_item_details_list_get(&state->declarator_part_list_items, current_declarator_index.id);
+	if(details.type == TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_LIST_START){
 		if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "Start of List.\n"); }
 	}else{
-		print_declarator_in_spiral_rule_order(state, out, prev_id, ptype);
-		print_declarator_part(state, out, item_id, ptype);
+		print_declarator_in_spiral_rule_order(state, out, details.prev_id, ptype);
+		print_declarator_part(state, out, details.item_id, ptype);
 		buffered_printf(out, ", ");
 		if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "\n"); }
 	}
 }
 
-void print_specifier_or_qualifier_list(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int list_id, enum type_engine_print_type ptype){
-	unsigned int details = unsigned_int_list_get(&state->specifier_or_qualifier_list_items, list_id);
-	enum type_engine_specifier_or_qualifier_list_item_kind is_start = (enum type_engine_specifier_or_qualifier_list_item_kind)((details & 0x80000000) >> 31);
-	unsigned int item_id = (details & 0x7FFF0000) >> 16;
-	unsigned int prev_id = details & 0xFFFF;
+void print_specifier_or_qualifier_list(struct type_engine_state * state, struct unsigned_char_list * out, struct specifier_or_qualifier_list_item_id id, enum type_engine_print_type ptype){
+	struct specifier_or_qualifier_list_item_details details = struct_specifier_or_qualifier_list_item_details_list_get(&state->specifier_or_qualifier_list_items, id.id);
+	enum type_engine_specifier_or_qualifier_list_item_kind is_start = details.type;
+	struct specifier_or_qualifier_id item_id = details.item_id;
+	struct specifier_or_qualifier_list_item_id prev_id = details.prev_id;
 	if(is_start == TYPE_ENGINE_SPECIFIER_OR_QUALIFIER_LIST_ITEM_LIST_START){
 		if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "Start of List.\n"); }
 	}else{
@@ -2257,15 +2280,12 @@ void print_specifier_or_qualifier_list(struct type_engine_state * state, struct 
 }
 
 void print_general_type_list(struct type_engine_state * state, unsigned char * delimiter, struct unsigned_char_list * out, unsigned int list_id, enum type_engine_print_type ptype, unsigned int current_level){
-	unsigned int details = unsigned_int_list_get(&state->general_type_list_items, list_id);
-	enum type_engine_general_type_list_item_kind is_start = (enum type_engine_general_type_list_item_kind)((details & 0x80000000) >> 31);
-	unsigned int item_id = (details & 0x7FFF0000) >> 16;
-	unsigned int prev_id = details & 0xFFFF;
-	if(is_start == TYPE_ENGINE_GENERAL_TYPE_LIST_ITEM_LIST_START){
+	struct general_type_list_item_details details = struct_general_type_list_item_details_list_get(&state->general_type_list_items, list_id);
+	if(details.type == TYPE_ENGINE_GENERAL_TYPE_LIST_ITEM_LIST_START){
 		if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "Start of List.\n"); }
 	}else{
-		print_general_type_list(state, delimiter, out, prev_id, ptype, current_level + 1);
-		print_general_type_list_item(state, out, item_id, ptype);
+		print_general_type_list(state, delimiter, out, details.prev_id.id, ptype, current_level + 1);
+		print_general_type_list_item(state, out, details.item_id.id, ptype);
 		if(current_level){
 			buffered_printf(out, (char *)delimiter);
 		}
@@ -2274,29 +2294,29 @@ void print_general_type_list(struct type_engine_state * state, unsigned char * d
 }
 
 void print_general_type_list_item(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int general_type_details = unsigned_int_list_get(&state->general_types, index);
-	unsigned int specifier_or_qualifier_list_id = (general_type_details & 0xFFFF0000) >> 16;
-	unsigned int bitfield_or_declarator = (general_type_details & 0xFFFF);
-	print_specifier_or_qualifier_list(state, out, specifier_or_qualifier_list_id, ptype);
+	struct general_type_details details = struct_general_type_details_list_get(&state->general_types, index);
+	unsigned int specifier_or_qualifier_list_id = details.specifier_or_qualifier_list_item_id.id;
+	unsigned int bitfield_or_declarator = details.bitfield_or_declarator_id.id;
+	struct specifier_or_qualifier_list_item_id a;
+	a.id = specifier_or_qualifier_list_id;
+	print_specifier_or_qualifier_list(state, out, a, ptype);
 	print_bitfield_or_declarator(state, out, bitfield_or_declarator, ptype);
 }
 
-void print_declarator_part(struct type_engine_state * state, struct unsigned_char_list * out, unsigned int index, enum type_engine_print_type ptype){
-	unsigned int declarator_part_details = unsigned_int_list_get(&state->declarator_parts, index);
-	enum type_engine_declarator_part_kind declarator_part_type = (enum type_engine_declarator_part_kind)((declarator_part_details & 0xC0000000) >> 30);
-	unsigned int sub_index = declarator_part_details & 0x3FFFFFFF;
-	switch(declarator_part_type){
+void print_declarator_part(struct type_engine_state * state, struct unsigned_char_list * out, struct declarator_part_id index, enum type_engine_print_type ptype){
+	struct declarator_part_details details = struct_declarator_part_details_list_get(&state->declarator_parts, index.id);
+	switch(details.type){
 		case TYPE_ENGINE_FUNCTION_DECLARATOR_PART:{
 			if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "Function: "); }
-			print_function_part(state, out, unsigned_int_list_get(&state->function_parts, sub_index), ptype);
+			print_function_part(state, out, struct_function_part_details_list_get(&state->function_parts, details.id).id, ptype);
 			break;
 		}case TYPE_ENGINE_POINTER_DECLARATOR_PART:{
 			if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "Pointer: "); }
-			print_pointer_part(state, out, unsigned_int_list_get(&state->pointer_parts, sub_index), ptype);
+			print_pointer_part(state, out, struct_pointer_part_details_list_get(&state->pointer_parts, details.id).id, ptype);
 			break;
 		}case TYPE_ENGINE_ARRAY_DECLARATOR_PART:{
 			if(ptype == TYPE_ENGINE_DEBUG){ buffered_printf(out, "Array: "); }
-			print_array_part(state, out, unsigned_int_list_get(&state->array_parts, sub_index), ptype);
+			print_array_part(state, out, struct_array_part_details_list_get(&state->array_parts, details.id).id, ptype);
 			break;
 		}default:{
 			assert(0 && "Not considered.");
@@ -2306,167 +2326,169 @@ void print_declarator_part(struct type_engine_state * state, struct unsigned_cha
 
 void print_type_engine_state(struct type_engine_state * state, struct unsigned_char_list * out){
 	unsigned int i;
-	struct unsigned_int_list all_type_specifiers_map_keys;
-	struct unsigned_int_list simple_type_specifiers_map_keys;
-	struct unsigned_int_list simple_type_qualifiers_map_keys;
-	struct unsigned_int_list storage_class_specifiers_map_keys;
-	struct unsigned_int_list specifier_or_qualifiers_map_keys;
-	struct unsigned_int_list specifier_or_qualifier_list_items_map_keys;
-	struct struct_generic_list_item_list declarator_part_list_items_map_keys;
+	struct struct_aggregate_specifier_details_list aggregate_specifiers_map_keys;
+	struct enum_c_token_type_list simple_type_specifiers_map_keys;
+	struct enum_c_token_type_list simple_type_qualifiers_map_keys;
+	struct enum_c_token_type_list storage_class_specifiers_map_keys;
+	struct struct_specifier_or_qualifier_details_list specifier_or_qualifiers_map_keys;
+	struct struct_specifier_or_qualifier_list_item_details_list specifier_or_qualifier_list_items_map_keys;
+	struct struct_declarator_part_list_item_details_list declarator_part_list_items_map_keys;
 	struct struct_c_lexer_token_list identifier_map_keys;
-	simple_type_specifiers_map_keys = unsigned_int_to_unsigned_int_map_keys(&state->simple_type_specifiers_map);
+	simple_type_specifiers_map_keys = enum_c_token_type_to_struct_simple_specifier_id_map_keys(&state->simple_type_specifiers_map);
 	buffered_printf(out, "Simple Type Specifier Mapping\n");
 	buffered_printf(out, "| Key || Index |\n");
-	for(i = 0; i < unsigned_int_list_size(&simple_type_specifiers_map_keys); i++){
-		unsigned int key = unsigned_int_list_get(&simple_type_specifiers_map_keys, i);
-		unsigned int value = unsigned_int_to_unsigned_int_map_get(&state->simple_type_specifiers_map, key);
+	for(i = 0; i < enum_c_token_type_list_size(&simple_type_specifiers_map_keys); i++){
+		enum c_token_type key = enum_c_token_type_list_get(&simple_type_specifiers_map_keys, i);
+		struct simple_specifier_id value = enum_c_token_type_to_struct_simple_specifier_id_map_get(&state->simple_type_specifiers_map, key);
 		buffered_printf(out, "| %u %s |", key, get_c_token_type_names()[key]);
-		buffered_printf(out, "| %u   |\n", value);
+		buffered_printf(out, "| %u   |\n", value.id);
 	}
-	unsigned_int_list_destroy(&simple_type_specifiers_map_keys);
+	enum_c_token_type_list_destroy(&simple_type_specifiers_map_keys);
 
-	simple_type_qualifiers_map_keys = unsigned_int_to_unsigned_int_map_keys(&state->simple_type_qualifiers_map);
+	simple_type_qualifiers_map_keys = enum_c_token_type_to_struct_type_qualifier_id_map_keys(&state->simple_type_qualifiers_map);
 	buffered_printf(out, "Simple Type Qualifier Mapping\n");
 	buffered_printf(out, "| Key || Index |\n");
-	for(i = 0; i < unsigned_int_list_size(&simple_type_qualifiers_map_keys); i++){
-		unsigned int key = unsigned_int_list_get(&simple_type_qualifiers_map_keys, i);
-		unsigned int value = unsigned_int_to_unsigned_int_map_get(&state->simple_type_qualifiers_map, key);
+	for(i = 0; i < enum_c_token_type_list_size(&simple_type_qualifiers_map_keys); i++){
+		enum c_token_type key = enum_c_token_type_list_get(&simple_type_qualifiers_map_keys, i);
+		struct type_qualifier_id value = enum_c_token_type_to_struct_type_qualifier_id_map_get(&state->simple_type_qualifiers_map, key);
 		buffered_printf(out, "| %u %s |", key, get_c_token_type_names()[key]);
-		buffered_printf(out, "| %u   |\n", value);
+		buffered_printf(out, "| %u   |\n", value.id);
 	}
-	unsigned_int_list_destroy(&simple_type_qualifiers_map_keys);
+	enum_c_token_type_list_destroy(&simple_type_qualifiers_map_keys);
 
-	storage_class_specifiers_map_keys = unsigned_int_to_unsigned_int_map_keys(&state->storage_class_specifiers_map);
+	storage_class_specifiers_map_keys = enum_c_token_type_to_struct_storage_class_specifier_id_map_keys(&state->storage_class_specifiers_map);
 	buffered_printf(out, "Storage Class Specifier Mapping\n");
 	buffered_printf(out, "| Key || Index |\n");
-	for(i = 0; i < unsigned_int_list_size(&storage_class_specifiers_map_keys); i++){
-		unsigned int key = unsigned_int_list_get(&storage_class_specifiers_map_keys, i);
-		unsigned int value = unsigned_int_to_unsigned_int_map_get(&state->storage_class_specifiers_map, key);
+	for(i = 0; i < enum_c_token_type_list_size(&storage_class_specifiers_map_keys); i++){
+		enum c_token_type key = enum_c_token_type_list_get(&storage_class_specifiers_map_keys, i);
+		struct storage_class_specifier_id s = enum_c_token_type_to_struct_storage_class_specifier_id_map_get(&state->storage_class_specifiers_map, key);
 		buffered_printf(out, "| %u %s |", key, get_c_token_type_names()[key]);
-		buffered_printf(out, "| %u   |\n", value);
+		buffered_printf(out, "| %u   |\n", s.id);
 	}
-	unsigned_int_list_destroy(&storage_class_specifiers_map_keys);
+	enum_c_token_type_list_destroy(&storage_class_specifiers_map_keys);
 
-	all_type_specifiers_map_keys = unsigned_int_to_unsigned_int_map_keys(&state->all_type_specifiers_map);
+	aggregate_specifiers_map_keys = struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map_keys(&state->aggregate_specifiers_map);
 	buffered_printf(out, "All Type Specifiers Mapping\n");
 	buffered_printf(out, "| Key || Index |\n");
-	for(i = 0; i < unsigned_int_list_size(&all_type_specifiers_map_keys); i++){
-		unsigned int key = unsigned_int_list_get(&all_type_specifiers_map_keys, i);
-		unsigned int value = unsigned_int_to_unsigned_int_map_get(&state->all_type_specifiers_map, key);
+	for(i = 0; i < struct_aggregate_specifier_details_list_size(&aggregate_specifiers_map_keys); i++){
+		struct aggregate_specifier_details key = struct_aggregate_specifier_details_list_get(&aggregate_specifiers_map_keys, i);
+		struct aggregate_specifier_id value = struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map_get(&state->aggregate_specifiers_map, key);
 		buffered_printf(out, "| ");
-		print_all_type_specifiers(state, out, value, TYPE_ENGINE_DEBUG);
+		print_aggregate_specifiers(state, out, value, TYPE_ENGINE_DEBUG);
 		buffered_printf(out, " |");
-		buffered_printf(out, "| %u   |\n", value);
+		buffered_printf(out, "| %u   |\n", value.id);
 	}
-	unsigned_int_list_destroy(&all_type_specifiers_map_keys);
+	struct_aggregate_specifier_details_list_destroy(&aggregate_specifiers_map_keys);
 
-	specifier_or_qualifiers_map_keys = unsigned_int_to_unsigned_int_map_keys(&state->specifier_or_qualifiers_map);
+	specifier_or_qualifiers_map_keys = struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_map_keys(&state->specifier_or_qualifiers_map);
 	buffered_printf(out, "Specifier, Qualifiers Or Storage Classes\n");
 	buffered_printf(out, "| Item || Value |\n");
-	for(i = 0; i < unsigned_int_list_size(&specifier_or_qualifiers_map_keys); i++){
-		unsigned int key = unsigned_int_list_get(&specifier_or_qualifiers_map_keys, i);
-		unsigned int value = unsigned_int_to_unsigned_int_map_get(&state->specifier_or_qualifiers_map, key);
+	for(i = 0; i < struct_specifier_or_qualifier_details_list_size(&specifier_or_qualifiers_map_keys); i++){
+		struct specifier_or_qualifier_details key = struct_specifier_or_qualifier_details_list_get(&specifier_or_qualifiers_map_keys, i);
+		struct specifier_or_qualifier_id value = struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_map_get(&state->specifier_or_qualifiers_map, key);
 
 		buffered_printf(out, "| %X   |", key);
-		buffered_printf(out, "| %u   |\n", value);
+		buffered_printf(out, "| %u   |\n", value.id);
 	}
-	unsigned_int_list_destroy(&specifier_or_qualifiers_map_keys);
+	struct_specifier_or_qualifier_details_list_destroy(&specifier_or_qualifiers_map_keys);
 
-	specifier_or_qualifier_list_items_map_keys = unsigned_int_to_unsigned_int_map_keys(&state->specifier_or_qualifier_list_items_map);
+	specifier_or_qualifier_list_items_map_keys = struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_keys(&state->specifier_or_qualifier_list_items_map);
 	buffered_printf(out, "Specifier or Qualifier List Items\n");
 	buffered_printf(out, "| List || Index Of First Item |\n");
-	for(i = 0; i < unsigned_int_list_size(&specifier_or_qualifier_list_items_map_keys); i++){
-		unsigned int key = unsigned_int_list_get(&specifier_or_qualifier_list_items_map_keys, i);
-		unsigned int value = unsigned_int_to_unsigned_int_map_get(&state->specifier_or_qualifier_list_items_map, key);
+	for(i = 0; i < struct_specifier_or_qualifier_list_item_details_list_size(&specifier_or_qualifier_list_items_map_keys); i++){
+		struct specifier_or_qualifier_list_item_details key = struct_specifier_or_qualifier_list_item_details_list_get(&specifier_or_qualifier_list_items_map_keys, i);
+		struct specifier_or_qualifier_list_item_id value = struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_get(&state->specifier_or_qualifier_list_items_map, key);
 
 		buffered_printf(out, "| ");
 		/*TODO:  Incorrect print_type_specifier_or_qualifier_list_item(state, out, key, TYPE_ENGINE_DEBUG);*/
 		buffered_printf(out, " |");
-		buffered_printf(out, "| %u   |\n", value);
+		buffered_printf(out, "| %u   |\n", value.id);
 	}
-	unsigned_int_list_destroy(&specifier_or_qualifier_list_items_map_keys);
+	struct_specifier_or_qualifier_list_item_details_list_destroy(&specifier_or_qualifier_list_items_map_keys);
 
-	declarator_part_list_items_map_keys = struct_generic_list_item_to_unsigned_int_map_keys(&state->declarator_part_list_items_map);
+	declarator_part_list_items_map_keys = struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_keys(&state->declarator_part_list_items_map);
 	buffered_printf(out, "Declarator Part List Items\n");
 	buffered_printf(out, "| List || Index Of First Item |\n");
-	for(i = 0; i < struct_generic_list_item_list_size(&declarator_part_list_items_map_keys); i++){
-		struct generic_list_item key = struct_generic_list_item_list_get(&declarator_part_list_items_map_keys, i);
-		unsigned int value = struct_generic_list_item_to_unsigned_int_map_get(&state->declarator_part_list_items_map, key);
+	for(i = 0; i < struct_declarator_part_list_item_details_list_size(&declarator_part_list_items_map_keys); i++){
+		struct declarator_part_list_item_details key = struct_declarator_part_list_item_details_list_get(&declarator_part_list_items_map_keys, i);
+		struct declarator_part_list_item_id value = struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_get(&state->declarator_part_list_items_map, key);
 
 		buffered_printf(out, "| ");
 		/*TODO:  Incorrect print_declarator_part_list_item(state, out, key, TYPE_ENGINE_DEBUG);*/
 		buffered_printf(out, " |");
 		buffered_printf(out, "| %u   |\n", value);
 	}
-	struct_generic_list_item_list_destroy(&declarator_part_list_items_map_keys);
+	struct_declarator_part_list_item_details_list_destroy(&declarator_part_list_items_map_keys);
 
-	identifier_map_keys = struct_c_lexer_token_to_unsigned_int_map_keys(&state->identifiers_map);
+	identifier_map_keys = struct_c_lexer_token_to_struct_identifier_id_map_keys(&state->identifiers_map);
 	buffered_printf(out, "Identifiers Mapping\n");
 	buffered_printf(out, "| Key || Index |\n");
 	for(i = 0; i < struct_c_lexer_token_list_size(&identifier_map_keys); i++){
 		struct c_lexer_token key = struct_c_lexer_token_list_get(&identifier_map_keys, i);
-		unsigned int value = struct_c_lexer_token_to_unsigned_int_map_get(&state->identifiers_map, key);
+		struct identifier_id value = struct_c_lexer_token_to_struct_identifier_id_map_get(&state->identifiers_map, key);
 		unsigned char * c = key.first_byte;
 		buffered_printf(out, "| ");
 		do{
 			buffered_printf(out, "%c", *c);
 		}while(c++ != key.last_byte);
 		buffered_printf(out, " |");
-		buffered_printf(out, "| %u   |\n", value);
+		buffered_printf(out, "| %u   |\n", value.id);
 	}
 	struct_c_lexer_token_list_destroy(&identifier_map_keys);
 }
 
 void create_type_engine_state(struct type_engine_state * state, struct memory_pool_collection * m){
 	(void)m;
-	struct_parser_node_ptr_to_unsigned_int_map_create(&state->parser_node_scope_associations, struct_parser_node_ptr_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_list_create(&state->reversible_operations);
+	struct_parser_node_ptr_to_struct_scope_level_id_map_create(&state->parser_node_scope_associations, struct_struct_parser_node_ptr_to_struct_scope_level_id_key_value_pair_compare);
+	enum_type_engine_operation_type_list_create(&state->reversible_operations);
+	struct_identifier_id_list_create(&state->saved_identifier_ids);
+	struct_struct_or_union_specifier_id_list_create(&state->saved_struct_or_union_specifier_ids);
 
-	unsigned_int_list_create(&state->simple_type_qualifiers);
-	unsigned_int_list_create(&state->simple_type_specifiers);
-	unsigned_int_list_create(&state->all_type_specifiers);
-	unsigned_int_list_create(&state->storage_class_specifiers);
-	unsigned_int_list_create(&state->specifier_or_qualifiers);
-	unsigned_int_list_create(&state->specifier_or_qualifier_list_items);
-	unsigned_int_list_create(&state->parameter_lists);
-	struct_generic_list_item_list_create(&state->declarator_part_list_items);
-	unsigned_int_list_create(&state->declarator_parts);
-	unsigned_int_list_create(&state->pointer_parts);
-	unsigned_int_list_create(&state->function_parts);
-	unsigned_int_list_create(&state->array_parts);
-	unsigned_int_list_create(&state->bitfield_or_declarators);
-	unsigned_int_list_create(&state->general_types);
-	unsigned_int_list_create(&state->general_type_list_items);
-	unsigned_int_list_create(&state->struct_or_union_specifiers);
-	unsigned_int_list_create(&state->scoped_struct_or_union_specifiers);
-	unsigned_int_list_create(&state->union_specifiers);
-	unsigned_int_list_create(&state->struct_specifiers);
+	enum_c_token_type_list_create(&state->simple_type_qualifiers);
+	enum_c_token_type_list_create(&state->simple_type_specifiers);
+	struct_aggregate_specifier_details_list_create(&state->aggregate_specifiers);
+	enum_c_token_type_list_create(&state->storage_class_specifiers);
+	struct_specifier_or_qualifier_details_list_create(&state->specifier_or_qualifiers);
+	struct_specifier_or_qualifier_list_item_details_list_create(&state->specifier_or_qualifier_list_items);
+	struct_parameter_list_details_list_create(&state->parameter_lists);
+	struct_declarator_part_list_item_details_list_create(&state->declarator_part_list_items);
+	struct_declarator_part_details_list_create(&state->declarator_parts);
+	struct_pointer_part_details_list_create(&state->pointer_parts);
+	struct_function_part_details_list_create(&state->function_parts);
+	struct_array_part_details_list_create(&state->array_parts);
+	struct_bitfield_or_declarator_details_list_create(&state->bitfield_or_declarators);
+	struct_general_type_details_list_create(&state->general_types);
+	struct_general_type_list_item_details_list_create(&state->general_type_list_items);
+	struct_struct_or_union_specifier_details_list_create(&state->struct_or_union_specifiers);
+	struct_scoped_struct_or_union_specifier_details_list_create(&state->scoped_struct_or_union_specifiers);
+	struct_union_specifier_details_list_create(&state->union_specifiers);
+	struct_struct_specifier_details_list_create(&state->struct_specifiers);
 	struct_c_lexer_token_list_create(&state->identifiers);
 	struct_parser_node_ptr_list_create(&state->constant_expression_parser_nodes);
 	struct_scope_level_ptr_list_create(&state->scope_levels);
-	unsigned_int_to_unsigned_int_map_create(&state->all_type_specifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->simple_type_specifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->simple_type_qualifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->storage_class_specifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->specifier_or_qualifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->specifier_or_qualifier_list_items_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	struct_generic_list_item_to_unsigned_int_map_create(&state->declarator_part_list_items_map, struct_generic_list_item_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->declarator_parts_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->pointer_parts_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->function_parts_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->array_parts_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->parameter_lists_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->bitfield_or_declarators_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->general_types_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->general_type_list_items_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->struct_or_union_specifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->scoped_struct_or_union_specifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->union_specifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&state->struct_specifiers_map, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	struct_parser_node_ptr_to_unsigned_int_map_create(&state->constant_expression_parser_nodes_map, struct_parser_node_ptr_to_unsigned_int_key_value_pair_compare);
-	struct_scope_level_ptr_to_unsigned_int_map_create(&state->scope_levels_map, struct_scope_level_ptr_to_unsigned_int_key_value_pair_compare);
-	struct_c_lexer_token_to_unsigned_int_map_create(&state->identifiers_map, struct_c_lexer_token_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_void_ptr_map_create(&state->function_definitions.general_type_ids_to_function_definitions, unsigned_int_to_void_ptr_key_value_pair_compare);
+	struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map_create(&state->aggregate_specifiers_map, struct_struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_key_value_pair_compare);
+	enum_c_token_type_to_struct_simple_specifier_id_map_create(&state->simple_type_specifiers_map, struct_enum_c_token_type_to_struct_simple_specifier_id_key_value_pair_compare);
+	enum_c_token_type_to_struct_type_qualifier_id_map_create(&state->simple_type_qualifiers_map, struct_enum_c_token_type_to_struct_type_qualifier_id_key_value_pair_compare);
+	enum_c_token_type_to_struct_storage_class_specifier_id_map_create(&state->storage_class_specifiers_map, struct_enum_c_token_type_to_struct_storage_class_specifier_id_key_value_pair_compare);
+	struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_map_create(&state->specifier_or_qualifiers_map, struct_struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_key_value_pair_compare);
+	struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_create(&state->specifier_or_qualifier_list_items_map, struct_struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_key_value_pair_compare);
+	struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_create(&state->declarator_part_list_items_map, struct_struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_key_value_pair_compare);
+	struct_declarator_part_details_to_struct_declarator_part_id_map_create(&state->declarator_parts_map, struct_struct_declarator_part_details_to_struct_declarator_part_id_key_value_pair_compare);
+	struct_pointer_part_details_to_struct_pointer_part_id_map_create(&state->pointer_parts_map, struct_struct_pointer_part_details_to_struct_pointer_part_id_key_value_pair_compare);
+	struct_function_part_details_to_struct_function_part_id_map_create(&state->function_parts_map, struct_struct_function_part_details_to_struct_function_part_id_key_value_pair_compare);
+	struct_array_part_details_to_struct_array_part_id_map_create(&state->array_parts_map, struct_struct_array_part_details_to_struct_array_part_id_key_value_pair_compare);
+	struct_parameter_list_details_to_struct_parameter_list_id_map_create(&state->parameter_lists_map, struct_struct_parameter_list_details_to_struct_parameter_list_id_key_value_pair_compare);
+	struct_bitfield_or_declarator_details_to_struct_bitfield_or_declarator_id_map_create(&state->bitfield_or_declarators_map, struct_struct_bitfield_or_declarator_details_to_struct_bitfield_or_declarator_id_key_value_pair_compare);
+	struct_general_type_details_to_struct_general_type_id_map_create(&state->general_types_map, struct_struct_general_type_details_to_struct_general_type_id_key_value_pair_compare);
+	struct_general_type_list_item_details_to_struct_general_type_list_item_id_map_create(&state->general_type_list_items_map, struct_struct_general_type_list_item_details_to_struct_general_type_list_item_id_key_value_pair_compare);
+	struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_map_create(&state->struct_or_union_specifiers_map, struct_struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_key_value_pair_compare);
+	struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_map_create(&state->scoped_struct_or_union_specifiers_map, struct_struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_key_value_pair_compare);
+	struct_union_specifier_details_to_struct_union_specifier_id_map_create(&state->union_specifiers_map, struct_struct_union_specifier_details_to_struct_union_specifier_id_key_value_pair_compare);
+	struct_struct_specifier_details_to_struct_struct_specifier_id_map_create(&state->struct_specifiers_map, struct_struct_struct_specifier_details_to_struct_struct_specifier_id_key_value_pair_compare);
+	struct_parser_node_ptr_to_struct_parser_node_id_map_create(&state->constant_expression_parser_nodes_map, struct_struct_parser_node_ptr_to_struct_parser_node_id_key_value_pair_compare);
+	struct_scope_level_ptr_to_struct_scope_level_id_map_create(&state->scope_levels_map, struct_struct_scope_level_ptr_to_struct_scope_level_id_key_value_pair_compare);
+	struct_c_lexer_token_to_struct_identifier_id_map_create(&state->identifiers_map, struct_struct_c_lexer_token_to_struct_identifier_id_key_value_pair_compare);
+	unsigned_int_to_void_ptr_map_create(&state->function_definitions.general_type_ids_to_function_definitions, struct_unsigned_int_to_void_ptr_key_value_pair_compare);
 	void_ptr_list_create(&state->stored_pointers);
 	state->current_scope_depth = 0;
 	state->top_scope = create_empty_scope(state, (struct scope_level *)0, SCOPE_LEVEL_TYPE_FILE_SCOPE);
@@ -2487,94 +2509,96 @@ void destroy_type_engine_state(struct type_engine_state * state){
 
 	backtrack_type_engine(state, 0);
 	destroy_empty_scope(state->top_scope);
-	unsigned_int_list_destroy(&state->reversible_operations);
+	enum_type_engine_operation_type_list_destroy(&state->reversible_operations);
+	struct_identifier_id_list_destroy(&state->saved_identifier_ids);
+	struct_struct_or_union_specifier_id_list_destroy(&state->saved_struct_or_union_specifier_ids);
 
-	unsigned_int_list_destroy(&state->simple_type_qualifiers);
-	unsigned_int_list_destroy(&state->simple_type_specifiers);
-	unsigned_int_list_destroy(&state->all_type_specifiers);
-	unsigned_int_list_destroy(&state->storage_class_specifiers);
-	unsigned_int_list_destroy(&state->specifier_or_qualifiers);
-	unsigned_int_list_destroy(&state->specifier_or_qualifier_list_items);
-	unsigned_int_list_destroy(&state->parameter_lists);
-	struct_generic_list_item_list_destroy(&state->declarator_part_list_items);
-	unsigned_int_list_destroy(&state->declarator_parts);
-	unsigned_int_list_destroy(&state->pointer_parts);
-	unsigned_int_list_destroy(&state->function_parts);
-	unsigned_int_list_destroy(&state->array_parts);
-	unsigned_int_list_destroy(&state->bitfield_or_declarators);
-	unsigned_int_list_destroy(&state->general_types);
-	unsigned_int_list_destroy(&state->general_type_list_items);
-	unsigned_int_list_destroy(&state->struct_or_union_specifiers);
-	unsigned_int_list_destroy(&state->scoped_struct_or_union_specifiers);
-	unsigned_int_list_destroy(&state->union_specifiers);
-	unsigned_int_list_destroy(&state->struct_specifiers);
+	enum_c_token_type_list_destroy(&state->simple_type_qualifiers);
+	enum_c_token_type_list_destroy(&state->simple_type_specifiers);
+	struct_aggregate_specifier_details_list_destroy(&state->aggregate_specifiers);
+	enum_c_token_type_list_destroy(&state->storage_class_specifiers);
+	struct_specifier_or_qualifier_details_list_destroy(&state->specifier_or_qualifiers);
+	struct_specifier_or_qualifier_list_item_details_list_destroy(&state->specifier_or_qualifier_list_items);
+	struct_parameter_list_details_list_destroy(&state->parameter_lists);
+	struct_declarator_part_list_item_details_list_destroy(&state->declarator_part_list_items);
+	struct_declarator_part_details_list_destroy(&state->declarator_parts);
+	struct_pointer_part_details_list_destroy(&state->pointer_parts);
+	struct_function_part_details_list_destroy(&state->function_parts);
+	struct_array_part_details_list_destroy(&state->array_parts);
+	struct_bitfield_or_declarator_details_list_destroy(&state->bitfield_or_declarators);
+	struct_general_type_details_list_destroy(&state->general_types);
+	struct_general_type_list_item_details_list_destroy(&state->general_type_list_items);
+	struct_struct_or_union_specifier_details_list_destroy(&state->struct_or_union_specifiers);
+	struct_scoped_struct_or_union_specifier_details_list_destroy(&state->scoped_struct_or_union_specifiers);
+	struct_union_specifier_details_list_destroy(&state->union_specifiers);
+	struct_struct_specifier_details_list_destroy(&state->struct_specifiers);
 	struct_c_lexer_token_list_destroy(&state->identifiers);
 	struct_parser_node_ptr_list_destroy(&state->constant_expression_parser_nodes);
 	struct_scope_level_ptr_list_destroy(&state->scope_levels);
-	unsigned_int_to_unsigned_int_map_destroy(&state->all_type_specifiers_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->simple_type_specifiers_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->simple_type_qualifiers_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->storage_class_specifiers_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->specifier_or_qualifiers_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->specifier_or_qualifier_list_items_map);
-	struct_generic_list_item_to_unsigned_int_map_destroy(&state->declarator_part_list_items_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->declarator_parts_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->pointer_parts_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->function_parts_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->array_parts_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->parameter_lists_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->bitfield_or_declarators_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->general_types_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->general_type_list_items_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->struct_or_union_specifiers_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->scoped_struct_or_union_specifiers_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->union_specifiers_map);
-	unsigned_int_to_unsigned_int_map_destroy(&state->struct_specifiers_map);
-	struct_parser_node_ptr_to_unsigned_int_map_destroy(&state->constant_expression_parser_nodes_map);
-	struct_scope_level_ptr_to_unsigned_int_map_destroy(&state->scope_levels_map);
-	struct_c_lexer_token_to_unsigned_int_map_destroy(&state->identifiers_map);
+	struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map_destroy(&state->aggregate_specifiers_map);
+	enum_c_token_type_to_struct_simple_specifier_id_map_destroy(&state->simple_type_specifiers_map);
+	enum_c_token_type_to_struct_type_qualifier_id_map_destroy(&state->simple_type_qualifiers_map);
+	enum_c_token_type_to_struct_storage_class_specifier_id_map_destroy(&state->storage_class_specifiers_map);
+	struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_map_destroy(&state->specifier_or_qualifiers_map);
+	struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_destroy(&state->specifier_or_qualifier_list_items_map);
+	struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_destroy(&state->declarator_part_list_items_map);
+	struct_declarator_part_details_to_struct_declarator_part_id_map_destroy(&state->declarator_parts_map);
+	struct_pointer_part_details_to_struct_pointer_part_id_map_destroy(&state->pointer_parts_map);
+	struct_function_part_details_to_struct_function_part_id_map_destroy(&state->function_parts_map);
+	struct_array_part_details_to_struct_array_part_id_map_destroy(&state->array_parts_map);
+	struct_parameter_list_details_to_struct_parameter_list_id_map_destroy(&state->parameter_lists_map);
+	struct_bitfield_or_declarator_details_to_struct_bitfield_or_declarator_id_map_destroy(&state->bitfield_or_declarators_map);
+	struct_general_type_details_to_struct_general_type_id_map_destroy(&state->general_types_map);
+	struct_general_type_list_item_details_to_struct_general_type_list_item_id_map_destroy(&state->general_type_list_items_map);
+	struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_map_destroy(&state->struct_or_union_specifiers_map);
+	struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_map_destroy(&state->scoped_struct_or_union_specifiers_map);
+	struct_union_specifier_details_to_struct_union_specifier_id_map_destroy(&state->union_specifiers_map);
+	struct_struct_specifier_details_to_struct_struct_specifier_id_map_destroy(&state->struct_specifiers_map);
+	struct_parser_node_ptr_to_struct_parser_node_id_map_destroy(&state->constant_expression_parser_nodes_map);
+	struct_scope_level_ptr_to_struct_scope_level_id_map_destroy(&state->scope_levels_map);
+	struct_c_lexer_token_to_struct_identifier_id_map_destroy(&state->identifiers_map);
 	unsigned_int_to_void_ptr_map_destroy(&state->function_definitions.general_type_ids_to_function_definitions);
 	void_ptr_list_destroy(&state->stored_pointers);
-	struct_parser_node_ptr_to_unsigned_int_map_destroy(&state->parser_node_scope_associations);
+	struct_parser_node_ptr_to_struct_scope_level_id_map_destroy(&state->parser_node_scope_associations);
 }
 
 unsigned int type_engine_checkpoint(struct type_engine_state * state){
 	/*  Returns the number of operations that have been performed so far */
-	return unsigned_int_list_size(&state->reversible_operations);
+	return enum_type_engine_operation_type_list_size(&state->reversible_operations);
 }
 
 void backtrack_type_engine(struct type_engine_state * state, unsigned int target_number){
-	assert(unsigned_int_list_size(&state->reversible_operations) >= target_number);
-	while(unsigned_int_list_size(&state->reversible_operations) > target_number){
-		unsigned int operation = unsigned_int_list_pop_end(&state->reversible_operations);
+	assert(enum_type_engine_operation_type_list_size(&state->reversible_operations) >= target_number);
+	while(enum_type_engine_operation_type_list_size(&state->reversible_operations) > target_number){
+		enum type_engine_operation_type operation = enum_type_engine_operation_type_list_pop_end(&state->reversible_operations);
 		undo_type_engine_operation(state, operation);
 	}
 }
 
 struct parser_node * associate_parser_node_with_scope_level(struct type_engine_state * state, struct scope_level * scope, struct parser_node * n){
 	if(scope){
-		unsigned int scope_id = get_type_engine_id_for_scope_level(state, scope);
-		struct_parser_node_ptr_to_unsigned_int_map_put(&state->parser_node_scope_associations, n, scope_id);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ASSOCIATE_PARSER_NODE_WITH_SCOPE_LEVEL);
+		struct scope_level_id scope_id = get_type_engine_id_for_scope_level(state, scope);
+		struct_parser_node_ptr_to_struct_scope_level_id_map_put(&state->parser_node_scope_associations, n, scope_id);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ASSOCIATE_PARSER_NODE_WITH_SCOPE_LEVEL);
 		void_ptr_list_add_end(&state->stored_pointers, (void *)n);
 	}
 	return n;
 }
 
 struct scope_level * increment_scope_depth(struct type_engine_state * state, enum scope_level_type t){
-	unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_INCREMENT_SCOPE_DEPTH);
+	enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_INCREMENT_SCOPE_DEPTH);
 	manage_new_scope(state, state->top_scope, state->current_scope_depth, ADD, t);
 	state->current_scope_depth = state->current_scope_depth + 1;
 	return get_parser_scope_level(state);
 }
 
 void decrement_scope_depth(struct type_engine_state * state){
-	unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_DECREMENT_SCOPE_DEPTH);
+	enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_DECREMENT_SCOPE_DEPTH);
 	assert(state->current_scope_depth > 0);
 	state->current_scope_depth = state->current_scope_depth - 1;
 }
 
-void undo_type_engine_operation(struct type_engine_state * state, unsigned int o){
+void undo_type_engine_operation(struct type_engine_state * state, enum type_engine_operation_type o){
 	switch (o){
 		case TYPE_ENGINE_INCREMENT_SCOPE_DEPTH:{
 			state->current_scope_depth = state->current_scope_depth - 1;
@@ -2588,88 +2612,88 @@ void undo_type_engine_operation(struct type_engine_state * state, unsigned int o
 			scope->next_anonymous_tag_id = scope->next_anonymous_tag_id - 1;
 			break;
 		}case TYPE_ENGINE_ADD_GENERAL_TYPE_LIST_ITEM:{
-			unsigned int e = unsigned_int_list_pop_end(&state->general_type_list_items);
-			unsigned_int_to_unsigned_int_map_remove(&state->general_type_list_items_map, e);
+			struct general_type_list_item_details e = struct_general_type_list_item_details_list_pop_end(&state->general_type_list_items);
+			struct_general_type_list_item_details_to_struct_general_type_list_item_id_map_remove(&state->general_type_list_items_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_ALL_SPECIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->all_type_specifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->all_type_specifiers_map, e);
+			struct aggregate_specifier_details e = struct_aggregate_specifier_details_list_pop_end(&state->aggregate_specifiers);
+			struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map_remove(&state->aggregate_specifiers_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_SIMPLE_SPECIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->simple_type_specifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->simple_type_specifiers_map, e);
+			enum c_token_type e = enum_c_token_type_list_pop_end(&state->simple_type_specifiers);
+			enum_c_token_type_to_struct_simple_specifier_id_map_remove(&state->simple_type_specifiers_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_STORAGE_CLASS_SPECIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->storage_class_specifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->storage_class_specifiers_map, e);
+			enum c_token_type t = enum_c_token_type_list_pop_end(&state->storage_class_specifiers);
+			enum_c_token_type_to_struct_storage_class_specifier_id_map_remove(&state->storage_class_specifiers_map, t);
 			break;
 		}case TYPE_ENGINE_ADD_SIMPLE_QUALIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->simple_type_qualifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->simple_type_qualifiers_map, e);
+			enum c_token_type e = enum_c_token_type_list_pop_end(&state->simple_type_qualifiers);
+			enum_c_token_type_to_struct_type_qualifier_id_map_remove(&state->simple_type_qualifiers_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_SPECIFIER_OR_QUALIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->specifier_or_qualifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->specifier_or_qualifiers_map, e);
+			struct specifier_or_qualifier_details e = struct_specifier_or_qualifier_details_list_pop_end(&state->specifier_or_qualifiers);
+			struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_map_remove(&state->specifier_or_qualifiers_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_DECLARATOR_PART:{
-			unsigned int e = unsigned_int_list_pop_end(&state->declarator_parts);
-			unsigned_int_to_unsigned_int_map_remove(&state->declarator_parts_map, e);
+			struct declarator_part_details  e = struct_declarator_part_details_list_pop_end(&state->declarator_parts);
+			struct_declarator_part_details_to_struct_declarator_part_id_map_remove(&state->declarator_parts_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_POINTER_PART:{
-			unsigned int e = unsigned_int_list_pop_end(&state->pointer_parts);
-			unsigned_int_to_unsigned_int_map_remove(&state->pointer_parts_map, e);
+			struct pointer_part_details e = struct_pointer_part_details_list_pop_end(&state->pointer_parts);
+			struct_pointer_part_details_to_struct_pointer_part_id_map_remove(&state->pointer_parts_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_ARRAY_PART:{
-			unsigned int e = unsigned_int_list_pop_end(&state->array_parts);
-			unsigned_int_to_unsigned_int_map_remove(&state->array_parts_map, e);
+			struct array_part_details e = struct_array_part_details_list_pop_end(&state->array_parts);
+			struct_array_part_details_to_struct_array_part_id_map_remove(&state->array_parts_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_FUNCTION_PART:{
-			unsigned int e = unsigned_int_list_pop_end(&state->function_parts);
-			unsigned_int_to_unsigned_int_map_remove(&state->function_parts_map, e);
+			struct function_part_details e = struct_function_part_details_list_pop_end(&state->function_parts);
+			struct_function_part_details_to_struct_function_part_id_map_remove(&state->function_parts_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_PARAMETER_LIST:{
-			unsigned int e = unsigned_int_list_pop_end(&state->parameter_lists);
-			unsigned_int_to_unsigned_int_map_remove(&state->parameter_lists_map, e);
+			struct parameter_list_details e = struct_parameter_list_details_list_pop_end(&state->parameter_lists);
+			struct_parameter_list_details_to_struct_parameter_list_id_map_remove(&state->parameter_lists_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_BITFIELD_OR_DECLARATOR:{
-			unsigned int e = unsigned_int_list_pop_end(&state->bitfield_or_declarators);
-			unsigned_int_to_unsigned_int_map_remove(&state->bitfield_or_declarators_map, e);
+			struct bitfield_or_declarator_details e = struct_bitfield_or_declarator_details_list_pop_end(&state->bitfield_or_declarators);
+			struct_bitfield_or_declarator_details_to_struct_bitfield_or_declarator_id_map_remove(&state->bitfield_or_declarators_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_GENERAL_TYPE:{
-			unsigned int e = unsigned_int_list_pop_end(&state->general_types);
-			unsigned_int_to_unsigned_int_map_remove(&state->general_types_map, e);
+			struct general_type_details e = struct_general_type_details_list_pop_end(&state->general_types);
+			struct_general_type_details_to_struct_general_type_id_map_remove(&state->general_types_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_SCOPE_LEVEL:{
 			struct scope_level * e = struct_scope_level_ptr_list_pop_end(&state->scope_levels);
-			struct_scope_level_ptr_to_unsigned_int_map_remove(&state->scope_levels_map, e);
+			struct_scope_level_ptr_to_struct_scope_level_id_map_remove(&state->scope_levels_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_CONSTANT_PARSER_NODE:{
 			struct parser_node * e = struct_parser_node_ptr_list_pop_end(&state->constant_expression_parser_nodes);
-			struct_parser_node_ptr_to_unsigned_int_map_remove(&state->constant_expression_parser_nodes_map, e);
+			struct_parser_node_ptr_to_struct_parser_node_id_map_remove(&state->constant_expression_parser_nodes_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_SPECIFIER_QUALIFIER_LIST_ITEM:{
-			unsigned int e = unsigned_int_list_pop_end(&state->specifier_or_qualifier_list_items);
-			unsigned_int_to_unsigned_int_map_remove(&state->specifier_or_qualifier_list_items_map, e);
+			struct specifier_or_qualifier_list_item_details e = struct_specifier_or_qualifier_list_item_details_list_pop_end(&state->specifier_or_qualifier_list_items);
+			struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_remove(&state->specifier_or_qualifier_list_items_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_DECLARATOR_PART_LIST_ITEM:{
-			struct generic_list_item e = struct_generic_list_item_list_pop_end(&state->declarator_part_list_items);
-			struct_generic_list_item_to_unsigned_int_map_remove(&state->declarator_part_list_items_map, e);
+			struct declarator_part_list_item_details e = struct_declarator_part_list_item_details_list_pop_end(&state->declarator_part_list_items);
+			struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_remove(&state->declarator_part_list_items_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_STRUCT_OR_UNION_SPECIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->struct_or_union_specifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->struct_or_union_specifiers_map, e);
+			struct struct_or_union_specifier_details e = struct_struct_or_union_specifier_details_list_pop_end(&state->struct_or_union_specifiers);
+			struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_map_remove(&state->struct_or_union_specifiers_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_UNION_SPECIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->union_specifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->union_specifiers_map, e);
+			struct union_specifier_details e = struct_union_specifier_details_list_pop_end(&state->union_specifiers);
+			struct_union_specifier_details_to_struct_union_specifier_id_map_remove(&state->union_specifiers_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_STRUCT_SPECIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->struct_specifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->struct_specifiers_map, e);
+			struct struct_specifier_details e = struct_struct_specifier_details_list_pop_end(&state->struct_specifiers);
+			struct_struct_specifier_details_to_struct_struct_specifier_id_map_remove(&state->struct_specifiers_map, e);
 			break;
 		}case TYPE_ENGINE_ADD_SCOPED_STRUCT_OR_UNION_SPECIFIER:{
-			unsigned int e = unsigned_int_list_pop_end(&state->scoped_struct_or_union_specifiers);
-			unsigned_int_to_unsigned_int_map_remove(&state->scoped_struct_or_union_specifiers_map, e);
+			struct scoped_struct_or_union_specifier_details e = struct_scoped_struct_or_union_specifier_details_list_pop_end(&state->scoped_struct_or_union_specifiers);
+			struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_map_remove(&state->scoped_struct_or_union_specifiers_map, e);
 			break;
 		}case TYPE_ENGINE_CREATE_DECLARATION_NAMESPACE:{
 			struct declaration_namespace * d = (struct declaration_namespace *)void_ptr_list_pop_end(&state->stored_pointers);
@@ -2685,27 +2709,27 @@ void undo_type_engine_operation(struct type_engine_state * state, unsigned int o
 			break;
 		}case TYPE_ENGINE_ADD_IDENTIFIER_ID_TO_DECLARATION_NAMESPACE:{
 			struct declaration_namespace * dn = (struct declaration_namespace *)void_ptr_list_pop_end(&state->stored_pointers);
-			unsigned int identifier_id = unsigned_int_list_pop_end(&state->reversible_operations);
-			unsigned_int_to_unsigned_int_map_remove(&dn->identifier_ids_to_type_ids, identifier_id);
+			struct identifier_id identifier_id = struct_identifier_id_list_pop_end(&state->saved_identifier_ids);
+			unsigned_int_to_unsigned_int_map_remove(&dn->identifier_ids_to_type_ids, identifier_id.id);
 			break;
 		}case TYPE_ENGINE_ADD_STRUCT_OR_UNION_DEFINITION:{
 			struct scope_level * scope = (struct scope_level*)void_ptr_list_pop_end(&state->stored_pointers);
-			unsigned int all_specifiers_id = unsigned_int_list_pop_end(&state->reversible_operations);
+			struct struct_or_union_specifier_id aggregate_specifiers_id = struct_struct_or_union_specifier_id_list_pop_end(&state->saved_struct_or_union_specifier_ids);
 			struct struct_or_union_definition * d;
-			d = (struct struct_or_union_definition *)unsigned_int_to_void_ptr_map_get(&scope->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, all_specifiers_id);
-			unsigned_int_to_void_ptr_map_remove(&scope->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, all_specifiers_id);
+			d = (struct struct_or_union_definition *)unsigned_int_to_void_ptr_map_get(&scope->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, aggregate_specifiers_id.id);
+			unsigned_int_to_void_ptr_map_remove(&scope->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, aggregate_specifiers_id.id);
 			free(d);
 			break;
 		}case TYPE_ENGINE_ADD_NAMED_STRUCT_OR_UNION_DECLARATION:{
 			struct scope_level * scope = (struct scope_level*)void_ptr_list_pop_end(&state->stored_pointers);
-			unsigned int identifier_id = unsigned_int_list_pop_end(&state->reversible_operations);
+			struct identifier_id identifier_id = struct_identifier_id_list_pop_end(&state->saved_identifier_ids);
 			unsigned int struct_or_union_specifier_id = unsigned_int_list_pop_end(&scope->struct_or_union_declarations.ordered_type_ids);
-			unsigned_int_to_unsigned_int_map_remove(&scope->struct_or_union_declarations.identifier_ids_to_type_ids, identifier_id);
+			unsigned_int_to_unsigned_int_map_remove(&scope->struct_or_union_declarations.identifier_ids_to_type_ids, identifier_id.id);
 			unsigned_int_to_unsigned_int_map_remove(&scope->struct_or_union_declarations.type_ids_to_ordered_index, struct_or_union_specifier_id);
 			break;
 		}case TYPE_ENGINE_ASSOCIATE_PARSER_NODE_WITH_SCOPE_LEVEL:{
 			struct parser_node * n = (struct parser_node*)void_ptr_list_pop_end(&state->stored_pointers);
-			struct_parser_node_ptr_to_unsigned_int_map_remove(&state->parser_node_scope_associations, n);
+			struct_parser_node_ptr_to_struct_scope_level_id_map_remove(&state->parser_node_scope_associations, n);
 			break;
 		}default:{
 			assert(0 && "Unknown operation.");
@@ -2746,7 +2770,7 @@ unsigned int consume_next_anonymous_tag_id_in_current_parser_scope(struct type_e
 	struct scope_level * scope = get_parser_scope_level(state);
 	unsigned int rtn = scope->next_anonymous_tag_id;
 	scope->next_anonymous_tag_id = rtn + 1;
-	unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_INCREMENT_NEXT_ANONYMOUS_TAG_ID);
+	enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_INCREMENT_NEXT_ANONYMOUS_TAG_ID);
 	return rtn;
 }
 
@@ -2758,26 +2782,26 @@ struct scope_level * create_empty_scope(struct type_engine_state * state, struct
 	s->first_local_object = (struct namespace_object *)0;
 	s->parent_scope = parent;
 	struct_scope_level_ptr_list_create(&s->scopes);
-	unsigned_char_ptr_to_struct_namespace_object_ptr_map_create(&s->tag_namespace, unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare);
-	unsigned_char_ptr_to_struct_namespace_object_ptr_map_create(&s->label_namespace, unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare);
-	unsigned_char_ptr_to_struct_namespace_object_ptr_map_create(&s->identifier_namespace, unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_namespace_object_ptr_map_create(&s->tag_namespace, struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_namespace_object_ptr_map_create(&s->label_namespace, struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_namespace_object_ptr_map_create(&s->identifier_namespace, struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare);
 	unsigned_char_ptr_list_create(&s->evaluate_labels);
 	unsigned_char_ptr_list_create(&s->end_labels);
 
 	unsigned_int_list_create(&s->enum_declarations.ordered_type_ids);
-	unsigned_int_to_unsigned_int_map_create(&s->enum_declarations.identifier_ids_to_type_ids, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&s->enum_declarations.type_ids_to_ordered_index, unsigned_int_to_unsigned_int_key_value_pair_compare);
+	unsigned_int_to_unsigned_int_map_create(&s->enum_declarations.identifier_ids_to_type_ids, struct_unsigned_int_to_unsigned_int_key_value_pair_compare);
+	unsigned_int_to_unsigned_int_map_create(&s->enum_declarations.type_ids_to_ordered_index, struct_unsigned_int_to_unsigned_int_key_value_pair_compare);
 
 	unsigned_int_list_create(&s->struct_or_union_declarations.ordered_type_ids);
-	unsigned_int_to_unsigned_int_map_create(&s->struct_or_union_declarations.identifier_ids_to_type_ids, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&s->struct_or_union_declarations.type_ids_to_ordered_index, unsigned_int_to_unsigned_int_key_value_pair_compare);
+	unsigned_int_to_unsigned_int_map_create(&s->struct_or_union_declarations.identifier_ids_to_type_ids, struct_unsigned_int_to_unsigned_int_key_value_pair_compare);
+	unsigned_int_to_unsigned_int_map_create(&s->struct_or_union_declarations.type_ids_to_ordered_index, struct_unsigned_int_to_unsigned_int_key_value_pair_compare);
 
 	unsigned_int_list_create(&s->identifier_declarations.ordered_type_ids);
-	unsigned_int_to_unsigned_int_map_create(&s->identifier_declarations.identifier_ids_to_type_ids, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&s->identifier_declarations.type_ids_to_ordered_index, unsigned_int_to_unsigned_int_key_value_pair_compare);
+	unsigned_int_to_unsigned_int_map_create(&s->identifier_declarations.identifier_ids_to_type_ids, struct_unsigned_int_to_unsigned_int_key_value_pair_compare);
+	unsigned_int_to_unsigned_int_map_create(&s->identifier_declarations.type_ids_to_ordered_index, struct_unsigned_int_to_unsigned_int_key_value_pair_compare);
 
-	unsigned_int_to_void_ptr_map_create(&s->enum_definitions.general_type_ids_to_enum_definitions, unsigned_int_to_void_ptr_key_value_pair_compare);
-	unsigned_int_to_void_ptr_map_create(&s->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, unsigned_int_to_void_ptr_key_value_pair_compare);
+	unsigned_int_to_void_ptr_map_create(&s->enum_definitions.general_type_ids_to_enum_definitions, struct_unsigned_int_to_void_ptr_key_value_pair_compare);
+	unsigned_int_to_void_ptr_map_create(&s->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, struct_unsigned_int_to_void_ptr_key_value_pair_compare);
 	s->next_anonymous_tag_id = 0;
 	return s;
 }
@@ -2807,328 +2831,504 @@ void destroy_empty_scope(struct scope_level * s){
 	free(s);
 }
 
+struct aggregate_specifier_id aggregate_specifier_from_simple_specifier_id(struct type_engine_state * state, struct simple_specifier_id s){
+	return aggregate_specifier_from_any_specifier_id(state, TYPE_ENGINE_SIMPLE_SPECIFIER, s.id);
+}
 
+struct aggregate_specifier_id aggregate_specifier_from_typename_specifier_id(struct type_engine_state * state, unsigned int s){
+	return aggregate_specifier_from_any_specifier_id(state, TYPE_ENGINE_TYPENAME_SPECIFIER, s);
+}
 
-unsigned int get_type_engine_id_for_all_specifier(struct type_engine_state * state, enum type_engine_type_specifier_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 30) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->all_type_specifiers_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->all_type_specifiers_map, details);
+struct aggregate_specifier_id aggregate_specifier_from_enum_specifier_id(struct type_engine_state * state, unsigned int s){
+	return aggregate_specifier_from_any_specifier_id(state, TYPE_ENGINE_ENUM_SPECIFIER, s);
+}
+
+struct aggregate_specifier_id aggregate_specifier_from_scoped_struct_or_union_specifier_id(struct type_engine_state * state, struct scoped_struct_or_union_specifier_id s){
+	return aggregate_specifier_from_any_specifier_id(state, TYPE_ENGINE_STRUCT_OR_UNION_SPECIFIER, s.id);
+}
+
+struct aggregate_specifier_id aggregate_specifier_from_any_specifier_id(struct type_engine_state * state, enum type_engine_aggregate_specifier_kind type, unsigned int s){
+	struct aggregate_specifier_details details;
+	details.type = type;
+	details.id = s;
+	if(struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map_exists(&state->aggregate_specifiers_map, details)){
+		return struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map_get(&state->aggregate_specifiers_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->all_type_specifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->all_type_specifiers_map, details, new_index);
-		unsigned_int_list_add_end(&state->all_type_specifiers, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_ALL_SPECIFIER);
-		return new_index;
+		struct aggregate_specifier_id new_id;
+		new_id.id = struct_aggregate_specifier_details_list_size(&state->aggregate_specifiers);
+		struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map_put(&state->aggregate_specifiers_map, details, new_id);
+		struct_aggregate_specifier_details_list_add_end(&state->aggregate_specifiers, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_ALL_SPECIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_simple_specifier(struct type_engine_state * state, enum c_token_type t){
-	if(unsigned_int_to_unsigned_int_map_exists(&state->simple_type_specifiers_map, (unsigned int)t)){
-		return unsigned_int_to_unsigned_int_map_get(&state->simple_type_specifiers_map, (unsigned int)t);
+struct simple_specifier_id get_type_engine_id_for_simple_specifier(struct type_engine_state * state, enum c_token_type t){
+	if(enum_c_token_type_to_struct_simple_specifier_id_map_exists(&state->simple_type_specifiers_map, t)){
+		return enum_c_token_type_to_struct_simple_specifier_id_map_get(&state->simple_type_specifiers_map, t);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->simple_type_specifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->simple_type_specifiers_map, (unsigned int)t, new_index);
-		unsigned_int_list_add_end(&state->simple_type_specifiers, (unsigned int)t);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_SIMPLE_SPECIFIER);
-		return new_index;
+		struct simple_specifier_id new_id;
+		new_id.id = enum_c_token_type_list_size(&state->simple_type_specifiers);
+		enum_c_token_type_to_struct_simple_specifier_id_map_put(&state->simple_type_specifiers_map, t, new_id);
+		enum_c_token_type_list_add_end(&state->simple_type_specifiers, t);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_SIMPLE_SPECIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_storage_class_specifier(struct type_engine_state * state, enum c_token_type t){
-	if(unsigned_int_to_unsigned_int_map_exists(&state->storage_class_specifiers_map, (unsigned int)t)){
-		return unsigned_int_to_unsigned_int_map_get(&state->storage_class_specifiers_map, (unsigned int)t);
+struct storage_class_specifier_id get_type_engine_id_for_storage_class_specifier(struct type_engine_state * state, enum c_token_type t){
+	if(enum_c_token_type_to_struct_storage_class_specifier_id_map_exists(&state->storage_class_specifiers_map, t)){
+		return enum_c_token_type_to_struct_storage_class_specifier_id_map_get(&state->storage_class_specifiers_map, t);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->storage_class_specifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->storage_class_specifiers_map, (unsigned int)t, new_index);
-		unsigned_int_list_add_end(&state->storage_class_specifiers, (unsigned int)t);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_STORAGE_CLASS_SPECIFIER);
-		return new_index;
+		struct storage_class_specifier_id new_id;
+		new_id.id = enum_c_token_type_list_size(&state->storage_class_specifiers);
+		enum_c_token_type_to_struct_storage_class_specifier_id_map_put(&state->storage_class_specifiers_map, t, new_id);
+		enum_c_token_type_list_add_end(&state->storage_class_specifiers, t);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_STORAGE_CLASS_SPECIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_simple_qualifier(struct type_engine_state * state, enum c_token_type t){
-	if(unsigned_int_to_unsigned_int_map_exists(&state->simple_type_qualifiers_map, (unsigned int)t)){
-		return unsigned_int_to_unsigned_int_map_get(&state->simple_type_qualifiers_map, (unsigned int)t);
+struct type_qualifier_id get_type_engine_id_for_simple_qualifier(struct type_engine_state * state, enum c_token_type t){
+	if(enum_c_token_type_to_struct_type_qualifier_id_map_exists(&state->simple_type_qualifiers_map, t)){
+		return enum_c_token_type_to_struct_type_qualifier_id_map_get(&state->simple_type_qualifiers_map, t);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->simple_type_qualifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->simple_type_qualifiers_map, (unsigned int)t, new_index);
-		unsigned_int_list_add_end(&state->simple_type_qualifiers, (unsigned int)t);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_SIMPLE_QUALIFIER);
-		return new_index;
+		struct type_qualifier_id new_id;
+		new_id.id = enum_c_token_type_list_size(&state->simple_type_qualifiers);
+		enum_c_token_type_to_struct_type_qualifier_id_map_put(&state->simple_type_qualifiers_map, t, new_id);
+		enum_c_token_type_list_add_end(&state->simple_type_qualifiers, t);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_SIMPLE_QUALIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_specifier_or_qualifiers(struct type_engine_state * state, enum type_engine_specifier_or_qualifier_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 30) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->specifier_or_qualifiers_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->specifier_or_qualifiers_map, details);
+struct specifier_or_qualifier_id specifier_or_qualifier_from_aggregate_specifier_id(struct type_engine_state * state, struct aggregate_specifier_id s){
+	return get_type_engine_id_for_any_specifier_or_qualifier(state, TYPE_ENGINE_TYPE_SPECIFIER, s.id);
+}
+
+struct specifier_or_qualifier_id specifier_or_qualifier_from_type_qualifier_id(struct type_engine_state * state, struct type_qualifier_id s){
+	return get_type_engine_id_for_any_specifier_or_qualifier(state, TYPE_ENGINE_SIMPLE_QUALIFIER, s.id);
+}
+
+struct specifier_or_qualifier_id specifier_or_qualifier_from_storage_class_specifier_id(struct type_engine_state * state, struct storage_class_specifier_id s){
+	return get_type_engine_id_for_any_specifier_or_qualifier(state, TYPE_ENGINE_STORAGE_CLASS_SPECIFIER, s.id);
+}
+
+struct specifier_or_qualifier_id get_type_engine_id_for_any_specifier_or_qualifier(struct type_engine_state * state, enum type_engine_specifier_or_qualifier_kind type, unsigned int index){
+	struct specifier_or_qualifier_details details;
+	details.type = type;
+	details.id = index;
+	if(struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_map_exists(&state->specifier_or_qualifiers_map, details)){
+		return struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_map_get(&state->specifier_or_qualifiers_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->specifier_or_qualifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->specifier_or_qualifiers_map, details, new_index);
-		unsigned_int_list_add_end(&state->specifier_or_qualifiers, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_SPECIFIER_OR_QUALIFIER);
-		return new_index;
+		struct specifier_or_qualifier_id new_id;
+		new_id.id = struct_specifier_or_qualifier_details_list_size(&state->specifier_or_qualifiers);
+		struct_specifier_or_qualifier_details_to_struct_specifier_or_qualifier_id_map_put(&state->specifier_or_qualifiers_map, details, new_id);
+		struct_specifier_or_qualifier_details_list_add_end(&state->specifier_or_qualifiers, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_SPECIFIER_OR_QUALIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_declarator_part(struct type_engine_state * state, enum type_engine_declarator_part_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 30) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->declarator_parts_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->declarator_parts_map, details);
+struct declarator_part_id declarator_part_from_array_part_id(struct type_engine_state * state, struct array_part_id i){
+	return get_type_engine_id_for_declarator_part(state, TYPE_ENGINE_ARRAY_DECLARATOR_PART, i.id);
+}
+
+struct declarator_part_id declarator_part_from_function_part_id(struct type_engine_state * state, struct function_part_id i){
+	return get_type_engine_id_for_declarator_part(state, TYPE_ENGINE_FUNCTION_DECLARATOR_PART, i.id);
+}
+
+struct declarator_part_id declarator_part_from_pointer_part_id(struct type_engine_state * state, struct pointer_part_id i){
+	return get_type_engine_id_for_declarator_part(state, TYPE_ENGINE_POINTER_DECLARATOR_PART, i.id);
+}
+
+struct declarator_part_id get_type_engine_id_for_declarator_part(struct type_engine_state * state, enum type_engine_declarator_part_kind type, unsigned int index){
+	struct declarator_part_details details;
+	details.type = type;
+	details.id = index;
+	if(struct_declarator_part_details_to_struct_declarator_part_id_map_exists(&state->declarator_parts_map, details)){
+		return struct_declarator_part_details_to_struct_declarator_part_id_map_get(&state->declarator_parts_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->declarator_parts);
-		unsigned_int_to_unsigned_int_map_put(&state->declarator_parts_map, details, new_index);
-		unsigned_int_list_add_end(&state->declarator_parts, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_DECLARATOR_PART);
-		return new_index;
+		struct declarator_part_id new_id;
+		new_id.id = struct_declarator_part_details_list_size(&state->declarator_parts);
+		struct_declarator_part_details_to_struct_declarator_part_id_map_put(&state->declarator_parts_map, details, new_id);
+		struct_declarator_part_details_list_add_end(&state->declarator_parts, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_DECLARATOR_PART);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_pointer_part(struct type_engine_state * state, enum type_engine_pointer_part_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 31) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->pointer_parts_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->pointer_parts_map, details);
+struct pointer_part_id get_type_engine_id_for_pointer_part(struct type_engine_state * state, enum type_engine_pointer_part_kind type, struct specifier_or_qualifier_list_item_id index){
+	struct pointer_part_details details;
+	details.id = index.id;
+	details.type = type;
+	if(struct_pointer_part_details_to_struct_pointer_part_id_map_exists(&state->pointer_parts_map, details)){
+		return struct_pointer_part_details_to_struct_pointer_part_id_map_get(&state->pointer_parts_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->pointer_parts);
-		unsigned_int_to_unsigned_int_map_put(&state->pointer_parts_map, details, new_index);
-		unsigned_int_list_add_end(&state->pointer_parts, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_POINTER_PART);
-		return new_index;
+		struct pointer_part_id new_id;
+		new_id.id = struct_pointer_part_details_list_size(&state->pointer_parts);
+		struct_pointer_part_details_to_struct_pointer_part_id_map_put(&state->pointer_parts_map, details, new_id);
+		struct_pointer_part_details_list_add_end(&state->pointer_parts, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_POINTER_PART);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_array_part(struct type_engine_state * state, enum type_engine_array_part_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 31) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->array_parts_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->array_parts_map, details);
+
+struct array_part_id get_type_engine_id_for_constant_expression_array_part(struct type_engine_state * state, unsigned int index){
+	return get_type_engine_id_for_array_part(state, TYPE_ENGINE_CONSTANT_EXPRESSION_ARRAY, index);
+}
+
+struct array_part_id get_type_engine_id_for_flexible_array_part(struct type_engine_state * state, unsigned int index){
+	return get_type_engine_id_for_array_part(state, TYPE_ENGINE_FLEXIBLE_ARRAY, index);
+}
+
+struct array_part_id get_type_engine_id_for_array_part(struct type_engine_state * state, enum type_engine_array_part_kind type, unsigned int index){
+	struct array_part_details details;
+	details.type = type;
+	details.id = index;
+	if(struct_array_part_details_to_struct_array_part_id_map_exists(&state->array_parts_map, details)){
+		return struct_array_part_details_to_struct_array_part_id_map_get(&state->array_parts_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->array_parts);
-		unsigned_int_to_unsigned_int_map_put(&state->array_parts_map, details, new_index);
-		unsigned_int_list_add_end(&state->array_parts, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_ARRAY_PART);
-		return new_index;
+		struct array_part_id new_id;
+		new_id.id = struct_array_part_details_list_size(&state->array_parts);
+		struct_array_part_details_to_struct_array_part_id_map_put(&state->array_parts_map, details, new_id);
+		struct_array_part_details_list_add_end(&state->array_parts, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_ARRAY_PART);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_function_part(struct type_engine_state * state, enum type_engine_function_part_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 31) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->function_parts_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->function_parts_map, details);
+struct function_part_id get_type_engine_id_for_prototype_function_part(struct type_engine_state * state, unsigned int index){
+	return get_type_engine_id_for_function_part(state, TYPE_ENGINE_FUNCTION_PROTOTYPE, index);
+}
+
+struct function_part_id get_type_engine_id_for_k_r_function_part(struct type_engine_state * state, unsigned int index){
+	return get_type_engine_id_for_function_part(state, TYPE_ENGINE_FUNCTION_K_AND_R_C, index);
+}
+
+struct function_part_id get_type_engine_id_for_function_part(struct type_engine_state * state, enum type_engine_function_part_kind type, unsigned int index){
+	struct function_part_details details;
+	details.id = index;
+	details.type = type;
+	if(struct_function_part_details_to_struct_function_part_id_map_exists(&state->function_parts_map, details)){
+		return struct_function_part_details_to_struct_function_part_id_map_get(&state->function_parts_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->function_parts);
-		unsigned_int_to_unsigned_int_map_put(&state->function_parts_map, details, new_index);
-		unsigned_int_list_add_end(&state->function_parts, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_FUNCTION_PART);
-		return new_index;
+		struct function_part_id new_id;
+		new_id.id = struct_function_part_details_list_size(&state->function_parts);
+		struct_function_part_details_to_struct_function_part_id_map_put(&state->function_parts_map, details, new_id);
+		struct_function_part_details_list_add_end(&state->function_parts, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_FUNCTION_PART);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_parameter_list(struct type_engine_state * state, enum type_engine_parameter_list_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 31) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->parameter_lists_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->parameter_lists_map, details);
+struct parameter_list_id get_variadic_parameter_list_id(struct type_engine_state * state, struct general_type_list_item_id index){
+	return get_type_engine_id_for_parameter_list(state, TYPE_ENGINE_PARAMETER_LIST_VARIADIC, index.id);
+}
+
+struct parameter_list_id get_non_variadic_parameter_list_id(struct type_engine_state * state, struct general_type_list_item_id index){
+	return get_type_engine_id_for_parameter_list(state, TYPE_ENGINE_PARAMETER_LIST_NON_VARIADIC, index.id);
+}
+
+struct parameter_list_id get_type_engine_id_for_parameter_list(struct type_engine_state * state, enum type_engine_parameter_list_kind type, unsigned int index){
+	struct parameter_list_details details;
+	details.type = type;
+	details.id = index;
+	if(struct_parameter_list_details_to_struct_parameter_list_id_map_exists(&state->parameter_lists_map, details)){
+		return struct_parameter_list_details_to_struct_parameter_list_id_map_get(&state->parameter_lists_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->parameter_lists);
-		unsigned_int_to_unsigned_int_map_put(&state->parameter_lists_map, details, new_index);
-		unsigned_int_list_add_end(&state->parameter_lists, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_PARAMETER_LIST);
-		return new_index;
+		struct parameter_list_id new_id;
+		new_id.id = struct_parameter_list_details_list_size(&state->parameter_lists);
+		struct_parameter_list_details_to_struct_parameter_list_id_map_put(&state->parameter_lists_map, details, new_id);
+		struct_parameter_list_details_list_add_end(&state->parameter_lists, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_PARAMETER_LIST);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_bitfield_or_declarator(struct type_engine_state * state, enum type_engine_bitfield_or_declarator_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 30) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->bitfield_or_declarators_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->bitfield_or_declarators_map, details);
+struct bitfield_or_declarator_id bitfield_or_declarator_from_only_bitfield(struct type_engine_state * state, unsigned int index){
+	return get_type_engine_id_for_bitfield_or_declarator(state, TYPE_ENGINE_ONLY_BITFIELD, index);
+}
+
+struct bitfield_or_declarator_id bitfield_or_declarator_from_only_declarator(struct type_engine_state * state, struct declarator_part_list_item_id index){
+	return get_type_engine_id_for_bitfield_or_declarator(state, TYPE_ENGINE_ONLY_DECLARATOR, index.id);
+}
+
+struct bitfield_or_declarator_id bitfield_or_declarator_from_bitfield_and_declarator(struct type_engine_state * state, unsigned int index){
+	return get_type_engine_id_for_bitfield_or_declarator(state, TYPE_ENGINE_BITFIELD_AND_DECLARATOR, index);
+}
+
+struct bitfield_or_declarator_id get_type_engine_id_for_bitfield_or_declarator(struct type_engine_state * state, enum type_engine_bitfield_or_declarator_kind type, unsigned int index){
+	struct bitfield_or_declarator_details details;
+	details.type = type;
+	details.id = index;
+	if(struct_bitfield_or_declarator_details_to_struct_bitfield_or_declarator_id_map_exists(&state->bitfield_or_declarators_map, details)){
+		return struct_bitfield_or_declarator_details_to_struct_bitfield_or_declarator_id_map_get(&state->bitfield_or_declarators_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->bitfield_or_declarators);
-		unsigned_int_to_unsigned_int_map_put(&state->bitfield_or_declarators_map, details, new_index);
-		unsigned_int_list_add_end(&state->bitfield_or_declarators, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_BITFIELD_OR_DECLARATOR);
-		return new_index;
+		struct bitfield_or_declarator_id new_id;
+		new_id.id = struct_bitfield_or_declarator_details_list_size(&state->bitfield_or_declarators);
+		struct_bitfield_or_declarator_details_to_struct_bitfield_or_declarator_id_map_put(&state->bitfield_or_declarators_map, details, new_id);
+		struct_bitfield_or_declarator_details_list_add_end(&state->bitfield_or_declarators, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_BITFIELD_OR_DECLARATOR);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_scoped_struct_or_union_specifier(struct type_engine_state * state, unsigned int scope_id, unsigned int struct_or_union_specifier_id){
-	unsigned int details = (scope_id << 16) | struct_or_union_specifier_id;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->scoped_struct_or_union_specifiers_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->scoped_struct_or_union_specifiers_map, details);
+struct scoped_struct_or_union_specifier_id get_type_engine_id_for_scoped_struct_or_union_specifier(struct type_engine_state * state, struct scope_level_id scope_id, struct struct_or_union_specifier_id struct_or_union_specifier_id){
+	struct scoped_struct_or_union_specifier_details details;
+	details.scope_id = scope_id;
+	details.struct_or_union_specifier_id = struct_or_union_specifier_id;
+	if(struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_map_exists(&state->scoped_struct_or_union_specifiers_map, details)){
+		return struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_map_get(&state->scoped_struct_or_union_specifiers_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->scoped_struct_or_union_specifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->scoped_struct_or_union_specifiers_map, details, new_index);
-		unsigned_int_list_add_end(&state->scoped_struct_or_union_specifiers, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_SCOPED_STRUCT_OR_UNION_SPECIFIER);
-		return new_index;
+		struct scoped_struct_or_union_specifier_id new_id;
+		new_id.id = struct_scoped_struct_or_union_specifier_details_list_size(&state->scoped_struct_or_union_specifiers);
+		struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_map_put(&state->scoped_struct_or_union_specifiers_map, details, new_id);
+		struct_scoped_struct_or_union_specifier_details_list_add_end(&state->scoped_struct_or_union_specifiers, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_SCOPED_STRUCT_OR_UNION_SPECIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_struct_or_union_specifier(struct type_engine_state * state, enum type_engine_struct_or_union_specifier_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 31) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->struct_or_union_specifiers_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->struct_or_union_specifiers_map, details);
+struct struct_or_union_specifier_id get_struct_specifier_id(struct type_engine_state * state, struct struct_specifier_id index){
+	return get_type_engine_id_for_struct_or_union_specifier(state, TYPE_ENGINE_STRUCT_SPECIFIER, index.id);
+}
+
+struct struct_or_union_specifier_id get_union_specifier_id(struct type_engine_state * state, struct union_specifier_id index){
+	return get_type_engine_id_for_struct_or_union_specifier(state, TYPE_ENGINE_UNION_SPECIFIER, index.id);
+}
+
+struct struct_or_union_specifier_id get_type_engine_id_for_struct_or_union_specifier(struct type_engine_state * state, enum type_engine_struct_or_union_specifier_kind type, unsigned int index){
+	struct struct_or_union_specifier_details details;
+	details.type = type;
+	details.id = index;
+	if(struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_map_exists(&state->struct_or_union_specifiers_map, details)){
+		return struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_map_get(&state->struct_or_union_specifiers_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->struct_or_union_specifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->struct_or_union_specifiers_map, details, new_index);
-		unsigned_int_list_add_end(&state->struct_or_union_specifiers, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_STRUCT_OR_UNION_SPECIFIER);
-		return new_index;
+		struct struct_or_union_specifier_id new_id;
+		new_id.id = struct_struct_or_union_specifier_details_list_size(&state->struct_or_union_specifiers);
+		struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_map_put(&state->struct_or_union_specifiers_map, details, new_id);
+		struct_struct_or_union_specifier_details_list_add_end(&state->struct_or_union_specifiers, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_STRUCT_OR_UNION_SPECIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_union_specifier(struct type_engine_state * state, enum type_engine_union_specifier_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 31) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->union_specifiers_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->union_specifiers_map, details);
+
+struct union_specifier_id get_named_union_specifier_id(struct type_engine_state * state, struct identifier_id index){
+	return get_aggregate_union_specifier_id(state, TYPE_ENGINE_NAMED_UNION, index.id);
+}
+
+struct union_specifier_id get_anonymous_union_specifier_id(struct type_engine_state * state, unsigned int index){
+	return get_aggregate_union_specifier_id(state, TYPE_ENGINE_ANONYMOUS_UNION, index);
+}
+
+struct union_specifier_id get_aggregate_union_specifier_id(struct type_engine_state * state, enum type_engine_union_specifier_kind type, unsigned int index){
+	struct union_specifier_details details;
+	details.type = type;
+	details.id = index;
+	if(struct_union_specifier_details_to_struct_union_specifier_id_map_exists(&state->union_specifiers_map, details)){
+		return struct_union_specifier_details_to_struct_union_specifier_id_map_get(&state->union_specifiers_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->union_specifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->union_specifiers_map, details, new_index);
-		unsigned_int_list_add_end(&state->union_specifiers, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_UNION_SPECIFIER);
-		return new_index;
+		struct union_specifier_id new_id;
+		new_id.id = struct_union_specifier_details_list_size(&state->union_specifiers);
+		struct_union_specifier_details_to_struct_union_specifier_id_map_put(&state->union_specifiers_map, details, new_id);
+		struct_union_specifier_details_list_add_end(&state->union_specifiers, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_UNION_SPECIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_struct_specifier(struct type_engine_state * state, enum type_engine_struct_specifier_kind type, unsigned int index){
-	unsigned int details = ((unsigned int)type << 31) | index;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->struct_specifiers_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->struct_specifiers_map, details);
+struct struct_specifier_id get_named_struct_specifier_id(struct type_engine_state * state, struct identifier_id index){
+	return get_aggregate_struct_specifier_id(state, TYPE_ENGINE_NAMED_STRUCT, index.id);
+}
+
+struct struct_specifier_id get_anonymous_struct_specifier_id(struct type_engine_state * state, unsigned int index){
+	return get_aggregate_struct_specifier_id(state, TYPE_ENGINE_ANONYMOUS_STRUCT, index);
+}
+
+struct struct_specifier_id get_aggregate_struct_specifier_id(struct type_engine_state * state, enum type_engine_struct_specifier_kind type, unsigned int index){
+	struct struct_specifier_details details;
+	details.type = type;
+	details.id = index;
+	if(struct_struct_specifier_details_to_struct_struct_specifier_id_map_exists(&state->struct_specifiers_map, details)){
+		return struct_struct_specifier_details_to_struct_struct_specifier_id_map_get(&state->struct_specifiers_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->struct_specifiers);
-		unsigned_int_to_unsigned_int_map_put(&state->struct_specifiers_map, details, new_index);
-		unsigned_int_list_add_end(&state->struct_specifiers, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_STRUCT_SPECIFIER);
-		return new_index;
+		struct struct_specifier_id new_id;
+		new_id.id = struct_struct_specifier_details_list_size(&state->struct_specifiers);
+		struct_struct_specifier_details_to_struct_struct_specifier_id_map_put(&state->struct_specifiers_map, details, new_id);
+		struct_struct_specifier_details_list_add_end(&state->struct_specifiers, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_STRUCT_SPECIFIER);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_general_type(struct type_engine_state * state, unsigned int specifier_or_qualifier_list_id, unsigned int bitfield_or_declarator_id){
-	unsigned int details = (specifier_or_qualifier_list_id << 16) | bitfield_or_declarator_id;
-	if(unsigned_int_to_unsigned_int_map_exists(&state->general_types_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->general_types_map, details);
+struct general_type_id get_type_engine_id_for_general_type(struct type_engine_state * state, struct specifier_or_qualifier_list_item_id specifier_or_qualifier_list_id, struct bitfield_or_declarator_id bitfield_or_declarator_id){
+	struct general_type_details details;
+	details.specifier_or_qualifier_list_item_id = specifier_or_qualifier_list_id;
+	details.bitfield_or_declarator_id = bitfield_or_declarator_id;
+	if(struct_general_type_details_to_struct_general_type_id_map_exists(&state->general_types_map, details)){
+		return struct_general_type_details_to_struct_general_type_id_map_get(&state->general_types_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->general_types);
-		unsigned_int_to_unsigned_int_map_put(&state->general_types_map, details, new_index);
-		unsigned_int_list_add_end(&state->general_types, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_GENERAL_TYPE);
-		return new_index;
+		struct general_type_id new_id;
+		new_id.id = struct_general_type_details_list_size(&state->general_types);
+		struct_general_type_details_to_struct_general_type_id_map_put(&state->general_types_map, details, new_id);
+		struct_general_type_details_list_add_end(&state->general_types, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_GENERAL_TYPE);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_scope_level(struct type_engine_state * state, struct scope_level * p){
-	if(struct_scope_level_ptr_to_unsigned_int_map_exists(&state->scope_levels_map, p)){
-		return struct_scope_level_ptr_to_unsigned_int_map_get(&state->scope_levels_map, p);
+struct scope_level_id get_type_engine_id_for_scope_level(struct type_engine_state * state, struct scope_level * p){
+	if(struct_scope_level_ptr_to_struct_scope_level_id_map_exists(&state->scope_levels_map, p)){
+		return struct_scope_level_ptr_to_struct_scope_level_id_map_get(&state->scope_levels_map, p);
 	}else{
-		unsigned int new_index = struct_scope_level_ptr_list_size(&state->scope_levels);
-		struct_scope_level_ptr_to_unsigned_int_map_put(&state->scope_levels_map, p, new_index);
+		struct scope_level_id new_id;
+		new_id.id = struct_scope_level_ptr_list_size(&state->scope_levels);
+		struct_scope_level_ptr_to_struct_scope_level_id_map_put(&state->scope_levels_map, p, new_id);
 		struct_scope_level_ptr_list_add_end(&state->scope_levels, p);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_SCOPE_LEVEL);
-		return new_index;
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_SCOPE_LEVEL);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_constant_parser_node(struct type_engine_state * state, struct parser_node * p){
-	if(struct_parser_node_ptr_to_unsigned_int_map_exists(&state->constant_expression_parser_nodes_map, p)){
-		return struct_parser_node_ptr_to_unsigned_int_map_get(&state->constant_expression_parser_nodes_map, p);
+struct parser_node_id get_type_engine_id_for_parser_node(struct type_engine_state * state, struct parser_node * p){
+	if(struct_parser_node_ptr_to_struct_parser_node_id_map_exists(&state->constant_expression_parser_nodes_map, p)){
+		return struct_parser_node_ptr_to_struct_parser_node_id_map_get(&state->constant_expression_parser_nodes_map, p);
 	}else{
-		unsigned int new_index = struct_parser_node_ptr_list_size(&state->constant_expression_parser_nodes);
-		struct_parser_node_ptr_to_unsigned_int_map_put(&state->constant_expression_parser_nodes_map, p, new_index);
+		struct parser_node_id new_id;
+		new_id.id = struct_parser_node_ptr_list_size(&state->constant_expression_parser_nodes);
+		struct_parser_node_ptr_to_struct_parser_node_id_map_put(&state->constant_expression_parser_nodes_map, p, new_id);
 		struct_parser_node_ptr_list_add_end(&state->constant_expression_parser_nodes, p);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_CONSTANT_PARSER_NODE);
-		return new_index;
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_CONSTANT_PARSER_NODE);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_identifier(struct type_engine_state * state, struct c_lexer_token * t){
-	if(struct_c_lexer_token_to_unsigned_int_map_exists(&state->identifiers_map, *t)){
-		return struct_c_lexer_token_to_unsigned_int_map_get(&state->identifiers_map, *t);
+struct identifier_id get_type_engine_id_for_identifier(struct type_engine_state * state, struct c_lexer_token * t){
+	if(struct_c_lexer_token_to_struct_identifier_id_map_exists(&state->identifiers_map, *t)){
+		return struct_c_lexer_token_to_struct_identifier_id_map_get(&state->identifiers_map, *t);
 	}else{
 		/*  This one should never need to backtrack, because the identifier will just be used again somewhere else if we remove it.*/
-		unsigned int size = struct_c_lexer_token_list_size(&state->identifiers);
-		struct_c_lexer_token_to_unsigned_int_map_put(&state->identifiers_map, *t, size);
+		struct identifier_id id;
+		id.id = struct_c_lexer_token_list_size(&state->identifiers);
+		struct_c_lexer_token_to_struct_identifier_id_map_put(&state->identifiers_map, *t, id);
 		struct_c_lexer_token_list_add_end(&state->identifiers, *t);
-		return size;
+		return id;
 	}
 }
 
-unsigned int get_type_engine_id_for_specifier_or_qualifier_list_begin(struct type_engine_state * state){
-	return get_type_engine_specifier_qualifier_list_id(state, TYPE_ENGINE_SPECIFIER_OR_QUALIFIER_LIST_ITEM_LIST_START, 0, 0);
+struct specifier_or_qualifier_list_item_id make_specifier_or_qualifier_list_item(struct type_engine_state * state, struct specifier_or_qualifier_list_item_id a, struct specifier_or_qualifier_id b){
+	return get_type_engine_specifier_qualifier_list_id(state, TYPE_ENGINE_SPECIFIER_OR_QUALIFIER_LIST_ITEM_SPECIFIER_OR_QUALIFIER, a, b);
 }
 
-unsigned int get_type_engine_specifier_qualifier_list_id(struct type_engine_state * state, enum type_engine_specifier_or_qualifier_list_item_kind is_start, unsigned int prev_item_index, unsigned int current_item_index){
-	unsigned int details = ((unsigned int)is_start << 31) | (current_item_index << 16) | prev_item_index;
+struct specifier_or_qualifier_list_item_id specifier_or_qualifier_list_begin(struct type_engine_state * state){
+	struct specifier_or_qualifier_list_item_id a;
+	struct specifier_or_qualifier_id b;
+	a.id = 0;
+	b.id = 0;
+	return get_type_engine_specifier_qualifier_list_id(state, TYPE_ENGINE_SPECIFIER_OR_QUALIFIER_LIST_ITEM_LIST_START, a, b);
+}
 
-	if(unsigned_int_to_unsigned_int_map_exists(&state->specifier_or_qualifier_list_items_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->specifier_or_qualifier_list_items_map, details);
+struct specifier_or_qualifier_list_item_id get_type_engine_specifier_qualifier_list_id(struct type_engine_state * state, enum type_engine_specifier_or_qualifier_list_item_kind is_start, struct specifier_or_qualifier_list_item_id prev_item_index, struct specifier_or_qualifier_id current_item_index){
+	struct specifier_or_qualifier_list_item_details details;
+	details.type = is_start;
+	details.item_id = current_item_index;
+	details.prev_id = prev_item_index;
+
+	if(struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_exists(&state->specifier_or_qualifier_list_items_map, details)){
+		return struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_get(&state->specifier_or_qualifier_list_items_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->specifier_or_qualifier_list_items);
-		unsigned_int_to_unsigned_int_map_put(&state->specifier_or_qualifier_list_items_map, details, new_index);
-		unsigned_int_list_add_end(&state->specifier_or_qualifier_list_items, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_SPECIFIER_QUALIFIER_LIST_ITEM);
-		return new_index;
+		struct specifier_or_qualifier_list_item_id new_id;
+		new_id.id = struct_specifier_or_qualifier_list_item_details_list_size(&state->specifier_or_qualifier_list_items);
+		struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_put(&state->specifier_or_qualifier_list_items_map, details, new_id);
+		struct_specifier_or_qualifier_list_item_details_list_add_end(&state->specifier_or_qualifier_list_items, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_SPECIFIER_QUALIFIER_LIST_ITEM);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_declarator_part_list_begin(struct type_engine_state * state){
-	return get_type_engine_declarator_part_list_item_id(state, TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_LIST_START, 0, 0);
+struct declarator_part_list_item_id make_declarator_part_list_item(struct type_engine_state * state, struct declarator_part_list_item_id a, struct declarator_part_id b){
+	return get_type_engine_declarator_part_list_id(state, TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_DECLARATOR_PART, a, b);
 }
 
-unsigned int get_type_engine_declarator_part_list_item_id(struct type_engine_state * state, enum type_engine_declarator_part_list_item_kind is_start, unsigned int prev_item_index, unsigned int current_item_index){
-	struct generic_list_item details;
-	details.data = ((unsigned int)is_start << 31) | (current_item_index << 16) | prev_item_index;
+struct declarator_part_list_item_id declarator_part_list_begin(struct type_engine_state * state){
+	struct declarator_part_list_item_id a;
+	struct declarator_part_id b;
+	a.id = 0;
+	b.id = 0;
+	return get_type_engine_declarator_part_list_id(state, TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_LIST_START, a, b);
+}
 
-	if(struct_generic_list_item_to_unsigned_int_map_exists(&state->declarator_part_list_items_map, details)){
-		return struct_generic_list_item_to_unsigned_int_map_get(&state->declarator_part_list_items_map, details);
+struct declarator_part_list_item_id get_type_engine_declarator_part_list_id(struct type_engine_state * state, enum type_engine_declarator_part_list_item_kind is_start, struct declarator_part_list_item_id prev_item_index, struct declarator_part_id current_item_index){
+	struct declarator_part_list_item_details details;
+	details.type = is_start;
+	details.item_id = current_item_index;
+	details.prev_id = prev_item_index;
+
+	if(struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_exists(&state->declarator_part_list_items_map, details)){
+		return struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_get(&state->declarator_part_list_items_map, details);
 	}else{
-		unsigned int new_index = struct_generic_list_item_list_size(&state->declarator_part_list_items);
-		struct_generic_list_item_to_unsigned_int_map_put(&state->declarator_part_list_items_map, details, new_index);
-		struct_generic_list_item_list_add_end(&state->declarator_part_list_items, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_DECLARATOR_PART_LIST_ITEM);
-		return new_index;
+		struct declarator_part_list_item_id new_id;
+		new_id.id = struct_declarator_part_list_item_details_list_size(&state->declarator_part_list_items);
+		struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_put(&state->declarator_part_list_items_map, details, new_id);
+		struct_declarator_part_list_item_details_list_add_end(&state->declarator_part_list_items, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_DECLARATOR_PART_LIST_ITEM);
+		return new_id;
 	}
 }
 
-unsigned int get_type_engine_id_for_general_type_list_begin(struct type_engine_state * state){
-	return get_type_engine_general_type_list_item_id(state, TYPE_ENGINE_GENERAL_TYPE_LIST_ITEM_LIST_START, 0, 0);
+struct general_type_list_item_id make_general_type_list_item(struct type_engine_state * state, struct general_type_list_item_id prev, struct general_type_id item){
+	return get_type_engine_general_type_list_item_id(state, TYPE_ENGINE_GENERAL_TYPE_LIST_ITEM_GENERAL_TYPE, prev, item);
 }
 
-unsigned int get_type_engine_general_type_list_item_id(struct type_engine_state * state, enum type_engine_general_type_list_item_kind is_start, unsigned int prev_item_index, unsigned int current_item_index){
-	unsigned int details = ((unsigned int)is_start << 31) | (current_item_index << 16) | prev_item_index;
+struct general_type_list_item_id get_general_type_list_begin(struct type_engine_state * state){
+	struct general_type_list_item_id a;
+	struct general_type_id b;
+	a.id = 0;
+	b.id = 0;
+	return get_type_engine_general_type_list_item_id(state, TYPE_ENGINE_GENERAL_TYPE_LIST_ITEM_LIST_START, a, b);
+}
 
-	if(unsigned_int_to_unsigned_int_map_exists(&state->general_type_list_items_map, details)){
-		return unsigned_int_to_unsigned_int_map_get(&state->general_type_list_items_map, details);
+struct general_type_list_item_id get_type_engine_general_type_list_item_id(struct type_engine_state * state, enum type_engine_general_type_list_item_kind is_start, struct general_type_list_item_id prev_item_index, struct general_type_id current_item_index){
+	struct general_type_list_item_details details;
+	details.type = is_start;
+	details.prev_id = prev_item_index;
+	details.item_id = current_item_index;
+	if(struct_general_type_list_item_details_to_struct_general_type_list_item_id_map_exists(&state->general_type_list_items_map, details)){
+		return struct_general_type_list_item_details_to_struct_general_type_list_item_id_map_get(&state->general_type_list_items_map, details);
 	}else{
-		unsigned int new_index = unsigned_int_list_size(&state->general_type_list_items);
-		unsigned_int_to_unsigned_int_map_put(&state->general_type_list_items_map, details, new_index);
-		unsigned_int_list_add_end(&state->general_type_list_items, details);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_GENERAL_TYPE_LIST_ITEM);
-		return new_index;
+		struct general_type_list_item_id new_id;
+		new_id.id = struct_general_type_list_item_details_list_size(&state->general_type_list_items);
+		struct_general_type_list_item_details_to_struct_general_type_list_item_id_map_put(&state->general_type_list_items_map, details, new_id);
+		struct_general_type_list_item_details_list_add_end(&state->general_type_list_items, details);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_GENERAL_TYPE_LIST_ITEM);
+		return new_id;
 	}
 }
 
-void add_declarators_to_list(struct type_engine_state * state, unsigned int * most_recent_list_id, unsigned int current_declarator_id, unsigned int reverse){
+void add_declarators_to_list(struct type_engine_state * state, struct declarator_part_list_item_id * most_recent_list_id, struct declarator_part_list_item_id current_declarator_id, unsigned int reverse){
 	/*  Add the declarators onto the end of the list */
-	enum type_engine_declarator_part_list_item_kind t;
-	struct generic_list_item current_declarator_details = struct_generic_list_item_list_get(&state->declarator_part_list_items, current_declarator_id);
-	t = (enum type_engine_declarator_part_list_item_kind)((current_declarator_details.data & 0x80000000) >> 31);
-	if(t == TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_LIST_START){
+	struct declarator_part_list_item_details details = struct_declarator_part_list_item_details_list_get(&state->declarator_part_list_items, current_declarator_id.id);
+	if(details.type == TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_LIST_START){
 		/*  base case */
 	}else{
-		unsigned int item_id = (current_declarator_details.data & 0x7FFF0000) >> 16; /*  Take the item out */
 		if(reverse){
 			/*  Now add these items to the end of the list */
-			*most_recent_list_id = get_type_engine_declarator_part_list_item_id(state, TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_DECLARATOR_PART, *most_recent_list_id, item_id);
+			*most_recent_list_id = make_declarator_part_list_item(state, *most_recent_list_id, details.item_id);
 			/*  Go down to base case, */
-			add_declarators_to_list(state, most_recent_list_id, (current_declarator_details.data & 0xFFFF), reverse);
+			add_declarators_to_list(state, most_recent_list_id, details.prev_id, reverse);
 		}else{
 			/*  Go down to base case, */
-			add_declarators_to_list(state, most_recent_list_id, (current_declarator_details.data & 0xFFFF), reverse);
+			add_declarators_to_list(state, most_recent_list_id, details.prev_id, reverse);
 			/*  Now add these items to the end of the list */
-			*most_recent_list_id = get_type_engine_declarator_part_list_item_id(state, TYPE_ENGINE_DECLARATOR_PART_LIST_ITEM_DECLARATOR_PART, *most_recent_list_id, item_id);
+			*most_recent_list_id = make_declarator_part_list_item(state, *most_recent_list_id, details.item_id);
 		}
 	}
 }
 
-unsigned int add_pointer_and_direct_declarators_to_list(struct type_engine_state * state, unsigned int previous_list_item, unsigned int pointer_end_list_item, unsigned int direct_declarator_end_list_item){
+struct declarator_part_list_item_id add_pointer_and_direct_declarators_to_list(struct type_engine_state * state, struct declarator_part_list_item_id previous_list_item, struct declarator_part_list_item_id pointer_end_list_item, struct declarator_part_list_item_id direct_declarator_end_list_item){
 	/*  This function takes care of the fact that declarators aren't parsed in the same order that they are read in the spiral rule */
 	add_declarators_to_list(state, &previous_list_item, direct_declarator_end_list_item, 0);
 	add_declarators_to_list(state, &previous_list_item, pointer_end_list_item, 1);
@@ -3138,59 +3338,59 @@ unsigned int add_pointer_and_direct_declarators_to_list(struct type_engine_state
 struct declaration_namespace * create_declaration_namespace(struct type_engine_state * state){
 	struct declaration_namespace * d = (struct declaration_namespace *)malloc(sizeof(struct declaration_namespace));
 	unsigned_int_list_create(&d->ordered_type_ids);
-	unsigned_int_to_unsigned_int_map_create(&d->identifier_ids_to_type_ids, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_to_unsigned_int_map_create(&d->type_ids_to_ordered_index, unsigned_int_to_unsigned_int_key_value_pair_compare);
-	unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_CREATE_DECLARATION_NAMESPACE);
+	unsigned_int_to_unsigned_int_map_create(&d->identifier_ids_to_type_ids, struct_unsigned_int_to_unsigned_int_key_value_pair_compare);
+	unsigned_int_to_unsigned_int_map_create(&d->type_ids_to_ordered_index, struct_unsigned_int_to_unsigned_int_key_value_pair_compare);
+	enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_CREATE_DECLARATION_NAMESPACE);
 	void_ptr_list_add_end(&state->stored_pointers, (void*)d);
 	return d;
 }
 
-void add_ordered_general_type_to_declaration_namespace(struct type_engine_state * state, struct declaration_namespace * dn, unsigned int general_type_id){
-	unsigned_int_list_add_end(&dn->ordered_type_ids, general_type_id);
-	unsigned_int_to_unsigned_int_map_put(&dn->type_ids_to_ordered_index, general_type_id, unsigned_int_list_size(&dn->ordered_type_ids));
-	unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_ORDERED_TYPE_TO_DECLARATION_NAMESPACE);
+void add_ordered_general_type_to_declaration_namespace(struct type_engine_state * state, struct declaration_namespace * dn, struct general_type_id general_type_id){
+	unsigned_int_list_add_end(&dn->ordered_type_ids, general_type_id.id);
+	unsigned_int_to_unsigned_int_map_put(&dn->type_ids_to_ordered_index, general_type_id.id, unsigned_int_list_size(&dn->ordered_type_ids));
+	enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_ORDERED_TYPE_TO_DECLARATION_NAMESPACE);
 	void_ptr_list_add_end(&state->stored_pointers, (void*)dn);
 }
 
-void add_identifier_id_to_declaration_namespace(struct type_engine_state * state, struct declaration_namespace * dn, unsigned int general_type_id, unsigned int identifier_id){
-	unsigned_int_to_unsigned_int_map_put(&dn->identifier_ids_to_type_ids, identifier_id, general_type_id);
-	unsigned_int_list_add_end(&state->reversible_operations, identifier_id);
-	unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_IDENTIFIER_ID_TO_DECLARATION_NAMESPACE);
+void add_identifier_id_to_declaration_namespace(struct type_engine_state * state, struct declaration_namespace * dn, struct general_type_id general_type_id, struct identifier_id identifier_id){
+	unsigned_int_to_unsigned_int_map_put(&dn->identifier_ids_to_type_ids, identifier_id.id, general_type_id.id);
+	struct_identifier_id_list_add_end(&state->saved_identifier_ids, identifier_id);
+	enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_IDENTIFIER_ID_TO_DECLARATION_NAMESPACE);
 	void_ptr_list_add_end(&state->stored_pointers, (void*)dn);
 }
 
-unsigned int add_named_struct_or_union_declaration(struct type_engine_state * state, unsigned int identifier_id, unsigned int struct_or_union_specifier_id, struct scope_level * scope){
-	if(unsigned_int_to_unsigned_int_map_exists(&scope->struct_or_union_declarations.identifier_ids_to_type_ids, identifier_id)){
+unsigned int add_named_struct_or_union_declaration(struct type_engine_state * state, struct identifier_id identifier_id, struct struct_or_union_specifier_id struct_or_union_specifier_id, struct scope_level * scope){
+	if(unsigned_int_to_unsigned_int_map_exists(&scope->struct_or_union_declarations.identifier_ids_to_type_ids, identifier_id.id)){
 		return 0; /*  Already defined, do nothing */
 	}else{
 		unsigned int index = unsigned_int_list_size(&scope->struct_or_union_declarations.ordered_type_ids);
-		unsigned_int_to_unsigned_int_map_put(&scope->struct_or_union_declarations.identifier_ids_to_type_ids, identifier_id, struct_or_union_specifier_id);
-		unsigned_int_to_unsigned_int_map_put(&scope->struct_or_union_declarations.type_ids_to_ordered_index, struct_or_union_specifier_id, index);
-		unsigned_int_list_add_end(&scope->struct_or_union_declarations.ordered_type_ids, struct_or_union_specifier_id);
-		unsigned_int_list_add_end(&state->reversible_operations, identifier_id);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_NAMED_STRUCT_OR_UNION_DECLARATION);
+		unsigned_int_to_unsigned_int_map_put(&scope->struct_or_union_declarations.identifier_ids_to_type_ids, identifier_id.id, struct_or_union_specifier_id.id);
+		unsigned_int_to_unsigned_int_map_put(&scope->struct_or_union_declarations.type_ids_to_ordered_index, struct_or_union_specifier_id.id, index);
+		unsigned_int_list_add_end(&scope->struct_or_union_declarations.ordered_type_ids, struct_or_union_specifier_id.id);
+		struct_identifier_id_list_add_end(&state->saved_identifier_ids, identifier_id);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_NAMED_STRUCT_OR_UNION_DECLARATION);
 		void_ptr_list_add_end(&state->stored_pointers, (void*)scope);
 		return 0;
 	}
 }
 
-unsigned int add_struct_or_union_definition(struct type_engine_state * state, struct declaration_namespace * dn, unsigned int struct_or_union_specifier_id, struct scope_level * scope){
-	if(unsigned_int_to_void_ptr_map_exists(&scope->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, struct_or_union_specifier_id)){
+unsigned int add_struct_or_union_definition(struct type_engine_state * state, struct declaration_namespace * dn, struct struct_or_union_specifier_id struct_or_union_specifier_id, struct scope_level * scope){
+	if(unsigned_int_to_void_ptr_map_exists(&scope->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, struct_or_union_specifier_id.id)){
 		return 1; /*  Already defined */
 	}else{
 		struct struct_or_union_definition * new_d = (struct struct_or_union_definition *)malloc(sizeof(struct struct_or_union_definition));
 		new_d->declaration_namespace = dn;
-		unsigned_int_list_add_end(&state->reversible_operations, struct_or_union_specifier_id);
-		unsigned_int_list_add_end(&state->reversible_operations, (unsigned int)TYPE_ENGINE_ADD_STRUCT_OR_UNION_DEFINITION);
-		unsigned_int_to_void_ptr_map_put(&scope->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, struct_or_union_specifier_id, (void*)new_d);
+		struct_struct_or_union_specifier_id_list_add_end(&state->saved_struct_or_union_specifier_ids, struct_or_union_specifier_id);
+		enum_type_engine_operation_type_list_add_end(&state->reversible_operations, TYPE_ENGINE_ADD_STRUCT_OR_UNION_DEFINITION);
+		unsigned_int_to_void_ptr_map_put(&scope->struct_or_union_definitions.struct_or_union_specifier_ids_to_struct_or_union_definitions, struct_or_union_specifier_id.id, (void*)new_d);
 		void_ptr_list_add_end(&state->stored_pointers, (void*)scope);
 		return 0;
 	}
 }
 
-struct scope_level * get_scope_of_closest_struct_or_union_tag_declaration(struct type_engine_state * state, struct scope_level * starting_scope, unsigned int unscoped_struct_or_union_id){
+struct scope_level * get_scope_of_closest_struct_or_union_tag_declaration(struct type_engine_state * state, struct scope_level * starting_scope, struct struct_or_union_specifier_id unscoped_struct_or_union_id){
 	if(starting_scope){
-		if(unsigned_int_to_unsigned_int_map_exists(&starting_scope->struct_or_union_declarations.type_ids_to_ordered_index, unscoped_struct_or_union_id)){
+		if(unsigned_int_to_unsigned_int_map_exists(&starting_scope->struct_or_union_declarations.type_ids_to_ordered_index, unscoped_struct_or_union_id.id)){
 			return starting_scope;
 		}else{
 			return get_scope_of_closest_struct_or_union_tag_declaration(state, starting_scope->parent_scope, unscoped_struct_or_union_id);

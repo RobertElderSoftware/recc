@@ -46,10 +46,6 @@
 #ifndef OP_CPU_H_
 #include "../emulators/c/op-cpu.h"
 #endif
-#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare.h"
-#endif
-
 
 
 void create_code_gen_state(struct code_gen_state *, struct parser_state *, struct unsigned_char_list *, struct unsigned_char_list *);

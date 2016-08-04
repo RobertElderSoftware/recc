@@ -95,16 +95,16 @@
 #include "../generated/struct_preprocessor_state.h"
 #endif
 #ifndef unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare.h"
+#include "../generated/struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare.h"
 #endif
 #ifndef unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare.h"
+#include "../generated/struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare.h"
 #endif
 #ifndef unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare.h"
+#include "../generated/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare.h"
 #endif
 #ifndef struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare.h"
+#include "../generated/struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare.h"
 #endif
 
 enum search_state{

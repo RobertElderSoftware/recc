@@ -8,6 +8,7 @@ else
 include config.mak
 
 
+
 CLANG_C89_FLAGS=-g -std=c89 $(SUPPORTED_CLANG_WARNING_FLAGS)
 CLANG_C99_FLAGS=-g -std=c99 $(SUPPORTED_CLANG_WARNING_FLAGS)
 CLANGPP_FLAGS=-xc++ -std=c++11 -g ${SUPPORTED_CLANGPP_WARNING_FLAGS}
@@ -60,6 +61,7 @@ endif
 ifeq ("$(wildcard recc-implementation/bootstrap_phase_2)","")
 include recc-implementation/Makefile
 .DEFAULT:
+	echo $(MAKECMDGOALS)
 	@make -e -s phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
 kernel:
 	@make -e -s phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
@@ -81,7 +83,7 @@ help:
 
 test: run-tests
 
-COMPILER_OBJECTS=libc/filesystem.o test/recc.o recc-implementation/phase2_recc.o recc-implementation/phase2_generate.o libc/recc.o kernel/recc.o builtin/recc.o recc-implementation/recc.o recc-implementation/librecc.a
+COMPILER_OBJECTS=libc/filesystem.o test/recc.o recc-implementation/phase2_recc.o libc/recc.o kernel/recc.o builtin/recc.o recc-implementation/recc.o recc-implementation/librecc.a
 
 include builtin/Makefile
 include demos/brainfuck-cpp/Makefile

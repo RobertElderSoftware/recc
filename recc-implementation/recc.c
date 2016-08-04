@@ -56,28 +56,5 @@ void register_compiler_objects(struct build_state * state){
 	register_ri_object(state, "recc-implementation/type_engine", 0);
 	register_ri_object(state, "recc-implementation/replace_tool", 0);
 	register_ri_object(state, "recc-implementation/binary_exponential_buffer", 0);
-
-	register_ri_object(state, "recc-implementation/comparison-functions/struct_start_end_ptr_compare", 1);
-	/*  Comparison functions for maps */
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_entity_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_linker_file_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/struct_c_lexer_token_ptr_to_unsigned_char_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/struct_c_lexer_token_to_unsigned_int_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/struct_generic_list_item_to_unsigned_int_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/struct_parser_node_ptr_to_unsigned_int_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/struct_scope_level_ptr_to_unsigned_int_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_int_to_unsigned_int_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/unsigned_int_to_void_ptr_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/void_ptr_to_unsigned_int_key_value_pair_compare", 1);
-	register_ri_object(state, "recc-implementation/comparison-functions/struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_key_value_pair_compare", 1);
-
 	register_entity(state, "recc-implementation/libdata-structures.l2", ENTITY_TYPE_L2_FILE);
 }

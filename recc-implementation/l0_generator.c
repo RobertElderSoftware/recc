@@ -32,11 +32,9 @@ static void output_data(struct l2_parser_node *, enum l0_language_type, FILE *, 
 void output_data_open(unsigned int size, char * variable_name, FILE * out, enum l0_language_type language);
 static void output_to_l0_file(struct l0_generator_state *, char *, char *, enum l0_language_type);
 
-static unsigned int parse_decimal_string(struct l2_lexer_token *);
-static unsigned int parse_hexidecimal_string(struct l2_lexer_token *);
 static void output_to_l0_file(struct l0_generator_state *, char *, char *, enum l0_language_type);
 
-static unsigned int parse_decimal_string(struct l2_lexer_token * t){
+unsigned int parse_decimal_token(struct l2_lexer_token * t){
 	unsigned int i = 0;
 	unsigned int base = 1;
 	unsigned char * c = t->last_byte;
@@ -47,7 +45,7 @@ static unsigned int parse_decimal_string(struct l2_lexer_token * t){
 	return i;
 }
 
-static unsigned int parse_hexidecimal_string(struct l2_lexer_token * t){
+unsigned int parse_hexadecimal_token(struct l2_lexer_token * t){
 	unsigned int i = 0;
 	unsigned int base = 1;
 	unsigned char * c = t->last_byte;
@@ -66,7 +64,7 @@ static unsigned int parse_hexidecimal_string(struct l2_lexer_token * t){
 	return i;
 }
 
-static unsigned int get_register_number(struct l2_lexer_token * t){
+unsigned int get_register_number(struct l2_lexer_token * t){
 	if(*(t->first_byte) == 'P' && *(t->last_byte) == 'C'){
 		return 0;
 	}else if(*(t->first_byte) == 'S' && *(t->last_byte) == 'P'){
@@ -84,7 +82,7 @@ static unsigned int get_register_number(struct l2_lexer_token * t){
 			struct l2_lexer_token abc;
 			abc.first_byte = &t->first_byte[1];
 			abc.last_byte = t->last_byte;
-			return parse_decimal_string(&abc) + 5;
+			return parse_decimal_token(&abc) + 5;
 		}else{
 			assert(0 && "Expected register");
 			return 0;
@@ -253,7 +251,7 @@ static unsigned int count_l2_instruction_image_size(struct l2_parser_node * n){
 				}case L2_SKIP_WORDS_DIRECTIVE: {
 					struct l2_lexer_token * value = directive->first_child->next->l2_lexer_token;
 					if(value->type == L2_CONSTANT_HEX){
-						return parse_hexidecimal_string(value);
+						return parse_hexadecimal_token(value);
 					}else{
 						assert(0 && "Unknown value type.");
 					}
@@ -344,7 +342,7 @@ static void output_instruction(struct l2_parser_node * n, enum l0_language_type 
 				instruction += ((1L << rb_OFFSET) * get_register_number(op_code->next->next->l2_lexer_token));
 			}else{
 				/*  Uses a constant */
-				instruction += parse_hexidecimal_string(op_code->next->next->l2_lexer_token);
+				instruction += parse_hexadecimal_token(op_code->next->next->l2_lexer_token);
 			}
 			switch(op_code->l2_lexer_token->type){
 				case L2_ADD:{ instruction += ADD_OP_CODE; break; }
@@ -384,7 +382,7 @@ static void output_instruction(struct l2_parser_node * n, enum l0_language_type 
 				struct l2_parser_node * b = op_code->next->next->next;
 				unsigned int constant_is_negative = b->first_child->l2_lexer_token->type == L2_MINUS_CHAR;
 				struct l2_lexer_token * number = constant_is_negative ? b->first_child->next->l2_lexer_token : b->first_child->l2_lexer_token;
-				unsigned int branch_distance = parse_decimal_string(number);
+				unsigned int branch_distance = parse_decimal_token(number);
 				if(constant_is_negative){
 					instruction += ((BRANCH_DISTANCE_MASK - branch_distance) + 1);
 				}else{
@@ -400,62 +398,62 @@ static void output_instruction(struct l2_parser_node * n, enum l0_language_type 
 			struct l2_parser_node * directive = n->first_child->first_child;
 			switch(directive->type){
 				case L2_DEFINE_WORD_DIRECTIVE: {
-					output_data_item(L0_DW_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_DW_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_SKIP_WORDS_DIRECTIVE: {
-					output_data_item(L0_SW_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_SW_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_OFFSET_DIRECTIVE:{
-					output_data_item(L0_OFFSET_ADDRESS_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_OFFSET_ADDRESS_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_SYMBOL_LINKAGE_DECLARATION:{
 					assert(0 && "Should not happen.");
 					break;
 				}case L2_STRING_DIRECTIVE:{
-					output_data_item(L0_STRING_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_STRING_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_LINKAGE_DIRECTIVE:{
-					output_data_item(L0_LINKAGE_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_LINKAGE_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_FUNCTION_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_FUNCTION_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_FUNCTION_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_VARIABLE_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_VARIABLE_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_VARIABLE_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_CONSTANT_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_CONSTANT_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_CONSTANT_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_START_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_START_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_START_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_END_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_END_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_END_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_UNRESOLVED_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_UNRESOLVED_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_UNRESOLVED_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_IMPLEMENTED_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_IMPLEMENTED_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_IMPLEMENTED_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_REQUIRED_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_REQUIRED_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_REQUIRED_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_PERMISSION_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_PERMISSION_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_PERMISSION_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}case L2_REGION_DIRECTIVE:{
 					assert(directive->first_child->next->l2_lexer_token->type == L2_CONSTANT_HEX);
-					output_data_item(L0_REGION_DIRECTIVE, parse_hexidecimal_string(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
+					output_data_item(L0_REGION_DIRECTIVE, parse_hexadecimal_token(directive->first_child->next->l2_lexer_token), out, language, position, num_l0_items);
 					break;
 				}default:{
 					printf("Note type was %s\n", get_l2_node_type_names()[directive->type]);

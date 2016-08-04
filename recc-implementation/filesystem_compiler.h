@@ -35,7 +35,7 @@
 #include "../recc-implementation/io.h"
 #endif
 #ifndef unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare.h"
+#include "../generated/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare.h"
 #endif
 
 void output_filesystem_impl(unsigned char *);

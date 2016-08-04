@@ -20,14 +20,14 @@ void free_symbol_map(struct linker_state *, struct unsigned_char_ptr_to_struct_l
 unsigned int set_post_linking_offsets(struct linker_state *, struct linker_file * linker_file);
 unsigned int set_pre_linking_offsets(struct linker_state *, struct linker_file * linker_file);
 unsigned int get_l2_item_size(struct linker_state *, struct l2_item *);
-unsigned int parse_hexidecimal_string(struct l2_lexer_token *);
-unsigned int parse_decimal_string(struct l2_lexer_token *);
 unsigned int get_linker_file_size(struct linker_state *, struct linker_file *);
 int struct_linker_file_ptr_cmp_indirect(struct linker_file **, struct linker_file **);
 int struct_linker_file_ptr_cmp(struct linker_file *, struct linker_file *);
 void linker_file_destroy(struct linker_state *, struct linker_file *);
 void add_items_of_type(struct linker_state *, enum l2_token_type, struct struct_l2_item_ptr_list *, struct struct_l2_item_ptr_list *, struct struct_start_end_list *, unsigned int *, struct linker_file *);
+void print_register_number(struct unsigned_char_list *, unsigned int);
 
+void print_op_code(struct unsigned_char_list *, enum l2_token_type);
 void reorder_linker_files(struct linker_state *, struct struct_linker_file_ptr_list *, struct struct_linker_file_ptr_list *, unsigned int);
 
 unsigned int is_non_descending_order(struct struct_linker_file_ptr_list *);
@@ -113,9 +113,9 @@ void reorder_linker_files(struct linker_state * state, struct struct_linker_file
 			assert(prev_offset <= current->linker_file_post_linking_offset);
 			
 			if(current_file_size){
-				printf("Non-relocatable linker file %s must occupy %08X - %08X\n", current->l2_lexer_state->c.filename, 4 * current->linker_file_post_linking_offset, 4*end_byte);
+				printf("Non-relocatable linker file %s must occupy %08X - %08X\n", current->source_file, 4 * current->linker_file_post_linking_offset, 4*end_byte);
 			}else{
-				printf("Non-relocatable linker file %s is empty so it is ignored.\n", current->l2_lexer_state->c.filename);
+				printf("Non-relocatable linker file %s is empty so it is ignored.\n", current->source_file);
 			}
 			prev = current;
 		}
@@ -136,9 +136,9 @@ void reorder_linker_files(struct linker_state * state, struct struct_linker_file
 					unsigned int end = start + relocatable_size;
 					struct_linker_file_ptr_list_add_end(reordered_linker_files, relocatable);
 					if(start == end){
-						printf("Linker file %s is empty\n", relocatable->l2_lexer_state->c.filename);
+						printf("Linker file %s is empty\n", relocatable->source_file);
 					}else{
-						printf("0x%08X to 0x%08X will fit linker file %s before non-relocatable linker file %s, which starts at 0x%08X.\n",4 * start, 4 * end -1, relocatable->l2_lexer_state->c.filename, non_relocatable->l2_lexer_state->c.filename, 4 * current_linker_file_start);
+						printf("0x%08X to 0x%08X will fit linker file %s before non-relocatable linker file %s, which starts at 0x%08X.\n",4 * start, 4 * end -1, relocatable->source_file, non_relocatable->source_file, 4 * current_linker_file_start);
 					}
 					/* Don't try to add this one multiple times */
 					struct_linker_file_ptr_list_remove_all(&relocatable_linker_files, relocatable, struct_linker_file_ptr_cmp);
@@ -159,7 +159,7 @@ void reorder_linker_files(struct linker_state * state, struct struct_linker_file
 		/*  No more of the relocatable files will fit, put the non relocatable file after them */
 		struct_linker_file_ptr_list_add_end(reordered_linker_files, non_relocatable);
 		/*  Next file needs to know where it can start from */
-		printf("0x%08X to 0x%08X will fit non-relocatable linker file %s\n", 4 * previous_linker_file_end, 4 * (previous_linker_file_end + non_relocatable_size) -1, non_relocatable->l2_lexer_state->c.filename);
+		printf("0x%08X to 0x%08X will fit non-relocatable linker file %s\n", 4 * previous_linker_file_end, 4 * (previous_linker_file_end + non_relocatable_size) -1, non_relocatable->source_file);
 		previous_linker_file_end = previous_linker_file_end + non_relocatable_size;
 	}
 
@@ -171,7 +171,7 @@ void reorder_linker_files(struct linker_state * state, struct struct_linker_file
 	}
 
 	if(end_linker_file){
-		printf("Linker file %s must be last.\n", end_linker_file->l2_lexer_state->c.filename);
+		printf("Linker file %s must be last.\n", end_linker_file->source_file);
 		struct_linker_file_ptr_list_add_end(reordered_linker_files, end_linker_file);
 	}
 	/*  Now all the linker files are guaranteed to fit. */
@@ -181,58 +181,18 @@ void reorder_linker_files(struct linker_state * state, struct struct_linker_file
 	struct_linker_file_ptr_list_destroy(&non_relocatable_linker_files);
 }
 
-unsigned int parse_decimal_string(struct l2_lexer_token * token){
-	unsigned int i = 0;
-	unsigned int base = 1;
-	unsigned char * c = token->last_byte;
-	do{
-		unsigned int n;
-		if(*c >= '0' && *c <= '9'){
-			n = *c - '0';
-		}else{
-			printf("%c\n", *c);
-			assert(0 && "Unknown decimal character.");
-		}
-		i += (n * base);
-		base *= 10;
-	}while(c-- != token->first_byte);
-	return i;
-}
-
-unsigned int parse_hexidecimal_string(struct l2_lexer_token * token){
-	unsigned int i = 0;
-	unsigned int base = 1;
-	unsigned char * c = token->last_byte;
-	do{
-		unsigned int n;
-		if(*c >= '0' && *c <= '9'){
-			n = *c - '0';
-		}else if(*c >= 'A' && *c <= 'F'){
-			n = (*c - 'A') + 10;
-		}else{
-			printf("%c\n", *c);
-			assert(0 && "Unknown hex character.");
-		}
-		i += (n * base);
-		base *= 16;
-	}while(*(--c) != 'x');
-	return i;
-}
-
 unsigned int get_l2_item_size(struct linker_state * state, struct l2_item * item){
-	enum l2_token_type type = item->op_token->type;
-
-	if(type == L2_COLON_CHAR){
+	if(item->op_type == L2_COLON_CHAR){
 		/*  A label */
 		return 0;
 	}
 
-	if ((type == L2_BLT || type == L2_BEQ) && item->identifier_token && state->entity_type == ENTITY_TYPE_L1_FILE){ /* Gets re-written for long jumps */
+	if ((item->op_type == L2_BLT || item->op_type == L2_BEQ) && item->referenced_linker_symbol && state->entity_type == ENTITY_TYPE_L1_FILE){ /* Gets re-written for long jumps */
 		return 4;
 	}
 
-	if (type == L2_SW){
-		return parse_hexidecimal_string(item->number_token); /* Size depends on number of words skipped */
+	if (item->op_type == L2_SW){
+		return item->number_value; /* Size depends on number of words skipped */
 	}
 
 	return 1; /* 1 word */
@@ -278,7 +238,7 @@ void set_symbol_l2_item_pointer(struct linker_state * state, struct linker_file 
 	struct linker_symbol * internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, identifier_str) : (struct linker_symbol *)0;
 	if(internal_symbol){
 		if(internal_symbol->observed_as_implemented){
-			printf("Internal label %s re-declared on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->l2_lexer_state->c.filename);
+			printf("Internal label %s re-declared on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->source_file);
 			assert(0 && "Trying to re-declare label in this linker file.");
 		}else{
 			internal_symbol->original_l2_item_index = original_index;
@@ -289,7 +249,7 @@ void set_symbol_l2_item_pointer(struct linker_state * state, struct linker_file 
 		struct linker_symbol * external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&state->external_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&state->external_symbols, identifier_str) : (struct linker_symbol *)0;
 		if(external_symbol){
 			if(external_symbol->observed_as_implemented){
-				printf("Internal label %s re-declared on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->l2_lexer_state->c.filename);
+				printf("Internal label %s re-declared on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->source_file);
 				assert(0 && "Trying to re-declare label in this linker file.");
 			}else{
 				external_symbol->l2_item = pointer;
@@ -297,7 +257,7 @@ void set_symbol_l2_item_pointer(struct linker_state * state, struct linker_file 
 				external_symbol->observed_as_implemented = 1; /*  Observed a label for this symbol in the file */
 			}
 		}else{
-			printf("Undeclared identifier %s on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->l2_lexer_state->c.filename);
+			printf("Undeclared identifier %s on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->source_file);
 			assert(0 && "Trying to set offset of unknown symbol.");
 		}
 	}
@@ -307,10 +267,10 @@ void set_symbol_l2_item_pointer(struct linker_state * state, struct linker_file 
 void verify_symbol_declaration(struct linker_state * state, struct linker_file * linker_file, struct l2_lexer_token * token){
 	/*  Make sure that a symbol has been declared before it is implemented */
 	unsigned char * identifier_str = copy_string(token->first_byte, token->last_byte, state->memory_pool_collection);
-	unsigned int internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, identifier_str);
-	unsigned int external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&state->external_symbols, identifier_str);
+	struct linker_symbol ** internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, identifier_str);
+	struct linker_symbol ** external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&state->external_symbols, identifier_str);
 	if(!(internal_symbol || external_symbol)){
-		printf("Undeclared identifier %s on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->l2_lexer_state->c.filename);
+		printf("Undeclared identifier %s on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->source_file);
 		assert(0 && "Found symbol without forward declaration.");
 	}
 	heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
@@ -334,6 +294,9 @@ void add_internal_linker_symbol(struct linker_state * state, struct linker_file 
 	new_symbol->is_external = 0;
 	new_symbol->observed_as_implemented = 0; /*  We haven't see a lable for this symbol yet */
 	new_symbol->parent_linker_file = linker_file;
+	new_symbol->identifier = identifier_str;
+	new_symbol->id = state->next_internal_identifier_id;
+	state->next_internal_identifier_id++;
 	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_put(&linker_file->internal_symbols, identifier_str, new_symbol);
 }
 
@@ -343,8 +306,8 @@ void add_external_linker_symbol(struct linker_state * state, struct linker_file 
 	struct linker_symbol * existing_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&state->external_symbols, identifier_str) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&state->external_symbols, identifier_str) : (struct linker_symbol *)0;
 	if(existing_symbol){
 		if(existing_symbol->is_implemented && is_implemented){
-			printf("Detected duplicate external symbol %s re-implemented on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->l2_lexer_state->c.filename);
-			printf("The previously declared external symbol was declared in file %s\n", existing_symbol->parent_linker_file->l2_lexer_state->c.filename);
+			printf("Detected duplicate external symbol %s re-implemented on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->source_file);
+			printf("The previously declared external symbol was declared in file %s\n", existing_symbol->parent_linker_file->source_file);
 			assert(0 && "Cannot implement external symbol multiple times.");
 		}
 		existing_symbol->is_implemented = existing_symbol->is_implemented ? existing_symbol->is_implemented : is_implemented;
@@ -360,7 +323,88 @@ void add_external_linker_symbol(struct linker_state * state, struct linker_file 
 	new_symbol->is_external = 1;
 	new_symbol->observed_as_implemented = 0; /*  We haven't see a lable for this symbol yet */
 	new_symbol->parent_linker_file = is_implemented ? linker_file : (struct linker_file *)0;
+	new_symbol->identifier = identifier_str;
+	new_symbol->id = state->next_internal_identifier_id;
+	state->next_internal_identifier_id++;
 	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_put(&state->external_symbols, identifier_str, new_symbol);
+}
+
+void print_register_number(struct unsigned_char_list * buffer, unsigned int i){
+	switch(i){
+		case 0:{
+			buffered_puts(buffer, (const char *)"PC");
+			break;
+		}case 1:{
+			buffered_puts(buffer, (const char *)"SP");
+			break;
+		}case 2:{
+			buffered_puts(buffer, (const char *)"FP");
+			break;
+		}case 3:{
+			buffered_puts(buffer, (const char *)"ZR");
+			break;
+		}case 4:{
+			buffered_puts(buffer, (const char *)"FR");
+			break;
+		}case 5:{
+			buffered_puts(buffer, (const char *)"WR");
+			break;
+		}default:{
+			buffered_printf(buffer, "r%u", (i - 5));
+		}
+	}
+}
+
+
+void print_op_code(struct unsigned_char_list * buffer, enum l2_token_type type){
+	switch(type){
+		case L2_ADD:{
+			buffered_puts(buffer, (const char *)"add");
+			break;
+		}case L2_SUB:{
+			buffered_puts(buffer, (const char *)"sub");
+			break;
+		}case L2_MUL:{
+			buffered_puts(buffer, (const char *)"mul");
+			break;
+		}case L2_AND:{
+			buffered_puts(buffer, (const char *)"and");
+			break;
+		}case L2_OR:{
+			buffered_puts(buffer, (const char *)"or");
+			break;
+		}case L2_DIV:{
+			buffered_puts(buffer, (const char *)"div");
+			break;
+		}case L2_LOA:{
+			buffered_puts(buffer, (const char *)"loa");
+			break;
+		}case L2_STO:{
+			buffered_puts(buffer, (const char *)"sto");
+			break;
+		}case L2_NOT:{
+			buffered_puts(buffer, (const char *)"not");
+			break;
+		}case L2_SHR:{
+			buffered_puts(buffer, (const char *)"shr");
+			break;
+		}case L2_SHL:{
+			buffered_puts(buffer, (const char *)"shl");
+			break;
+		}case L2_LL:{
+			buffered_puts(buffer, (const char *)"ll");
+			break;
+		}case L2_BEQ:{
+			buffered_puts(buffer, (const char *)"beq");
+			break;
+		}case L2_BLT:{
+			buffered_puts(buffer, (const char *)"blt");
+			break;
+		}default:{
+			assert(0 && "Not expected op code.");
+			break;
+		}
+	}
 }
 
 void process_statement(struct l2_parser_node *, struct linker_state *, struct linker_file *);
@@ -370,47 +414,46 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 		case L2_INSTRUCTION_STATEMENT:{
 			struct l2_parser_node * op_code = n->first_child->first_child;
 			struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection->struct_l2_item_pool);
-			new_instruction->op_token = op_code->l2_lexer_token;
+			new_instruction->op_type = op_code->l2_lexer_token->type;
 			switch(op_code->l2_lexer_token->type){
 				/*  Uses case statement fallthrough: */
 				case L2_ADD:; case L2_SUB:; case L2_MUL:; case L2_DIV:; case L2_AND:; case L2_OR:{
-					new_instruction->rx_token = op_code->next->l2_lexer_token;
-					new_instruction->ry_token = op_code->next->next->l2_lexer_token;
-					new_instruction->rz_token = op_code->next->next->next->l2_lexer_token;
+					new_instruction->rx_number = get_register_number(op_code->next->l2_lexer_token);
+					new_instruction->ry_number = get_register_number(op_code->next->next->l2_lexer_token);
+					new_instruction->rz_number = get_register_number(op_code->next->next->next->l2_lexer_token);
 					break;
 				}case L2_LOA:; case L2_STO:; case L2_NOT:; case L2_SHR:; case L2_SHL:{
-					new_instruction->rx_token = op_code->next->l2_lexer_token;
-					new_instruction->ry_token = op_code->next->next->l2_lexer_token;
+					new_instruction->rx_number = get_register_number(op_code->next->l2_lexer_token);
+					new_instruction->ry_number = get_register_number(op_code->next->next->l2_lexer_token);
 					break;
 				}case L2_BEQ:; case L2_BLT:{
 					struct l2_parser_node * branch_distance;
-					new_instruction->rx_token = op_code->next->l2_lexer_token;
-					new_instruction->ry_token = op_code->next->next->l2_lexer_token;
+					new_instruction->rx_number = get_register_number(op_code->next->l2_lexer_token);
+					new_instruction->ry_number = get_register_number(op_code->next->next->l2_lexer_token);
 					branch_distance = op_code->next->next->next;
 					if(branch_distance->first_child->l2_lexer_token->type == L2_IDENTIFIER){
-						new_instruction->identifier_token = branch_distance->first_child->l2_lexer_token;
-						new_instruction->number_token = 0;
-						new_instruction->number_token_is_negative = 0;
+						unsigned char * ident = copy_string(branch_distance->first_child->l2_lexer_token->first_byte, branch_distance->first_child->l2_lexer_token->last_byte, state->memory_pool_collection);
 						verify_symbol_declaration(state, linker_file, branch_distance->first_child->l2_lexer_token);
+						new_instruction->referenced_linker_symbol = get_absolute_symbol(state, ident, linker_file);
+						heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 					}else if(branch_distance->first_child->l2_lexer_token->type == L2_MINUS_CHAR){
 						/*  Next one should be the decimal number */
 						assert(branch_distance->first_child->next->l2_lexer_token->type == L2_CONSTANT_DECIMAL);
-						new_instruction->number_token = branch_distance->first_child->next->l2_lexer_token;
-						new_instruction->identifier_token = 0;
-						new_instruction->number_token_is_negative = 1;
+						new_instruction->number_value = parse_decimal_token(branch_distance->first_child->next->l2_lexer_token);
+						new_instruction->number_value_is_negative = 1;
+						new_instruction->referenced_linker_symbol = (struct linker_symbol *)0;
 					}else if(branch_distance->first_child->l2_lexer_token->type == L2_CONSTANT_DECIMAL){
-						new_instruction->number_token = branch_distance->first_child->l2_lexer_token;
-						new_instruction->identifier_token = 0;
-						new_instruction->number_token_is_negative = 0;
+						new_instruction->number_value = parse_decimal_token(branch_distance->first_child->l2_lexer_token);
+						new_instruction->number_value_is_negative = 0;
+						new_instruction->referenced_linker_symbol = (struct linker_symbol *)0;
 					}else{
 						assert(0 && "Unknown branch distance.");
 					}
 					break;
 				}case L2_LL:{
-					new_instruction->rx_token = op_code->next->l2_lexer_token;
-					new_instruction->number_token_is_negative = 0;
-					new_instruction->number_token = op_code->next->next->l2_lexer_token;
-					new_instruction->identifier_token = 0;
+					new_instruction->rx_number = get_register_number(op_code->next->l2_lexer_token);
+					new_instruction->number_value_is_negative = 0;
+					new_instruction->number_value = parse_hexadecimal_token(op_code->next->next->l2_lexer_token);
 					break;
 				}default:{
 					printf("Note type was %s\n", get_l2_token_type_names()[op_code->l2_lexer_token->type]);
@@ -423,10 +466,12 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 			struct l2_parser_node * terminal = n->first_child->first_child;
 			struct l2_lexer_token * identifier = terminal->l2_lexer_token;
 			struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection->struct_l2_item_pool);
-			new_instruction->op_token = terminal->next->l2_lexer_token;
+			new_instruction->op_type = terminal->next->l2_lexer_token->type;
 			if(terminal->next->type == L2_TERMINAL && terminal->next->l2_lexer_token->type == L2_COLON_CHAR){
+				unsigned char * ident = copy_string(identifier->first_byte, identifier->last_byte, state->memory_pool_collection);
+				new_instruction->referenced_linker_symbol = get_absolute_symbol(state, ident, linker_file);
+				heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 				set_symbol_l2_item_pointer(state, linker_file, identifier, new_instruction, struct_l2_item_ptr_list_size(&linker_file->l2_items));
-				new_instruction->identifier_token = identifier;
 			}else{
 				assert(0 && "Expected colon.");
 			}
@@ -439,14 +484,15 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 				}case L2_SKIP_WORDS_DIRECTIVE: {
 					struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection->struct_l2_item_pool);
 					struct l2_lexer_token * value = directive->first_child->next->l2_lexer_token;
-					new_instruction->op_token = directive->first_child->l2_lexer_token;
+					new_instruction->op_type = directive->first_child->l2_lexer_token->type;
 					if(value->type == L2_CONSTANT_HEX){
-						new_instruction->number_token_is_negative = 0;
-						new_instruction->number_token = value;
-						new_instruction->identifier_token = 0;
+						new_instruction->referenced_linker_symbol = (struct linker_symbol *)0;
+						new_instruction->number_value_is_negative = 0;
+						new_instruction->number_value = parse_hexadecimal_token(value);
 					}else if(value->type == L2_IDENTIFIER){
-						new_instruction->identifier_token = value;
-						new_instruction->number_token = 0;
+						unsigned char * ident = copy_string(value->first_byte, value->last_byte, state->memory_pool_collection);
+						new_instruction->referenced_linker_symbol = get_absolute_symbol(state, ident, linker_file);
+						heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 						verify_symbol_declaration(state, linker_file, value);
 					}else{
 						assert(0 && "Unknown value type.");
@@ -462,7 +508,7 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 						linker_file->relocation_type = RELOCATION_TYPE_END; /* Must be last linker file */
 						linker_file->offset_declared = 1;
 					}else if(value->type == L2_CONSTANT_HEX){
-						unsigned int parsed_value = parse_hexidecimal_string(value);
+						unsigned int parsed_value = parse_hexadecimal_token(value);
 						linker_file->relocation_type = RELOCATION_TYPE_ADDRESS; /* This linker file must be placed at a fixed location in memory */
 						linker_file->linker_file_post_linking_offset = (parsed_value / 4); /*  Offset in # words */
 						assert(parsed_value % 4 == 0 && "Value must be evenly divisible by word size.");
@@ -541,16 +587,14 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 	}
 }
 
-struct linker_file * create_linker_file(struct linker_state * state, struct l2_parser_state * l2_parser_state, struct unsigned_char_list * file_input){
+struct linker_file * create_linker_file(struct linker_state * state, struct l2_parser_state * l2_parser_state, unsigned char * source_file){
 	struct linker_file * linker_file = (struct linker_file *)malloc(sizeof(struct linker_file));
 	struct l2_parser_node * current_node = l2_parser_state->top_node;
 	struct_linker_object_ptr_list_create(&linker_file->object_declarations);
+	linker_file->source_file = source_file;
 	linker_file->offset_declared = 0;
 	linker_file->current_line = 1;
-	linker_file->l2_parser_state = l2_parser_state;
-	linker_file->l2_lexer_state = l2_parser_state->l2_lexer_state;
-	linker_file->file_input = file_input;
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_file->internal_symbols, unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&linker_file->internal_symbols, struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
 	struct_l2_item_ptr_list_create(&linker_file->l2_items);
 
 	while(current_node->type != L2_EPSILON){
@@ -586,7 +630,7 @@ struct linker_file * create_linker_file(struct linker_state * state, struct l2_p
 	}
 
 	if(!linker_file->offset_declared){
-		printf("On line %d in file %s\n", linker_file->current_line, l2_parser_state->l2_lexer_state->c.filename); assert(0 && "offset not declared..");
+		printf("On line %d in file %s\n", linker_file->current_line, linker_file->source_file); assert(0 && "offset not declared..");
 	}
 	return linker_file;
 }
@@ -622,6 +666,14 @@ unsigned int get_absolute_symbol_offset(struct linker_state * state, unsigned ch
 	}
 }
 
+struct linker_symbol * get_absolute_symbol(struct linker_state * state, unsigned char * identifier, struct linker_file * current_linker_file){
+	struct linker_symbol * internal_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&current_linker_file->internal_symbols, identifier) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&current_linker_file->internal_symbols, identifier) : (struct linker_symbol *)0;
+	if(internal_symbol){
+		return internal_symbol;
+	}else{
+		return unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&state->external_symbols, identifier) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&state->external_symbols, identifier) : (struct linker_symbol *)0;
+	}
+}
 
 void output_symbols(struct linker_state * state, struct linker_file * linker_file, struct unsigned_char_list * symbol_buffer, unsigned char * symbol_file){
 	if(symbol_file){
@@ -630,7 +682,7 @@ void output_symbols(struct linker_state * state, struct linker_file * linker_fil
 		unsigned int external_keys_size = unsigned_char_ptr_list_size(&external_keys);
 		unsigned int internal_keys_size = unsigned_char_ptr_list_size(&internal_keys);
 		unsigned int g;
-		buffered_printf(symbol_buffer, "Internal symbols for file %s:\n", linker_file->l2_lexer_state->c.filename);
+		buffered_printf(symbol_buffer, "Internal symbols for file %s:\n", linker_file->source_file);
 		for(g = 0; g < internal_keys_size; g++){
 			unsigned char * id = unsigned_char_ptr_list_get(&internal_keys, g);
 			unsigned int found;
@@ -638,13 +690,13 @@ void output_symbols(struct linker_state * state, struct linker_file * linker_fil
 			if(found){
 				buffered_printf(symbol_buffer, "0x%08X %s\n", absolute_offset * 4, id);
 			}else{
-				printf("Symbol %s is unimplemented.  Symbol referenced in file %s.\n", id, linker_file->l2_lexer_state->c.filename);
+				printf("Symbol %s is unimplemented.  Symbol referenced in file %s.\n", id, linker_file->source_file);
 			}
 
 		}
 		unsigned_char_ptr_list_destroy(&internal_keys);
 
-		buffered_printf(symbol_buffer, "External symbols for file %s:\n", linker_file->l2_lexer_state->c.filename);
+		buffered_printf(symbol_buffer, "External symbols for file %s:\n", linker_file->source_file);
 		for(g = 0; g < external_keys_size; g++){
 			unsigned char * id = unsigned_char_ptr_list_get(&external_keys, g);
 			struct linker_symbol * external_symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&state->external_symbols, id);
@@ -655,7 +707,7 @@ void output_symbols(struct linker_state * state, struct linker_file * linker_fil
 				if(found){
 					buffered_printf(symbol_buffer, "0x%08X %s\n", absolute_offset * 4, id);
 				}else{
-					printf("Symbol %s is unimplemented.  Symbol referenced in file %s.\n", id, linker_file->l2_lexer_state->c.filename);
+					printf("Symbol %s is unimplemented.  Symbol referenced in file %s.\n", id, linker_file->source_file);
 				}
 			}
 		}
@@ -672,75 +724,70 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 
 	for(i = 0; i < size; i++){
 		struct l2_item * instruction = data[i];
-		enum l2_token_type type = instruction->op_token->type;
-		switch(type){
+		switch(instruction->op_type){
 			/* Uses case statement fallthrough */
 			case L2_COLON_CHAR:{
 				/*  A label */
-				if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L2_FILE){
-					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
-					struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, ident) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, ident) : (struct linker_symbol *)0;
-					buffered_token_output(file_output, instruction->identifier_token);
+				if(instruction->referenced_linker_symbol && state->entity_type == ENTITY_TYPE_L2_FILE){
+					struct linker_symbol * symbol = instruction->referenced_linker_symbol;
+					buffered_puts(file_output, (const char *)symbol->identifier);
 					if(symbol && !symbol->is_external){
-						buffered_printf(file_output, "_%p", symbol);
+						buffered_printf(file_output, "_%u", symbol->id);
 					}
 					buffered_puts(file_output, ":\n");
-					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 				}else{
 					/*  Don't output anything */
 				}
 				break;
 			}case L2_ADD:; case L2_SUB:; case L2_MUL:; case L2_AND:; case L2_OR:; case L2_DIV:{
-				buffered_token_output(file_output, instruction->op_token);
+				print_op_code(file_output, instruction->op_type);
 				buffered_puts(file_output, " ");
-				buffered_token_output(file_output, instruction->rx_token);
+				print_register_number(file_output, instruction->rx_number);
 				buffered_puts(file_output, " ");
-				buffered_token_output(file_output, instruction->ry_token);
+				print_register_number(file_output, instruction->ry_number);
 				buffered_puts(file_output, " ");
-				buffered_token_output(file_output, instruction->rz_token);
+				print_register_number(file_output, instruction->rz_number);
 				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
 				}
 				buffered_puts(file_output, "\n");
 				break;
 			}case L2_LOA:; case L2_STO :; case L2_NOT:; case L2_SHR:; case L2_SHL:{
-				buffered_token_output(file_output, instruction->op_token);
+				print_op_code(file_output, instruction->op_type);
 				buffered_puts(file_output, " ");
-				buffered_token_output(file_output, instruction->rx_token);
+				print_register_number(file_output, instruction->rx_number);
 				buffered_puts(file_output, " ");
-				buffered_token_output(file_output, instruction->ry_token);
+				print_register_number(file_output, instruction->ry_number);
 				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
 				}
 				buffered_puts(file_output, "\n");
 				break;
 			}case L2_LL:{
-				unsigned int hex_value = parse_hexidecimal_string(instruction->number_token);
-				buffered_token_output(file_output, instruction->op_token);
+				print_op_code(file_output, instruction->op_type);
 				buffered_puts(file_output, " ");
-				buffered_token_output(file_output, instruction->rx_token);
+				print_register_number(file_output, instruction->rx_number);
 				buffered_puts(file_output, " ");
-				if(!(hex_value <= MAX_LL_CONSTANT)){
-					printf("LL constant too large: %X on line %d in file %s\n", hex_value, linker_file->current_line, linker_file->l2_lexer_state->c.filename);
+				if(!(instruction->number_value <= MAX_LL_CONSTANT)){
+					printf("LL constant too large: %X on line %d in file %s\n", instruction->number_value, linker_file->current_line, linker_file->source_file);
 					assert(0);
 				}
-				buffered_printf(file_output, "0x%X", hex_value);
+				buffered_printf(file_output, "0x%X", instruction->number_value);
 				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
 				}
 				buffered_puts(file_output, "\n");
 				break;
 			}case L2_BEQ:;  case L2_BLT:{
-				if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L1_FILE){
-					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
+				if(instruction->referenced_linker_symbol && state->entity_type == ENTITY_TYPE_L1_FILE){
+					struct linker_symbol * symbol = instruction->referenced_linker_symbol;
 					unsigned int found;
-					unsigned int absolute_offset = get_absolute_symbol_offset(state, ident, linker_file, &found);
-					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
-					buffered_token_output(file_output, instruction->op_token);
+					unsigned int absolute_offset = get_absolute_symbol_offset(state, symbol->identifier, linker_file, &found);
+					print_op_code(file_output, instruction->op_type);
 					buffered_puts(file_output, " ");
-					buffered_token_output(file_output, instruction->rx_token);
+					print_register_number(file_output, instruction->rx_number);
 					buffered_puts(file_output, " ");
-					buffered_token_output(file_output, instruction->ry_token);
+					print_register_number(file_output, instruction->ry_number);
 					buffered_puts(file_output, " ");
 					buffered_puts(file_output, "1");
 					buffered_puts(file_output, "\n");
@@ -750,36 +797,33 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 						buffered_printf(file_output, "DW 0x%X\n", absolute_offset * 4);
 					}else{
 						buffered_puts(file_output, "UNRESOLVED 0x0\n");
-						printf("Leaving symbol %s unresolved in output file %s.\n", ident, state->out_file);
+						printf("Leaving symbol %s unresolved in output file %s.\n", symbol->identifier, state->out_file);
 					}
-				}else if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L2_FILE){
-					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
-					struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, ident) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, ident) : (struct linker_symbol *)0;
-					buffered_token_output(file_output, instruction->op_token);
-					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
+				}else if(instruction->referenced_linker_symbol && state->entity_type == ENTITY_TYPE_L2_FILE){
+					struct linker_symbol * symbol = instruction->referenced_linker_symbol;
+					print_op_code(file_output, instruction->op_type);
 					buffered_puts(file_output, " ");
-					buffered_token_output(file_output, instruction->rx_token);
+					print_register_number(file_output, instruction->rx_number);
 					buffered_puts(file_output, " ");
-					buffered_token_output(file_output, instruction->ry_token);
+					print_register_number(file_output, instruction->ry_number);
 					buffered_puts(file_output, " ");
-					buffered_token_output(file_output, instruction->identifier_token);
+					buffered_puts(file_output, (const char *)symbol->identifier);
 					if(symbol && !symbol->is_external){
-						buffered_printf(file_output, "_%p", symbol);
+						buffered_printf(file_output, "_%u", symbol->id);
 					}
 					buffered_puts(file_output, ";\n");
 				}else{
-					unsigned int constant_value = parse_decimal_string(instruction->number_token);
-					buffered_token_output(file_output, instruction->op_token);
+					print_op_code(file_output, instruction->op_type);
 					buffered_puts(file_output, " ");
-					buffered_token_output(file_output, instruction->rx_token);
+					print_register_number(file_output, instruction->rx_number);
 					buffered_puts(file_output, " ");
-					buffered_token_output(file_output, instruction->ry_token);
+					print_register_number(file_output, instruction->ry_number);
 					buffered_puts(file_output, " ");
-					if(instruction->number_token_is_negative){
+					if(instruction->number_value_is_negative){
 						buffered_puts(file_output, "-");
 					}
-					assert(constant_value <= MAX_BRANCH_POS || (instruction->number_token_is_negative && constant_value <= MAX_BRANCH_NEG));
-					buffered_printf(file_output, "%i", constant_value);
+					assert(instruction->number_value <= MAX_BRANCH_POS || (instruction->number_value_is_negative && instruction->number_value <= MAX_BRANCH_NEG));
+					buffered_printf(file_output, "%i", instruction->number_value);
 					if(state->entity_type == ENTITY_TYPE_L2_FILE){
 						buffered_puts(file_output, ";");
 					}
@@ -787,31 +831,27 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 				}
 				break;
 			}case L2_DW:{
-				if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L1_FILE){
-					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
+				if(instruction->referenced_linker_symbol && state->entity_type == ENTITY_TYPE_L1_FILE){
+					struct linker_symbol * symbol = instruction->referenced_linker_symbol;
 					unsigned int found;
-					unsigned int absolute_offset = get_absolute_symbol_offset(state, ident, linker_file, &found);
+					unsigned int absolute_offset = get_absolute_symbol_offset(state, symbol->identifier, linker_file, &found);
 
 					if(found){
 						buffered_printf(file_output, "DW 0x%X", absolute_offset * 4);
 					}else{
 						buffered_puts(file_output, "UNRESOLVED 0x0");
-						printf("Leaving symbol %s unresolved in output file %s.\n", ident, state->out_file);
+						printf("Leaving symbol %s unresolved in output file %s.\n", symbol->identifier, state->out_file);
 					}
-
-					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
-				}else if(instruction->identifier_token && state->entity_type == ENTITY_TYPE_L2_FILE){
-					unsigned char * ident = copy_string(instruction->identifier_token->first_byte, instruction->identifier_token->last_byte, state->memory_pool_collection);
-					struct linker_symbol * symbol = unsigned_char_ptr_to_struct_linker_symbol_ptr_map_exists(&linker_file->internal_symbols, ident) ? unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&linker_file->internal_symbols, ident) : (struct linker_symbol *)0;
+				}else if(instruction->referenced_linker_symbol && state->entity_type == ENTITY_TYPE_L2_FILE){
+					struct linker_symbol * symbol = instruction->referenced_linker_symbol;
 					buffered_puts(file_output, "DW ");
-					buffered_token_output(file_output, instruction->identifier_token);
+					buffered_puts(file_output, (const char *)symbol->identifier);
 					if(symbol && !symbol->is_external){
-						buffered_printf(file_output, "_%p", symbol);
+						buffered_printf(file_output, "_%u", symbol->id);
 					}
-					heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 				}else{
 					buffered_puts(file_output, "DW ");
-					buffered_token_output(file_output, instruction->number_token);
+					buffered_printf(file_output, "0x%X", instruction->number_value);
 				}
 				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
@@ -820,16 +860,15 @@ void output_artifacts(struct linker_state * state, struct unsigned_char_list * f
 				break;
 			}case L2_UNRESOLVED:{
 				buffered_puts(file_output, "UNRESOLVED ");
-				buffered_token_output(file_output, instruction->number_token);
+				buffered_printf(file_output, "0x%X", instruction->number_value);
 				buffered_puts(file_output, "\n");
 				break;
 			}case L2_SW:{
-				buffered_token_output(file_output, instruction->op_token);
-				buffered_puts(file_output, " ");
-				if(instruction->identifier_token){
+				buffered_puts(file_output, "SW ");
+				if(instruction->referenced_linker_symbol){
 					assert(0 && "Unexpected lablel with skip words instruction.");
 				}else{
-					buffered_token_output(file_output, instruction->number_token);
+					buffered_printf(file_output, "0x%X", instruction->number_value);
 				}
 				if(state->entity_type == ENTITY_TYPE_L2_FILE){
 					buffered_puts(file_output, ";");
@@ -862,7 +901,7 @@ void linker_state_create(struct linker_state * state, struct memory_pool_collect
 	struct l2_lexer_token t;
 	t.first_byte = offset;
 	t.last_byte = get_null_terminator(offset) -1;
-	state->starting_offset = entity_type == ENTITY_TYPE_L1_FILE ? parse_hexidecimal_string(&t) : 0;
+	state->starting_offset = entity_type == ENTITY_TYPE_L1_FILE ? parse_hexadecimal_token(&t) : 0;
 	state->memory_pool_collection = memory_pool_collection;
 	state->in_files = in_files;
 	state->out_file = out_file;
@@ -871,7 +910,9 @@ void linker_state_create(struct linker_state * state, struct memory_pool_collect
 	state->offset = offset;
 	state->page_align_permission_regions = page_align_permission_regions;
 	state->only_metadata = only_metadata;
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&state->external_symbols, unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
+	state->next_internal_identifier_id = 0;
+
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&state->external_symbols, struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
 
 	unsigned_char_list_create(&state->file_output);
 	unsigned_char_list_create(&state->symbol_output);
@@ -886,8 +927,6 @@ void linker_file_destroy(struct linker_state * state, struct linker_file * file)
 	unsigned int j = 0;
 	unsigned int num_symbols = struct_linker_object_ptr_list_size(&file->object_declarations);
 	unsigned int num_items = struct_l2_item_ptr_list_size(&file->l2_items);
-	struct l2_parser_state * l2_parser_state = file->l2_parser_state;
-	struct l2_lexer_state * l2_lexer_state = l2_parser_state->l2_lexer_state;
 	for(j = 0; j < num_symbols; j++){
 		struct linker_object * obj = struct_linker_object_ptr_list_get(&file->object_declarations, j);
 		heap_memory_pool_free(state->memory_pool_collection->heap_pool, obj->start_label);
@@ -896,8 +935,6 @@ void linker_file_destroy(struct linker_state * state, struct linker_file * file)
 	}
 	struct_linker_object_ptr_list_destroy(&file->object_declarations);
 
-	unsigned_char_list_destroy(file->file_input);
-
 	free_symbol_map(state, &file->internal_symbols);
 
 	for(j = 0; j < num_items; j++){
@@ -905,11 +942,6 @@ void linker_file_destroy(struct linker_state * state, struct linker_file * file)
 	}
 	struct_l2_item_ptr_list_destroy(&file->l2_items);
 
-	destroy_l2_lexer_state(l2_lexer_state);
-	destroy_l2_parser_state(l2_parser_state);
-	free(file->file_input);
-	free(l2_lexer_state);
-	free(l2_parser_state);
 	free(file);
 }
 
@@ -923,11 +955,6 @@ void linker_state_destroy(struct linker_state * state){
 	unsigned_char_list_destroy(&state->symbol_output);
 
 	for(i = 0; i < num_created_sw_items; i++){
-		struct l2_item * it = struct_l2_item_ptr_list_get(&state->created_sw_items, i);
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, it->number_token->first_byte);
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, it->op_token->first_byte);
-		struct_l2_lexer_token_memory_pool_free(state->memory_pool_collection->struct_l2_lexer_token_pool, it->number_token);
-		struct_l2_lexer_token_memory_pool_free(state->memory_pool_collection->struct_l2_lexer_token_pool, it->op_token);
 		/* it gets destroyed in linker file destroy */
 	}
 	struct_l2_item_ptr_list_destroy(&state->created_sw_items);
@@ -962,17 +989,6 @@ void set_all_post_linking_offsets(struct linker_state * state){
 			}
 		}
 	}
-}
-
-struct l2_lexer_token * make_sw_op_token(struct linker_state *);
-struct l2_lexer_token * make_sw_op_token(struct linker_state * state){
-	/* TODO: Hopefully these functions can be removed later */
-	struct l2_lexer_token * tok = struct_l2_lexer_token_memory_pool_malloc(state->memory_pool_collection->struct_l2_lexer_token_pool);
-	unsigned char * str = create_formatted_string(state->memory_pool_collection, 2, "SW");
-	tok->type = L2_SW;
-	tok->first_byte = str;
-	tok->last_byte = &str[1];
-	return tok;
 }
 
 struct l2_lexer_token * make_hex_number_token(struct linker_state *, unsigned int);
@@ -1019,10 +1035,10 @@ void add_items_of_type(struct linker_state * state, enum l2_token_type type, str
 	printf("Needed to add 0x%X to page align region.\n", alignment_words_needed);
 
 	sw_padding = struct_l2_item_memory_pool_malloc(state->memory_pool_collection->struct_l2_item_pool);
-	sw_padding->op_token = make_sw_op_token(state);
-	sw_padding->number_token_is_negative = 0;
-	sw_padding->number_token = make_hex_number_token(state, alignment_words_needed);
-	sw_padding->identifier_token = 0;
+	sw_padding->op_type = L2_SW;
+	sw_padding->number_value_is_negative = 0;
+	sw_padding->number_value = alignment_words_needed;
+	sw_padding->referenced_linker_symbol = (struct linker_symbol *)0;
 	struct_l2_item_ptr_list_add_end(dest, sw_padding);
 	struct_l2_item_ptr_list_add_end(&state->created_sw_items, sw_padding); /* Need for garbage collection later */
 
@@ -1047,7 +1063,7 @@ void add_items_of_type(struct linker_state * state, enum l2_token_type type, str
 	}
 	if(new_region.length){ /*  Don't add empty regions. */
 		struct_linker_region_list_add_end(&state->regions, new_region);
-		printf("Region occupies 0x%X to 0x%X in linker file %s.\n", new_region.start, new_region.start + new_region.length, file->l2_lexer_state->c.filename);
+		printf("Region occupies 0x%X to 0x%X in linker file %s.\n", new_region.start, new_region.start + new_region.length, file->source_file);
 	}
 }
 
@@ -1095,7 +1111,7 @@ void group_and_page_align_linker_files(struct linker_state * state){
 		/*  Sort the array of start + ends */
 		/*  Requires stable sorting */
 		num_start_ends = struct_start_end_list_size(&starts_and_ends);
-		struct_start_end_merge_sort(struct_start_end_list_data(&starts_and_ends), num_start_ends, struct_start_end_ptr_compare);
+		struct_start_end_merge_sort(struct_start_end_list_data(&starts_and_ends), num_start_ends, struct_start_end_compare);
 		for(j = 0; j < num_start_ends; j++){
 			/*  Check for complete space usage and monotonic and complete array */
 			struct start_end current = struct_start_end_list_get(&starts_and_ends, j);
@@ -1103,12 +1119,12 @@ void group_and_page_align_linker_files(struct linker_state * state){
 				assert(current.is_start);
 				assert((current_offset <= current.symbol->l2_item->pre_linking_offset) && "Not monotonic.");
 				if(!((current.symbol->l2_item->pre_linking_offset - current_offset) == 0)){
-					printf("In file %s before label %s there were stray instructions.\n", file->l2_lexer_state->c.filename, current.source->start_label);
+					printf("In file %s before label %s there were stray instructions.\n", file->source_file, current.source->start_label);
 					assert(0 && "Extra instructions not belonging to any object.");
 				}
 			}else{  /*  Odd  */
 				if(current.is_start){
-					printf("In file %s saw start label %s (%dth start or end) but should have seen an end label.\n", file->l2_lexer_state->c.filename, current.source->start_label, j);
+					printf("In file %s saw start label %s (%dth start or end) but should have seen an end label.\n", file->source_file, current.source->start_label, j);
 					assert(0 && "Unexpected start label.");
 				}
 			}
@@ -1121,7 +1137,7 @@ void group_and_page_align_linker_files(struct linker_state * state){
 			unsigned int last_item_offset = last_item->pre_linking_offset;
 			unsigned int file_size = get_l2_item_size(state, last_item);
 			if(!num_start_ends){
-				printf("In file %s There should be at least one object in this file since it is not empty.\n", file->l2_lexer_state->c.filename);
+				printf("In file %s There should be at least one object in this file since it is not empty.\n", file->source_file);
 				assert(0);
 			}
 			assert((last_item_offset + file_size) == struct_start_end_list_get(&starts_and_ends, num_start_ends -1).symbol->l2_item->pre_linking_offset);
@@ -1197,14 +1213,14 @@ void do_link_to_l1(struct linker_state * state){
 				printf("0x%08X to 0x%08X is unused space between linker files.\n", 4 * unused_start, 4 * unused_end -1);
 			}
 			if(start == end){
-				printf("Linker file %s is empty.\n", file->l2_lexer_state->c.filename);
+				printf("Linker file %s is empty.\n", file->source_file);
 			}else{
-				printf("0x%08X to 0x%08X is linker file %s.\n", 4 * start, 4 * end -1, file->l2_lexer_state->c.filename);
+				printf("0x%08X to 0x%08X is linker file %s.\n", 4 * start, 4 * end -1, file->source_file);
 			}
 			file->unused_words_before = sw_size;
 			next_linker_file_post_linking_offset = file->linker_file_post_linking_offset + current_linker_file_size;
 		}else{
-			printf("Impossible overlap in linker files: %s, 0x%08X goes over 0x%08X.\n", file->l2_lexer_state->c.filename, 4 * next_linker_file_post_linking_offset, 4 * file->linker_file_post_linking_offset);
+			printf("Impossible overlap in linker files: %s, 0x%08X goes over 0x%08X.\n", file->source_file, 4 * next_linker_file_post_linking_offset, 4 * file->linker_file_post_linking_offset);
 			assert(0 && "This should never happen.");
 		}
 	}
@@ -1260,11 +1276,12 @@ void do_link_to_l2(struct linker_state * state){
 					break;
 				}default:{
 					assert(0 && "Unknown type.");
+					object_type = "UNKNOWN";
 				}
 			}
 			/*  Re-name any internal symbol labels if necessary */
 			if(sym_start){
-				buffered_printf(&state->file_output, "%s %s_%p %s_%p;\n", object_type, start, sym_start, end, sym_end);
+				buffered_printf(&state->file_output, "%s %s_%u %s_%u;\n", object_type, start, sym_start->id, end, sym_end->id);
 			}else{
 				buffered_printf(&state->file_output, "%s %s %s;\n", object_type, start, end);
 			}
@@ -1289,7 +1306,7 @@ void do_link_to_l2(struct linker_state * state){
 				assert(0 && "Not expected.");
 			}
 
-			buffered_printf(&state->file_output, " INTERNAL %s_%p;\n", key, sym); /*  Make the internal symbol unique by appending the symbol pointer */
+			buffered_printf(&state->file_output, " INTERNAL %s_%u;\n", key, sym->id); /*  Make the internal symbol unique by appending the symbol pointer */
 		}
 		unsigned_char_ptr_list_destroy(&internal_symbols);
 	}
@@ -1334,9 +1351,10 @@ int do_link(struct memory_pool_collection * memory_pool_collection, struct unsig
 		struct l2_lexer_state * l2_lexer_state = (struct l2_lexer_state *)malloc(sizeof(struct l2_lexer_state));
 		struct l2_parser_state * l2_parser_state = (struct l2_parser_state *)malloc(sizeof(struct l2_parser_state));
 		struct linker_file * linker_file;
+		unsigned char * source_file = unsigned_char_ptr_list_get(state.in_files, i);
 		unsigned_char_list_create(file_input);
 		unsigned_char_list_create(&tmp);
-		add_file_to_buffer(file_input, (char*)unsigned_char_ptr_list_get(state.in_files, i));
+		add_file_to_buffer(file_input, (char*)source_file);
 
 		create_l2_lexer_state(l2_lexer_state, &state.l2_lexer_output, state.memory_pool_collection, unsigned_char_ptr_list_get(state.in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
 		lex_asm(l2_lexer_state);
@@ -1344,7 +1362,14 @@ int do_link(struct memory_pool_collection * memory_pool_collection, struct unsig
 		parse_l2(l2_parser_state);
 		printf("Linker parsed input file %d '%s'.\n", i, (char *)unsigned_char_ptr_list_get(state.in_files, i));
 
-		linker_file = create_linker_file(&state, l2_parser_state, file_input);
+		linker_file = create_linker_file(&state, l2_parser_state, source_file);
+
+		destroy_l2_parser_state(l2_parser_state);
+		free(l2_parser_state);
+		destroy_l2_lexer_state(l2_lexer_state);
+		free(l2_lexer_state);
+		unsigned_char_list_destroy(file_input);
+		free(file_input);
 
 		struct_linker_file_ptr_list_add_end(&state.linker_files, linker_file);
 		unsigned_char_list_destroy(&tmp);

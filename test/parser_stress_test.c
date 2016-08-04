@@ -41,8 +41,10 @@ enum ID_TYPE {
 	TEST_1_DECLARATOR,
 	TEST_1_STRUCT_OR_UNION_SPECIFIER,
 	TEST_1_STRUCT_DECLARATOR,
+	TEST_1_STRUCT_DECLARATOR_LIST_REST,
 	TEST_1_INIT_DECLARATOR,
 	TEST_1_PARAMETER_LIST,
+	TEST_1_PARAMETER_TYPE_LIST,
 	TEST_1_STRUCT_DECLARATION,
 	TEST_1_STRUCT_DECLARATION_LIST,
 	TEST_1_DECLARATION,
@@ -84,7 +86,13 @@ enum ID_TYPE {
 	TEST_1_DIRECT_DECLARATOR_REST,
 	TEST_1_DIRECT_DECLARATOR,
 	TEST_1_INITIALIZER_LIST_REST,
-	TEST_1_INITIALIZER
+	TEST_1_INITIALIZER,
+	TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST,
+	TEST_1_DIRECT_ABSTRACT_DECLARATOR,
+	TEST_1_LABELED_STATEMENT,
+	TEST_1_SELECTION_STATEMENT,
+	TEST_1_ITERATION_STATEMENT,
+	TEST_1_JUMP_STATEMENT
 };
 
 void test_1(struct memory_pool_collection *);
@@ -132,8 +140,8 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 	struct parser_state * p2;
 	struct parser_node * n1;
 	struct parser_node * n2;
-	unsigned int id1;
-	unsigned int id2;
+	unsigned int ids_match;
+	unsigned int nodes_not_null;
 
 	struct_parser_state_ptr_list_create(&parsers);
 	struct_c_lexer_state_ptr_list_create(&lexers);
@@ -148,15 +156,21 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 	buffered_printf(&l, "--------------------------\n");
 	switch(type){
 		case TEST_1_TYPE_SPECIFIER:{
+			struct aggregate_specifier_id id1;
+			struct aggregate_specifier_id id2;
 			n1 = type_specifier(p1, &id1);
 			n2 = type_specifier(p2, &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing type_specifier rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_all_type_specifiers(&engine, &l, id1, TYPE_ENGINE_NORMAL);
+				print_aggregate_specifiers(&engine, &l, id1, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_TYPE_QUALIFIER:{
+			struct type_qualifier_id id1;
+			struct type_qualifier_id id2;
 			n1 = type_qualifier(p1, &id1);
 			n2 = type_qualifier(p2, &id2);
 			if(n1 && n2){
@@ -164,8 +178,12 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 				print_type_qualifier(&engine, &l, id1, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_STORAGE_CLASS_SPECIFIER:{
+			struct storage_class_specifier_id id1;
+			struct storage_class_specifier_id id2;
 			n1 = storage_class_specifier(p1, &id1);
 			n2 = storage_class_specifier(p2, &id2);
 			if(n1 && n2){
@@ -173,50 +191,70 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 				print_storage_class_specifier(&engine, &l, id1, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_STRUCT_OR_UNION_SPECIFIER:{
+			struct scoped_struct_or_union_specifier_id id1;
+			struct scoped_struct_or_union_specifier_id id2;
 			n1 = struct_or_union_specifier(p1, &id1, 0/*  For testing, both have same anonymous id */);
 			n2 = struct_or_union_specifier(p2, &id2, 0/*  For testing, both have same anonymous id */);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing struct_or_union_specifier rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_scoped_struct_or_union_specifier(&engine, &l, id1, TYPE_ENGINE_NORMAL);
+				print_scoped_struct_or_union_specifier(&engine, &l, id1.id, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_DECLARATION_SPECIFIERS:{
-			n1 = declaration_specifiers(p1, get_type_engine_id_for_specifier_or_qualifier_list_begin(p1->type_engine), &id1);
-			n2 = declaration_specifiers(p2, get_type_engine_id_for_specifier_or_qualifier_list_begin(p2->type_engine), &id2);
+			struct specifier_or_qualifier_list_item_id id1;
+			struct specifier_or_qualifier_list_item_id id2;
+			n1 = declaration_specifiers(p1, specifier_or_qualifier_list_begin(p1->type_engine), &id1);
+			n2 = declaration_specifiers(p2, specifier_or_qualifier_list_begin(p2->type_engine), &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing declaration_specifiers rule with input '%s'.\nSuccessfully identified:\n", str);
 				print_specifier_or_qualifier_list(&engine, &l, id1, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_SPECIFIER_QUALIFIER_LIST:{
-			n1 = specifier_qualifier_list(p1, get_type_engine_id_for_specifier_or_qualifier_list_begin(p1->type_engine), &id1);
-			n2 = specifier_qualifier_list(p2, get_type_engine_id_for_specifier_or_qualifier_list_begin(p2->type_engine), &id2);
+			struct specifier_or_qualifier_list_item_id id1;
+			struct specifier_or_qualifier_list_item_id id2;
+			n1 = specifier_qualifier_list(p1, specifier_or_qualifier_list_begin(p1->type_engine), &id1);
+			n2 = specifier_qualifier_list(p2, specifier_or_qualifier_list_begin(p2->type_engine), &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing specifier_qualifier_list rule with input '%s'.\nSuccessfully identified:\n", str);
 				print_specifier_or_qualifier_list(&engine, &l, id1, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_TYPE_QUALIFIER_LIST:{
-			n1 = type_qualifier_list(p1, get_type_engine_id_for_specifier_or_qualifier_list_begin(p1->type_engine), &id1);
-			n2 = type_qualifier_list(p2, get_type_engine_id_for_specifier_or_qualifier_list_begin(p2->type_engine), &id2);
+			struct specifier_or_qualifier_list_item_id id1;
+			struct specifier_or_qualifier_list_item_id id2;
+			n1 = type_qualifier_list(p1, specifier_or_qualifier_list_begin(p1->type_engine), &id1);
+			n2 = type_qualifier_list(p2, specifier_or_qualifier_list_begin(p2->type_engine), &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing type_qualifier_list rule with input '%s'.\nSuccessfully identified:\n", str);
 				print_specifier_or_qualifier_list(&engine, &l, id1, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_DECLARATOR:{
+			struct declarator_part_list_item_id id1;
+			struct declarator_part_list_item_id id2;
 			struct identifier_from_declarator ifd1;
 			struct identifier_from_declarator ifd2;
 			ifd1.initialized = 0;
 			ifd2.initialized = 0;
-			n1 = declarator(p1, get_type_engine_id_for_declarator_part_list_begin(p1->type_engine), &id1, &ifd1);
-			n2 = declarator(p2, get_type_engine_id_for_declarator_part_list_begin(p2->type_engine), &id2, &ifd2);
+			n1 = declarator(p1, declarator_part_list_begin(p1->type_engine), &id1, &ifd1);
+			n2 = declarator(p2, declarator_part_list_begin(p2->type_engine), &id2, &ifd2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing declarator rule with input '%s'.\nSuccessfully identified:\n", str);
 				print_declarator_in_spiral_rule_order(&engine, &l, id1, TYPE_ENGINE_NORMAL);
@@ -224,10 +262,14 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 				print_declarator_in_visual_order(&engine, &l, id1, TYPE_ENGINE_NORMAL, 0);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_ABSTRACT_DECLARATOR:{
-			n1 = abstract_declarator(p1, get_type_engine_id_for_declarator_part_list_begin(p1->type_engine), &id1);
-			n2 = abstract_declarator(p2, get_type_engine_id_for_declarator_part_list_begin(p2->type_engine), &id2);
+			struct declarator_part_list_item_id id1;
+			struct declarator_part_list_item_id id2;
+			n1 = abstract_declarator(p1, declarator_part_list_begin(p1->type_engine), &id1);
+			n2 = abstract_declarator(p2, declarator_part_list_begin(p2->type_engine), &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing abstract_declarator rule with input '%s'.\nSuccessfully identified:\n", str);
 				print_declarator_in_spiral_rule_order(&engine, &l, id1, TYPE_ENGINE_NORMAL);
@@ -235,8 +277,12 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 				print_declarator_in_visual_order(&engine, &l, id1, TYPE_ENGINE_NORMAL, 0);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_STRUCT_DECLARATOR:{
+			struct bitfield_or_declarator_id id1;
+			struct bitfield_or_declarator_id id2;
 			struct identifier_from_declarator ifd1;
 			struct identifier_from_declarator ifd2;
 			ifd1.initialized = 0;
@@ -245,11 +291,28 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 			n2 = struct_declarator(p2, &id2, &ifd2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing struct_declarator rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_bitfield_or_declarator(&engine, &l, id1, TYPE_ENGINE_NORMAL);
+				print_bitfield_or_declarator(&engine, &l, id1.id, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
+			break;
+		}case TEST_1_STRUCT_DECLARATOR_LIST_REST:{
+			struct general_type_list_item_id id1;
+			struct general_type_list_item_id id2;
+			struct declaration_namespace * dn1 = create_declaration_namespace(&engine);
+			struct declaration_namespace * dn2 = create_declaration_namespace(&engine);
+			n1 = struct_declarator_list_rest(p1, specifier_or_qualifier_list_begin(&engine), get_general_type_list_begin(&engine), &id1, dn1);
+			n2 = struct_declarator_list_rest(p2, specifier_or_qualifier_list_begin(&engine), get_general_type_list_begin(&engine), &id2, dn2);
+			if(n1 && n2){
+				buffered_printf(&l, "Testing struct_declarator_list_rest rule with input '%s'.\nSuccessfully identified:\n", str);
+			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_INIT_DECLARATOR:{
+			struct bitfield_or_declarator_id id1;
+			struct bitfield_or_declarator_id id2;
 			struct identifier_from_declarator ifd1;
 			struct identifier_from_declarator ifd2;
 			ifd1.initialized = 0;
@@ -258,62 +321,96 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 			n2 = init_declarator(p2, &id2, &ifd2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing init_declarator rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_bitfield_or_declarator(&engine, &l, id1, TYPE_ENGINE_NORMAL);
+				print_bitfield_or_declarator(&engine, &l, id1.id, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_PARAMETER_LIST:{
+			struct general_type_list_item_id id1;
+			struct general_type_list_item_id id2;
 			n1 = parameter_list(p1, &id1);
 			n2 = parameter_list(p2, &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing parameter_list rule with input '%s'.\nSuccessfully identified:\n", str);
 				buffered_printf(&l, "(");
-				print_general_type_list(&engine, (unsigned char *)", ", &l, id1, TYPE_ENGINE_NORMAL, 0);
+				print_general_type_list(&engine, (unsigned char *)", ", &l, id1.id, TYPE_ENGINE_NORMAL, 0);
 				buffered_printf(&l, ")\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
+			break;
+		}case TEST_1_PARAMETER_TYPE_LIST:{
+			n1 = parameter_type_list(p1);
+			n2 = parameter_type_list(p2);
+			if(n1 && n2){
+				buffered_printf(&l, "Testing parameter type list rule with input '%s'.\nSuccessfully identified:\n", str);
+			}
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_STRUCT_DECLARATION:{
-			n1 = struct_declaration(p1, get_type_engine_id_for_general_type_list_begin(&engine), &id1, create_declaration_namespace(&engine));
-			n2 = struct_declaration(p2, get_type_engine_id_for_general_type_list_begin(&engine), &id2, create_declaration_namespace(&engine));
+			struct general_type_list_item_id id1;
+			struct general_type_list_item_id id2;
+			n1 = struct_declaration(p1, get_general_type_list_begin(&engine), &id1, create_declaration_namespace(&engine));
+			n2 = struct_declaration(p2, get_general_type_list_begin(&engine), &id2, create_declaration_namespace(&engine));
 			if(n1 && n2){
 				buffered_printf(&l, "Testing struct_declaration rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1, TYPE_ENGINE_NORMAL, 0);
+				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1.id, TYPE_ENGINE_NORMAL, 0);
 				buffered_printf(&l, ";\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_STRUCT_DECLARATION_LIST:{
-			n1 = struct_declaration_list(p1, get_type_engine_id_for_general_type_list_begin(&engine), &id1, create_declaration_namespace(&engine));
-			n2 = struct_declaration_list(p2, get_type_engine_id_for_general_type_list_begin(&engine), &id2, create_declaration_namespace(&engine));
+			struct general_type_list_item_id id1;
+			struct general_type_list_item_id id2;
+			n1 = struct_declaration_list(p1, get_general_type_list_begin(&engine), &id1, create_declaration_namespace(&engine));
+			n2 = struct_declaration_list(p2, get_general_type_list_begin(&engine), &id2, create_declaration_namespace(&engine));
 			if(n1 && n2){
 				buffered_printf(&l, "Testing struct_declaration_list rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1, TYPE_ENGINE_NORMAL, 0);
+				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1.id, TYPE_ENGINE_NORMAL, 0);
 				buffered_printf(&l, ";\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_DECLARATION:{
-			n1 = declaration(p1, get_type_engine_id_for_general_type_list_begin(&engine), &id1);
-			n2 = declaration(p2, get_type_engine_id_for_general_type_list_begin(&engine), &id2);
+			struct general_type_list_item_id id1;
+			struct general_type_list_item_id id2;
+			n1 = declaration(p1, get_general_type_list_begin(&engine), &id1);
+			n2 = declaration(p2, get_general_type_list_begin(&engine), &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing declaration rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1, TYPE_ENGINE_NORMAL, 0);
+				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1.id, TYPE_ENGINE_NORMAL, 0);
 				buffered_printf(&l, ";\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_DECLARATION_LIST:{
-			n1 = declaration_list(p1, (struct namespace_object *)0, get_type_engine_id_for_general_type_list_begin(&engine), &id1);
-			n2 = declaration_list(p2, (struct namespace_object *)0, get_type_engine_id_for_general_type_list_begin(&engine), &id2);
+			struct general_type_list_item_id id1;
+			struct general_type_list_item_id id2;
+			n1 = declaration_list(p1, (struct namespace_object *)0, get_general_type_list_begin(&engine), &id1);
+			n2 = declaration_list(p2, (struct namespace_object *)0, get_general_type_list_begin(&engine), &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing declaration_list rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1, TYPE_ENGINE_NORMAL, 0);
+				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1.id, TYPE_ENGINE_NORMAL, 0);
 				buffered_printf(&l, ";\n");
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_IDENTIFIER:{
+			struct identifier_id id1;
+			struct identifier_id id2;
 			n1 = get_identifier_node(p1, &id1);
 			n2 = get_identifier_node(p2, &id2);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing identifier rule with input '%s'.\nSuccessfully identified.\n", str);
 			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_PRIMARY_EXPRESSION:{
 			primary_expression(p1);
@@ -491,23 +588,23 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 			buffered_printf(&l, "Testing enum_specifier rule with input '%s'.\n", str);
 			break;
 		}case TEST_1_DIRECT_DECLARATOR_REST:{
-			unsigned int list_id1;
-			unsigned int list_id2;
+			struct declarator_part_list_item_id id1;
+			struct declarator_part_list_item_id id2;
 			struct identifier_from_declarator ifd1;
 			struct identifier_from_declarator ifd2;
-			direct_declarator_rest(p1, get_type_engine_id_for_declarator_part_list_begin(&engine), &list_id1, &ifd1);
-			direct_declarator_rest(p2, get_type_engine_id_for_declarator_part_list_begin(&engine), &list_id2, &ifd2);
+			direct_declarator_rest(p1, declarator_part_list_begin(&engine), &id1, &ifd1);
+			direct_declarator_rest(p2, declarator_part_list_begin(&engine), &id2, &ifd2);
 			buffered_printf(&l, "Testing direct_declarator_rest rule with input '%s'.\n", str);
 			break;
 		}case TEST_1_DIRECT_DECLARATOR:{
-			unsigned int list_id1;
-			unsigned int list_id2;
+			struct declarator_part_list_item_id id1;
+			struct declarator_part_list_item_id id2;
 			struct identifier_from_declarator ifd1;
 			struct identifier_from_declarator ifd2;
 			ifd1.initialized = 0;
 			ifd2.initialized = 0;
-			direct_declarator(p1, get_type_engine_id_for_declarator_part_list_begin(&engine), &list_id1, &ifd1);
-			direct_declarator(p2, get_type_engine_id_for_declarator_part_list_begin(&engine), &list_id2, &ifd2);
+			direct_declarator(p1, declarator_part_list_begin(&engine), &id1, &ifd1);
+			direct_declarator(p2, declarator_part_list_begin(&engine), &id2, &ifd2);
 			buffered_printf(&l, "Testing direct_declarator rule with input '%s'.\n", str);
 			break;
 		}case TEST_1_INITIALIZER_LIST_REST:{
@@ -520,14 +617,47 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 			initializer(p2);
 			buffered_printf(&l, "Testing initializer rule with input '%s'.\n", str);
 			break;
+		}case TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST:{
+			struct declarator_part_list_item_id id1;
+			struct declarator_part_list_item_id id2;
+			direct_abstract_declarator_rest(p1, declarator_part_list_begin(&engine), &id1);
+			direct_abstract_declarator_rest(p2, declarator_part_list_begin(&engine), &id2);
+			buffered_printf(&l, "Testing direct_abstract_declarator_rest rule with input '%s'.\n", str);
+			break;
+		}case TEST_1_DIRECT_ABSTRACT_DECLARATOR:{
+			struct declarator_part_list_item_id id1;
+			struct declarator_part_list_item_id id2;
+			direct_abstract_declarator(p1, declarator_part_list_begin(&engine), &id1);
+			direct_abstract_declarator(p2, declarator_part_list_begin(&engine), &id2);
+			buffered_printf(&l, "Testing direct_abstract_declarator rule with input '%s'.\n", str);
+			break;
+		}case TEST_1_LABELED_STATEMENT:{
+			labeled_statement(p1);
+			labeled_statement(p2);
+			buffered_printf(&l, "Testing labeled_statement rule with input '%s'.\n", str);
+			break;
+		}case TEST_1_SELECTION_STATEMENT:{
+			selection_statement(p1);
+			selection_statement(p2);
+			buffered_printf(&l, "Testing selection_statement rule with input '%s'.\n", str);
+			break;
+		}case TEST_1_ITERATION_STATEMENT:{
+			iteration_statement(p1);
+			iteration_statement(p2);
+			buffered_printf(&l, "Testing iteration_statement rule with input '%s'.\n", str);
+			break;
+		}case TEST_1_JUMP_STATEMENT:{
+			jump_statement(p1);
+			jump_statement(p2);
+			buffered_printf(&l, "Testing jump_statement rule with input '%s'.\n", str);
+			break;
 		}default:{
 			assert(0 && "Not considered.");
 		}
 	}
 
 	if(COMPARE_TYPES & checks){
-		assert(id1 == id2);
-		assert(n1 && n2);
+		assert(ids_match && nodes_not_null);
 	}
 
 	if(ERROR_CHECK & checks){
@@ -795,6 +925,85 @@ void test_1(struct memory_pool_collection * m){
 
 	test_parser_error("{f ", m, TEST_1_INITIALIZER, PARSER_ERROR_INITIALIZER_MISSING_COMMA_OR_CLOSE_BRACE);
 	test_parser_error("{}", m, TEST_1_INITIALIZER, PARSER_ERROR_INITIALIZER_MISSING_INITIALIZER_LIST);
+
+	test_parser_error("a:", m, TEST_1_STRUCT_DECLARATOR, PARSER_ERROR_STRUCT_DECLARATOR_MISSING_CONSTANT_AFTER_DECLARATOR);
+	test_parser_error(":", m, TEST_1_STRUCT_DECLARATOR, PARSER_ERROR_STRUCT_DECLARATOR_MISSING_CONSTANT_NO_DECLARATOR);
+
+	test_parser_error(", ) ", m, TEST_1_STRUCT_DECLARATOR_LIST_REST, PARSER_ERROR_STRUCT_DECLARATOR_LIST_REST_MISSING_STRUCT_DECLARATOR);
+	test_parser_error(", a , ) ", m, TEST_1_STRUCT_DECLARATOR_LIST_REST, PARSER_ERROR_STRUCT_DECLARATOR_LIST_REST_MISSING_REST);
+
+	test_parser_error("int, double, ", m, TEST_1_PARAMETER_TYPE_LIST, PARSER_ERROR_PARAMETER_TYPE_LIST_MISSING_ELLIPSIS);
+
+	test_parser_error("struct { }", m, TEST_1_STRUCT_OR_UNION_SPECIFIER, PARSER_ERROR_STRUCT_OR_UNION_SPECIFIER_MISSING_STRUCT_DECLARATION_LIST);
+	test_parser_error("struct { int i; ", m, TEST_1_STRUCT_OR_UNION_SPECIFIER, PARSER_ERROR_STRUCT_OR_UNION_SPECIFIER_MISSING_CLOSE_BRACE);
+
+
+
+	test_parser_error("()(", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_REST_MISSING_REST_AFTER_CLOSE_NO_PARAM);
+	test_parser_error("(int)(", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_REST_MISSING_REST_AFTER_CLOSE_WITH_PARAM);
+	test_parser_error("(int ", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_REST_MISSING_CLOSE_PAREN_AFTER_PARAMS);
+	test_parser_error("[](", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_REST_MISSING_REST_AFTER_CLOSE_NO_SIZE);
+	test_parser_error("[3](", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_REST_MISSING_REST_AFTER_CLOSE_SIZED);
+	test_parser_error("[3 ", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_REST_MISSING_CLOSE_BRACKET_AFTER_SIZED);
+	test_parser_error("[ ", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR_REST, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_REST_MISSING_CLOSE_BRACKET_OR_CONSTANT);
+	test_parser_error("()( ", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_REST_AFTER_CLOSE_NO_PARAM);
+	test_parser_error("(int)( ", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_REST_AFTER_CLOSE_WITH_PARAM);
+	test_parser_error("(int ", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_CLOSE_PAREN_AFTER_PARAMS);
+	test_parser_error("(*)( ", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_REST_AFTER_ABSTRACT_DECLARATOR);
+	test_parser_error("(* ", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_CLOSE_PAREN_AFTER_ABSTRACT_DECLARATOR);
+	test_parser_error("[](", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_REST_AFTER_CLOSE_NO_SIZE);
+	test_parser_error("[3](", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_REST_AFTER_CLOSE_SIZED);
+	test_parser_error("[3", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_CLOSE_BRACKET_AFTER_SIZED);
+	test_parser_error("[", m, TEST_1_DIRECT_ABSTRACT_DECLARATOR, PARSER_ERROR_DIRECT_ABSTRACT_DECLARATOR_MISSING_CLOSE_BRACKET_OR_CONSTANT);
+
+
+	test_parser_error("asdf: ", m, TEST_1_LABELED_STATEMENT, PARSER_ERROR_LABELED_STATEMENT_MISSING_STATEMENT_AFTER_LABEL);
+	test_parser_error("case 3: ", m, TEST_1_LABELED_STATEMENT, PARSER_ERROR_LABELED_STATEMENT_MISSING_STATEMENT_AFTER_CASE);
+	test_parser_error("case 3 ", m, TEST_1_LABELED_STATEMENT, PARSER_ERROR_LABELED_STATEMENT_MISSING_COLON_AFTER_CASE);
+	test_parser_error("case  ", m, TEST_1_LABELED_STATEMENT, PARSER_ERROR_LABELED_STATEMENT_MISSING_CONSTANT_AFTER_CASE);
+	test_parser_error("default: ", m, TEST_1_LABELED_STATEMENT, PARSER_ERROR_LABELED_STATEMENT_MISSING_STATEMENT_AFTER_DEFAULT);
+	test_parser_error("default ", m, TEST_1_LABELED_STATEMENT, PARSER_ERROR_LABELED_STATEMENT_MISSING_COLON_AFTER_DEFAULT);
+
+	test_parser_error("if(1) a; else ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_STATEMENT_AFTER_ELSE);
+	test_parser_error("if(1) else ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_STATEMENT_AFTER_IF);
+	test_parser_error("if(1 else ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_CLOSE_PAREN_AFTER_IF);
+	test_parser_error("if() else ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_EXPRESSION_AFTER_IF);
+	test_parser_error("if) else ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_OPEN_PAREN_AFTER_IF);
+	test_parser_error("switch (2)  ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_STATEMENT_AFTER_SWITCH);
+	test_parser_error("switch (2  ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_CLOSE_PAREN_AFTER_SWITCH);
+	test_parser_error("switch ()  ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_EXPRESSION_AFTER_SWITCH);
+	test_parser_error("switch )  ", m, TEST_1_SELECTION_STATEMENT, PARSER_ERROR_SELECTION_STATEMENT_MISSING_OPEN_PAREN_AFTER_SWITCH);
+
+
+	test_parser_error("while(1) ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_STATEMENT_AFTER_WHILE_CLOSE_PAREN);
+	test_parser_error("while(1 ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_CLOSE_PAREN_AFTER_WHILE);
+	test_parser_error("while() ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_EXPRESSION_AFTER_WHILE);
+	test_parser_error("while )", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_OPEN_PAREN_AFTER_WHILE);
+	test_parser_error("do i++; while (i) ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_SEMICOLON_AFTER_DO_WHILE);
+	test_parser_error("do i++; while (i ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_CLOSE_PAREN_AFTER_DO_WHILE);
+	test_parser_error("do i++; while ( ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_EXPRESSION_AFTER_DO_WHILE);
+	test_parser_error("do i++; while ) ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_OPEN_PAREN_AFTER_DO_WHILE);
+	test_parser_error("do i++; ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_WHILE_AFTER_DO_WHILE);
+	test_parser_error("do  ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_STATEMENT_AFTER_DO_WHILE);
+	test_parser_error("for(;;) ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_STATEMENT_AFTER_SMALL_FOR);
+	test_parser_error("for(i=0;i<a;i++) ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_STATEMENT_AFTER_BIG_FOR);
+	test_parser_error("for(i=0;i<a;i++ ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_CLOSE_PAREN_AFTER_FOR);
+	test_parser_error("for(i=0;i<a; ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_EXPRESSION_OR_CLOSE_PAREN_AFTER_FOR);
+	test_parser_error("for(i=0;: ", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_EXPRESSION_STATEMENT_2_AFTER_FOR);
+	test_parser_error("for(:", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_EXPRESSION_STATEMENT_1_AFTER_FOR);
+	test_parser_error("for)", m, TEST_1_ITERATION_STATEMENT, PARSER_ERROR_ITERATION_STATEMENT_MISSING_OPEN_PAREN_AFTER_FOR);
+	test_parser_error("goto a ", m, TEST_1_JUMP_STATEMENT, PARSER_ERROR_JUMP_STATEMENT_MISSING_SEMICOLON_AFTER_GOTO);
+	test_parser_error("goto ;", m, TEST_1_JUMP_STATEMENT, PARSER_ERROR_JUMP_STATEMENT_MISSING_IDENTIFIER_AFTER_GOTO);
+	test_parser_error("continue ", m, TEST_1_JUMP_STATEMENT, PARSER_ERROR_JUMP_STATEMENT_MISSING_SEMICOLON_AFTER_CONTINUE);
+	test_parser_error("break ", m, TEST_1_JUMP_STATEMENT, PARSER_ERROR_JUMP_STATEMENT_MISSING_SEMICOLON_AFTER_BREAK);
+	test_parser_error("return abc ", m, TEST_1_JUMP_STATEMENT, PARSER_ERROR_JUMP_STATEMENT_MISSING_SEMICOLON_AFTER_RETURN);
+	test_parser_error("return ", m, TEST_1_JUMP_STATEMENT, PARSER_ERROR_JUMP_STATEMENT_MISSING_SEMICOLON_AND_EXPRESSION_AFTER_RETURN);
+
+
+
+
+
+	
 }
 
 int main(void){

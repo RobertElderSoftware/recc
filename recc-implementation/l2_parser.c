@@ -123,6 +123,7 @@ struct l2_parser_node * offset_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_OFFSET_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber or relocatable.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -137,6 +138,7 @@ struct l2_parser_node * skip_words_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_SKIP_WORDS_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -153,6 +155,7 @@ struct l2_parser_node * define_word_directive(struct l2_parser_state * state){
                         return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_DEFINE_WORD_DIRECTIVE);
                 }else{
                         assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
                 }
         }else{
                 return (struct l2_parser_node *)0;
@@ -167,6 +170,7 @@ struct l2_parser_node * linkage_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_LINKAGE_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -181,6 +185,7 @@ struct l2_parser_node * string_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_STRING_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -195,6 +200,7 @@ struct l2_parser_node * implemented_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_IMPLEMENTED_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -209,6 +215,7 @@ struct l2_parser_node * required_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_REQUIRED_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -223,6 +230,7 @@ struct l2_parser_node * unresolved_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_UNRESOLVED_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -237,6 +245,7 @@ struct l2_parser_node * region_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_REGION_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -251,6 +260,7 @@ struct l2_parser_node * start_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_START_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -265,6 +275,7 @@ struct l2_parser_node * end_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_END_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -279,6 +290,7 @@ struct l2_parser_node * permission_directive(struct l2_parser_state * state){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_PERMISSION_DIRECTIVE);
 		}else{
 			assert(0 && "Expected hexnumber.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -318,11 +330,13 @@ struct l2_parser_node * function_directive(struct l2_parser_state * state){
 				return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_FUNCTION_DIRECTIVE);
 			}else{
 				assert(0 && "Expected identifier.");
+				return (struct l2_parser_node *)0;
 			}
 		}else if((n->next = l2_accept(L2_CONSTANT_HEX, state))){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_FUNCTION_DIRECTIVE);
 		}else{
 			assert(0 && "Expected identifier or hex constant.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -338,11 +352,13 @@ struct l2_parser_node * variable_directive(struct l2_parser_state * state){
 				return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_VARIABLE_DIRECTIVE);
 			}else{
 				assert(0 && "Expected identifier.");
+				return (struct l2_parser_node *)0;
 			}
 		}else if((n->next = l2_accept(L2_CONSTANT_HEX, state))){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_VARIABLE_DIRECTIVE);
 		}else{
 			assert(0 && "Expected identifier or hex constant.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -358,11 +374,13 @@ struct l2_parser_node * constant_directive(struct l2_parser_state * state){
 				return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_CONSTANT_DIRECTIVE);
 			}else{
 				assert(0 && "Expected identifier.");
+				return (struct l2_parser_node *)0;
 			}
 		}else if((n->next = l2_accept(L2_CONSTANT_HEX, state))){
 			return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_CONSTANT_DIRECTIVE);
 		}else{
 			assert(0 && "Expected identifier or hex constant.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -378,6 +396,7 @@ struct l2_parser_node * symbol_linkage_declaration(struct l2_parser_state * stat
 				return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_SYMBOL_LINKAGE_DECLARATION);
 			}else{
 				assert(0 && "Expected identifier.");
+				return (struct l2_parser_node *)0;
 			}
 		}else if((n->next = l2_accept(L2_COMMA_CHAR, state))){
 			if((n->next->next = interface_specifier(state))){
@@ -386,15 +405,19 @@ struct l2_parser_node * symbol_linkage_declaration(struct l2_parser_state * stat
 						return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_SYMBOL_LINKAGE_DECLARATION);
 					}else{
 						assert(0 && "Expected identifier.");
+						return (struct l2_parser_node *)0;
 					}
 				}else{
 					assert(0 && "Expected linkage domain.");
+					return (struct l2_parser_node *)0;
 				}
 			}else{
 				assert(0 && "Expected interface specifier.");
+				return (struct l2_parser_node *)0;
 			}
 		}else{
 			assert(0 && "Expected comma or linkage domain.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -455,6 +478,7 @@ struct l2_parser_node * branch_distance(struct l2_parser_state * state){
 		}else{
 			printf("Parser could not continue on line %d of file %s\n", state->line_number, state->l2_lexer_state->c.filename);
 			assert(0 && "Expected constant decimal.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -471,12 +495,15 @@ struct l2_parser_node * instruction_statement(struct l2_parser_state * state){
 					return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_INSTRUCTION_STATEMENT);
 				}else{
 					assert(0 && "Expected register.");
+					return (struct l2_parser_node *)0;
 				}
 			}else{
 				assert(0 && "Expected register.");
+				return (struct l2_parser_node *)0;
 			}
 		}else{
 			assert(0 && "Expected register.");
+			return (struct l2_parser_node *)0;
 		}
 	}else if((n = l2_accept(L2_NOT, state)) || (n = l2_accept(L2_LOA, state)) || (n = l2_accept(L2_STO, state)) || (n = l2_accept(L2_SHR, state)) || (n = l2_accept(L2_SHL, state))){
 		if((n->next = l2_accept(L2_REGISTER, state))){
@@ -484,9 +511,11 @@ struct l2_parser_node * instruction_statement(struct l2_parser_state * state){
 				return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_INSTRUCTION_STATEMENT);
 			}else{
 				assert(0 && "Expected register.");
+				return (struct l2_parser_node *)0;
 			}
 		}else{
 			assert(0 && "Expected register.");
+			return (struct l2_parser_node *)0;
 		}
 	}else if((n = l2_accept(L2_BEQ, state)) || (n = l2_accept(L2_BLT, state))){
 		if((n->next = l2_accept(L2_REGISTER, state))){
@@ -499,9 +528,11 @@ struct l2_parser_node * instruction_statement(struct l2_parser_state * state){
 				}
 			}else{
 				assert(0 && "Expected register.");
+				return (struct l2_parser_node *)0;
 			}
 		}else{
 			assert(0 && "Expected register.");
+			return (struct l2_parser_node *)0;
 		}
 	}else if((n = l2_accept(L2_LL, state))){
 		if((n->next = l2_accept(L2_REGISTER, state))){
@@ -509,9 +540,11 @@ struct l2_parser_node * instruction_statement(struct l2_parser_state * state){
 				return create_l2_parser_node(state, (struct l2_parser_node *)0, n, (struct l2_lexer_token *)0, L2_INSTRUCTION_STATEMENT);
 			}else{
 				assert(0 && "Expected constant hex.");
+				return (struct l2_parser_node *)0;
 			}
 		}else{
 			assert(0 && "Expected register.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;
@@ -527,6 +560,7 @@ struct l2_parser_node * label_statement(struct l2_parser_state * state){
 		}else{
 			printf("Parser could not continue on line %d of file %s\n", state->line_number, state->l2_lexer_state->c.filename);
 			assert(0 && "Expected colon.");
+			return (struct l2_parser_node *)0;
 		}
 	}else{
 		return (struct l2_parser_node *)0;

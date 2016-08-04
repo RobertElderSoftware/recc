@@ -16,15 +16,6 @@
 
 #include "compiler_interface_phase_3.h"
 
-unsigned int make_target(struct build_state *, struct entity*);
-unsigned char * get_parent_symbol_file(struct build_state *, struct entity *);
-struct entity * make_new_entity(unsigned char *);
-
-/*  Include C code instead of linking object files, because code will change due to different previous header definition. */
-#include "compiler_interface_common.c"
-#include "compiler_interface_header_targets.c"
-#include "compiler_interface_c_compiler_targets.c"
-
 
 unsigned char * get_parent_symbol_file(struct build_state * state, struct entity * target){
 	struct unsigned_char_ptr_list parent_keys = get_entity_name_list_for_relationship(state, target, RELATION_TYPE_IS_DEPENDED_ON_AT_BUILD_TIME_BY);
@@ -49,8 +40,8 @@ unsigned int make_target(struct build_state * state, struct entity * target){
 
 struct build_state * create_build_state(void){
 	struct build_state * state = (struct build_state *)malloc(sizeof(struct build_state));
-	unsigned_char_ptr_to_struct_entity_ptr_map_create(&state->targets, unsigned_char_ptr_to_struct_entity_ptr_key_value_pair_compare);
-	struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_map_create(&state->relationships, struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_entity_ptr_map_create(&state->targets, struct_unsigned_char_ptr_to_struct_entity_ptr_key_value_pair_compare);
+	struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_map_create(&state->relationships, struct_struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_key_value_pair_compare);
 	state->memory_pool_collection = (struct memory_pool_collection*)malloc(sizeof(struct memory_pool_collection));
 	memory_pool_collection_create(state->memory_pool_collection);
 	return state;

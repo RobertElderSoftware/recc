@@ -14,7 +14,7 @@
     under the License.
 */
 
-unsigned int make_c_compiler_target(struct build_state *, struct entity *);
+#include "compiler_interface_c_compiler_targets.h"
 
 unsigned int make_c_compiler_target(struct build_state * state, struct entity * target){
 	struct unsigned_char_ptr_list child_keys = get_entity_name_list_for_relationship(state, target, RELATION_TYPE_DEPENDS_ON_AT_BUILD_TIME);
@@ -70,11 +70,13 @@ unsigned int make_c_compiler_target(struct build_state * state, struct entity * 
 				variable_name = unsigned_char_ptr_to_unsigned_char_ptr_map_get(&target->attributes, (unsigned char *)"variable_name");
 			}else{
 				assert("Missing variable name attribute" && 0);
+				variable_name = (unsigned char *)"uninitialized";
 			}
 			if(unsigned_char_ptr_to_unsigned_char_ptr_map_exists(&target->attributes, (unsigned char *)"language")){
 				language = unsigned_char_ptr_to_unsigned_char_ptr_map_get(&target->attributes, (unsigned char *)"language");
 			}else{
 				assert("Missing language attribute" && 0);
+				language = (unsigned char *)"uninitialized";
 			}
 			printf("Build process creating L0 file '%s' from l1 file '%s'.\n", target->name, unsigned_char_ptr_list_get(&child_keys,0));
 			l0_generator_state = l0_generator_state_create(state->memory_pool_collection, variable_name, unsigned_char_ptr_list_get(&child_keys,0), target->name, language);

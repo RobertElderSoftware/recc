@@ -217,6 +217,7 @@ struct compile_time_constant * evaluate_constant_primary_expression(struct code_
 		return evaluate_constant_identifier(state, n->first_child);
 	}else{
 		assert(0);
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -226,6 +227,7 @@ struct compile_time_constant * evaluate_constant_postfix_expression(struct code_
 		return evaluate_constant_primary_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_postfix_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -237,6 +239,7 @@ struct compile_time_constant * evaluate_constant_unary_expression(struct code_ge
 		return evaluate_constant_sizeof_type_name(state, n->first_child->next->next);
 	}else{
 		assert(0 && "Not currently supporting constant_unary_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -246,6 +249,7 @@ struct compile_time_constant * evaluate_constant_cast_expression(struct code_gen
 		return evaluate_constant_unary_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_unary_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -255,6 +259,7 @@ struct compile_time_constant * evaluate_constant_multiplicative_expression(struc
 		assert(n->first_child->next->first_child->type == EPSILON);
 		return evaluate_constant_cast_expression(state, n->first_child);
 	}else{
+		return (struct compile_time_constant *)0;
 		assert(0 && "Not currently supporting constant_multiplicative_expression");
 	}
 }
@@ -266,6 +271,7 @@ struct compile_time_constant * evaluate_constant_additive_expression(struct code
 		return evaluate_constant_multiplicative_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_additive_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -276,6 +282,7 @@ struct compile_time_constant * evaluate_constant_shift_expression(struct code_ge
 		return evaluate_constant_additive_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_shift_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -286,6 +293,7 @@ struct compile_time_constant * evaluate_constant_relational_expression(struct co
 		return evaluate_constant_shift_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_relational_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -296,6 +304,7 @@ struct compile_time_constant * evaluate_constant_equality_expression(struct code
 		return evaluate_constant_relational_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_relational_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -306,6 +315,7 @@ struct compile_time_constant * evaluate_constant_and_expression(struct code_gen_
 		return evaluate_constant_equality_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_and_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -316,6 +326,7 @@ struct compile_time_constant * evaluate_constant_exclusive_or_expression(struct 
 		return evaluate_constant_and_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_exclusive_or_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -326,6 +337,7 @@ struct compile_time_constant * evaluate_constant_inclusive_or_expression(struct 
 		return evaluate_constant_exclusive_or_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_inclusive_or_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -336,6 +348,7 @@ struct compile_time_constant * evaluate_constant_logical_and_expression(struct c
 		return evaluate_constant_inclusive_or_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_logical_and_expression");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -346,6 +359,7 @@ struct compile_time_constant * evaluate_constant_logical_or_expression(struct co
 		return evaluate_constant_logical_and_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant_logical_or_expression.");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -355,6 +369,7 @@ struct compile_time_constant * evaluate_constant_conditional_expression(struct c
 		return evaluate_constant_logical_or_expression(state, n->first_child);
 	}else{
 		assert(0 && "Not currently supporting constant conditional expressions.");
+		return (struct compile_time_constant *)0;
 	}
 }
 
@@ -798,7 +813,7 @@ unsigned int struct_type_size(struct code_gen_state * state, struct type_descrip
 	/*  Uses tsc instead of t->value type in case we want to see how big an lvalu's rvalue is */
 	struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(t.t->specifiers);
 	struct c_lexer_token * token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
-	unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte, state->memory_pool_collection) : make_up_identifier(t.t->source_element, state->memory_pool_collection);
+	unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte, state->memory_pool_collection) : make_up_identifier(state->parser_state, t.t->source_element, state->memory_pool_collection);
 	unsigned int num_children;
 	struct namespace_object * obj;
 	struct normalized_declaration_element * element;
@@ -890,7 +905,7 @@ struct type_traversal * construct_type_traversal(struct code_gen_state * state, 
 		}case TYPE_CLASS_STRUCT:{
 			struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(t.t->specifiers);
 			struct c_lexer_token * token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
-			unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte, state->memory_pool_collection) : make_up_identifier(t.t->source_element, state->memory_pool_collection);
+			unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte, state->memory_pool_collection) : make_up_identifier(state->parser_state, t.t->source_element, state->memory_pool_collection);
 			unsigned int num_children;
 			struct namespace_object * obj;
 			struct normalized_declaration_element * element;
@@ -952,7 +967,7 @@ void process_global_type(struct code_gen_state * state, struct struct_compile_ti
 		if(c && c->constant_description && c->constant_description->type == STRING_LITERAL){
 			/*  If it is a string literal, we don't know the addr, use the label */
 			struct memory_pool_collection * m = state->memory_pool_collection;
-			unsigned char * string_literal_identifier_str = create_formatted_string(m, 20, "_%psl", (void *)c->constant_description->native_data);
+			unsigned char * string_literal_identifier_str = create_formatted_string(m, 20, "_%usl", c->constant_description->id);
 			assert(!bytes_buffered); /*  Complicated alignment case with char before pointer in struct */
 			buffered_printf(state->buffered_output, "DW %s;\n", string_literal_identifier_str);
 			heap_memory_pool_free(state->memory_pool_collection->heap_pool, string_literal_identifier_str);
@@ -1376,7 +1391,7 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * state)
 		}else if(is_terminal_c_token_type(first_child(p), STRING_LITERAL)){
 			unsigned char * constant = copy_string(first_child(p)->c_lexer_token->first_byte, first_child(p)->c_lexer_token->last_byte, m);
 			struct constant_description * description = find_constant(parser_state, constant);
-			unsigned char * string_literal_identifier_str = create_formatted_string(m, 20, "_%psl", (void *)description->native_data);
+			unsigned char * string_literal_identifier_str = create_formatted_string(m, 20, "_%usl", description->id);
 			assert(description);
 			buffered_puts(state->buffered_output,"; onto top of stack\n");
 			buffered_puts(state->buffered_output,"sub SP SP WR;\n");
@@ -1689,7 +1704,7 @@ void do_struct_dereference_operator(struct code_gen_state * state, unsigned char
 		assert(0);
 	}
 	struct_tag_token = get_struct_or_union_or_enum_tag_token(struct_or_union_or_enum_specifier);
-	struct_tag_identifier = struct_tag_token ? copy_string(struct_tag_token->first_byte, struct_tag_token->last_byte, state->memory_pool_collection) : make_up_identifier(t.t->source_element, state->memory_pool_collection);
+	struct_tag_identifier = struct_tag_token ? copy_string(struct_tag_token->first_byte, struct_tag_token->last_byte, state->memory_pool_collection) : make_up_identifier(state->parser_state, t.t->source_element, state->memory_pool_collection);
 
 	obj = get_namespace_object_from_closest_namespace(struct_tag_identifier, TAG_NAMESPACE, t.t->source_scope_level, 1, state->memory_pool_collection);
 	if(!obj){
@@ -3038,17 +3053,17 @@ struct namespace_object * get_current_function(struct code_gen_state * state){
 
 void update_scope_for_current_parser_node(struct code_gen_state * state, struct parser_node * n){
 	/*  If there is a scope level associated with this parser node... */
-	if(struct_parser_node_ptr_to_unsigned_int_map_exists(&state->parser_state->type_engine->parser_node_scope_associations, n)){
-		unsigned int scope_id = struct_parser_node_ptr_to_unsigned_int_map_get(&state->parser_state->type_engine->parser_node_scope_associations, n);
-		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->type_engine->scope_levels, scope_id);
+	if(struct_parser_node_ptr_to_struct_scope_level_id_map_exists(&state->parser_state->type_engine->parser_node_scope_associations, n)){
+		struct scope_level_id scope_id = struct_parser_node_ptr_to_struct_scope_level_id_map_get(&state->parser_state->type_engine->parser_node_scope_associations, n);
+		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->type_engine->scope_levels, scope_id.id);
 	}
 }
 
 void exit_scope_for_current_parser_node(struct code_gen_state * state, struct parser_node * n){
-	if(struct_parser_node_ptr_to_unsigned_int_map_exists(&state->parser_state->type_engine->parser_node_scope_associations, n)){
-		unsigned int scope_id = struct_parser_node_ptr_to_unsigned_int_map_get(&state->parser_state->type_engine->parser_node_scope_associations, n);
+	if(struct_parser_node_ptr_to_struct_scope_level_id_map_exists(&state->parser_state->type_engine->parser_node_scope_associations, n)){
+		struct scope_level_id scope_id = struct_parser_node_ptr_to_struct_scope_level_id_map_get(&state->parser_state->type_engine->parser_node_scope_associations, n);
 		clear_locals_from_scope(state, state->current_scope);
-		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->type_engine->scope_levels, scope_id)->parent_scope;
+		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->type_engine->scope_levels, scope_id.id)->parent_scope;
 	}
 }
 
@@ -4848,8 +4863,8 @@ void g_translation_unit(struct parser_node * p, struct code_gen_state * state){
 		for(i = 0; i < num_string_literals; i++){
 			struct constant_description * description = struct_constant_description_ptr_list_get(&string_literals, i);
 			unsigned int j;
-			unsigned char * string_literal_identifier_str = create_formatted_string(state->memory_pool_collection, 20, "_%psl", description->native_data);
-			unsigned char * end = create_formatted_string(state->memory_pool_collection, 20, "_end_%psl", description->native_data);
+			unsigned char * string_literal_identifier_str = create_formatted_string(state->memory_pool_collection, 20, "_%usl", description->id);
+			unsigned char * end = create_formatted_string(state->memory_pool_collection, 20, "_end_%usl", description->id);
 			unsigned int * c = (unsigned int *)description->native_data;
 			buffered_printf(state->buffered_output,"%s:\n", string_literal_identifier_str);
 			assert(description->size_in_bytes % sizeof(unsigned int) == 0);
@@ -4947,7 +4962,7 @@ void create_code_gen_state(struct code_gen_state * state, struct parser_state * 
 	struct_constant_description_ptr_list_create(&state->created_constant_descriptions);
 	struct_compile_time_constant_ptr_list_create(&state->created_compile_time_constants);
 	void_ptr_list_create(&state->created_data);
-	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&state->symbols, unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_create(&state->symbols, struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare);
 	struct_linker_object_ptr_list_create(&state->object_declarations);
 }
 

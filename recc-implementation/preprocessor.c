@@ -186,7 +186,7 @@ void process_define_directive(struct preprocessor_state * state, struct struct_c
 	unsigned char * macro_identifier;
 	const char * va_arg_str = "__VA_ARGS__";
 	struct_c_lexer_token_ptr_list_create(&processed_tokens);
-	unsigned_char_ptr_to_struct_macro_parameter_ptr_map_create(&new_macro_definition->function_macro_parameters, unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_macro_parameter_ptr_map_create(&new_macro_definition->function_macro_parameters, struct_unsigned_char_ptr_to_struct_macro_parameter_ptr_key_value_pair_compare);
 
 	identifier_token = read_until_next_token(state, define_body_tokens, &processed_tokens, macro_expansion_levels);
 	if(!identifier_token){
@@ -415,7 +415,7 @@ void process_ifndef_directive(struct preprocessor_state * state, struct struct_c
 	current_token = read_until_next_token(state, working_tokens, &processed_tokens, macro_expansion_levels);
 	if(current_token->type == IDENTIFIER){
 		unsigned char * identifier_str = copy_string(current_token->first_byte, current_token->last_byte, state->memory_pool_collection);
-		unsigned int macro_defined = unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->macro_map, identifier_str);
+		struct macro_definition ** macro_defined = unsigned_char_ptr_to_struct_macro_definition_ptr_map_exists(&state->macro_map, identifier_str);
 		if(macro_defined){
 			branch->active = 0;
 		}else{
@@ -1414,7 +1414,7 @@ void destroy_preprocessor_macro_level(struct preprocessor_macro_level * level, s
 
 struct preprocessor_state * create_preprocessor_state(struct memory_pool_collection * memory_pool_collection){
 	struct preprocessor_state * state = (struct preprocessor_state *)malloc(sizeof(struct preprocessor_state));
-	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_create(&state->special_macros, unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_special_macro_definition_ptr_map_create(&state->special_macros, struct_unsigned_char_ptr_to_struct_special_macro_definition_ptr_key_value_pair_compare);
 
 	state->comma_token = (struct c_lexer_token*)malloc(sizeof(struct c_lexer_token));
 	state->comma_token->type = COMMA_CHAR;
@@ -1433,9 +1433,9 @@ struct preprocessor_state * create_preprocessor_state(struct memory_pool_collect
 	struct_c_lexer_state_ptr_list_create(&state->c_lexer_states);
 	struct_c_lexer_token_ptr_list_create(&state->created_tokens);
 	add_special_macros(state, &state->special_macros);
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->disabled_macros, unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
-	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&state->disabled_tokens, struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare);
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->macro_map, unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->disabled_macros, struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
+	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&state->disabled_tokens, struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&state->macro_map, struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
 	return state;
 }
 
@@ -1460,10 +1460,10 @@ int do_preprocess(struct memory_pool_collection * memory_pool_collection, unsign
 	struct unsigned_char_ptr_to_struct_macro_definition_ptr_map disabled_macros;
 	struct struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map disabled_tokens;
 	struct_c_lexer_token_ptr_list_create(&output_tokens);
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&disabled_macros, unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
-	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&disabled_tokens, struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&disabled_macros, struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
+	struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map_create(&disabled_tokens, struct_struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_key_value_pair_compare);
 
-	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&macro_map, unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_macro_definition_ptr_map_create(&macro_map, struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_compare);
 	if(!(rtn = get_preprocessed_output_from_file(preprocessor_state, in_file, &output_tokens))){
 		unsigned int i;
 		struct unsigned_char_list file_output;

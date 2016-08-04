@@ -16,14 +16,6 @@
 
 #include "compiler_interface_phase_2.h"
 
-void destroy_build_state(struct build_state *);
-unsigned int make_target(struct build_state *, struct entity*);
-unsigned char * copy_of_string(unsigned char *);
-
-/*  Include C code instead of linking object files, because code will change due to different previous header definition. */
-#include "compiler_interface_common.c"
-#include "compiler_interface_header_targets.c"
-
 
 unsigned int make_target(struct build_state * state, struct entity * target){
 	assert(!make_header_target(state, target));
@@ -32,8 +24,8 @@ unsigned int make_target(struct build_state * state, struct entity * target){
 
 struct build_state * create_build_state(void){
 	struct build_state * state = (struct build_state *)malloc(sizeof(struct build_state));
-	unsigned_char_ptr_to_struct_entity_ptr_map_create(&state->targets, unsigned_char_ptr_to_struct_entity_ptr_key_value_pair_compare);
-	struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_map_create(&state->relationships, struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_struct_entity_ptr_map_create(&state->targets, struct_unsigned_char_ptr_to_struct_entity_ptr_key_value_pair_compare);
+	struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_map_create(&state->relationships, struct_struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_key_value_pair_compare);
 	return state;
 }
 

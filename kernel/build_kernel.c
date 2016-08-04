@@ -23,7 +23,6 @@ void register_builtin_objects(struct build_state *);
 void register_compiler_objects(struct build_state *);
 void register_kernel_objects(struct build_state *);
 void new_register_data_structures_objects(struct build_state *);
-void new_generate_files(struct build_state *);
 
 void build_tests(void){
 	struct build_state * state = create_build_state();
@@ -32,7 +31,7 @@ void build_tests(void){
 	register_compiler_objects(state);
 	register_kernel_objects(state);
 	new_register_data_structures_objects(state);
-	new_generate_files(state);
+	construct_generated_c_entities(state);
 
 	construct_entity(state, "test/kernel.l0.js");
 

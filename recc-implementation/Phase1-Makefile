@@ -31,4 +31,4 @@ recc-implementation/libbootstrap.o: recc-implementation/libbootstrap.c
 	@$(HOSTCC) -c recc-implementation/libbootstrap.c -o recc-implementation/libbootstrap.o $(CUSTOM_C89_FLAGS)
 
 clean-phase-1:
-	@rm -f recc-implementation/bootstrap_phase_1 recc-implementation/*.o generated/*.l2 generated/*.o generated/*.i generated/*.c generated/*.h recc-implementation/file-dependencies-data-structures recc-implementation/library-data-structures recc-implementation/object-data-structures recc-implementation/comparison-functions/*.l2 recc-implementation/comparison-functions/*.i recc-implementation/comparison-functions/*.o
+	@rm -f recc-implementation/bootstrap_phase_1 recc-implementation/file-dependencies-data-structures recc-implementation/library-data-structures recc-implementation/object-data-structures recc-implementation/comparison-functions/*.l2 recc-implementation/comparison-functions/*.i recc-implementation/comparison-functions/*.o recc-implementation/*.o recc-implementation/*.l2 recc-implementation/*.i generated/*.c generated/*.h generated/*.o generated/*.i generated/*.l2

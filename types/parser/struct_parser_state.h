@@ -20,6 +20,7 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct parser_state{
+	struct struct_normalized_declaration_element_ptr_to_unsigned_int_map declaration_element_ids;
 	struct type_engine_state * type_engine;
 	struct memory_pool_collection * memory_pool_collection;
 	struct c_lexer_state * c_lexer_state;
@@ -31,4 +32,6 @@ struct parser_state{
 	unsigned char * buff;
 	unsigned int tokens_position;
 	unsigned int line_number;
+	unsigned int next_declaration_element_id;
+	unsigned int next_constant_description_id;
 };

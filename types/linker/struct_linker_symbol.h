@@ -26,5 +26,7 @@ struct linker_symbol{
 	struct l2_item * l2_item; /* The pointer to the l2_item of the instruction in its parent linker object. */
 	unsigned int observed_as_implemented;  /*  indicates if a corresponding label for that linker object has been found in the file */
 	unsigned int pad;
+	unsigned int id;
 	struct linker_file * parent_linker_file;  /*  External symbols need to remember which linker object they belong to. */
+	unsigned char * identifier;
 };

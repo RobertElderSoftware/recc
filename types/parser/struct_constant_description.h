@@ -26,4 +26,5 @@ struct constant_description{
 	unsigned int num_references;
 	enum c_token_type type;
 	unsigned int pad;
+	unsigned int id;
 };

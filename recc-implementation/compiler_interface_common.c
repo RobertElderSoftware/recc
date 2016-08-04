@@ -14,20 +14,11 @@
     under the License.
 */
 
-unsigned char * copy_of_string(unsigned char *);
-const char * register_dependency(struct build_state *, const char *, const char *);
-const char * register_inclusion(struct build_state *, const char * , const char *);
-const char * register_composition(struct build_state *, const char * , const char *);
-const char * register_entity(struct build_state *, const char *, enum entity_type);
-void add_entity_attribute(struct build_state *, const char *, const char *, const char *);
-struct entity * make_new_entity(unsigned char *);
-unsigned int construct_entity(struct build_state *, const char *);
-void register_relationship(struct build_state *, unsigned char * , unsigned char *, enum entity_relation_type);
-void destroy_entity(struct entity *);
+#include "compiler_interface_common.h"
 
 struct entity * make_new_entity(unsigned char * name){
 	struct entity * e = (struct entity *)malloc(sizeof(struct entity));
-	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&e->attributes, unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&e->attributes, struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare);
 	e->satisfied = 0;
 	e->registered = 0;
 	e->name = name;
@@ -104,7 +95,6 @@ const char * register_entity(struct build_state * state, const char * name, enum
 	return name;
 }
 
-int struct_entity_cmp(struct entity *, struct entity *);
 int struct_entity_cmp(struct entity * a, struct entity * b){
 	if(a < b){
 		return -1;
@@ -115,7 +105,6 @@ int struct_entity_cmp(struct entity * a, struct entity * b){
 	}
 }
 
-struct struct_entity_ptr_list * get_entity_list_for_relationship(struct build_state *, struct entity *, enum entity_relation_type);
 struct struct_entity_ptr_list * get_entity_list_for_relationship(struct build_state * state, struct entity * e, enum entity_relation_type type){
 	struct entity_relationship r;
 	r.entity = e;
@@ -127,7 +116,6 @@ struct struct_entity_ptr_list * get_entity_list_for_relationship(struct build_st
 	}
 }
 
-struct unsigned_char_ptr_list get_entity_name_list_for_relationship(struct build_state *, struct entity *, enum entity_relation_type);
 struct unsigned_char_ptr_list get_entity_name_list_for_relationship(struct build_state * state, struct entity * e, enum entity_relation_type type){
 	struct unsigned_char_ptr_list rtn_list;
 	struct struct_entity_ptr_list * list = get_entity_list_for_relationship(state, e, type);

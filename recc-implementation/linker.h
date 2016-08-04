@@ -40,6 +40,9 @@
 #ifndef LINKER_H_
 #include "linker.h"
 #endif
+#ifndef L0_GENERATOR_H_
+#include "l0_generator.h"
+#endif
 #ifndef unsigned_char_list_H_DEFINED_
 #include "../generated/unsigned_char_list.h"
 #endif
@@ -98,18 +101,15 @@
 #include "../generated/struct_linker_state.h"
 #endif
 #ifndef struct_start_end_ptr_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/struct_start_end_ptr_compare.h"
+#include "../generated/struct_start_end_compare.h"
 #endif
 #ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare.h"
-#endif
-#ifndef unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare_H_DEFINED_
-#include "../recc-implementation/comparison-functions/unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare.h"
+#include "../generated/struct_unsigned_char_ptr_to_struct_linker_symbol_ptr_key_value_pair_compare.h"
 #endif
 
 
 int do_link(struct memory_pool_collection *, struct unsigned_char_ptr_list *, unsigned char *, unsigned char *, enum entity_type, unsigned char *, unsigned int, unsigned int);
-struct linker_file * create_linker_file(struct linker_state *, struct l2_parser_state *, struct unsigned_char_list *);
+struct linker_file * create_linker_file(struct linker_state *, struct l2_parser_state *, unsigned char *);
 void set_symbol_l2_item_pointer(struct linker_state *, struct linker_file *, struct l2_lexer_token *, struct l2_item *, unsigned int);
 void add_internal_linker_symbol(struct linker_state *, struct linker_file *, struct l2_lexer_token *, unsigned int, unsigned int);
 void add_external_linker_symbol(struct linker_state *, struct linker_file *, struct l2_lexer_token *, unsigned int, unsigned int);
@@ -124,5 +124,6 @@ void do_link_to_l1(struct linker_state *);
 void do_link_to_l2(struct linker_state *);
 void set_all_post_linking_offsets(struct linker_state *);
 void group_and_page_align_linker_files(struct linker_state *);
+struct linker_symbol * get_absolute_symbol(struct linker_state *, unsigned char *, struct linker_file *);
 
 #endif

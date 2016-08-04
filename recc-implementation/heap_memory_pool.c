@@ -27,7 +27,7 @@ void heap_memory_pool_create(struct heap_memory_pool * h){
 		h->heap_pools[i].object_size = current_pool_item_size; /*  Set size of pool */
 		current_pool_item_size = current_pool_item_size * 2;   /*  Next pool has blocks that are twice this size */
 	}
-	void_ptr_to_unsigned_int_map_create(&h->contiguous_heap_bock_entries, void_ptr_to_unsigned_int_key_value_pair_compare);
+	void_ptr_to_unsigned_int_map_create(&h->contiguous_heap_bock_entries, struct_void_ptr_to_unsigned_int_key_value_pair_compare);
 }
 
 void heap_memory_pool_destroy(struct heap_memory_pool * h){

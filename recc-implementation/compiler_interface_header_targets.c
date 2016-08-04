@@ -14,7 +14,7 @@
     under the License.
 */
 
-unsigned int make_header_target(struct build_state *, struct entity*);
+#include "compiler_interface_header_targets.h"
 
 unsigned int make_header_target(struct build_state * state, struct entity * target){
 	(void)state;

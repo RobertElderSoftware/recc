@@ -18,13 +18,14 @@
   Page CPU'.  The One Page CPU is a specification for a very simple CPU that
   was designed with the primary goal of being easy to emulate in software,
   while still providing a practical environment for programs running on it.
-  The CPU supports context switching, timer interrupts, I/O interrupts and 14
-  different machine instructions.  Performance regarding execution speed or
-  memory consumption has not been a primary consideration for this project. The
-  justification behind this is based on the observation that is typically more
-  difficult to go from a high performance complicated design to any kind of
-  simple design than it is to go from an inefficient simple design to a
-  complicated and efficient one.  Make it work, make it right, make it fast.
+  The CPU uses 32-bit addresses and registers.  It supports context switching,
+  timer interrupts, I/O interrupts and 14 different machine instructions.
+  Performance regarding execution speed or memory consumption has not been a
+  primary consideration for this project. The justification behind this is
+  based on the observation that is typically more difficult to go from a high
+  performance complicated design to any kind of simple design than it is to go
+  from an inefficient simple design to a complicated and efficient one.  Make
+  it work, make it right, make it fast.
 
   1.2  In order to explain assembly language programming for the One Page CPU,
   it is helpful to describe the process of compiling .c files and executing
@@ -526,4 +527,4 @@
   Used in conjunction with REGION directive to specify the read, write or
   execute permissions associated with a region of code.
 
-The sha1sum of the lines above is 2a09081e2bc625959813a4857c506ea9b2ab3ce4
+The sha1sum of the lines above is 9926c429b7ed7ec68db6ced5919f79f4ae96750a

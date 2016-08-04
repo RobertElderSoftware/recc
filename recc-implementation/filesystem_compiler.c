@@ -476,8 +476,8 @@ void create_filesystem_impl(unsigned char * out_file){
 	unsigned int i;
 	memory_pool_collection_create(&mpc);
 	initialize_filesystem_datastructures();
-	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&files, unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare);
-	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&directories, unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&files, struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare);
+	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&directories, struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare);
 	unsigned_char_list_create(&tmp);
 	for(i = 0; i < NUM_FILES; i++){
 		unsigned int j = 0;
