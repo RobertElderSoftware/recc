@@ -18,11 +18,7 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct declaration_namespace{
-	/*  An ordered list of type ids of things that are declared in this namespace */
-	struct unsigned_int_list ordered_type_ids;
-	/*  Allows us to map an identifier to the type id it is associated with */
-	struct unsigned_int_to_unsigned_int_map identifier_ids_to_type_ids;
-	/*  For anonymous types, we simply start with a type id and find out the ordering from there. */
-	struct unsigned_int_to_unsigned_int_map type_ids_to_ordered_index;
+struct scoped_tag_specifier_details{
+	struct scope_level_id scope_id;
+	struct unscoped_tag_specifier_id unscoped_tag_specifier_id;
 };

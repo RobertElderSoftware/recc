@@ -18,6 +18,12 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct struct_or_union_specifier_id{
-	unsigned int id;
+struct tag_declaration_namespace{
+	/*  An ordered list of type ids of things that are declared in this namespace */
+	struct struct_unscoped_tag_specifier_id_list ordered_type_ids;
+	/*  Allows us to map an identifier to the type id it is associated with */
+	struct struct_identifier_id_to_struct_unscoped_tag_specifier_id_map identifier_ids_to_type_ids;
+	/*  For anonymous types, we simply start with a type id and find out the ordering from there. */
+	/*  The integer here specifies the index of the type id in the 'ordered_type_ids' variable. */
+	struct struct_unscoped_tag_specifier_id_to_unsigned_int_map type_ids_to_ordered_index;
 };

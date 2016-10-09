@@ -16,8 +16,7 @@
     under the License.
 */
 
-/*GETS_REPLACED_WITH_INCLUDES*/
-
-struct storage_class_specifier_id{
-	unsigned int id;
+enum type_engine_enum_specifier_kind{
+        TYPE_ENGINE_ANONYMOUS_ENUM,
+        TYPE_ENGINE_NAMED_ENUM
 };

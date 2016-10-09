@@ -7,7 +7,21 @@ all:
 else
 include config.mak
 
-
+#  Used for building the compiler against build targets from another version
+#  of RECC (used for benchmarking and testing)
+#  If undefined or set to the current directory
+ifeq ($(origin CROSS_BUILD_PREFIX),undefined)
+  CROSS_BUILD_PREFIX_PREREQ=
+  CROSS_BUILD_PREFIX=./
+else
+ifeq ("${CROSS_BUILD_PREFIX}","./")
+  CROSS_BUILD_PREFIX_PREREQ=
+  CROSS_BUILD_PREFIX=./
+else
+  CROSS_BUILD_PREFIX_PREREQ=cross-build-prefix-prereq
+  CROSS_BUILD_PREFIX=${CROSS_BUILD_PREFIX}
+endif
+endif
 
 CLANG_C89_FLAGS=-g -std=c89 $(SUPPORTED_CLANG_WARNING_FLAGS)
 CLANG_C99_FLAGS=-g -std=c99 $(SUPPORTED_CLANG_WARNING_FLAGS)
@@ -62,11 +76,11 @@ ifeq ("$(wildcard recc-implementation/bootstrap_phase_2)","")
 include recc-implementation/Makefile
 .DEFAULT:
 	echo $(MAKECMDGOALS)
-	@make -e -s phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
+	make -e phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
 kernel:
-	@make -e -s phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
+	make -e phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
 test:
-	@make -e -s phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
+	make -e phase1 DEFERRED_GLOALS="$(MAKECMDGOALS)"
 else
 
 help:
@@ -81,9 +95,10 @@ help:
 	@echo "7) make test                      - Attempts to run unit tests in chrome (requires that testing API is set up)."
 	@echo "8) make kernel                    - Attempts to run the kernel in chrome (requires that testing API is set up)."
 
+
 test: run-tests
 
-COMPILER_OBJECTS=libc/filesystem.o test/recc.o recc-implementation/phase2_recc.o libc/recc.o kernel/recc.o builtin/recc.o recc-implementation/recc.o recc-implementation/librecc.a
+COMPILER_OBJECTS=libc/filesystem.o $(CROSS_BUILD_PREFIX)test/recc.o $(CROSS_BUILD_PREFIX)recc-implementation/phase2_recc.o $(CROSS_BUILD_PREFIX)libc/recc.o $(CROSS_BUILD_PREFIX)kernel/recc.o $(CROSS_BUILD_PREFIX)builtin/recc.o $(CROSS_BUILD_PREFIX)recc-implementation/recc.o recc-implementation/librecc.a
 
 include builtin/Makefile
 include demos/brainfuck-cpp/Makefile

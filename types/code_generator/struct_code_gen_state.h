@@ -24,7 +24,7 @@ struct code_gen_state{
 	struct scope_level * current_scope;
 	struct memory_pool_collection * memory_pool_collection;
 	struct struct_switch_frame_ptr_list switch_frames; /*  Used for keeping track of the case labels under switches */
-	struct struct_type_description_reference_list type_stack;
+	struct struct_type_description_ptr_list type_stack;
 	struct unsigned_char_list * buffered_output;
 	struct unsigned_char_list * buffered_symbol_table;
 	struct unsigned_char_ptr_to_struct_linker_symbol_ptr_map symbols;

@@ -182,26 +182,26 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_STORAGE_CLASS_SPECIFIER:{
-			struct storage_class_specifier_id id1;
-			struct storage_class_specifier_id id2;
-			n1 = storage_class_specifier(p1, &id1);
-			n2 = storage_class_specifier(p2, &id2);
+			struct simple_storage_class_specifier_id id1;
+			struct simple_storage_class_specifier_id id2;
+			n1 = simple_storage_class_specifier(p1, &id1);
+			n2 = simple_storage_class_specifier(p2, &id2);
 			if(n1 && n2){
-				buffered_printf(&l, "Testing storage_class_specifier rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_storage_class_specifier(&engine, &l, id1, TYPE_ENGINE_NORMAL);
+				buffered_printf(&l, "Testing simple_storage_class_specifier rule with input '%s'.\nSuccessfully identified:\n", str);
+				print_simple_storage_class_specifier(&engine, &l, id1, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
 			ids_match = id1.id == id2.id;
 			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_STRUCT_OR_UNION_SPECIFIER:{
-			struct scoped_struct_or_union_specifier_id id1;
-			struct scoped_struct_or_union_specifier_id id2;
+			struct scoped_tag_specifier_id id1;
+			struct scoped_tag_specifier_id id2;
 			n1 = struct_or_union_specifier(p1, &id1, 0/*  For testing, both have same anonymous id */);
 			n2 = struct_or_union_specifier(p2, &id2, 0/*  For testing, both have same anonymous id */);
 			if(n1 && n2){
 				buffered_printf(&l, "Testing struct_or_union_specifier rule with input '%s'.\nSuccessfully identified:\n", str);
-				print_scoped_struct_or_union_specifier(&engine, &l, id1.id, TYPE_ENGINE_NORMAL);
+				print_scoped_tag_specifier(&engine, &l, id1.id, TYPE_ENGINE_NORMAL);
 				buffered_printf(&l, "\n");
 			}
 			ids_match = id1.id == id2.id;
@@ -300,8 +300,8 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 		}case TEST_1_STRUCT_DECLARATOR_LIST_REST:{
 			struct general_type_list_item_id id1;
 			struct general_type_list_item_id id2;
-			struct declaration_namespace * dn1 = create_declaration_namespace(&engine);
-			struct declaration_namespace * dn2 = create_declaration_namespace(&engine);
+			struct identifier_declaration_namespace * dn1 = create_identifier_declaration_namespace(&engine);
+			struct identifier_declaration_namespace * dn2 = create_identifier_declaration_namespace(&engine);
 			n1 = struct_declarator_list_rest(p1, specifier_or_qualifier_list_begin(&engine), get_general_type_list_begin(&engine), &id1, dn1);
 			n2 = struct_declarator_list_rest(p2, specifier_or_qualifier_list_begin(&engine), get_general_type_list_begin(&engine), &id2, dn2);
 			if(n1 && n2){
@@ -352,8 +352,8 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 		}case TEST_1_STRUCT_DECLARATION:{
 			struct general_type_list_item_id id1;
 			struct general_type_list_item_id id2;
-			n1 = struct_declaration(p1, get_general_type_list_begin(&engine), &id1, create_declaration_namespace(&engine));
-			n2 = struct_declaration(p2, get_general_type_list_begin(&engine), &id2, create_declaration_namespace(&engine));
+			n1 = struct_declaration(p1, get_general_type_list_begin(&engine), &id1, create_identifier_declaration_namespace(&engine));
+			n2 = struct_declaration(p2, get_general_type_list_begin(&engine), &id2, create_identifier_declaration_namespace(&engine));
 			if(n1 && n2){
 				buffered_printf(&l, "Testing struct_declaration rule with input '%s'.\nSuccessfully identified:\n", str);
 				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1.id, TYPE_ENGINE_NORMAL, 0);
@@ -365,8 +365,8 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 		}case TEST_1_STRUCT_DECLARATION_LIST:{
 			struct general_type_list_item_id id1;
 			struct general_type_list_item_id id2;
-			n1 = struct_declaration_list(p1, get_general_type_list_begin(&engine), &id1, create_declaration_namespace(&engine));
-			n2 = struct_declaration_list(p2, get_general_type_list_begin(&engine), &id2, create_declaration_namespace(&engine));
+			n1 = struct_declaration_list(p1, get_general_type_list_begin(&engine), &id1, create_identifier_declaration_namespace(&engine));
+			n2 = struct_declaration_list(p2, get_general_type_list_begin(&engine), &id2, create_identifier_declaration_namespace(&engine));
 			if(n1 && n2){
 				buffered_printf(&l, "Testing struct_declaration_list rule with input '%s'.\nSuccessfully identified:\n", str);
 				print_general_type_list(&engine, (unsigned char *)";\n", &l, id1.id, TYPE_ENGINE_NORMAL, 0);
@@ -583,9 +583,17 @@ void grammar_rule_test(const char * str, struct memory_pool_collection * m, enum
 			buffered_printf(&l, "Testing enumerator_list rule with input '%s'.\n", str);
 			break;
 		}case TEST_1_ENUM_SPECIFIER:{
-			enum_specifier(p1);
-			enum_specifier(p2);
-			buffered_printf(&l, "Testing enum_specifier rule with input '%s'.\n", str);
+			struct scoped_tag_specifier_id id1;
+			struct scoped_tag_specifier_id id2;
+			n1 = enum_specifier(p1, &id1, 0/*  For testing, both have same anonymous id */);
+			n2 = enum_specifier(p2, &id2, 0/*  For testing, both have same anonymous id */);
+			if(n1 && n2){
+				buffered_printf(&l, "Testing enum_specifier rule with input '%s'.\nSuccessfully identified:\n", str);
+				print_scoped_tag_specifier(&engine, &l, id1.id, TYPE_ENGINE_NORMAL);
+				buffered_printf(&l, "\n");
+			}
+			ids_match = id1.id == id2.id;
+			nodes_not_null = n1 && n2;
 			break;
 		}case TEST_1_DIRECT_DECLARATOR_REST:{
 			struct declarator_part_list_item_id id1;

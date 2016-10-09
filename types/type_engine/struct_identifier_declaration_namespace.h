@@ -1,3 +1,5 @@
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -13,20 +15,14 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
+
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
-        if(a->key.scope_id.id > b->key.scope_id.id){
-                return 1;
-        }else if(a->key.scope_id.id < b->key.scope_id.id){
-                return -1;
-        }else{
-		if(a->key.unscoped_tag_specifier_id.id > b->key.unscoped_tag_specifier_id.id){
-			return 1;
-		}else if(a->key.unscoped_tag_specifier_id.id < b->key.unscoped_tag_specifier_id.id){
-			return -1;
-		}else{
-			return 0;
-		}
-        }
-}
+struct identifier_declaration_namespace{
+	/*  An ordered list of type ids of things that are declared in this namespace */
+	struct struct_general_type_id_list ordered_type_ids;
+	/*  Allows us to map an identifier to the type id it is associated with */
+	struct struct_identifier_id_to_struct_general_type_id_map identifier_ids_to_type_ids;
+	/*  Allows us to map an identifier to the index it has in its scope */
+	struct struct_identifier_id_to_unsigned_int_map identifier_id_to_ordered_index;
+};

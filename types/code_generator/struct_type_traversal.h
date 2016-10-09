@@ -19,7 +19,7 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct type_traversal{
-	struct type_description_reference type_description;
+	struct type_description * type_description;
 	struct struct_type_traversal_ptr_list children;
 	unsigned int arity; /* For arrays */
 	unsigned int arrays_as_pointers; /* For arrays */

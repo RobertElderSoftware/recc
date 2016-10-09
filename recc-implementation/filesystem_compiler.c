@@ -55,6 +55,7 @@ void output_filesystem_impl(unsigned char * out_file){
 	unsigned int i;
 	if(!(f = fopen((char*)out_file, "w"))){
 		printf("Failed to open file %s for write.\n", out_file);
+		assert(0);
 		return;
 	}
 
@@ -280,7 +281,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"./generated/unsigned_int_ptr_list.h", "/./generated/unsigned_int_ptr_list.h"},
 		{"./generated/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h", "/./generated/struct_c_lexer_token_ptr_to_struct_c_lexer_token_ptr_map.h"},
 		{"./generated/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_binary_search.h", "/./generated/struct_unsigned_char_ptr_to_struct_constant_description_ptr_key_value_pair_binary_search.h"},
-		{"./generated/struct_type_description_reference_list.h", "/./generated/struct_type_description_reference_list.h"},
+		{"./generated/struct_type_description_ptr_list.h", "/./generated/struct_type_description_ptr_list.h"},
 		{"./generated/unsigned_char_ptr_to_struct_constant_description_ptr_map.h", "/./generated/unsigned_char_ptr_to_struct_constant_description_ptr_map.h"},
 		{"./generated/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_binary_search.h", "/./generated/struct_unsigned_char_ptr_to_struct_macro_definition_ptr_key_value_pair_binary_search.h"},
 		{"./recc-implementation/parser.h", "/./recc-implementation/parser.h"},
@@ -413,7 +414,7 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"generated/struct_struct_preprocessor_file_context_ptr_list.h","/generated/struct_struct_preprocessor_file_context_ptr_list.h"},
 		{"generated/struct_struct_type_traversal_ptr_list.h","/generated/struct_struct_type_traversal_ptr_list.h"},
 		{"generated/struct_void_ptr_to_unsigned_int_map.h","/generated/struct_void_ptr_to_unsigned_int_map.h"},
-		{"generated/struct_struct_type_description_reference_list.h","/generated/struct_struct_type_description_reference_list.h"},
+		{"generated/struct_struct_type_description_ptr_list.h","/generated/struct_struct_type_description_ptr_list.h"},
 		{"generated/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair.h","/generated/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair.h"},
 		{"generated/struct_struct_constant_initializer_level_ptr_list.h","/generated/struct_struct_constant_initializer_level_ptr_list.h"},
 		{"generated/struct_struct_normalized_specifier_ptr_list.h","/generated/struct_struct_normalized_specifier_ptr_list.h"},

@@ -65,8 +65,8 @@ test/custom_build_targets.c: remove-previous-custom-list
 test/build_tests.c: test/build_target_template.c test/custom_build_targets.c
 	@cat test/build_target_template.c | sed -e '/GETS_REPLACED_WITH_BUILD_TARGETS/r test/custom_build_targets.c' -e '/GETS_REPLACED_WITH_BUILD_TARGETS/d' > test/build_tests.c
 
-test/recc.o: test/recc.c
-	@$(HOSTCC) -c test/recc.c -o test/recc.o $(CUSTOM_C89_FLAGS)
+$(CROSS_BUILD_PREFIX)test/recc.o: $(CROSS_BUILD_PREFIX)test/recc.c
+	@$(HOSTCC) -c $(CROSS_BUILD_PREFIX)test/recc.c -o $(CROSS_BUILD_PREFIX)test/recc.o $(CUSTOM_C89_FLAGS)
 
 remove-old-js-and-diffs:
 	@rm -f $(JS_OUTPUT) $(ALL_DIFFS)

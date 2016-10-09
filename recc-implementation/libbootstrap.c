@@ -312,6 +312,7 @@ int add_file_to_binary_exponential_buffer(struct binary_exponential_buffer * buf
         int c = 0;
         if(!(f = fopen((char *)in_file, "rb"))){
                 printf("Failed to open file %s for read.\n", in_file);
+		assert(0);
                 return 1;
         }
 
@@ -333,6 +334,7 @@ int output_binary_exponential_buffer_to_file(struct binary_exponential_buffer * 
 	unsigned int i;
 	if(!(f = fopen((char *)out_file, "w"))){
 		printf("Failed to open file %s for write.\n", out_file);
+		assert(0);
 		return 1;
 	}
 

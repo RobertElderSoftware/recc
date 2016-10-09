@@ -57,12 +57,12 @@ struct struct_normalized_declarator_ptr_list * get_normalized_declarator_list(st
 struct parser_node * add_outer_direct_abstract_declarator_to_inner_as_rest(struct memory_pool_collection *, struct parser_node *, struct parser_node *);
 void add_pointer_to_end(struct memory_pool_collection *, struct parser_node *, struct parser_node *);
 struct parser_node * insert_abstract_declarator(struct memory_pool_collection *, struct parser_node *, struct parser_node *);
-void convert_to_untypedefed_type_description(struct memory_pool_collection *, struct type_description_reference);
+void convert_to_untypedefed_type_description(struct memory_pool_collection *, struct type_description *);
 struct namespace_object * get_namespace_object_from_closest_namespace(unsigned char *, enum scope_type, struct scope_level *, unsigned int, struct memory_pool_collection *);
-struct type_description_reference create_type_description_from_normalized_declaration_element(struct memory_pool_collection *, struct normalized_declaration_element *, struct parser_node *, struct scope_level *, enum value_type);
-void destroy_type_description(struct memory_pool_collection *, struct type_description_reference);
-unsigned int count_specifiers(struct type_description_reference, enum c_token_type);
-void remove_specifier(struct memory_pool_collection *, struct type_description_reference, unsigned int, enum c_token_type);
+struct type_description * create_type_description_from_normalized_declaration_element(struct memory_pool_collection *, struct normalized_declaration_element *, struct parser_node *, struct scope_level *, enum value_type);
+void destroy_type_description(struct memory_pool_collection *, struct type_description *);
+unsigned int count_specifiers(struct type_description *, enum c_token_type);
+void remove_specifier(struct memory_pool_collection *, struct type_description *, unsigned int, enum c_token_type);
 struct parser_node * create_abstract_declarator_from_declarator(struct memory_pool_collection *, struct parser_node *);
 struct parser_node * create_abstract_declarator_from_normalized_declarator(struct memory_pool_collection *, struct normalized_declarator *);
 struct namespace_object * get_namespace_object_from_scope_namespace_using_string(struct unsigned_char_ptr_to_struct_namespace_object_ptr_map *, unsigned char *);
@@ -86,7 +86,7 @@ struct parser_node * get_function_definition_from_namespace_object(struct namesp
 struct c_lexer_token * get_struct_or_union_or_enum_tag_token(struct parser_node *);
 struct parser_node * get_struct_or_union_or_enum_specifier(struct struct_normalized_specifier_ptr_list *);
 struct normalized_declaration_set * create_normalized_declaration_set_from_parser_node(struct memory_pool_collection *, struct parser_node *, struct normalized_declaration_set *);
-struct type_description_reference create_type_description_from_normalized_declarator_and_specifiers(struct memory_pool_collection *, struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *, struct parser_node *, struct scope_level *, enum value_type, struct normalized_declaration_element *);
+struct type_description * create_type_description_from_normalized_declarator_and_specifiers(struct memory_pool_collection *, struct normalized_declarator *, struct struct_normalized_specifier_ptr_list *, struct parser_node *, struct scope_level *, enum value_type, struct normalized_declaration_element *);
 void destroy_normalized_declaration_element_list(struct memory_pool_collection *, struct struct_normalized_declaration_element_ptr_list *);
 struct struct_normalized_declaration_element_ptr_list * create_normalized_declaration_element_list(struct normalized_declaration_set *);
 void validate_specifier_token_type(enum c_token_type);
@@ -108,10 +108,10 @@ void decrement_scope_depth(struct type_engine_state *);
 void manage_new_scope(struct type_engine_state *, struct scope_level *, unsigned int, enum add_or_remove, enum scope_level_type);
 struct scope_level * get_parser_scope_level_h(struct scope_level *, unsigned int);
 struct scope_level * get_parser_scope_level(struct type_engine_state *);
-struct simple_specifier_id get_type_engine_id_for_simple_specifier(struct type_engine_state *, enum c_token_type);
+struct simple_type_specifier_id get_type_engine_id_for_simple_type_specifier(struct type_engine_state *, enum c_token_type);
 struct identifier_id get_type_engine_id_for_identifier(struct type_engine_state *, struct c_lexer_token *);
 struct type_qualifier_id get_type_engine_id_for_simple_qualifier(struct type_engine_state *, enum c_token_type);
-struct storage_class_specifier_id get_type_engine_id_for_storage_class_specifier(struct type_engine_state *, enum c_token_type);
+struct simple_storage_class_specifier_id get_type_engine_id_for_simple_storage_class_specifier(struct type_engine_state *, enum c_token_type);
 struct specifier_or_qualifier_list_item_id specifier_or_qualifier_list_begin(struct type_engine_state *);
 unsigned int get_type_engine_id_for_aggregate_specifier(struct type_engine_state *, enum type_engine_aggregate_specifier_kind, unsigned int);
 struct specifier_or_qualifier_list_item_id make_specifier_or_qualifier_list_item(struct type_engine_state *, struct specifier_or_qualifier_list_item_id, struct specifier_or_qualifier_id);
@@ -121,15 +121,18 @@ struct declarator_part_list_item_id declarator_part_list_begin(struct type_engin
 struct declarator_part_list_item_id add_pointer_and_direct_declarators_to_list(struct type_engine_state *, struct declarator_part_list_item_id, struct declarator_part_list_item_id, struct declarator_part_list_item_id);
 void add_declarators_to_list(struct type_engine_state *, struct declarator_part_list_item_id *, struct declarator_part_list_item_id, unsigned int);
 struct pointer_part_id get_type_engine_id_for_pointer_part(struct type_engine_state *, enum type_engine_pointer_part_kind, struct specifier_or_qualifier_list_item_id);
-struct scoped_struct_or_union_specifier_id get_type_engine_id_for_scoped_struct_or_union_specifier(struct type_engine_state *, struct scope_level_id, struct struct_or_union_specifier_id);
+struct scoped_tag_specifier_id get_type_engine_id_for_scoped_tag_specifier(struct type_engine_state *, struct scope_level_id, struct unscoped_tag_specifier_id);
 struct scope_level_id get_type_engine_id_for_scope_level(struct type_engine_state *, struct scope_level *);
-struct declaration_namespace * create_declaration_namespace(struct type_engine_state *);
-void add_ordered_general_type_to_declaration_namespace(struct type_engine_state *, struct declaration_namespace *, struct general_type_id);
-void add_identifier_id_to_declaration_namespace(struct type_engine_state *, struct declaration_namespace *, struct general_type_id, struct identifier_id);
-unsigned int add_struct_or_union_definition(struct type_engine_state *, struct declaration_namespace *, struct struct_or_union_specifier_id, struct scope_level *);
+struct tag_declaration_namespace * create_tag_declaration_namespace(struct type_engine_state *);
+struct identifier_declaration_namespace * create_identifier_declaration_namespace(struct type_engine_state *);
+void add_ordered_general_type_to_identifier_declaration_namespace(struct type_engine_state *, struct identifier_declaration_namespace *, struct general_type_id);
+void add_identifier_id_to_identifier_declaration_namespace(struct type_engine_state *, struct identifier_declaration_namespace *, struct general_type_id, struct identifier_id);
+
+unsigned int add_struct_or_union_definition(struct type_engine_state *, struct identifier_declaration_namespace *, struct unscoped_tag_specifier_id, struct scope_level *, enum type_engine_unscoped_tag_specifier_kind);
+unsigned int add_enum_definition(struct type_engine_state *, struct identifier_declaration_namespace *, struct unscoped_tag_specifier_id, struct scope_level *);
 unsigned int consume_next_anonymous_tag_id_in_current_parser_scope(struct type_engine_state *);
-unsigned int add_named_struct_or_union_declaration(struct type_engine_state *, struct identifier_id , struct struct_or_union_specifier_id, struct scope_level *);
-struct scope_level * get_scope_of_closest_struct_or_union_tag_declaration(struct type_engine_state *, struct scope_level *, struct struct_or_union_specifier_id);
+unsigned int add_named_tag_declaration(struct type_engine_state *, struct identifier_id , struct unscoped_tag_specifier_id, struct scope_level *);
+struct scope_level * get_scope_of_closest_tag_declaration(struct type_engine_state *, struct scope_level *, struct unscoped_tag_specifier_id);
 
 void print_general_type_list(struct type_engine_state *, unsigned char *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type, unsigned int);
 void print_general_type_list_item(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
@@ -143,23 +146,22 @@ void print_declarator_in_spiral_rule_order(struct type_engine_state *, struct un
 void print_bitfield_or_declarator(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_type_engine_state(struct type_engine_state *, struct unsigned_char_list *);
 void print_type_qualifier(struct type_engine_state *, struct unsigned_char_list *, struct type_qualifier_id, enum type_engine_print_type);
-void print_storage_class_specifier(struct type_engine_state *, struct unsigned_char_list *, struct storage_class_specifier_id, enum type_engine_print_type);
+void print_simple_storage_class_specifier(struct type_engine_state *, struct unsigned_char_list *, struct simple_storage_class_specifier_id, enum type_engine_print_type);
 void print_specifier_or_qualifier_list(struct type_engine_state *, struct unsigned_char_list *, struct specifier_or_qualifier_list_item_id, enum type_engine_print_type);
 void print_declarator_in_visual_order(struct type_engine_state *, struct unsigned_char_list *, struct declarator_part_list_item_id, enum type_engine_print_type, unsigned int);
 void print_struct_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_union_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_struct_or_union_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
-void print_scoped_struct_or_union_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
+void print_scoped_tag_specifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 void print_identifier(struct type_engine_state *, struct unsigned_char_list *, unsigned int, enum type_engine_print_type);
 
-struct aggregate_specifier_id aggregate_specifier_from_simple_specifier_id(struct type_engine_state *, struct simple_specifier_id);
+struct aggregate_specifier_id aggregate_specifier_from_simple_type_specifier_id(struct type_engine_state *, struct simple_type_specifier_id);
 struct aggregate_specifier_id aggregate_specifier_from_typename_specifier_id(struct type_engine_state *, unsigned int);
-struct aggregate_specifier_id aggregate_specifier_from_enum_specifier_id(struct type_engine_state *, unsigned int);
-struct aggregate_specifier_id aggregate_specifier_from_scoped_struct_or_union_specifier_id(struct type_engine_state *, struct scoped_struct_or_union_specifier_id);
+struct aggregate_specifier_id aggregate_specifier_from_scoped_tag_specifier_id(struct type_engine_state *, struct scoped_tag_specifier_id);
 
 struct specifier_or_qualifier_id specifier_or_qualifier_from_aggregate_specifier_id(struct type_engine_state *, struct aggregate_specifier_id);
 struct specifier_or_qualifier_id specifier_or_qualifier_from_type_qualifier_id(struct type_engine_state *, struct type_qualifier_id);
-struct specifier_or_qualifier_id specifier_or_qualifier_from_storage_class_specifier_id(struct type_engine_state *, struct storage_class_specifier_id);
+struct specifier_or_qualifier_id specifier_or_qualifier_from_simple_storage_class_specifier_id(struct type_engine_state *, struct simple_storage_class_specifier_id);
 
 struct specifier_or_qualifier_list_item_id make_specifier_or_qualifier_list_item(struct type_engine_state *, struct specifier_or_qualifier_list_item_id, struct specifier_or_qualifier_id);
 struct specifier_or_qualifier_list_item_id specifier_or_qualifier_list_begin(struct type_engine_state *);
@@ -174,22 +176,25 @@ struct declarator_part_list_item_id declarator_part_list_begin(struct type_engin
 struct parameter_list_id get_variadic_parameter_list_id(struct type_engine_state *, struct general_type_list_item_id);
 struct parameter_list_id get_non_variadic_parameter_list_id(struct type_engine_state *, struct general_type_list_item_id);
 
-struct bitfield_or_declarator_id bitfield_or_declarator_from_only_bitfield(struct type_engine_state *, unsigned int);
-struct bitfield_or_declarator_id bitfield_or_declarator_from_only_declarator(struct type_engine_state *, struct declarator_part_list_item_id);
-struct bitfield_or_declarator_id bitfield_or_declarator_from_bitfield_and_declarator(struct type_engine_state *, unsigned int);
+struct bitfield_or_declarator_id bitfield_or_declarator_from_has_bitfield(struct type_engine_state *, struct declarator_part_list_item_id);
+struct bitfield_or_declarator_id bitfield_or_declarator_from_does_not_have_bitfield(struct type_engine_state *, struct declarator_part_list_item_id);
 
 struct general_type_id get_type_engine_id_for_general_type(struct type_engine_state *, struct specifier_or_qualifier_list_item_id, struct bitfield_or_declarator_id);
 struct general_type_list_item_id make_general_type_list_item(struct type_engine_state *, struct general_type_list_item_id, struct general_type_id);
 struct general_type_list_item_id get_general_type_list_begin(struct type_engine_state *);
 
-struct struct_or_union_specifier_id get_struct_specifier_id(struct type_engine_state *, struct struct_specifier_id);
-struct struct_or_union_specifier_id get_union_specifier_id(struct type_engine_state *, struct union_specifier_id);
+struct unscoped_tag_specifier_id get_struct_specifier_id(struct type_engine_state *, struct struct_specifier_id);
+struct unscoped_tag_specifier_id get_union_specifier_id(struct type_engine_state *, struct union_specifier_id);
+struct unscoped_tag_specifier_id get_enum_specifier_id(struct type_engine_state *, struct enum_specifier_id);
 
 struct struct_specifier_id get_named_struct_specifier_id(struct type_engine_state *, struct identifier_id);
 struct struct_specifier_id get_anonymous_struct_specifier_id(struct type_engine_state *, unsigned int);
 
 struct union_specifier_id get_named_union_specifier_id(struct type_engine_state *, struct identifier_id);
 struct union_specifier_id get_anonymous_union_specifier_id(struct type_engine_state *, unsigned int);
+
+struct enum_specifier_id get_named_enum_specifier_id(struct type_engine_state *, struct identifier_id);
+struct enum_specifier_id get_anonymous_enum_specifier_id(struct type_engine_state *, unsigned int);
 
 struct function_part_id get_type_engine_id_for_prototype_function_part(struct type_engine_state *, unsigned int);
 struct function_part_id get_type_engine_id_for_k_r_function_part(struct type_engine_state *, unsigned int);

@@ -1,5 +1,3 @@
-
-
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -15,9 +13,14 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
+/*GETS_REPLACED_WITH_INCLUDES*/
 
-struct type_description_reference{
-        struct type_description * t;
-};
-
-
+int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
+	if(a->key.id > b->key.id){
+		return 1;
+	}else if(a->key.id < b->key.id){
+		return -1;
+	}else{
+		return 0;
+	}
+}

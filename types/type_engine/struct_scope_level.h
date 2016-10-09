@@ -19,11 +19,10 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct scope_level{
-	struct declaration_namespace struct_or_union_declarations;
-	struct declaration_namespace enum_declarations;
-	struct declaration_namespace identifier_declarations;
-	struct struct_or_union_definition_collection struct_or_union_definitions;
-	struct enum_definition_collection enum_definitions;
+	struct tag_declaration_namespace tag_declarations;
+	struct identifier_declaration_namespace identifier_declarations;
+	struct struct_unscoped_tag_specifier_id_to_struct_struct_or_union_definition_ptr_map struct_or_union_definitions;
+	struct struct_unscoped_tag_specifier_id_to_struct_enum_definition_ptr_map enum_definitions;
 	struct scope_level * parent_scope;
 	struct struct_scope_level_ptr_list scopes;
 	struct unsigned_char_ptr_list evaluate_labels; /*  For continue statements  */

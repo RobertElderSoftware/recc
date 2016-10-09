@@ -18,6 +18,6 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct simple_specifier_id{
+struct simple_storage_class_specifier_id{
 	unsigned int id;
 };

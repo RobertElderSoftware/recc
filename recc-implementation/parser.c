@@ -182,9 +182,9 @@ void set_current_function(struct current_function_change *);
 void unset_current_function(struct current_function_change *);
 struct scope_level * get_last_function_namespace_scope(struct parser_state *);
 struct normalized_declaration_element * get_most_recently_added_declaration_element_from_object(struct namespace_object *);
-unsigned int is_const(struct type_description_reference t);
-struct type_description_reference ensure_signed(struct memory_pool_collection *, struct type_description_reference t);
-struct type_description_reference ensure_unsigned(struct memory_pool_collection *, struct type_description_reference t);
+unsigned int is_const(struct type_description * t);
+struct type_description * ensure_signed(struct memory_pool_collection *, struct type_description * t);
+struct type_description * ensure_unsigned(struct memory_pool_collection *, struct type_description * t);
 void validate_specifier_token_type(enum c_token_type);
 enum normalized_specifier_type get_normalized_specifier_type(enum c_token_type);
 enum node_type get_specifier_parser_node_type(enum c_token_type);
@@ -257,13 +257,13 @@ struct parser_node * get_last_terminal_node(struct parser_node * n){
 	}
 }
 
-void print_error_with_type(struct c_lexer_state * state, struct type_description_reference t1, struct parser_node * context, const char * msg){
+void print_error_with_type(struct c_lexer_state * state, struct type_description * t1, struct parser_node * context, const char * msg){
 	struct unsigned_char_list l;
 	unsigned_char_list_create(&l);
 	buffered_printf(&l,"\n%s\n", msg);
-	if(t1.t){
+	if(t1){
 		buffered_puts(&l,"Type #1:\n");
-		print_normalized_declaration_declarator_and_specifiers(state->c.memory_pool_collection, &l, t1.t->declarator, t1.t->specifiers, (struct parser_node *)0, 0);
+		print_normalized_declaration_declarator_and_specifiers(state->c.memory_pool_collection, &l, t1->declarator, t1->specifiers, (struct parser_node *)0, 0);
 	}
 	unsigned_char_list_add_end(&l, 0);
 	printf("%s\n", unsigned_char_list_data(&l));
@@ -271,14 +271,14 @@ void print_error_with_type(struct c_lexer_state * state, struct type_description
 	unsigned_char_list_destroy(&l);
 }
 
-void print_error_with_types(struct c_lexer_state * state, struct type_description_reference t1, struct type_description_reference t2, struct parser_node * context, const char * msg){
+void print_error_with_types(struct c_lexer_state * state, struct type_description * t1, struct type_description * t2, struct parser_node * context, const char * msg){
 	struct unsigned_char_list l;
 	unsigned_char_list_create(&l);
 	buffered_printf(&l,"\n%s\n", msg);
 	buffered_puts(&l,"Type #1:\n");
-	print_normalized_declaration_declarator_and_specifiers(state->c.memory_pool_collection, &l, t1.t->declarator, t1.t->specifiers, (struct parser_node *)0, 0);
+	print_normalized_declaration_declarator_and_specifiers(state->c.memory_pool_collection, &l, t1->declarator, t1->specifiers, (struct parser_node *)0, 0);
 	buffered_puts(&l,"Type #2:\n");
-	print_normalized_declaration_declarator_and_specifiers(state->c.memory_pool_collection, &l, t2.t->declarator, t2.t->specifiers, (struct parser_node *)0, 0);
+	print_normalized_declaration_declarator_and_specifiers(state->c.memory_pool_collection, &l, t2->declarator, t2->specifiers, (struct parser_node *)0, 0);
 	unsigned_char_list_add_end(&l, 0);
 	printf("%s\n", unsigned_char_list_data(&l));
 	print_node_context(state, context);
@@ -402,15 +402,15 @@ void unset_current_function(struct current_function_change * c){
 }
 
 
-unsigned int is_type_description_a_function(struct memory_pool_collection * m, struct type_description_reference t){
-	struct parser_node * temp = create_abstract_declarator_from_normalized_declarator(m, t.t->declarator);
+unsigned int is_type_description_a_function(struct memory_pool_collection * m, struct type_description * t){
+	struct parser_node * temp = create_abstract_declarator_from_normalized_declarator(m, t->declarator);
 	unsigned int rtn = is_function(m, temp);
 	destroy_parser_node_tree_and_c_lexer_tokens(m, temp);
 	return rtn;
 }
 
-unsigned int is_type_description_a_function_pointer(struct memory_pool_collection * m, struct type_description_reference t){
-	struct parser_node * temp = create_abstract_declarator_from_normalized_declarator(m, t.t->declarator);
+unsigned int is_type_description_a_function_pointer(struct memory_pool_collection * m, struct type_description * t){
+	struct parser_node * temp = create_abstract_declarator_from_normalized_declarator(m, t->declarator);
 	unsigned int rtn;
 	while(is_pointer(m, temp)){
 		temp = convert_abstract_declarator_to_pointer_type(m, temp);
@@ -420,11 +420,11 @@ unsigned int is_type_description_a_function_pointer(struct memory_pool_collectio
 	return rtn;
 }
 
-struct type_description_reference create_type_description_from_type_name(struct memory_pool_collection * m, struct parser_state * state, struct parser_node * n){
-	struct type_description_reference rtn;
+struct type_description * create_type_description_from_type_name(struct memory_pool_collection * m, struct parser_state * state, struct parser_node * n){
+	struct type_description * rtn;
 	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 	struct scope_level * scope = get_parser_scope_level(state->type_engine);
-	rtn.t = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
+	rtn = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
 	assert(n->type == TYPE_NAME);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
 	if(n->first_child->next && n->first_child->next->type == ABSTRACT_DECLARATOR){
@@ -432,36 +432,36 @@ struct type_description_reference create_type_description_from_type_name(struct 
 	}else{
 		normalized_declarator->declarator = (struct parser_node *)0;
 	}
-	rtn.t->specifiers = get_normalized_specifier_list(m, n->first_child);
-	rtn.t->declarator = normalized_declarator;
-	rtn.t->source_scope_level = scope;
-	rtn.t->context = n;
-	rtn.t->value_type = WORD_ALIGNED_RVALUE;
-	rtn.t->source_element = (struct normalized_declaration_element *)0;
+	rtn->specifiers = get_normalized_specifier_list(m, n->first_child);
+	rtn->declarator = normalized_declarator;
+	rtn->source_scope_level = scope;
+	rtn->context = n;
+	rtn->value_type = WORD_ALIGNED_RVALUE;
+	rtn->source_element = (struct normalized_declaration_element *)0;
 	return rtn;
 }
 
-struct type_description_reference get_current_function_return_type_description(struct memory_pool_collection * m, struct type_description_reference t){
+struct type_description * get_current_function_return_type_description(struct memory_pool_collection * m, struct type_description * t){
 	/*  Should be a plain function type with no levels of indirection */
-	struct type_description_reference return_type_description;
+	struct type_description * return_type_description;
 	struct normalized_declarator * normalized_declarator_return = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 
-	struct parser_node * abstract = create_abstract_declarator_from_normalized_declarator(m, t.t->declarator);
+	struct parser_node * abstract = create_abstract_declarator_from_normalized_declarator(m, t->declarator);
 	struct parser_node * fcn_type = convert_abstract_declarator_to_function_type(m, abstract);
 	normalized_declarator_return->declarator = fcn_type;
 	normalized_declarator_return->type = NORMALIZED_ABSTRACT_DECLARATOR;
-	return_type_description = create_type_description_from_normalized_declarator_and_specifiers(m, normalized_declarator_return, t.t->specifiers, t.t->context, t.t->source_scope_level, t.t->value_type, t.t->source_element);
+	return_type_description = create_type_description_from_normalized_declarator_and_specifiers(m, normalized_declarator_return, t->specifiers, t->context, t->source_scope_level, t->value_type, t->source_element);
 	destroy_parser_node_tree_and_c_lexer_tokens(m, normalized_declarator_return->declarator);
 	free(normalized_declarator_return);
 	return return_type_description;
 }
 
-struct type_description_reference create_dereferenced_array_type_description_from_type_description(struct memory_pool_collection * m, struct type_description_reference a){
+struct type_description * create_dereferenced_array_type_description_from_type_description(struct memory_pool_collection * m, struct type_description * a){
 	/* Take a type description as input and return a type description of the pointer type (do the [] operator on an array or pointer) */
-	struct type_description_reference rtn;
+	struct type_description * rtn;
 	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 	struct parser_node * temp = (struct parser_node *)0;
-	temp = create_abstract_declarator_from_normalized_declarator(m, a.t->declarator);
+	temp = create_abstract_declarator_from_normalized_declarator(m, a->declarator);
 	if(is_array(m, temp)){
 		normalized_declarator->declarator = convert_abstract_declarator_to_array_type(m, temp);
 	}else if(is_pointer(m, temp)){
@@ -470,48 +470,48 @@ struct type_description_reference create_dereferenced_array_type_description_fro
 		struct unsigned_char_list l;
 		unsigned_char_list_create(&l);
 		buffered_puts(&l, "Type is:\n");
-		print_normalized_declaration_declarator_and_specifiers(m, &l, a.t->declarator, a.t->specifiers, (struct parser_node *)0, 0);
+		print_normalized_declaration_declarator_and_specifiers(m, &l, a->declarator, a->specifiers, (struct parser_node *)0, 0);
 		unsigned_char_list_add_end(&l, 0);
 		printf("%s\n", unsigned_char_list_data(&l));
 		assert(0 && "Trying to perform [] operator on something that is not an array or pointer.");
 	}
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
-	rtn = create_type_description_from_normalized_declarator_and_specifiers(m, normalized_declarator, a.t->specifiers, a.t->context, a.t->source_scope_level, a.t->value_type, a.t->source_element);
+	rtn = create_type_description_from_normalized_declarator_and_specifiers(m, normalized_declarator, a->specifiers, a->context, a->source_scope_level, a->value_type, a->source_element);
 	destroy_parser_node_tree_and_c_lexer_tokens(m, normalized_declarator->declarator);
 	free(normalized_declarator);
 	return rtn;
 }
 
-struct type_description_reference create_dereferenced_pointer_type_description_from_type_description(struct memory_pool_collection * m, struct type_description_reference a){
+struct type_description * create_dereferenced_pointer_type_description_from_type_description(struct memory_pool_collection * m, struct type_description * a){
 	/* Take a type description as input and return a type description of the pointer type (do the * (value pointed to by) operator on a pointer) */
-	struct type_description_reference rtn;
+	struct type_description * rtn;
 	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 	struct parser_node * temp = (struct parser_node *)0;
-	temp = create_abstract_declarator_from_normalized_declarator(m, a.t->declarator);
+	temp = create_abstract_declarator_from_normalized_declarator(m, a->declarator);
 	normalized_declarator->declarator = convert_abstract_declarator_to_pointer_type(m, temp);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
-	rtn = create_type_description_from_normalized_declarator_and_specifiers(m, normalized_declarator, a.t->specifiers, a.t->context, a.t->source_scope_level, a.t->value_type, a.t->source_element);
+	rtn = create_type_description_from_normalized_declarator_and_specifiers(m, normalized_declarator, a->specifiers, a->context, a->source_scope_level, a->value_type, a->source_element);
 	destroy_parser_node_tree_and_c_lexer_tokens(m, normalized_declarator->declarator);
 	free(normalized_declarator);
 	return rtn;
 }
 
 
-struct type_description_reference create_address_type_description_from_type_description(struct memory_pool_collection * m, struct type_description_reference a){
+struct type_description * create_address_type_description_from_type_description(struct memory_pool_collection * m, struct type_description * a){
 	/* Take a type description as input and return a type description of the address type (do the & operator) */
-	struct type_description_reference rtn;
+	struct type_description * rtn;
 	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 	struct parser_node * temp = (struct parser_node *)0;
-	temp = create_abstract_declarator_from_normalized_declarator(m, a.t->declarator);
+	temp = create_abstract_declarator_from_normalized_declarator(m, a->declarator);
 	normalized_declarator->declarator = convert_abstract_declarator_to_address_type(m, temp);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
-	rtn = create_type_description_from_normalized_declarator_and_specifiers(m, normalized_declarator, a.t->specifiers, a.t->context, a.t->source_scope_level, a.t->value_type, a.t->source_element);
+	rtn = create_type_description_from_normalized_declarator_and_specifiers(m, normalized_declarator, a->specifiers, a->context, a->source_scope_level, a->value_type, a->source_element);
 	destroy_parser_node_tree_and_c_lexer_tokens(m, normalized_declarator->declarator);
 	free(normalized_declarator);
 	return rtn;
 }
 
-unsigned int type_description_cmp(struct memory_pool_collection * m, struct type_description_reference a, struct type_description_reference b){
+unsigned int type_description_cmp(struct memory_pool_collection * m, struct type_description * a, struct type_description * b){
 	/*  Compares the 'type' and ignores storage class specifiers and type qualifiers */
 	/*  TODO:  Refactor with options that can selectively ignore comparison of type qualifiers, specifiers etc. */
 
@@ -521,8 +521,8 @@ unsigned int type_description_cmp(struct memory_pool_collection * m, struct type
 	if(a_class != b_class){
 		return 1;
 	}else{
-		struct parser_node * abstract_declarator_a = create_abstract_declarator_from_normalized_declarator(m, a.t->declarator);
-		struct parser_node * abstract_declarator_b = create_abstract_declarator_from_normalized_declarator(m, b.t->declarator);
+		struct parser_node * abstract_declarator_a = create_abstract_declarator_from_normalized_declarator(m, a->declarator);
+		struct parser_node * abstract_declarator_b = create_abstract_declarator_from_normalized_declarator(m, b->declarator);
 		while(abstract_declarator_a || abstract_declarator_b){
 
 			if(is_pointer(m, abstract_declarator_a) || is_pointer(m, abstract_declarator_b)){
@@ -557,29 +557,29 @@ unsigned int type_description_cmp(struct memory_pool_collection * m, struct type
 										struct normalized_declaration_set * declaration_set_b = create_normalized_declaration_set_from_parser_node(m, parameter_declaration_b, (struct normalized_declaration_set *)0);
 										unsigned int rtn;
 
-										struct type_description_reference param_type_a;
-										struct type_description_reference param_type_b;
-										param_type_a.t = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
-										param_type_b.t = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
-										param_type_a.t->specifiers = declaration_set_a->normalized_specifiers;
-										param_type_b.t->specifiers = declaration_set_b->normalized_specifiers;
+										struct type_description * param_type_a;
+										struct type_description * param_type_b;
+										param_type_a = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
+										param_type_b = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
+										param_type_a->specifiers = declaration_set_a->normalized_specifiers;
+										param_type_b->specifiers = declaration_set_b->normalized_specifiers;
 										assert(struct_normalized_declarator_ptr_list_size(declaration_set_a->normalized_declarators) <= 1);
 										assert(struct_normalized_declarator_ptr_list_size(declaration_set_b->normalized_declarators) <= 1);
 										if(struct_normalized_declarator_ptr_list_size(declaration_set_a->normalized_declarators)){
-											param_type_a.t->declarator = struct_normalized_declarator_ptr_list_get(declaration_set_a->normalized_declarators, 0);
+											param_type_a->declarator = struct_normalized_declarator_ptr_list_get(declaration_set_a->normalized_declarators, 0);
 										}else{
-											param_type_a.t->declarator = (struct normalized_declarator *)0;
+											param_type_a->declarator = (struct normalized_declarator *)0;
 										}
 										if(struct_normalized_declarator_ptr_list_size(declaration_set_b->normalized_declarators)){
-											param_type_b.t->declarator = struct_normalized_declarator_ptr_list_get(declaration_set_b->normalized_declarators, 0);
+											param_type_b->declarator = struct_normalized_declarator_ptr_list_get(declaration_set_b->normalized_declarators, 0);
 										}else{
-											param_type_b.t->declarator = (struct normalized_declarator *)0;
+											param_type_b->declarator = (struct normalized_declarator *)0;
 										}
 										rtn = type_description_cmp(m, param_type_a, param_type_b);
 										destroy_normalized_declaration_element_list(m, create_normalized_declaration_element_list(declaration_set_a));
 										destroy_normalized_declaration_element_list(m, create_normalized_declaration_element_list(declaration_set_b));
-										struct_type_description_memory_pool_free(m->struct_type_description_pool, param_type_a.t);
-										struct_type_description_memory_pool_free(m->struct_type_description_pool, param_type_b.t);
+										struct_type_description_memory_pool_free(m->struct_type_description_pool, param_type_a);
+										struct_type_description_memory_pool_free(m->struct_type_description_pool, param_type_b);
 										arg_index++;
 										if(rtn){
 											return rtn;
@@ -1263,7 +1263,7 @@ unsigned int * convert_string_literal(unsigned char * str, unsigned int *size_in
 
 
 
-struct type_description_reference get_type_description_from_suffix(struct memory_pool_collection * m, unsigned char * str){
+struct type_description * get_type_description_from_suffix(struct memory_pool_collection * m, unsigned char * str){
 	unsigned int num_u = 0;
 	unsigned int num_l = 0;
 	while(*str){
@@ -1318,8 +1318,8 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 				new_description->native_data = (unsigned int *)malloc(sizeof(unsigned int));
 				*(new_description->native_data) = convert_hexadecimal_constant(new_description->str);
 				new_description->type_description = get_type_description_from_suffix(state->memory_pool_collection, new_description->str);
-				new_description->type_description.t->value_type = WORD_ALIGNED_RVALUE;
-				new_description->type_description.t->source_scope_level = (struct scope_level*)0;
+				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
+				new_description->type_description->source_scope_level = (struct scope_level*)0;
 				break;
 			}case CONSTANT_EXPONENT:{
 				assert(0 && "constant exponent conversion not implemented.");
@@ -1341,8 +1341,8 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 				}else{
 					new_description->type_description = add_specifier(state->memory_pool_collection, create_empty_type_description(state->memory_pool_collection), INT);
 				}
-				new_description->type_description.t->value_type = WORD_ALIGNED_RVALUE;
-				new_description->type_description.t->source_scope_level = (struct scope_level*)0;
+				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
+				new_description->type_description->source_scope_level = (struct scope_level*)0;
 				break;
 			}case CONSTANT_CHARACTER:{
 				unsigned int c;
@@ -1351,16 +1351,16 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 				convert_character_constant(&new_description->str[1], &c);
 				*((unsigned char *)&new_description->native_data[0]) = (unsigned char)c;
 				new_description->type_description = add_specifier(state->memory_pool_collection, add_specifier(state->memory_pool_collection, create_empty_type_description(state->memory_pool_collection), CONST), CHAR);
-				new_description->type_description.t->value_type = WORD_ALIGNED_RVALUE;
-				new_description->type_description.t->source_scope_level = (struct scope_level*)0;
+				new_description->type_description->value_type = WORD_ALIGNED_RVALUE;
+				new_description->type_description->source_scope_level = (struct scope_level*)0;
 				break;
 			}case STRING_LITERAL:{
-				struct type_description_reference type_description;
+				struct type_description * type_description;
 				new_description->native_data = convert_string_literal(new_description->str, &new_description->size_in_bytes);
 				type_description = add_specifier(state->memory_pool_collection, add_specifier(state->memory_pool_collection, create_empty_type_description(state->memory_pool_collection), CONST), CHAR);
-				type_description.t->declarator = make_array_brackets(state->memory_pool_collection);
-				type_description.t->value_type = LVALUE;
-				type_description.t->source_scope_level = (struct scope_level*)0;
+				type_description->declarator = make_array_brackets(state->memory_pool_collection);
+				type_description->value_type = LVALUE;
+				type_description->source_scope_level = (struct scope_level*)0;
 				new_description->type_description = type_description;
 				break;
 			}default:{
@@ -2519,23 +2519,23 @@ struct parser_node * type_qualifier(struct parser_state * state, struct type_qua
 	}
 }
 
-struct parser_node * storage_class_specifier(struct parser_state * state, struct storage_class_specifier_id * type_engine_id){
+struct parser_node * simple_storage_class_specifier(struct parser_state * state, struct simple_storage_class_specifier_id * type_engine_id){
 	struct parser_node * n1;
-	parser_progress("Attempting to build storage_class_specifier\n");
+	parser_progress("Attempting to build simple_storage_class_specifier\n");
 	if((n1 = p_accept(TYPEDEF, state))){
-		*type_engine_id = get_type_engine_id_for_storage_class_specifier(state->type_engine, TYPEDEF);
+		*type_engine_id = get_type_engine_id_for_simple_storage_class_specifier(state->type_engine, TYPEDEF);
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
 	}else if((n1 = p_accept(EXTERN, state))){
-		*type_engine_id = get_type_engine_id_for_storage_class_specifier(state->type_engine, EXTERN);
+		*type_engine_id = get_type_engine_id_for_simple_storage_class_specifier(state->type_engine, EXTERN);
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
 	}else if((n1 = p_accept(STATIC, state))){
-		*type_engine_id = get_type_engine_id_for_storage_class_specifier(state->type_engine, STATIC);
+		*type_engine_id = get_type_engine_id_for_simple_storage_class_specifier(state->type_engine, STATIC);
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
 	}else if((n1 = p_accept(AUTO, state))){
-		*type_engine_id = get_type_engine_id_for_storage_class_specifier(state->type_engine, AUTO);
+		*type_engine_id = get_type_engine_id_for_simple_storage_class_specifier(state->type_engine, AUTO);
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
 	}else if((n1 = p_accept(REGISTER, state))){
-		*type_engine_id = get_type_engine_id_for_storage_class_specifier(state->type_engine, REGISTER);
+		*type_engine_id = get_type_engine_id_for_simple_storage_class_specifier(state->type_engine, REGISTER);
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STORAGE_CLASS_SPECIFIER);
 	}else {
 		parser_progress("Expected type_qualifier.\n");
@@ -2605,12 +2605,20 @@ struct parser_node * enumerator_list(struct parser_state * state){
 	}
 }
 
-struct parser_node * enum_specifier(struct parser_state * state){
+struct parser_node * enum_specifier(struct parser_state * state, struct scoped_tag_specifier_id * scoped_tag_specifier_id, unsigned int possible_anonymous_tag_id){
 	struct parser_node * n1;
+	struct scope_level * current_scope = get_parser_scope_level(state->type_engine); 
 	parser_progress("Attempting to build enum_specifier\n");
 	if((n1 = p_accept(ENUM, state))){
 		struct identifier_id identifier_id;
 		if((n1->next = p_accept(OPEN_BRACE_CHAR, state))){
+			struct unscoped_tag_specifier_id anonymous_unscoped_tag_specifier_id;
+			unsigned int anonymous_declaration_id = possible_anonymous_tag_id; /* Unique id for each anonymous tag in a scope. */
+			struct scope_level_id scope_id = get_type_engine_id_for_scope_level(state->type_engine, current_scope);
+			struct enum_specifier_id anonymous_id = get_anonymous_enum_specifier_id(state->type_engine, anonymous_declaration_id);
+			anonymous_unscoped_tag_specifier_id = get_enum_specifier_id(state->type_engine, anonymous_id);
+			*scoped_tag_specifier_id = get_type_engine_id_for_scoped_tag_specifier(state->type_engine, scope_id, anonymous_unscoped_tag_specifier_id);
+
 			if((n1->next->next = enumerator_list(state))){
 				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
 					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, ENUM_SPECIFIER);
@@ -2623,6 +2631,24 @@ struct parser_node * enum_specifier(struct parser_state * state){
 				return (struct parser_node *)0;
 			}
 		}else if((n1->next = get_identifier_node(state, &identifier_id))){
+			struct enum_specifier_id non_anonymous_id = get_named_enum_specifier_id(state->type_engine, identifier_id);
+			struct scope_level * enum_origin_scope;
+			struct scope_level * closest_declared_scope;
+			struct unscoped_tag_specifier_id named_unscoped_tag_specifier_id;
+			struct scope_level_id scope_id;
+
+			named_unscoped_tag_specifier_id = get_enum_specifier_id(state->type_engine, non_anonymous_id);
+
+			closest_declared_scope = get_scope_of_closest_tag_declaration(state->type_engine, current_scope, named_unscoped_tag_specifier_id);
+			if(!closest_declared_scope){
+				/*  If there is no closest one, then this must declare an incomplete type. */
+				add_named_tag_declaration(state->type_engine, identifier_id, named_unscoped_tag_specifier_id, current_scope);
+			}
+			enum_origin_scope = closest_declared_scope ? closest_declared_scope : current_scope;
+			scope_id = get_type_engine_id_for_scope_level(state->type_engine, enum_origin_scope);
+
+			*scoped_tag_specifier_id = get_type_engine_id_for_scoped_tag_specifier(state->type_engine, scope_id, named_unscoped_tag_specifier_id);
+
 			if((n1->next->next = p_accept(OPEN_BRACE_CHAR, state))){
 				if((n1->next->next->next = enumerator_list(state))){
 					if((n1->next->next->next->next = p_accept(CLOSE_BRACE_CHAR, state))){
@@ -2648,14 +2674,14 @@ struct parser_node * enum_specifier(struct parser_state * state){
 	}
 }
 
-struct parser_node * struct_or_union(struct parser_state * state, enum type_engine_struct_or_union_specifier_kind * kind){
+struct parser_node * struct_or_union(struct parser_state * state, enum type_engine_unscoped_tag_specifier_kind * kind){
 	struct parser_node * n1;
 	parser_progress("Attempting to build struct_or_union\n");
 	if((n1 = p_accept(STRUCT, state))){
-		*kind = TYPE_ENGINE_STRUCT_SPECIFIER;
+		*kind = TYPE_ENGINE_UNSCOPED_STRUCT_SPECIFIER;
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION);
 	}else if((n1 = p_accept(UNION, state))){
-		*kind = TYPE_ENGINE_UNION_SPECIFIER;
+		*kind = TYPE_ENGINE_UNSCOPED_UNION_SPECIFIER;
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION);
 	}else {
 		parser_progress("Expected struct_or_union.\n");
@@ -2666,41 +2692,41 @@ struct parser_node * struct_or_union(struct parser_state * state, enum type_engi
 struct parser_node * type_specifier(struct parser_state * state, struct aggregate_specifier_id * type_engine_id){
 	struct parser_node * n1;
 	struct parser_checkpoint checkpoint = create_parser_checkpoint(state);
-	struct scoped_struct_or_union_specifier_id temp_id;
+	struct scoped_tag_specifier_id temp_id;
 	struct identifier_id identifier_id;
 	parser_progress("Attempting to build type_specifier\n");
 	if((n1 = p_accept(VOID, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, VOID));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, VOID));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(CHAR, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, CHAR));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, CHAR));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(SHORT, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, SHORT));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, SHORT));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(INT, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, INT));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, INT));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(LONG, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, LONG));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, LONG));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(FLOAT, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, FLOAT));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, FLOAT));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(DOUBLE, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, DOUBLE));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, DOUBLE));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(SIGNED, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, SIGNED));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, SIGNED));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = p_accept(UNSIGNED, state))){
-		*type_engine_id = aggregate_specifier_from_simple_specifier_id(state->type_engine, get_type_engine_id_for_simple_specifier(state->type_engine, UNSIGNED));
+		*type_engine_id = aggregate_specifier_from_simple_type_specifier_id(state->type_engine, get_type_engine_id_for_simple_type_specifier(state->type_engine, UNSIGNED));
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = struct_or_union_specifier(state, &temp_id, consume_next_anonymous_tag_id_in_current_parser_scope(state->type_engine)))){
-		*type_engine_id = aggregate_specifier_from_scoped_struct_or_union_specifier_id(state->type_engine, temp_id);
+		*type_engine_id = aggregate_specifier_from_scoped_tag_specifier_id(state->type_engine, temp_id);
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
-	}else if((n1 = enum_specifier(state))){
-		*type_engine_id = aggregate_specifier_from_enum_specifier_id(state->type_engine, 0); /* TODO:  Not really 0 */
+	}else if((n1 = enum_specifier(state, &temp_id, consume_next_anonymous_tag_id_in_current_parser_scope(state->type_engine)))){
+		*type_engine_id = aggregate_specifier_from_scoped_tag_specifier_id(state->type_engine, temp_id);
 		return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 	}else if((n1 = get_identifier_node(state, &identifier_id))){
 		/*  This identifier can only be treated as a type if it has been declared with a typedef.  */
@@ -2708,9 +2734,9 @@ struct parser_node * type_specifier(struct parser_state * state, struct aggregat
 		struct namespace_object * obj;
 		struct scope_level * scope = get_parser_scope_level(state->type_engine);
 		struct normalized_declaration_element * element;
-		struct type_description_reference type_description;
+		struct type_description * type_description;
 		*type_engine_id = aggregate_specifier_from_typename_specifier_id(state->type_engine, 0); /* TODO:  Not really 0 */
-		type_description.t = (struct type_description *)0;
+		type_description = (struct type_description *)0;
 		obj = get_namespace_object_from_closest_namespace(ident, IDENTIFIER_NAMESPACE, scope, 0, state->memory_pool_collection);
 		if(obj){
 			element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
@@ -2721,7 +2747,7 @@ struct parser_node * type_specifier(struct parser_state * state, struct aggregat
 			heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 		}else{
-			if(type_description.t){
+			if(type_description){
 				destroy_type_description(state->memory_pool_collection, type_description);
 			}
 			backtrack(state, checkpoint);
@@ -2739,10 +2765,10 @@ struct parser_node * declaration_specifiers(struct parser_state * state, struct 
 	struct parser_node * n1;
 	struct aggregate_specifier_id type_engine_type_specifier_id;
 	struct type_qualifier_id type_engine_type_qualifier_id;
-	struct storage_class_specifier_id type_engine_storage_class_specifier_id;
+	struct simple_storage_class_specifier_id type_engine_simple_storage_class_specifier_id;
 	parser_progress("Attempting to build declaration_specifiers\n");
-	if((n1 = storage_class_specifier(state, &type_engine_storage_class_specifier_id))){
-		struct specifier_or_qualifier_list_item_id new_list_id = make_specifier_or_qualifier_list_item(state->type_engine, previous_specifier_qualifier_list_id, specifier_or_qualifier_from_storage_class_specifier_id(state->type_engine, type_engine_storage_class_specifier_id));
+	if((n1 = simple_storage_class_specifier(state, &type_engine_simple_storage_class_specifier_id))){
+		struct specifier_or_qualifier_list_item_id new_list_id = make_specifier_or_qualifier_list_item(state->type_engine, previous_specifier_qualifier_list_id, specifier_or_qualifier_from_simple_storage_class_specifier_id(state->type_engine, type_engine_simple_storage_class_specifier_id));
 		if((n1->next = declaration_specifiers(state, new_list_id, this_list_id))){
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION_SPECIFIERS);
 		}else{
@@ -2838,7 +2864,7 @@ struct parser_node * declaration(struct parser_state * state, struct general_typ
 				return (struct parser_node *)0;
 			}
 		}else if((n1->next = p_accept(SEMICOLON_CHAR, state))){
-			struct general_type_id general_type_id = get_type_engine_id_for_general_type(state->type_engine, declaration_specifiers_list_id, bitfield_or_declarator_from_only_declarator(state->type_engine, declarator_part_list_begin(state->type_engine)));
+			struct general_type_id general_type_id = get_type_engine_id_for_general_type(state->type_engine, declaration_specifiers_list_id, bitfield_or_declarator_from_does_not_have_bitfield(state->type_engine, declarator_part_list_begin(state->type_engine)));
 			*this_list_id = make_general_type_list_item(state->type_engine, prev_general_type_list_item_id, general_type_id);
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, DECLARATION);
 		}else{
@@ -3236,7 +3262,7 @@ struct parser_node * init_declarator(struct parser_state * state, struct bitfiel
 	struct declarator_part_list_item_id declarator_item_list_id;
 	parser_progress("Attempting to build init_declarator\n");
 	if((n1 = declarator(state, declarator_part_list_begin(state->type_engine), &declarator_item_list_id, identifier))){
-		*bitfield_or_declarator_id = bitfield_or_declarator_from_only_declarator(state->type_engine, declarator_item_list_id);
+		*bitfield_or_declarator_id = bitfield_or_declarator_from_does_not_have_bitfield(state->type_engine, declarator_item_list_id);
 		if((n1->next = p_accept(EQUALS_CHAR, state))){
 			if((n1->next->next = initializer(state))){
 				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, INIT_DECLARATOR);
@@ -3261,7 +3287,8 @@ struct parser_node * struct_declarator(struct parser_state * state, struct bitfi
 		if((n1->next = p_accept(COLON_CHAR, state))){
 			if((n1->next->next = constant_expression(state))){
 				struct parser_node_id constant_expression_id = get_type_engine_id_for_parser_node(state->type_engine, n1->next->next);
-				*bitfield_or_declarator_id = bitfield_or_declarator_from_bitfield_and_declarator(state->type_engine, 0/* TODO: id for declarator and constant expression */);
+				/* TODO:  Currently completely ignoring bitfield */
+				*bitfield_or_declarator_id = bitfield_or_declarator_from_has_bitfield(state->type_engine, declarator_item_list_id);
 				(void)constant_expression_id;
 				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
 			}else{
@@ -3269,14 +3296,15 @@ struct parser_node * struct_declarator(struct parser_state * state, struct bitfi
 				return (struct parser_node *)0;
 			}
 		}else{
-			*bitfield_or_declarator_id = bitfield_or_declarator_from_only_declarator(state->type_engine, declarator_item_list_id);
+			*bitfield_or_declarator_id = bitfield_or_declarator_from_does_not_have_bitfield(state->type_engine, declarator_item_list_id);
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
 		}
 	}else if((n1 = p_accept(COLON_CHAR, state))){
 		if((n1->next = constant_expression(state))){
 			struct parser_node_id constant_expression_id = get_type_engine_id_for_parser_node(state->type_engine, n1->next);
 			(void)constant_expression_id;
-			*bitfield_or_declarator_id = bitfield_or_declarator_from_only_bitfield(state->type_engine, 0/* TODO: id for bitfield */);
+			/*  TODO: completely ignoring bitfield */
+			*bitfield_or_declarator_id = bitfield_or_declarator_from_has_bitfield(state->type_engine, declarator_part_list_begin(state->type_engine));
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR);
 		}else{
 			add_parser_error(state, PARSER_ERROR_STRUCT_DECLARATOR_MISSING_CONSTANT_NO_DECLARATOR);
@@ -3288,7 +3316,7 @@ struct parser_node * struct_declarator(struct parser_state * state, struct bitfi
 	}
 }
 
-struct parser_node * struct_declarator_list_rest(struct parser_state * state, struct specifier_or_qualifier_list_item_id specifier_qualifier_list_id, struct general_type_list_item_id prev_general_type_list_id, struct general_type_list_item_id * this_list_id, struct declaration_namespace * dn){
+struct parser_node * struct_declarator_list_rest(struct parser_state * state, struct specifier_or_qualifier_list_item_id specifier_qualifier_list_id, struct general_type_list_item_id prev_general_type_list_id, struct general_type_list_item_id * this_list_id, struct identifier_declaration_namespace * dn){
 	struct parser_node * n1;
 	parser_progress("Attempting to build struct_declarator_list_rest\n");
 	if((n1 = p_accept(COMMA_CHAR, state))){
@@ -3299,9 +3327,10 @@ struct parser_node * struct_declarator_list_rest(struct parser_state * state, st
 			struct general_type_id general_type_id = get_type_engine_id_for_general_type(state->type_engine, specifier_qualifier_list_id, declarator_id);
 			struct general_type_list_item_id general_type_list_item_id = make_general_type_list_item(state->type_engine, prev_general_type_list_id, general_type_id);
 
-			add_ordered_general_type_to_declaration_namespace(state->type_engine, dn, general_type_id);
-			assert(identifier_id.initialized);
-			add_identifier_id_to_declaration_namespace(state->type_engine, dn, general_type_id, identifier_id.id);
+			add_ordered_general_type_to_identifier_declaration_namespace(state->type_engine, dn, general_type_id);
+			if(identifier_id.initialized){ /*  A bitfield padding will not have an identifier */
+				add_identifier_id_to_identifier_declaration_namespace(state->type_engine, dn, general_type_id, identifier_id.id);
+			}
 
 			if((n1->next->next = struct_declarator_list_rest(state, specifier_qualifier_list_id, general_type_list_item_id, this_list_id, dn))){
 				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR_LIST_REST);
@@ -3321,7 +3350,7 @@ struct parser_node * struct_declarator_list_rest(struct parser_state * state, st
 }
 
 
-struct parser_node * struct_declarator_list(struct parser_state * state, struct specifier_or_qualifier_list_item_id specifier_qualifier_list_id, struct general_type_list_item_id prev_general_type_list_id, struct general_type_list_item_id * this_list_id, struct declaration_namespace * dn){
+struct parser_node * struct_declarator_list(struct parser_state * state, struct specifier_or_qualifier_list_item_id specifier_qualifier_list_id, struct general_type_list_item_id prev_general_type_list_id, struct general_type_list_item_id * this_list_id, struct identifier_declaration_namespace * dn){
 	struct parser_node * n1;
 	struct parser_checkpoint checkpoint = create_parser_checkpoint(state);
 	struct bitfield_or_declarator_id declarator_id;
@@ -3331,6 +3360,11 @@ struct parser_node * struct_declarator_list(struct parser_state * state, struct 
 	if((n1 = struct_declarator(state, &declarator_id, &identifier_id))){
 		struct general_type_id general_type_id = get_type_engine_id_for_general_type(state->type_engine, specifier_qualifier_list_id, declarator_id);
 		struct general_type_list_item_id general_type_list_item_id = make_general_type_list_item(state->type_engine, prev_general_type_list_id, general_type_id);
+		add_ordered_general_type_to_identifier_declaration_namespace(state->type_engine, dn, general_type_id);
+		if(identifier_id.initialized){ /*  A bitfield padding will not have an identifier */
+			add_identifier_id_to_identifier_declaration_namespace(state->type_engine, dn, general_type_id, identifier_id.id);
+		}
+
 		if((n1->next = struct_declarator_list_rest(state, specifier_qualifier_list_id, general_type_list_item_id, this_list_id, dn))){
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_DECLARATOR_LIST);
 		}else{
@@ -3370,7 +3404,7 @@ struct parser_node * specifier_qualifier_list(struct parser_state * state, struc
 	}
 }
 
-struct parser_node * struct_declaration(struct parser_state * state, struct general_type_list_item_id prev_generic_type_list_item_id, struct general_type_list_item_id * this_list_id, struct declaration_namespace * dn){
+struct parser_node * struct_declaration(struct parser_state * state, struct general_type_list_item_id prev_generic_type_list_item_id, struct general_type_list_item_id * this_list_id, struct identifier_declaration_namespace * dn){
 	struct parser_node * n1;
 	struct parser_checkpoint checkpoint = create_parser_checkpoint(state);
 	struct specifier_or_qualifier_list_item_id type_engine_specifier_qualifier_list_id;
@@ -3396,7 +3430,7 @@ struct parser_node * struct_declaration(struct parser_state * state, struct gene
 	}
 }
 
-struct parser_node * struct_declaration_list_rest(struct parser_state * state, struct general_type_list_item_id prev_generic_type_list_item_id, struct general_type_list_item_id * this_list_id, struct declaration_namespace * dn){
+struct parser_node * struct_declaration_list_rest(struct parser_state * state, struct general_type_list_item_id prev_generic_type_list_item_id, struct general_type_list_item_id * this_list_id, struct identifier_declaration_namespace * dn){
 	struct parser_node * n1;
 	struct parser_checkpoint checkpoint = create_parser_checkpoint(state);
 	parser_progress("Attempting to build struct_declaration_list_rest\n");
@@ -3416,7 +3450,7 @@ struct parser_node * struct_declaration_list_rest(struct parser_state * state, s
 }
 
 
-struct parser_node * struct_declaration_list(struct parser_state * state, struct general_type_list_item_id prev_generic_type_list_item_id, struct general_type_list_item_id * this_list_id, struct declaration_namespace * dn){
+struct parser_node * struct_declaration_list(struct parser_state * state, struct general_type_list_item_id prev_generic_type_list_item_id, struct general_type_list_item_id * this_list_id, struct identifier_declaration_namespace * dn){
 	struct parser_node * n1;
 	struct parser_checkpoint checkpoint = create_parser_checkpoint(state);
 	parser_progress("Attempting to build struct_declaration_list\n");
@@ -3975,46 +4009,46 @@ void add_parser_error(struct parser_state * state, enum parser_error_type t){
 	struct_parser_error_list_add_end(&state->parser_errors, e);
 }
 
-struct parser_node * struct_or_union_specifier(struct parser_state * state, struct scoped_struct_or_union_specifier_id * scoped_struct_or_union_specifier_id, unsigned int possible_anonymous_tag_id){
+struct parser_node * struct_or_union_specifier(struct parser_state * state, struct scoped_tag_specifier_id * scoped_tag_specifier_id, unsigned int possible_anonymous_tag_id){
 	struct parser_node * n1;
 	struct parser_checkpoint checkpoint = create_parser_checkpoint(state);
-	enum type_engine_struct_or_union_specifier_kind kind;
+	enum type_engine_unscoped_tag_specifier_kind kind;
 	struct scope_level * current_scope = get_parser_scope_level(state->type_engine); 
 	parser_progress("Attempting to build struct_or_union_specifier\n");
 	if((n1 = struct_or_union(state, &kind))){
 		struct identifier_id identifier_id;
 		if((n1->next = get_identifier_node(state, &identifier_id))){
 			struct scope_level * struct_or_union_origin_scope;
-			struct scope_level * cloest_declared_scope;
-			struct struct_or_union_specifier_id struct_or_union_non_anonymous_id;
+			struct scope_level * closest_declared_scope;
+			struct unscoped_tag_specifier_id named_unscoped_tag_specifier_id;
 			struct scope_level_id scope_id;
-			if(kind == TYPE_ENGINE_STRUCT_SPECIFIER){
+			if(kind == TYPE_ENGINE_UNSCOPED_STRUCT_SPECIFIER){
 				struct struct_specifier_id non_anonymous_id = get_named_struct_specifier_id(state->type_engine, identifier_id);
-				struct_or_union_non_anonymous_id = get_struct_specifier_id(state->type_engine, non_anonymous_id);
+				named_unscoped_tag_specifier_id = get_struct_specifier_id(state->type_engine, non_anonymous_id);
 			}else{
 				struct union_specifier_id non_anonymous_id = get_named_union_specifier_id(state->type_engine, identifier_id);
-				struct_or_union_non_anonymous_id = get_union_specifier_id(state->type_engine, non_anonymous_id);
+				named_unscoped_tag_specifier_id = get_union_specifier_id(state->type_engine, non_anonymous_id);
 			}
-			cloest_declared_scope = get_scope_of_closest_struct_or_union_tag_declaration(state->type_engine, current_scope, struct_or_union_non_anonymous_id);
-			if(!cloest_declared_scope){
+			closest_declared_scope = get_scope_of_closest_tag_declaration(state->type_engine, current_scope, named_unscoped_tag_specifier_id);
+			if(!closest_declared_scope){
 				/*  If there is no closest one, then this must declare an incomplete struct or union type. */
-				add_named_struct_or_union_declaration(state->type_engine, identifier_id, struct_or_union_non_anonymous_id, current_scope);
+				add_named_tag_declaration(state->type_engine, identifier_id, named_unscoped_tag_specifier_id, current_scope);
 			}
-			struct_or_union_origin_scope = cloest_declared_scope ? cloest_declared_scope : current_scope;
+			struct_or_union_origin_scope = closest_declared_scope ? closest_declared_scope : current_scope;
 			scope_id = get_type_engine_id_for_scope_level(state->type_engine, struct_or_union_origin_scope);
-			*scoped_struct_or_union_specifier_id = get_type_engine_id_for_scoped_struct_or_union_specifier(state->type_engine, scope_id, struct_or_union_non_anonymous_id);
+			*scoped_tag_specifier_id = get_type_engine_id_for_scoped_tag_specifier(state->type_engine, scope_id, named_unscoped_tag_specifier_id);
 			if((n1->next->next = p_accept(OPEN_BRACE_CHAR,state))){
 				struct general_type_list_item_id generic_type_list_id;
-				struct declaration_namespace * dn = create_declaration_namespace(state->type_engine);
+				struct identifier_declaration_namespace * dn = create_identifier_declaration_namespace(state->type_engine);
 
 				if((n1->next->next->next = struct_declaration_list(state, get_general_type_list_begin(state->type_engine), &generic_type_list_id, dn))){
 					if((n1->next->next->next->next = p_accept(CLOSE_BRACE_CHAR,state))){
 						if(struct_or_union_origin_scope != current_scope){
 							/*  If this is a struct or union definition, it wont complete the incomplete type from the outer scope */
 							scope_id = get_type_engine_id_for_scope_level(state->type_engine, current_scope);
-							*scoped_struct_or_union_specifier_id = get_type_engine_id_for_scoped_struct_or_union_specifier(state->type_engine, scope_id, struct_or_union_non_anonymous_id);
+							*scoped_tag_specifier_id = get_type_engine_id_for_scoped_tag_specifier(state->type_engine, scope_id, named_unscoped_tag_specifier_id);
 						}
-						if(add_struct_or_union_definition(state->type_engine, dn, struct_or_union_non_anonymous_id, current_scope)){
+						if(add_struct_or_union_definition(state->type_engine, dn, named_unscoped_tag_specifier_id, current_scope, kind)){
 							add_parser_error(state, PARSER_ERROR_STRUCT_OR_UNION_REDEFINITION);
 						}
 						return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
@@ -4030,23 +4064,23 @@ struct parser_node * struct_or_union_specifier(struct parser_state * state, stru
 				return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
 			}
 		}else if((n1->next = p_accept(OPEN_BRACE_CHAR,state))){
-			struct declaration_namespace * dn = create_declaration_namespace(state->type_engine);
+			struct identifier_declaration_namespace * dn = create_identifier_declaration_namespace(state->type_engine);
 			struct general_type_list_item_id generic_type_list_id;
-			struct struct_or_union_specifier_id struct_or_union_anonymous_id;
+			struct unscoped_tag_specifier_id anonymous_unscoped_tag_specifier_id;
 			unsigned int anonymous_declaration_id = possible_anonymous_tag_id; /* Unique id for each anonymous tag in a scope. */
 			struct scope_level_id scope_id = get_type_engine_id_for_scope_level(state->type_engine, current_scope);
-			if(kind == TYPE_ENGINE_STRUCT_SPECIFIER){
+			if(kind == TYPE_ENGINE_UNSCOPED_STRUCT_SPECIFIER){
 				struct struct_specifier_id anonymous_id = get_anonymous_struct_specifier_id(state->type_engine, anonymous_declaration_id);
-			 	struct_or_union_anonymous_id = get_struct_specifier_id(state->type_engine, anonymous_id);
+			 	anonymous_unscoped_tag_specifier_id = get_struct_specifier_id(state->type_engine, anonymous_id);
 			}else{
 				struct union_specifier_id anonymous_id = get_anonymous_union_specifier_id(state->type_engine, anonymous_declaration_id);
-			 	struct_or_union_anonymous_id = get_union_specifier_id(state->type_engine, anonymous_id);
+			 	anonymous_unscoped_tag_specifier_id = get_union_specifier_id(state->type_engine, anonymous_id);
 			}
-			*scoped_struct_or_union_specifier_id = get_type_engine_id_for_scoped_struct_or_union_specifier(state->type_engine, scope_id, struct_or_union_anonymous_id);
+			*scoped_tag_specifier_id = get_type_engine_id_for_scoped_tag_specifier(state->type_engine, scope_id, anonymous_unscoped_tag_specifier_id);
 
 			if((n1->next->next = struct_declaration_list(state, get_general_type_list_begin(state->type_engine), &generic_type_list_id, dn))){
 				if((n1->next->next->next = p_accept(CLOSE_BRACE_CHAR,state))){
-					if(add_struct_or_union_definition(state->type_engine, dn, struct_or_union_anonymous_id, current_scope)){
+					if(add_struct_or_union_definition(state->type_engine, dn, anonymous_unscoped_tag_specifier_id, current_scope, kind)){
 						add_parser_error(state, PARSER_ERROR_STRUCT_OR_UNION_REDEFINITION);
 					}
 					return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, STRUCT_OR_UNION_SPECIFIER);
@@ -4078,13 +4112,13 @@ struct parser_node * parameter_declaration(struct parser_state * state, struct g
 		struct identifier_from_declarator identifier_id;
 		identifier_id.initialized = 0; /*  No id obtained yet. */
 		if((n1->next = declarator(state, declarator_part_list_begin(state->type_engine), &declarator_list_item_id, &identifier_id))){
-			struct bitfield_or_declarator_id bitfield_or_declarator_id = bitfield_or_declarator_from_only_declarator(state->type_engine, declarator_list_item_id);
+			struct bitfield_or_declarator_id bitfield_or_declarator_id = bitfield_or_declarator_from_does_not_have_bitfield(state->type_engine, declarator_list_item_id);
 			struct general_type_id general_type_id = get_type_engine_id_for_general_type(state->type_engine, declaration_specifiers_list_id, bitfield_or_declarator_id);
 
 			*this_list_id = make_general_type_list_item(state->type_engine, prev_general_type_list_id, general_type_id);
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_DECLARATION);
 		}else if((n1->next = abstract_declarator(state, declarator_part_list_begin(state->type_engine), &declarator_list_item_id))){
-			struct bitfield_or_declarator_id bitfield_or_declarator_id = bitfield_or_declarator_from_only_declarator(state->type_engine, declarator_list_item_id);
+			struct bitfield_or_declarator_id bitfield_or_declarator_id = bitfield_or_declarator_from_does_not_have_bitfield(state->type_engine, declarator_list_item_id);
 			struct general_type_id general_type_id = get_type_engine_id_for_general_type(state->type_engine, declaration_specifiers_list_id, bitfield_or_declarator_id);
 			*this_list_id = make_general_type_list_item(state->type_engine, prev_general_type_list_id, general_type_id);
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, PARAMETER_DECLARATION);
@@ -4092,7 +4126,7 @@ struct parser_node * parameter_declaration(struct parser_state * state, struct g
 			struct bitfield_or_declarator_id bitfield_or_declarator_id;
 			struct general_type_id general_type_id;
 			declarator_list_item_id = declarator_part_list_begin(state->type_engine);
-			bitfield_or_declarator_id = bitfield_or_declarator_from_only_declarator(state->type_engine, declarator_list_item_id);
+			bitfield_or_declarator_id = bitfield_or_declarator_from_does_not_have_bitfield(state->type_engine, declarator_list_item_id);
 			general_type_id = get_type_engine_id_for_general_type(state->type_engine, declaration_specifiers_list_id, bitfield_or_declarator_id);
 
 			*this_list_id = make_general_type_list_item(state->type_engine, prev_general_type_list_id, general_type_id);
@@ -4659,7 +4693,7 @@ struct parser_node * function_definition(struct parser_state * state){
 	parser_progress("Attempting to build function_definition\n");
 	if((n1 = declaration_specifiers(state, specifier_or_qualifier_list_begin(state->type_engine), &declaration_specifiers_list_id))){
 		if((n1->next = declarator(state, declarator_part_list_begin(state->type_engine), &declarator_item_list_id, &identifier_id))){
-			struct bitfield_or_declarator_id declarator_id = bitfield_or_declarator_from_only_declarator(state->type_engine, declarator_item_list_id);
+			struct bitfield_or_declarator_id declarator_id = bitfield_or_declarator_from_does_not_have_bitfield(state->type_engine, declarator_item_list_id);
 			struct general_type_list_item_id general_type_list_id;
 			(void)declarator_id;
 			if((n1->next->next = declaration_list(state, (struct namespace_object *)0, get_general_type_list_begin(state->type_engine), &general_type_list_id))){
@@ -4684,7 +4718,7 @@ struct parser_node * function_definition(struct parser_state * state){
 		}
 	}else if((n1 = declarator(state, declarator_part_list_begin(state->type_engine), &declarator_item_list_id, &identifier_id))){
 		struct general_type_list_item_id general_type_list_id;
-		struct bitfield_or_declarator_id declarator_id = bitfield_or_declarator_from_only_declarator(state->type_engine, declarator_item_list_id);
+		struct bitfield_or_declarator_id declarator_id = bitfield_or_declarator_from_does_not_have_bitfield(state->type_engine, declarator_item_list_id);
 		(void)declarator_id;
 		if((n1->next = declaration_list(state, (struct namespace_object *)0, get_general_type_list_begin(state->type_engine), &general_type_list_id))){
 			if((n1->next->next = compound_statement(state, n1->next, 0))){
@@ -4895,18 +4929,18 @@ enum normalized_specifier_type get_normalized_specifier_type(enum c_token_type t
 	}
 }
 
-struct type_description_reference create_empty_type_description(struct memory_pool_collection * m){
-	struct type_description_reference new_type;
+struct type_description * create_empty_type_description(struct memory_pool_collection * m){
+	struct type_description * new_type;
 	struct struct_normalized_specifier_ptr_list * specifiers = (struct struct_normalized_specifier_ptr_list *)malloc(sizeof(struct struct_normalized_specifier_ptr_list));
-	new_type.t = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
+	new_type = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
 	struct_normalized_specifier_ptr_list_create(specifiers);
-	new_type.t->specifiers = specifiers;
-	new_type.t->declarator = (struct normalized_declarator *)0;
+	new_type->specifiers = specifiers;
+	new_type->declarator = (struct normalized_declarator *)0;
 	return new_type;
 }
 
-struct type_description_reference copy_type_description(struct memory_pool_collection * m, struct type_description_reference type){
-	return create_type_description_from_normalized_declarator_and_specifiers(m, type.t->declarator, type.t->specifiers, type.t->context, type.t->source_scope_level, type.t->value_type, type.t->source_element);
+struct type_description * copy_type_description(struct memory_pool_collection * m, struct type_description * type){
+	return create_type_description_from_normalized_declarator_and_specifiers(m, type->declarator, type->specifiers, type->context, type->source_scope_level, type->value_type, type->source_element);
 }
 
 unsigned int parse(struct parser_state * state){
@@ -4957,15 +4991,15 @@ const char ** get_node_type_names(void){
 	return (const char **)node_type_names;
 }
 
-unsigned int is_const(struct type_description_reference t){
+unsigned int is_const(struct type_description * t){
 	return !(count_specifiers(t, CONST));
 }
 
-unsigned int is_signed(struct type_description_reference t){
+unsigned int is_signed(struct type_description * t){
 	return !(count_specifiers(t, UNSIGNED));
 }
 
-struct type_description_reference ensure_signed(struct memory_pool_collection * m, struct type_description_reference t){
+struct type_description * ensure_signed(struct memory_pool_collection * m, struct type_description * t){
 	/*  Make sure that this type has the specifiers require for it to be signed.
 	Note that 'char' signedness is compiler defined.  We will define it to be signed.
 	This function assumes it is passed an integer based type (char, short, int, long,
@@ -4977,7 +5011,7 @@ struct type_description_reference ensure_signed(struct memory_pool_collection * 
 	return t;
 }
 
-struct type_description_reference ensure_unsigned(struct memory_pool_collection * m, struct type_description_reference t){
+struct type_description * ensure_unsigned(struct memory_pool_collection * m, struct type_description * t){
 	/*  Make sure that this type has the specifiers require for it to be unsigned.
 	Note that 'char' signedness is compiler defined.  We will define it to be signed.
 	This function assumes it is passed an integer based type (char, short, int, long,
@@ -4989,7 +5023,7 @@ struct type_description_reference ensure_unsigned(struct memory_pool_collection 
 	return add_specifier(m, t, UNSIGNED);
 }
 
-struct type_description_reference add_specifier(struct memory_pool_collection * m, struct type_description_reference description, enum c_token_type t){
+struct type_description * add_specifier(struct memory_pool_collection * m, struct type_description * description, enum c_token_type t){
 	unsigned char * string = get_specifier_string(t);
 	struct c_lexer_token * new_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
 	struct parser_node * terminal = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
@@ -5012,26 +5046,26 @@ struct type_description_reference add_specifier(struct memory_pool_collection * 
 
 	normalized_specifier->specifier = specifier;
 	normalized_specifier->type = get_normalized_specifier_type(t);
-	struct_normalized_specifier_ptr_list_add_end(description.t->specifiers, normalized_specifier);
+	struct_normalized_specifier_ptr_list_add_end(description->specifiers, normalized_specifier);
 	return description;
 }
 
-void remove_enum(struct memory_pool_collection * m, struct type_description_reference description){
+void remove_enum(struct memory_pool_collection * m, struct type_description * description){
 	unsigned int k;
-	for(k = 0; k < struct_normalized_specifier_ptr_list_size(description.t->specifiers); k++){
-		struct normalized_specifier * normalized_specifier = struct_normalized_specifier_ptr_list_get(description.t->specifiers, k);
+	for(k = 0; k < struct_normalized_specifier_ptr_list_size(description->specifiers); k++){
+		struct normalized_specifier * normalized_specifier = struct_normalized_specifier_ptr_list_get(description->specifiers, k);
 		if(normalized_specifier->specifier->type == TYPE_SPECIFIER && normalized_specifier->specifier->first_child->type == ENUM_SPECIFIER){
 			normalized_specifier->specifier->next = (struct parser_node *)0;
 			destroy_parser_node_tree_and_c_lexer_tokens(m, normalized_specifier->specifier);
 			free(normalized_specifier);
-			struct_normalized_specifier_ptr_list_remove_all(description.t->specifiers, normalized_specifier, normalized_specifier_ptr_cmp);
+			struct_normalized_specifier_ptr_list_remove_all(description->specifiers, normalized_specifier, normalized_specifier_ptr_cmp);
 			return;
 		}
 	}
 	assert(0 && "Did not find enum specifier.");
 }
 
-enum type_class determine_type_class(struct memory_pool_collection * m, struct type_description_reference t){
+enum type_class determine_type_class(struct memory_pool_collection * m, struct type_description * t){
 	/*  Be as specific as possible about the 'type' of something without differentiating between
 	    different user defined enums, unions or structs */
 	unsigned int num_char = count_specifiers(t, CHAR);
@@ -5042,8 +5076,8 @@ enum type_class determine_type_class(struct memory_pool_collection * m, struct t
 	unsigned int num_double = count_specifiers(t, DOUBLE);
 	unsigned int num_void = count_specifiers(t, VOID);
 	unsigned int num_unsigned = count_specifiers(t, UNSIGNED);
-	struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(t.t->specifiers);
-	struct parser_node * temp = create_abstract_declarator_from_normalized_declarator(m, t.t->declarator);
+	struct parser_node * struct_or_union_or_enum_specifier = get_struct_or_union_or_enum_specifier(t->specifiers);
+	struct parser_node * temp = create_abstract_declarator_from_normalized_declarator(m, t->declarator);
 	if(is_pointer(m, temp)){
 		destroy_parser_node_tree_and_c_lexer_tokens(m, temp);
 		return TYPE_CLASS_POINTER;
@@ -5099,7 +5133,7 @@ enum type_class determine_type_class(struct memory_pool_collection * m, struct t
 		struct unsigned_char_list l;
 		unsigned_char_list_create(&l);
 		buffered_puts(&l,"Type:\n");
-		print_normalized_declaration_declarator_and_specifiers(m, &l, t.t->declarator, t.t->specifiers, (struct parser_node *)0, 0);
+		print_normalized_declaration_declarator_and_specifiers(m, &l, t->declarator, t->specifiers, (struct parser_node *)0, 0);
 		unsigned_char_list_add_end(&l, 0);
 		printf("%s\n", unsigned_char_list_data(&l));
 		assert(0 && "Unrecognized primative.");
@@ -5115,7 +5149,7 @@ unsigned int get_ceil_modulo(unsigned int n, unsigned int modulo){
 	return modulo * (quotient + (remainder ? 1 : 0));
 }
 
-unsigned int arithmetic_type_size(struct memory_pool_collection * m, struct type_description_reference t, enum value_type tsc){
+unsigned int arithmetic_type_size(struct memory_pool_collection * m, struct type_description * t, enum value_type tsc){
 	enum type_class type_class = determine_type_class(m, t);
 	unsigned int data_bits;
 
@@ -5147,7 +5181,7 @@ unsigned int arithmetic_type_size(struct memory_pool_collection * m, struct type
 		}default:{
 			struct unsigned_char_list l;
 			unsigned_char_list_create(&l);
-			print_normalized_declaration_declarator_and_specifiers(m, &l, t.t->declarator, t.t->specifiers, (struct parser_node *)0, 0);
+			print_normalized_declaration_declarator_and_specifiers(m, &l, t->declarator, t->specifiers, (struct parser_node *)0, 0);
 			unsigned_char_list_add_end(&l, 0);
 			printf("%s\n", unsigned_char_list_data(&l));
 			assert(0 && "Unknown arithmetic type.");
@@ -5186,7 +5220,7 @@ unsigned int void_type_size(struct memory_pool_collection * m, enum value_type t
 	}
 }
 
-unsigned int enum_type_size(struct memory_pool_collection * m, struct type_description_reference t, enum value_type tsc){
+unsigned int enum_type_size(struct memory_pool_collection * m, struct type_description * t, enum value_type tsc){
 	(void)m;
 	(void)t;
 	switch (tsc){
@@ -5203,7 +5237,7 @@ unsigned int enum_type_size(struct memory_pool_collection * m, struct type_descr
 	}
 }
 
-unsigned int pointer_type_size(struct memory_pool_collection * m, struct type_description_reference t, enum value_type tsc){
+unsigned int pointer_type_size(struct memory_pool_collection * m, struct type_description * t, enum value_type tsc){
 	(void)t;
 	(void)m;
 	switch (tsc){
@@ -5220,7 +5254,7 @@ unsigned int pointer_type_size(struct memory_pool_collection * m, struct type_de
 	}
 }
 
-unsigned int is_integral_type(struct memory_pool_collection * m, struct type_description_reference t){
+unsigned int is_integral_type(struct memory_pool_collection * m, struct type_description * t){
 	enum type_class c = determine_type_class(m, t);
 	return (
 		c == TYPE_CLASS_CHAR ||
@@ -5232,7 +5266,7 @@ unsigned int is_integral_type(struct memory_pool_collection * m, struct type_des
 	);
 }
 
-unsigned int is_floating_type(struct memory_pool_collection * m, struct type_description_reference t){
+unsigned int is_floating_type(struct memory_pool_collection * m, struct type_description * t){
 	enum type_class c = determine_type_class(m, t);
 	return (
 		c == TYPE_CLASS_DOUBLE ||
@@ -5241,11 +5275,11 @@ unsigned int is_floating_type(struct memory_pool_collection * m, struct type_des
 	);
 }
 
-unsigned int is_arithmetic_type(struct memory_pool_collection * m, struct type_description_reference t){
+unsigned int is_arithmetic_type(struct memory_pool_collection * m, struct type_description * t){
 	return is_floating_type(m, t) || is_integral_type(m, t);
 }
 
-unsigned int is_scalar_type(struct memory_pool_collection * m, struct type_description_reference t){
+unsigned int is_scalar_type(struct memory_pool_collection * m, struct type_description * t){
 	enum type_class c = determine_type_class(m, t);
 	return is_arithmetic_type(m, t) || c == TYPE_CLASS_POINTER;
 }

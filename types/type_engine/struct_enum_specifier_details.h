@@ -18,6 +18,7 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct scoped_struct_or_union_specifier_id{
+struct enum_specifier_details{
+	enum type_engine_enum_specifier_kind type;
 	unsigned int id;
 };

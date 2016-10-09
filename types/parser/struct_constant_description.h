@@ -19,7 +19,7 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct constant_description{
-	struct type_description_reference type_description;
+	struct type_description * type_description;
 	unsigned char * str;
 	unsigned int * native_data; /* Byte array of the data used in the program */
 	unsigned int size_in_bytes;

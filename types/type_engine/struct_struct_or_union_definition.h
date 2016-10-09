@@ -19,7 +19,7 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct struct_or_union_definition {
-	struct declaration_namespace * declaration_namespace;
+	enum type_engine_unscoped_tag_specifier_kind type; /*  Should only be struct or union. */
+	struct identifier_declaration_namespace * identifier_declaration_namespace;
 	unsigned int is_completed;
-	enum c_token_type type; /*  struct or union */
 };

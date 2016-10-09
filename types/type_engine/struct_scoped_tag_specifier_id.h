@@ -1,3 +1,5 @@
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -13,20 +15,9 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
+
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
-        if(a->key.scope_id.id > b->key.scope_id.id){
-                return 1;
-        }else if(a->key.scope_id.id < b->key.scope_id.id){
-                return -1;
-        }else{
-		if(a->key.unscoped_tag_specifier_id.id > b->key.unscoped_tag_specifier_id.id){
-			return 1;
-		}else if(a->key.unscoped_tag_specifier_id.id < b->key.unscoped_tag_specifier_id.id){
-			return -1;
-		}else{
-			return 0;
-		}
-        }
-}
+struct scoped_tag_specifier_id{
+	unsigned int id;
+};

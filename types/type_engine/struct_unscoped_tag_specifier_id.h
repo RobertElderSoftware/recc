@@ -18,6 +18,6 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct struct_or_union_definition_collection {
-	struct unsigned_int_to_void_ptr_map struct_or_union_specifier_ids_to_struct_or_union_definitions;
+struct unscoped_tag_specifier_id{
+	unsigned int id;
 };

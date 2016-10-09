@@ -18,6 +18,6 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct enum_definition_collection{
-	struct unsigned_int_to_void_ptr_map general_type_ids_to_enum_definitions;
+struct simple_type_specifier_id{
+	unsigned int id;
 };

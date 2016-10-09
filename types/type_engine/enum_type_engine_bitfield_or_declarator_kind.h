@@ -17,7 +17,6 @@
 */
 
 enum type_engine_bitfield_or_declarator_kind{
-        TYPE_ENGINE_ONLY_DECLARATOR,
-        TYPE_ENGINE_ONLY_BITFIELD,
-        TYPE_ENGINE_BITFIELD_AND_DECLARATOR
+        TYPE_ENGINE_HAS_BITFIELD,
+        TYPE_ENGINE_DOES_NOT_HAVE_BITFIELD
 };

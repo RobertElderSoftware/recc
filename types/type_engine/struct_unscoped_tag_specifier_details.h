@@ -16,7 +16,9 @@
     under the License.
 */
 
-enum type_engine_struct_or_union_specifier_kind{
-        TYPE_ENGINE_STRUCT_SPECIFIER,
-        TYPE_ENGINE_UNION_SPECIFIER
+/*GETS_REPLACED_WITH_INCLUDES*/
+
+struct unscoped_tag_specifier_details{
+	enum type_engine_unscoped_tag_specifier_kind type;
+	unsigned int id;
 };

@@ -18,7 +18,6 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct scoped_struct_or_union_specifier_details{
-	struct scope_level_id scope_id;
-	struct struct_or_union_specifier_id struct_or_union_specifier_id;
+struct enum_specifier_id{
+	unsigned int id;
 };

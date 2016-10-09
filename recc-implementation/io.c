@@ -107,6 +107,7 @@ int output_buffer_to_file(struct unsigned_char_list * buffer, char * out_file){
 	unsigned int size = unsigned_char_list_size(buffer);
 	if(!(f = fopen(out_file, "w"))){
 		printf("Failed to open file %s for write.\n", out_file);
+		assert(0);
 		return 1;
 	}
 

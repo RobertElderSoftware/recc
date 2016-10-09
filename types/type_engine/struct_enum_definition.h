@@ -16,6 +16,9 @@
     under the License.
 */
 
-struct enum_definition{
-	unsigned int i; 
+/*GETS_REPLACED_WITH_INCLUDES*/
+
+struct enum_definition {
+	struct identifier_declaration_namespace * identifier_declaration_namespace;
+	unsigned int is_completed;
 };

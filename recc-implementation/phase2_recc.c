@@ -37,30 +37,39 @@ void new_register_data_structures_objects(struct build_state * state){
 	const char * generic_list_item_cmp = "recc-implementation/templates/comparison-functions/generic_list_item_compare.c";
 	const char * token_cmp = "recc-implementation/templates/comparison-functions/c_lexer_token_compare.c";
 	const char * details_cmp = "recc-implementation/templates/comparison-functions/type_engine_details_compare.c";
+	const char * id_cmp = "recc-implementation/templates/comparison-functions/type_engine_id_compare.c";
 	const char * general_type_details_cmp = "recc-implementation/templates/comparison-functions/type_engine_general_type_details_compare.c";
 	const char * type_engine_list_item_cmp = "recc-implementation/templates/comparison-functions/type_engine_list_item_compare.c";
 	const char * type_engine_scoped_type_cmp = "recc-implementation/templates/comparison-functions/type_engine_scoped_type_compare.c";
 	bootstrap_state_create(&bootstrap_state);
 
+	make_map(state, b, make_beb_list(2, "struct unscoped_tag_specifier_id", "struct struct_or_union_definition *"), make_beb_list(2, "generated/struct_unscoped_tag_specifier_id.h", "generated/struct_struct_or_union_definition.h"), id_cmp);
+	make_map(state, b, make_beb_list(2, "struct unscoped_tag_specifier_id", "struct enum_definition *"), make_beb_list(2, "generated/struct_unscoped_tag_specifier_id.h", "generated/struct_enum_definition.h"), id_cmp);
+	make_map(state, b, make_beb_list(2, "struct general_type_id", "unsigned int"), make_beb_list(1, "generated/struct_general_type_id.h"), id_cmp);
+	make_map(state, b, make_beb_list(2, "struct identifier_id", "struct general_type_id"), make_beb_list(2, "generated/struct_identifier_id.h", "generated/struct_general_type_id.h"), id_cmp);
+	make_map(state, b, make_beb_list(2, "struct identifier_id", "unsigned int"), make_beb_list(1, "generated/struct_identifier_id.h"), id_cmp);
+	make_map(state, b, make_beb_list(2, "struct unscoped_tag_specifier_id", "unsigned int"), make_beb_list(1, "generated/struct_unscoped_tag_specifier_id.h"), id_cmp);
+	make_map(state, b, make_beb_list(2, "struct identifier_id", "struct unscoped_tag_specifier_id"), make_beb_list(2, "generated/struct_identifier_id.h", "generated/struct_unscoped_tag_specifier_id.h"), id_cmp);
 	make_map(state, b, make_beb_list(2, "struct general_type_list_item_details", "struct general_type_list_item_id"), make_beb_list(2, "generated/struct_general_type_list_item_details.h", "generated/struct_general_type_list_item_id.h"), type_engine_list_item_cmp);
 	make_map(state, b, make_beb_list(2, "struct declarator_part_list_item_details", "struct declarator_part_list_item_id"), make_beb_list(2, "generated/struct_declarator_part_list_item_details.h", "generated/struct_declarator_part_list_item_id.h"), type_engine_list_item_cmp);
 	make_map(state, b, make_beb_list(2, "struct declarator_part_details", "struct declarator_part_id"), make_beb_list(2, "generated/struct_declarator_part_details.h", "generated/struct_declarator_part_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct struct_specifier_details", "struct struct_specifier_id"), make_beb_list(2, "generated/struct_struct_specifier_details.h", "generated/struct_struct_specifier_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct union_specifier_details", "struct union_specifier_id"), make_beb_list(2, "generated/struct_union_specifier_details.h", "generated/struct_union_specifier_id.h"), details_cmp);
+	make_map(state, b, make_beb_list(2, "struct enum_specifier_details", "struct enum_specifier_id"), make_beb_list(2, "generated/struct_enum_specifier_details.h", "generated/struct_enum_specifier_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct function_part_details", "struct function_part_id"), make_beb_list(2, "generated/struct_function_part_details.h", "generated/struct_function_part_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct array_part_details", "struct array_part_id"), make_beb_list(2, "generated/struct_array_part_details.h", "generated/struct_array_part_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct pointer_part_details", "struct pointer_part_id"), make_beb_list(2, "generated/struct_pointer_part_details.h", "generated/struct_pointer_part_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct specifier_or_qualifier_list_item_details", "struct specifier_or_qualifier_list_item_id"), make_beb_list(2, "generated/struct_specifier_or_qualifier_list_item_details.h", "generated/struct_specifier_or_qualifier_list_item_id.h"), type_engine_list_item_cmp);
-	make_map(state, b, make_beb_list(2, "struct scoped_struct_or_union_specifier_details", "struct scoped_struct_or_union_specifier_id"), make_beb_list(2, "generated/struct_scoped_struct_or_union_specifier_details.h", "generated/struct_scoped_struct_or_union_specifier_id.h"), type_engine_scoped_type_cmp);
-	make_map(state, b, make_beb_list(2, "struct struct_or_union_specifier_details", "struct struct_or_union_specifier_id"), make_beb_list(2, "generated/struct_struct_or_union_specifier_details.h", "generated/struct_struct_or_union_specifier_id.h"), details_cmp);
+	make_map(state, b, make_beb_list(2, "struct scoped_tag_specifier_details", "struct scoped_tag_specifier_id"), make_beb_list(2, "generated/struct_scoped_tag_specifier_details.h", "generated/struct_scoped_tag_specifier_id.h"), type_engine_scoped_type_cmp);
+	make_map(state, b, make_beb_list(2, "struct unscoped_tag_specifier_details", "struct unscoped_tag_specifier_id"), make_beb_list(2, "generated/struct_unscoped_tag_specifier_details.h", "generated/struct_unscoped_tag_specifier_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct specifier_or_qualifier_details", "struct specifier_or_qualifier_id"), make_beb_list(2, "generated/struct_specifier_or_qualifier_details.h", "generated/struct_specifier_or_qualifier_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct general_type_details", "struct general_type_id"), make_beb_list(2, "generated/struct_general_type_details.h", "generated/struct_general_type_id.h"), general_type_details_cmp);
 	make_map(state, b, make_beb_list(2, "struct bitfield_or_declarator_details", "struct bitfield_or_declarator_id"), make_beb_list(2, "generated/struct_bitfield_or_declarator_details.h", "generated/struct_bitfield_or_declarator_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct parameter_list_details", "struct parameter_list_id"), make_beb_list(2, "generated/struct_parameter_list_details.h", "generated/struct_parameter_list_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "struct aggregate_specifier_details", "struct aggregate_specifier_id"), make_beb_list(2, "generated/struct_aggregate_specifier_details.h", "generated/struct_aggregate_specifier_id.h"), details_cmp);
 	make_map(state, b, make_beb_list(2, "enum c_token_type", "struct type_qualifier_id"), make_beb_list(2, "generated/enum_c_token_type.h", "generated/struct_type_qualifier_id.h"), simple);
-	make_map(state, b, make_beb_list(2, "enum c_token_type", "struct storage_class_specifier_id"), make_beb_list(2, "generated/enum_c_token_type.h", "generated/struct_storage_class_specifier_id.h"), simple);
-	make_map(state, b, make_beb_list(2, "enum c_token_type", "struct simple_specifier_id"), make_beb_list(2, "generated/enum_c_token_type.h", "generated/struct_simple_specifier_id.h"), simple);
+	make_map(state, b, make_beb_list(2, "enum c_token_type", "struct simple_storage_class_specifier_id"), make_beb_list(2, "generated/enum_c_token_type.h", "generated/struct_simple_storage_class_specifier_id.h"), simple);
+	make_map(state, b, make_beb_list(2, "enum c_token_type", "struct simple_type_specifier_id"), make_beb_list(2, "generated/enum_c_token_type.h", "generated/struct_simple_type_specifier_id.h"), simple);
 	make_map(state, b, make_beb_list(2, "struct generic_list_item", "unsigned int"), make_beb_list(1, "generated/struct_generic_list_item.h"), generic_list_item_cmp);
 	make_map(state, b, make_beb_list(2, "struct normalized_declaration_element *", "unsigned int"), make_beb_list(1, "generated/struct_normalized_declaration_element.h"), simple);
 	make_map(state, b, make_beb_list(2, "struct parser_node *", "struct parser_node_id"), make_beb_list(2, "generated/struct_parser_node.h", "generated/struct_parser_node_id.h"), simple);
@@ -104,7 +113,7 @@ void new_register_data_structures_objects(struct build_state * state){
 	make_list(state, b, make_beb_list(1, "struct l2_lexer_state *"), make_beb_list(1, "generated/struct_l2_lexer_state.h"));
 	make_list(state, b, make_beb_list(1, "struct l2_parser_state *"), make_beb_list(1, "generated/struct_l2_parser_state.h"));
 	make_list(state, b, make_beb_list(1, "struct linker_file *"), make_beb_list(1, "generated/struct_linker_file.h"));
-	make_list(state, b, make_beb_list(1, "struct type_description_reference"), make_beb_list(1, "generated/struct_constant_description.h"));
+	make_list(state, b, make_beb_list(1, "struct type_description *"), make_beb_list(1, "generated/struct_type_description.h"));
 	make_list(state, b, make_beb_list(1, "struct constant_initializer_level *"), make_beb_list(1, "generated/struct_constant_initializer_level.h"));
 	make_list(state, b, make_beb_list(1, "struct compile_time_constant *"), make_beb_list(1, "generated/struct_compile_time_constant.h"));
 	make_list(state, b, make_beb_list(1, "struct type_traversal *"), make_beb_list(1, "generated/struct_type_traversal.h"));
@@ -116,6 +125,8 @@ void new_register_data_structures_objects(struct build_state * state){
 	make_list(state, b, make_beb_list(1, "struct linker_region"), make_beb_list(1, "generated/struct_linker_region.h"));
 	make_list(state, b, make_beb_list(1, "struct parser_operation"), make_beb_list(1, "generated/struct_parser_operation.h"));
 	make_list(state, b, make_beb_list(1, "struct l2_parser_operation"), make_beb_list(1, "generated/struct_l2_parser_operation.h"));
+	make_list(state, b, make_beb_list(1, "struct tag_declaration_namespace *"), make_beb_list(1, "generated/struct_tag_declaration_namespace.h"));
+	make_list(state, b, make_beb_list(1, "struct identifier_declaration_namespace *"), make_beb_list(1, "generated/struct_identifier_declaration_namespace.h"));
 
 	make_merge_sort(state, b, make_beb_list(1, "struct start_end"), make_beb_list(1, "generated/struct_start_end.h"));
 	make_merge_sort(state, b, make_beb_list(1, "struct linker_file *"), make_beb_list(1, "generated/struct_linker_file.h"));
@@ -220,9 +231,6 @@ void new_register_data_structures_objects(struct build_state * state){
 	register_generated_type(state, "types/parser/enum_l2_node_type.h", "generated/enum_l2_node_type.h",
 		"stop"
 	);
-	register_generated_type(state, "types/parser/struct_type_description_reference.h", "generated/struct_type_description_reference.h",
-		"stop"
-	);
 	register_generated_type(state, "types/parser/struct_namespace_modification.h", "generated/struct_namespace_modification.h",
 		"stop"
 	);
@@ -254,8 +262,15 @@ void new_register_data_structures_objects(struct build_state * state){
 	register_generated_type(state, "types/type_engine/struct_union_specifier_id.h", "generated/struct_union_specifier_id.h",
 		"stop"
 	);
+	register_generated_type(state, "types/type_engine/struct_enum_specifier_id.h", "generated/struct_enum_specifier_id.h",
+		"stop"
+	);
 	register_generated_type(state, "types/type_engine/struct_union_specifier_details.h", "generated/struct_union_specifier_details.h",
 		"generated/enum_type_engine_union_specifier_kind.h",
+		"stop"
+	);
+	register_generated_type(state, "types/type_engine/struct_enum_specifier_details.h", "generated/struct_enum_specifier_details.h",
+		"generated/enum_type_engine_enum_specifier_kind.h",
 		"stop"
 	);
 
@@ -346,20 +361,20 @@ void new_register_data_structures_objects(struct build_state * state){
 		"stop"
 	);
 
-	register_generated_type(state, "types/type_engine/struct_struct_or_union_specifier_id.h", "generated/struct_struct_or_union_specifier_id.h",
+	register_generated_type(state, "types/type_engine/struct_unscoped_tag_specifier_id.h", "generated/struct_unscoped_tag_specifier_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/type_engine/struct_struct_or_union_specifier_details.h", "generated/struct_struct_or_union_specifier_details.h",
-		"generated/enum_type_engine_struct_or_union_specifier_kind.h",
+	register_generated_type(state, "types/type_engine/struct_unscoped_tag_specifier_details.h", "generated/struct_unscoped_tag_specifier_details.h",
+		"generated/enum_type_engine_unscoped_tag_specifier_kind.h",
 		"stop"
 	);
 
-	register_generated_type(state, "types/type_engine/struct_scoped_struct_or_union_specifier_id.h", "generated/struct_scoped_struct_or_union_specifier_id.h",
+	register_generated_type(state, "types/type_engine/struct_scoped_tag_specifier_id.h", "generated/struct_scoped_tag_specifier_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/type_engine/struct_scoped_struct_or_union_specifier_details.h", "generated/struct_scoped_struct_or_union_specifier_details.h",
+	register_generated_type(state, "types/type_engine/struct_scoped_tag_specifier_details.h", "generated/struct_scoped_tag_specifier_details.h",
 		"generated/struct_scope_level_id.h",
-		"generated/struct_struct_or_union_specifier_id.h",
+		"generated/struct_unscoped_tag_specifier_id.h",
 		"stop"
 	);
 
@@ -423,7 +438,10 @@ void new_register_data_structures_objects(struct build_state * state){
         register_generated_type(state, "types/type_engine/enum_type_engine_bitfield_or_declarator_kind.h", "generated/enum_type_engine_bitfield_or_declarator_kind.h",
 		"stop"
 	);
-        register_generated_type(state, "types/type_engine/enum_type_engine_struct_or_union_specifier_kind.h", "generated/enum_type_engine_struct_or_union_specifier_kind.h",
+        register_generated_type(state, "types/type_engine/enum_type_engine_unscoped_tag_specifier_kind.h", "generated/enum_type_engine_unscoped_tag_specifier_kind.h",
+		"stop"
+	);
+        register_generated_type(state, "types/type_engine/enum_type_engine_enum_specifier_kind.h", "generated/enum_type_engine_enum_specifier_kind.h",
 		"stop"
 	);
         register_generated_type(state, "types/type_engine/enum_type_engine_union_specifier_kind.h", "generated/enum_type_engine_union_specifier_kind.h",
@@ -493,10 +511,10 @@ void new_register_data_structures_objects(struct build_state * state){
 	register_generated_type(state, "types/lexer/enum_l2_token_type.h", "generated/enum_l2_token_type.h",
 		"stop"
 	);
-	register_generated_type(state, "types/type_engine/struct_simple_specifier_id.h", "generated/struct_simple_specifier_id.h",
+	register_generated_type(state, "types/type_engine/struct_simple_type_specifier_id.h", "generated/struct_simple_type_specifier_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/type_engine/struct_storage_class_specifier_id.h", "generated/struct_storage_class_specifier_id.h",
+	register_generated_type(state, "types/type_engine/struct_simple_storage_class_specifier_id.h", "generated/struct_simple_storage_class_specifier_id.h",
 		"stop"
 	);
 	register_generated_type(state, "types/type_engine/struct_type_qualifier_id.h", "generated/struct_type_qualifier_id.h",
@@ -504,25 +522,6 @@ void new_register_data_structures_objects(struct build_state * state){
 	);
 
 	register_generated_type(state, "types/parser/struct_type_description.h", "generated/struct_type_description.h",
-		"generated/unsigned_int_list.h",
-		"generated/unsigned_char_list.h",
-		"generated/unsigned_int_ptr_list.h",
-		"generated/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h",
-		"generated/struct_switch_frame_ptr_list.h",
-		"generated/struct_type_description_reference_list.h",
-		"generated/struct_constant_initializer_level_ptr_list.h",
-		"generated/struct_type_traversal_ptr_list.h",
-		"generated/struct_compile_time_constant_ptr_list.h",
-		"generated/struct_linker_object_ptr_list.h",
-		"generated/char_ptr_list.h",
-		"generated/struct_parser_node_memory_pool.h",
-		"generated/struct_c_lexer_token_memory_pool.h",
-		"generated/struct_linker_symbol_memory_pool.h",
-		"generated/struct_code_gen_state.h",
-		"generated/struct_constant_initializer_level.h",
-		"generated/struct_type_traversal.h",
-		"generated/struct_switch_frame.h",
-		"generated/enum_l2_token_type.h",
 		"generated/enum_value_type.h",
 		"stop"
 	);
@@ -590,7 +589,7 @@ void new_register_data_structures_objects(struct build_state * state){
 		"stop"
 	);
 	register_generated_type(state, "types/parser/struct_constant_description.h", "generated/struct_constant_description.h",
-		"generated/struct_type_description_reference.h",
+		"generated/struct_type_description.h",
 		"generated/enum_c_token_type.h",
 		"stop"
 	);
@@ -610,22 +609,20 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/struct_l2_lexer_token.h",
 		"stop"
 	);
-	register_generated_type(state, "types/type_engine/struct_struct_or_union_definition_collection.h", "generated/struct_struct_or_union_definition_collection.h",
-		"generated/struct_void_ptr_list.h",
-		"generated/struct_unsigned_int_to_void_ptr_map.h",
+
+	register_generated_type(state, "types/type_engine/struct_identifier_declaration_namespace.h", "generated/struct_identifier_declaration_namespace.h",
+		"generated/struct_struct_general_type_id_list.h",
+		"generated/struct_struct_identifier_id_to_struct_general_type_id_map.h",
+		"generated/struct_struct_identifier_id_to_unsigned_int_map.h",
 		"stop"
 	);
-	register_generated_type(state, "types/type_engine/struct_declaration_namespace.h", "generated/struct_declaration_namespace.h",
-		"generated/struct_unsigned_int_list.h",
-		"generated/struct_unsigned_int_to_unsigned_int_map.h",
+	register_generated_type(state, "types/type_engine/struct_tag_declaration_namespace.h", "generated/struct_tag_declaration_namespace.h",
+		"generated/struct_struct_unscoped_tag_specifier_id_list.h",
+		"generated/struct_struct_identifier_id_to_struct_unscoped_tag_specifier_id_map.h",
+		"generated/struct_struct_unscoped_tag_specifier_id_to_unsigned_int_map.h",
 		"stop"
 	);
 	register_generated_type(state, "types/type_engine/struct_function_definition_collection.h", "generated/struct_function_definition_collection.h",
-		"generated/struct_void_ptr_list.h",
-		"generated/struct_unsigned_int_to_void_ptr_map.h",
-		"stop"
-	);
-	register_generated_type(state, "types/type_engine/struct_enum_definition_collection.h", "generated/struct_enum_definition_collection.h",
 		"generated/struct_void_ptr_list.h",
 		"generated/struct_unsigned_int_to_void_ptr_map.h",
 		"stop"
@@ -635,18 +632,21 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/struct_struct_scope_level_ptr_list.h",
 		"generated/struct_namespace_object.h",
 		"generated/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_map.h",
-		"generated/struct_declaration_namespace.h",
-		"generated/struct_struct_or_union_definition_collection.h",
-		"generated/struct_enum_definition_collection.h",
+		"generated/struct_tag_declaration_namespace.h",
+		"generated/struct_identifier_declaration_namespace.h",
+		"generated/struct_struct_unscoped_tag_specifier_id_to_struct_struct_or_union_definition_ptr_map.h",
+		"generated/struct_struct_unscoped_tag_specifier_id_to_struct_enum_definition_ptr_map.h",
 		"generated/enum_scope_level_type.h",
 		"stop"
 	);
 	register_generated_type(state, "types/type_engine/struct_struct_or_union_definition.h", "generated/struct_struct_or_union_definition.h",
-		"generated/enum_c_token_type.h",
+		"generated/enum_type_engine_unscoped_tag_specifier_kind.h",
 		"stop"
 	);
 	register_generated_type(state, "types/type_engine/struct_type_engine_state.h", "generated/struct_type_engine_state.h",
-		"generated/struct_struct_struct_or_union_specifier_id_list.h",
+		"generated/struct_struct_tag_declaration_namespace_ptr_list.h",
+		"generated/struct_struct_identifier_declaration_namespace_ptr_list.h",
+		"generated/struct_struct_unscoped_tag_specifier_id_list.h",
 		"generated/struct_enum_type_engine_operation_type_list.h",
 		"generated/struct_struct_identifier_id_list.h",
 		"generated/struct_struct_parser_node_ptr_list.h",
@@ -663,8 +663,8 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/struct_struct_generic_list_item_to_unsigned_int_map.h",
 		"generated/struct_function_definition_collection.h",
 		"generated/struct_enum_c_token_type_list.h",
-		"generated/struct_enum_c_token_type_to_struct_simple_specifier_id_map.h",
-		"generated/struct_enum_c_token_type_to_struct_storage_class_specifier_id_map.h",
+		"generated/struct_enum_c_token_type_to_struct_simple_type_specifier_id_map.h",
+		"generated/struct_enum_c_token_type_to_struct_simple_storage_class_specifier_id_map.h",
 		"generated/struct_enum_c_token_type_to_struct_type_qualifier_id_map.h",
 		"generated/struct_struct_aggregate_specifier_details_list.h",
 		"generated/struct_struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_map.h",
@@ -690,14 +690,16 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/struct_struct_general_type_details_to_struct_general_type_id_map.h",
 		"generated/struct_struct_general_type_list_item_details_list.h",
 		"generated/struct_struct_general_type_list_item_details_to_struct_general_type_list_item_id_map.h",
-		"generated/struct_struct_struct_or_union_specifier_details_list.h",
-		"generated/struct_struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_map.h",
+		"generated/struct_struct_unscoped_tag_specifier_details_list.h",
+		"generated/struct_struct_unscoped_tag_specifier_details_to_struct_unscoped_tag_specifier_id_map.h",
+		"generated/struct_struct_enum_specifier_details_list.h",
+		"generated/struct_struct_enum_specifier_details_to_struct_enum_specifier_id_map.h",
 		"generated/struct_struct_union_specifier_details_list.h",
 		"generated/struct_struct_union_specifier_details_to_struct_union_specifier_id_map.h",
 		"generated/struct_struct_struct_specifier_details_list.h",
 		"generated/struct_struct_struct_specifier_details_to_struct_struct_specifier_id_map.h",
-		"generated/struct_struct_scoped_struct_or_union_specifier_details_list.h",
-		"generated/struct_struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_map.h",
+		"generated/struct_struct_scoped_tag_specifier_details_list.h",
+		"generated/struct_struct_scoped_tag_specifier_details_to_struct_scoped_tag_specifier_id_map.h",
 		"stop"
 	);
 	register_generated_type(state, "types/code_generator/struct_compile_time_constant.h", "generated/struct_compile_time_constant.h",
@@ -722,7 +724,7 @@ void new_register_data_structures_objects(struct build_state * state){
 	);
 	register_generated_type(state, "types/code_generator/struct_type_traversal.h", "generated/struct_type_traversal.h",
 		"generated/enum_type_class.h",
-		"generated/struct_type_description_reference.h",
+		"generated/struct_type_description.h",
 		"generated/struct_struct_type_traversal_ptr_list.h",
 		"stop"
 	);
@@ -816,7 +818,7 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/enum_scope_type.h",
 		"generated/struct_current_function_change.h",
 		"generated/unsigned_int_list.h",
-		"generated/struct_type_description_reference_list.h",
+		"generated/struct_type_description_ptr_list.h",
 		"generated/struct_parser_error_list.h",
 		"generated/char_ptr_list.h",
 		"generated/struct_parser_operation_list.h",
@@ -848,7 +850,7 @@ void new_register_data_structures_objects(struct build_state * state){
 
 	register_generated_aggregate_include(state, "generated/code_generator_generated_includes.h",
 		"generated/unsigned_int_list.h",
-		"generated/struct_type_description_reference_list.h",
+		"generated/struct_type_description_ptr_list.h",
 		"generated/unsigned_char_list.h",
 		"generated/unsigned_int_ptr_list.h",
 		"generated/unsigned_char_ptr_to_struct_linker_symbol_ptr_map.h",
@@ -886,18 +888,20 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/enum_type_engine_function_part_kind.h",
 		"generated/enum_type_engine_array_part_kind.h",
 		"generated/enum_type_engine_bitfield_or_declarator_kind.h",
-		"generated/enum_type_engine_struct_or_union_specifier_kind.h",
+		"generated/enum_type_engine_unscoped_tag_specifier_kind.h",
 		"generated/enum_type_engine_union_specifier_kind.h",
 		"generated/enum_type_engine_struct_specifier_kind.h",
 		"generated/struct_c_lexer_token_memory_pool.h",
 		"generated/struct_parser_node_memory_pool.h",
 		"generated/enum_type_class.h",
 		"generated/struct_type_description.h",
-		"generated/struct_type_description_reference.h",
 		"generated/struct_memory_pool_collection.h",
 		"generated/unsigned_char_list.h",
+		"generated/struct_tag_declaration_namespace_ptr_list.h",
+		"generated/struct_identifier_declaration_namespace_ptr_list.h",
 		"generated/struct_c_lexer_token_list.h",
-		"generated/struct_struct_or_union_specifier_id_list.h",
+		"generated/struct_general_type_id_list.h",
+		"generated/struct_unscoped_tag_specifier_id_list.h",
 		"generated/struct_normalized_specifier_ptr_list.h",
 		"generated/struct_normalized_declarator_ptr_list.h",
 		"generated/struct_normalized_declaration_element_ptr_list.h",
@@ -914,13 +918,26 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/struct_parser_node_ptr_to_struct_scope_level_id_map.h",
 		"generated/struct_generic_list_item_to_unsigned_int_map.h",
 		"generated/struct_scope_level_ptr_to_struct_scope_level_id_map.h",
+		"generated/struct_identifier_id_to_struct_general_type_id_map.h",
+		"generated/struct_identifier_id_to_struct_unscoped_tag_specifier_id_map.h",
+		"generated/struct_unscoped_tag_specifier_id_to_unsigned_int_map.h",
+		"generated/struct_identifier_id_to_unsigned_int_map.h",
 		"generated/enum_c_token_type_list.h",
 		"generated/struct_type_engine_state.h",
 		"generated/enum_type_engine_operation_type.h",
 		"generated/struct_identifier_from_declarator.h",
+		"generated/struct_enum_definition.h",
 		"generated/struct_struct_or_union_definition.h",
 		"generated/enum_add_or_remove.h",
 		"generated/enum_type_engine_operation_type_list.h",
+		"generated/struct_unscoped_tag_specifier_id_to_struct_struct_or_union_definition_ptr_map.h",
+		"generated/struct_unscoped_tag_specifier_id_to_struct_enum_definition_ptr_map.h",
+		"generated/struct_struct_unscoped_tag_specifier_id_to_struct_struct_or_union_definition_ptr_key_value_pair_compare.h",
+		"generated/struct_struct_unscoped_tag_specifier_id_to_struct_enum_definition_ptr_key_value_pair_compare.h",
+		"generated/struct_struct_identifier_id_to_struct_general_type_id_key_value_pair_compare.h",
+		"generated/struct_struct_identifier_id_to_struct_unscoped_tag_specifier_id_key_value_pair_compare.h",
+		"generated/struct_struct_identifier_id_to_unsigned_int_key_value_pair_compare.h",
+		"generated/struct_struct_unscoped_tag_specifier_id_to_unsigned_int_key_value_pair_compare.h",
 		"generated/struct_struct_parser_node_ptr_to_struct_parser_node_id_key_value_pair_compare.h",
 		"generated/struct_struct_parser_node_ptr_to_struct_scope_level_id_key_value_pair_compare.h",
 		"generated/struct_unsigned_int_to_unsigned_int_key_value_pair_compare.h",
@@ -929,10 +946,10 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/struct_struct_c_lexer_token_to_struct_identifier_id_key_value_pair_compare.h",
 		"generated/struct_unsigned_int_to_void_ptr_key_value_pair_compare.h",
 		"generated/struct_unsigned_char_ptr_to_struct_namespace_object_ptr_key_value_pair_compare.h",
-		"generated/struct_enum_c_token_type_to_struct_storage_class_specifier_id_key_value_pair_compare.h",
-		"generated/enum_c_token_type_to_struct_storage_class_specifier_id_map.h",
-		"generated/struct_enum_c_token_type_to_struct_simple_specifier_id_key_value_pair_compare.h",
-		"generated/enum_c_token_type_to_struct_simple_specifier_id_map.h",
+		"generated/struct_enum_c_token_type_to_struct_simple_storage_class_specifier_id_key_value_pair_compare.h",
+		"generated/enum_c_token_type_to_struct_simple_storage_class_specifier_id_map.h",
+		"generated/struct_enum_c_token_type_to_struct_simple_type_specifier_id_key_value_pair_compare.h",
+		"generated/enum_c_token_type_to_struct_simple_type_specifier_id_map.h",
 		"generated/struct_enum_c_token_type_to_struct_type_qualifier_id_key_value_pair_compare.h",
 		"generated/enum_c_token_type_to_struct_type_qualifier_id_map.h",
 		"generated/struct_struct_aggregate_specifier_details_to_struct_aggregate_specifier_id_key_value_pair_compare.h",
@@ -971,18 +988,21 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/struct_struct_general_type_list_item_details_to_struct_general_type_list_item_id_key_value_pair_compare.h",
 		"generated/struct_general_type_list_item_details_list.h",
 		"generated/struct_general_type_list_item_details_to_struct_general_type_list_item_id_map.h",
-		"generated/struct_struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_key_value_pair_compare.h",
-		"generated/struct_struct_or_union_specifier_details_list.h",
-		"generated/struct_struct_or_union_specifier_details_to_struct_struct_or_union_specifier_id_map.h",
+		"generated/struct_struct_unscoped_tag_specifier_details_to_struct_unscoped_tag_specifier_id_key_value_pair_compare.h",
+		"generated/struct_unscoped_tag_specifier_details_list.h",
+		"generated/struct_unscoped_tag_specifier_details_to_struct_unscoped_tag_specifier_id_map.h",
+		"generated/struct_struct_enum_specifier_details_to_struct_enum_specifier_id_key_value_pair_compare.h",
+		"generated/struct_enum_specifier_details_list.h",
+		"generated/struct_enum_specifier_details_to_struct_enum_specifier_id_map.h",
 		"generated/struct_struct_union_specifier_details_to_struct_union_specifier_id_key_value_pair_compare.h",
 		"generated/struct_union_specifier_details_list.h",
 		"generated/struct_union_specifier_details_to_struct_union_specifier_id_map.h",
 		"generated/struct_struct_struct_specifier_details_to_struct_struct_specifier_id_key_value_pair_compare.h",
 		"generated/struct_struct_specifier_details_list.h",
 		"generated/struct_struct_specifier_details_to_struct_struct_specifier_id_map.h",
-		"generated/struct_struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_key_value_pair_compare.h",
-		"generated/struct_scoped_struct_or_union_specifier_details_list.h",
-		"generated/struct_scoped_struct_or_union_specifier_details_to_struct_scoped_struct_or_union_specifier_id_map.h",
+		"generated/struct_struct_scoped_tag_specifier_details_to_struct_scoped_tag_specifier_id_key_value_pair_compare.h",
+		"generated/struct_scoped_tag_specifier_details_list.h",
+		"generated/struct_scoped_tag_specifier_details_to_struct_scoped_tag_specifier_id_map.h",
 		"stop"
 	);
 }
