@@ -442,7 +442,6 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/code_generator.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/preprocessor.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/parser.l2");
-	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/heap_memory_pool.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/io.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/regex_engine.l2");
@@ -460,7 +459,6 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/code_generator.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/preprocessor.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/parser.l2");
-	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/heap_memory_pool.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/io.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/regex_engine.l2");

@@ -18,12 +18,12 @@
 unsigned char * vcreate_formatted_string(struct memory_pool_collection * m, unsigned int estimated_bytes_needed, const char * format, va_list try1, va_list try2){
 	/*  Use the estimate, otherwise allocate more memory. */
 	unsigned int chars_actually_required;
-	unsigned char * rtn = (unsigned char *)heap_memory_pool_malloc(m->heap_pool, estimated_bytes_needed);
+	unsigned char * rtn = (unsigned char *)heap_memory_pool_malloc(m, estimated_bytes_needed);
 	chars_actually_required = c89_vsnprintf((char *)rtn, estimated_bytes_needed, format, try1);
 	if(chars_actually_required < estimated_bytes_needed){
 		return rtn;
 	}else{
-		heap_memory_pool_free(m->heap_pool, rtn);
+		heap_memory_pool_free(m, rtn);
 		rtn = vcreate_formatted_string(m, chars_actually_required + 1, format, try2, try1);
 		return rtn;
 	}
@@ -125,7 +125,7 @@ unsigned char * get_null_terminator(unsigned char * c){
 
 unsigned char * copy_null_terminated_string(unsigned char * start, struct memory_pool_collection * m){
 	unsigned int length = (unsigned int)strlen((char *)start);
-	unsigned char * rtn = (unsigned char *)heap_memory_pool_malloc(m->heap_pool, ((sizeof(unsigned char) * length) + 1));
+	unsigned char * rtn = (unsigned char *)heap_memory_pool_malloc(m, ((sizeof(unsigned char) * length) + 1));
 	unsigned int i = 0;
 	(void)m;
 	for(i = 0; i < length; i++){
@@ -139,7 +139,7 @@ unsigned char * copy_string(unsigned char * start, unsigned char * end, struct m
 	unsigned int length = (unsigned int)(end - start) + 1;
 	unsigned char * string;
 	(void)m;
-	string = (unsigned char *)heap_memory_pool_malloc(m->heap_pool, (sizeof(unsigned char) * length) + 1);
+	string = (unsigned char *)heap_memory_pool_malloc(m, (sizeof(unsigned char) * length) + 1);
 	string[length] = 0; /* Null termination */
 	memcpy(string, start, length);
 	return string;
@@ -170,7 +170,7 @@ void resolve_path_components(unsigned char * path, struct unsigned_char_ptr_list
 				unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + (len -1), m);
 				unsigned_char_ptr_list_add_end(path_components, s);
 			}else{
-				unsigned char * s = (unsigned char *)heap_memory_pool_malloc(m->heap_pool, 1);
+				unsigned char * s = (unsigned char *)heap_memory_pool_malloc(m, 1);
 				s[0] = 0; /* empty string */
 				unsigned_char_ptr_list_add_end(path_components, s);
 			}

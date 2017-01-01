@@ -171,10 +171,10 @@ void load_file(unsigned char * d, FILE * f, struct memory_pool_collection * m){
 	new_file_inode = create_file_given_parent_inode(parent_directory_inode, file_name, 0);
 	load_file_given_new_inode(new_file_inode, f);
 	for(i = 0; i < unsigned_char_ptr_list_size(&components);i++){
-		heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_get(&components, i));
+		heap_memory_pool_free(m, unsigned_char_ptr_list_get(&components, i));
 	}
 	unsigned_char_ptr_list_destroy(&components);
-	heap_memory_pool_free(m->heap_pool, file_name);
+	heap_memory_pool_free(m, file_name);
 }
 
 
@@ -186,7 +186,7 @@ void create_directories(struct unsigned_char_ptr_list * directories, struct memo
 		unsigned char * null_byte = get_null_terminator(dir);
 		assert(*(null_byte -1) == '/' && "Directory should end with '/'.");
 		create_directory(dir, m);
-		heap_memory_pool_free(m->heap_pool, dir);
+		heap_memory_pool_free(m, dir);
 	}
 }
 
@@ -209,7 +209,7 @@ void create_files(struct unsigned_char_ptr_to_unsigned_char_ptr_map * files, str
 	unsigned_char_ptr_list_destroy(&file_keys);
 }
 
-#define NUM_FILES 253
+#define NUM_FILES 251
 
 void create_filesystem_impl(unsigned char * out_file){
 	unsigned char * root_dir;
@@ -287,7 +287,6 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"./recc-implementation/parser.h", "/./recc-implementation/parser.h"},
 		{"./recc-implementation/linker.h", "/./recc-implementation/linker.h"},
 		{"./recc-implementation/filesystem_compiler.h", "/./recc-implementation/filesystem_compiler.h"},
-		{"./recc-implementation/heap_memory_pool.h", "/./recc-implementation/heap_memory_pool.h"},
 		{"./recc-implementation/io.h", "/./recc-implementation/io.h"},
 		{"./kernel/private_kernel_interface.h", "/./kernel/private_kernel_interface.h"},
 		{"./kernel/user_proc.h", "/./kernel/user_proc.h"},
@@ -427,7 +426,6 @@ void create_filesystem_impl(unsigned char * out_file){
 		{"types/lexer/struct_c_lexer_token.h","/types/lexer/struct_c_lexer_token.h"},
 		{"types/lexer/struct_c_lexer_state.h","/types/lexer/struct_c_lexer_state.h"},
 		{"types/lexer/struct_l2_lexer_state.h","/types/lexer/struct_l2_lexer_state.h"},
-		{"types/recc-implementation/struct_heap_memory_pool.h","/types/recc-implementation/struct_heap_memory_pool.h"},
 		{"types/preprocessor/struct_macro_definition.h","/types/preprocessor/struct_macro_definition.h"},
 		{"types/preprocessor/struct_preprocessor_file_context.h","/types/preprocessor/struct_preprocessor_file_context.h"},
 		{"types/preprocessor/struct_preprocessor_macro_level.h","/types/preprocessor/struct_preprocessor_macro_level.h"},
@@ -476,6 +474,20 @@ void create_filesystem_impl(unsigned char * out_file){
 	};
 	unsigned int i;
 	memory_pool_collection_create(&mpc);
+	heap_memory_pool_create(&mpc);
+	struct_regex_computation_node_memory_pool_create(&mpc);
+	struct_regex_parser_node_memory_pool_create(&mpc);
+	struct_c_lexer_token_memory_pool_create(&mpc);
+	struct_parser_node_memory_pool_create(&mpc);
+	struct_l2_parser_node_memory_pool_create(&mpc);
+	struct_l2_lexer_token_memory_pool_create(&mpc);
+	struct_type_description_memory_pool_create(&mpc);
+	struct_l2_item_memory_pool_create(&mpc);
+	struct_linker_symbol_memory_pool_create(&mpc);
+
+	l2_token_matcher_create(&mpc);
+	c_token_matcher_create(&mpc);
+
 	initialize_filesystem_datastructures();
 	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&files, struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare);
 	unsigned_char_ptr_to_unsigned_char_ptr_map_create(&directories, struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare);
@@ -493,7 +505,7 @@ void create_filesystem_impl(unsigned char * out_file){
 			if(filesystem_files[i][1][j] == '/'){
 				unsigned char * s = copy_string(unsigned_char_list_data(&tmp), ((unsigned char *)unsigned_char_list_data(&tmp)) + j, &mpc);
 				if(unsigned_char_ptr_to_unsigned_char_ptr_map_exists(&directories, s)){
-					heap_memory_pool_free(mpc.heap_pool, s);
+					heap_memory_pool_free(&mpc, s);
 				}else{
 					unsigned_char_ptr_to_unsigned_char_ptr_map_put(&directories, s, s);
 				}
@@ -507,7 +519,7 @@ void create_filesystem_impl(unsigned char * out_file){
 	/*  Remove the root directory because its inode has already been created */
 	root_dir = unsigned_char_ptr_to_unsigned_char_ptr_map_get(&directories, (unsigned char *)"/");
 	unsigned_char_ptr_to_unsigned_char_ptr_map_remove(&directories, (unsigned char *)"/");
-	heap_memory_pool_free(mpc.heap_pool, root_dir);
+	heap_memory_pool_free(&mpc, root_dir);
 
 	directory_keys = unsigned_char_ptr_to_unsigned_char_ptr_map_keys(&directories);
 
@@ -516,7 +528,7 @@ void create_filesystem_impl(unsigned char * out_file){
 	for(i = 0; i < unsigned_char_ptr_list_size(&directory_keys); i++){
 		unsigned char * dir = unsigned_char_ptr_list_get(&directory_keys, i);
 		printf("Unique Directory: %s\n", dir);
-		heap_memory_pool_free(mpc.heap_pool, dir);
+		heap_memory_pool_free(&mpc, dir);
 	}
 
 	create_files(&files, &mpc);
@@ -525,6 +537,23 @@ void create_filesystem_impl(unsigned char * out_file){
 	unsigned_char_ptr_list_destroy(&directory_keys);
 	unsigned_char_ptr_to_unsigned_char_ptr_map_destroy(&files);
 	unsigned_char_ptr_to_unsigned_char_ptr_map_destroy(&directories);
+	heap_memory_pool_destroy(&mpc);
+	struct_c_lexer_token_memory_pool_destroy(&mpc);
+	struct_parser_node_memory_pool_destroy(&mpc);
+	struct_l2_parser_node_memory_pool_destroy(&mpc);
+	struct_l2_lexer_token_memory_pool_destroy(&mpc);
+	struct_type_description_memory_pool_destroy(&mpc);
+	struct_linker_symbol_memory_pool_destroy(&mpc);
+	struct_l2_item_memory_pool_destroy(&mpc);
+
+	l2_token_matcher_destroy(&mpc);
+	c_token_matcher_destroy(&mpc);
+
+	struct_regex_parser_node_memory_pool_destroy(&mpc);
+	struct_regex_computation_node_memory_pool_destroy(&mpc);
+
 	memory_pool_collection_destroy(&mpc);
+
+
 	output_filesystem_impl(out_file);  /*  Create l2 file the represents filesystem state */
 }

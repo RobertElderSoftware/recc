@@ -749,12 +749,9 @@ void new_register_data_structures_objects(struct build_state * state){
 		"generated/enum_special_macro_type.h",
 		"stop"
 	);
-	register_generated_type(state, "types/recc-implementation/struct_heap_memory_pool.h", "generated/struct_heap_memory_pool.h",
+	register_generated_type(state, "types/recc-implementation/struct_memory_pool_collection.h", "generated/struct_memory_pool_collection.h",
 		"generated/struct_void_ptr_memory_pool.h",
 		"generated/struct_void_ptr_to_unsigned_int_map.h",
-		"stop"
-	);
-	register_generated_type(state, "types/recc-implementation/struct_memory_pool_collection.h", "generated/struct_memory_pool_collection.h",
 		"generated/struct_regex_matcher_state.h",
 		"stop"
 	);
@@ -810,6 +807,18 @@ void new_register_data_structures_objects(struct build_state * state){
 	);
 	register_generated_type(state, "types/lexer/struct_l2_lexer_token.h", "generated/struct_l2_lexer_token.h",
 		"generated/enum_l2_token_type.h",
+		"stop"
+	);
+
+	register_generated_aggregate_include(state, "generated/lexer_generated_includes.h",
+		"generated/struct_regex_matcher_state.h",
+		"generated/struct_l2_lexer_token_memory_pool.h",
+		"generated/struct_l2_lexer_state.h",
+		"generated/struct_c_lexer_state.h",
+		"generated/struct_c_lexer_token_memory_pool.h",
+		"generated/unsigned_char_list.h",
+		"generated/struct_l2_lexer_token_ptr_list.h",
+		"generated/struct_c_lexer_token_ptr_list.h",
 		"stop"
 	);
 
@@ -873,6 +882,7 @@ void new_register_data_structures_objects(struct build_state * state){
 	);
 
 	register_generated_aggregate_include(state, "generated/type_engine_generated_includes.h",
+		"generated/struct_type_description_memory_pool.h",
 		"generated/struct_scope_level_id.h",
 		"generated/struct_aggregate_specifier_id.h",
 		"generated/struct_aggregate_specifier_details.h",

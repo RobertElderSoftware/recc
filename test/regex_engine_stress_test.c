@@ -582,6 +582,10 @@ int main(void){
 	struct memory_pool_collection m;
 	memory_pool_collection_create(&m);
 
+
+	struct_regex_computation_node_memory_pool_create(&m);
+	struct_regex_parser_node_memory_pool_create(&m);
+
 	test_regex_compile_error(&m, "\\x",   REGEX_ERROR_EXPECTED_HEX_DIGIT);
 	test_regex_compile_error(&m, "\\xk",  REGEX_ERROR_EXPECTED_HEX_DIGIT);
 	test_regex_compile_error(&m, "\\x3z", REGEX_ERROR_EXPECTED_HEX_DIGIT);
@@ -610,6 +614,12 @@ int main(void){
 	test_7(&m);
 	test_8(&m);
 	mini_lexer_test(&m);
+
+	struct_regex_parser_node_memory_pool_destroy(&m);
+	struct_regex_computation_node_memory_pool_destroy(&m);
+
 	memory_pool_collection_destroy(&m);
+
+
 	return 0;
 }

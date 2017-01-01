@@ -1,7 +1,7 @@
 phase1: recc-implementation/bootstrap_phase_1 $(CROSS_BUILD_PREFIX_PREREQ)
 	@$(VALGRIND) recc-implementation/bootstrap_phase_1
 	@echo "Completed phase 1 of bootstrapping process."
-	make -e phase2 DEFERRED_GLOALS="$(DEFERRED_GLOALS)"
+	@make -e -s phase2 DEFERRED_GLOALS="$(DEFERRED_GLOALS)"
 
 #  For the cross build, we need to bootstrap the other compiler's generated headers, data structures etc.
 cross-build-prefix-prereq:

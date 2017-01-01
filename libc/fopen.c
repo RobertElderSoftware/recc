@@ -43,6 +43,7 @@ FILE * fopen(const char * filepath, const char * mode){
 	char cwd[BUFFER_LEN];
 	struct memory_pool_collection mpc;
 	memory_pool_collection_create(&mpc);
+	heap_memory_pool_create(&mpc);
 	unsigned_char_list_create(&full_path_char_list);
 	(void)mode; /*  TODO: inspect mode */
 
@@ -75,7 +76,7 @@ FILE * fopen(const char * filepath, const char * mode){
 	resolve_path_components((unsigned char *)unsigned_char_list_data(&full_path_char_list), &components, &mpc);
 	file_name = unsigned_char_ptr_list_get(&components, unsigned_char_ptr_list_size(&components) -1);
 	unsigned_char_ptr_list_remove_all(&components, file_name, unsigned_char_ptr_cmp_fopen);
-	heap_memory_pool_free(mpc.heap_pool, file_name);
+	heap_memory_pool_free(&mpc, file_name);
 	parent_directory_inode = get_directory_inode_from_path_parts(&mpc, &components);
 	existing_file_inode = get_directory_entry_inode(file_name, parent_directory_inode, 0);
 	f->inode_index = existing_file_inode;
@@ -83,11 +84,14 @@ FILE * fopen(const char * filepath, const char * mode){
 	assert(inodes[f->inode_index].first_block_initialized);
 	f->current_block_index = inodes[f->inode_index].first_block;
 	for(i = 0; i < unsigned_char_ptr_list_size(&components); i++){
-		heap_memory_pool_free(mpc.heap_pool, unsigned_char_ptr_list_get(&components, i));
+		heap_memory_pool_free(&mpc, unsigned_char_ptr_list_get(&components, i));
 	}
 	unsigned_char_ptr_list_destroy(&components);
 	unsigned_char_list_destroy(&full_path_char_list);
+
+	heap_memory_pool_destroy(&mpc);
 	memory_pool_collection_destroy(&mpc);
+
 	return f;
 }
 

@@ -1,7 +1,7 @@
 phase2: recc-implementation/bootstrap_phase_2
 	@$(VALGRIND) recc-implementation/bootstrap_phase_2
 	@echo "Completed phase 2 of bootstrapping process."
-	make -e $(DEFERRED_GLOALS)
+	@make -e -s $(DEFERRED_GLOALS)
 
 recc-implementation/compiler_interface_common.o: recc-implementation/compiler_interface_common.c recc-implementation/compiler_interface_common.h
 	@$(HOSTCC) -c recc-implementation/compiler_interface_common.c -o recc-implementation/compiler_interface_common.o $(CUSTOM_C89_FLAGS)

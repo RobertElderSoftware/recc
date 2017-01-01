@@ -1017,7 +1017,28 @@ void test_1(struct memory_pool_collection * m){
 int main(void){
 	struct memory_pool_collection m;
 	memory_pool_collection_create(&m);
+	heap_memory_pool_create(&m);
+
+	struct_regex_computation_node_memory_pool_create(&m);
+	struct_regex_parser_node_memory_pool_create(&m);
+	struct_c_lexer_token_memory_pool_create(&m);
+	struct_parser_node_memory_pool_create(&m);
+	struct_type_description_memory_pool_create(&m);
+	c_token_matcher_create(&m);
+
 	test_1(&m);
+	heap_memory_pool_destroy(&m);
+
+	struct_c_lexer_token_memory_pool_destroy(&m);
+	struct_parser_node_memory_pool_destroy(&m);
+	struct_type_description_memory_pool_destroy(&m);
+
+	c_token_matcher_destroy(&m);
+
+	struct_regex_parser_node_memory_pool_destroy(&m);
+	struct_regex_computation_node_memory_pool_destroy(&m);
+
 	memory_pool_collection_destroy(&m);
+
 	return 0;
 }

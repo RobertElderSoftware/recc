@@ -136,7 +136,6 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/code_generator.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/preprocessor.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/parser.l2");
-	register_dependency(state, "kernel/kernel.l1", "recc-implementation/heap_memory_pool.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/io.l2");
 	register_dependency(state, "kernel/kernel.l1", "recc-implementation/regex_engine.l2");
@@ -177,7 +176,6 @@ void register_kernel_objects(struct build_state * state){
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/code_generator.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/preprocessor.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/parser.l2");
-	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/heap_memory_pool.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/io.l2");
 	register_dependency(state, "kernel/kernel_symbols.l1", "recc-implementation/regex_engine.l2");

@@ -33,9 +33,9 @@ void register_ri_object(struct build_state * state, const char * object, unsigne
 		register_dependency(state, "recc-implementation/libdata-structures.l2", (const char *)l2_name);
 	}
 
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, c_name);
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, i_name);
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, l2_name);
+	heap_memory_pool_free(state->memory_pool_collection, c_name);
+	heap_memory_pool_free(state->memory_pool_collection, i_name);
+	heap_memory_pool_free(state->memory_pool_collection, l2_name);
 }
 
 void register_compiler_objects(struct build_state *);
@@ -50,7 +50,6 @@ void register_compiler_objects(struct build_state * state){
 	register_ri_object(state, "recc-implementation/parser", 0);
 	register_ri_object(state, "recc-implementation/linker", 0);
 	register_ri_object(state, "recc-implementation/lexer", 0);
-	register_ri_object(state, "recc-implementation/heap_memory_pool", 0);
 	register_ri_object(state, "recc-implementation/memory_pool_collection", 0);
 	register_ri_object(state, "recc-implementation/regex_engine", 0);
 	register_ri_object(state, "recc-implementation/type_engine", 0);

@@ -146,7 +146,7 @@ void regex_compiler_state_create(struct regex_compiler_state * state, struct mem
 }
 
 static struct regex_parser_node * create_regex_parser_node(struct regex_compiler_state * state, struct regex_parser_node * n, struct regex_parser_node * f, unsigned char c, enum regex_parser_node_type t){
-	struct regex_parser_node * new_node = struct_regex_parser_node_memory_pool_malloc(state->m->struct_regex_parser_node_pool);
+	struct regex_parser_node * new_node = struct_regex_parser_node_memory_pool_malloc(state->m);
 	new_node->next = n;
 	new_node->first_child = f;
 	new_node->type = t;
@@ -158,7 +158,7 @@ static void destroy_regex_parser_node_tree(struct regex_compiler_state * state, 
 	if(n){
 		destroy_regex_parser_node_tree(state, n->next);
 		destroy_regex_parser_node_tree(state, n->first_child);
-		struct_regex_parser_node_memory_pool_free(state->m->struct_regex_parser_node_pool, n);
+		struct_regex_parser_node_memory_pool_free(state->m, n);
 	}
 }
 
@@ -700,7 +700,7 @@ static unsigned char process_non_class_character(struct regex_parser_node * p){
 }
 
 static struct regex_computation_node * create_new_regex_computation_node(struct regex_compiler_state * state){
-	struct regex_computation_node * n = struct_regex_computation_node_memory_pool_malloc(state->m->struct_regex_computation_node_pool);
+	struct regex_computation_node * n = struct_regex_computation_node_memory_pool_malloc(state->m);
 	n->path1 = (struct regex_computation_node *)0;
 	n->path2 = (struct regex_computation_node *)0;
 	n->after = (struct regex_computation_node *)0;
@@ -831,7 +831,7 @@ static struct regex_computation_node * reg_character_sequence(struct regex_compi
 			get_last_node(n)->after = reg_character_sequence_rest(state, reg_second_child(p));
 			return n;
 		}else{
-			struct_regex_computation_node_memory_pool_free(state->m->struct_regex_computation_node_pool, n);
+			struct_regex_computation_node_memory_pool_free(state->m, n);
 			return (struct regex_computation_node *)0;
 		}
 	}else{
@@ -1240,7 +1240,7 @@ static void destroy_regex_computation_nodes(struct regex_compiler_state * state,
 	if(n){
 		struct regex_computation_node * a = n->after;
 		destroy_character_class_ranges(n->ranges);
-		struct_regex_computation_node_memory_pool_free(state->m->struct_regex_computation_node_pool, n);
+		struct_regex_computation_node_memory_pool_free(state->m, n);
 		destroy_regex_computation_nodes(state, a);
 	}
 }

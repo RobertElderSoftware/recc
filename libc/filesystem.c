@@ -106,7 +106,7 @@ unsigned int get_directory_inode_from_path_parts(struct memory_pool_collection *
 	unsigned int i;
 	/*  The first component represents the root inode, which is constant */
 	unsigned_char_ptr_list_remove_all(path_components, root_component, unsigned_char_ptr_cmp);
-	heap_memory_pool_free(m->heap_pool, root_component);
+	heap_memory_pool_free(m, root_component);
 
 	for(i = 0; i < unsigned_char_ptr_list_size(path_components); i++){
 		current_inode = get_directory_entry_inode(unsigned_char_ptr_list_get(path_components, i), current_inode, 1);
@@ -231,8 +231,8 @@ void create_directory(unsigned char * d, struct memory_pool_collection * m){
 	printf("Creating directory %s with full path %s\n", directory_name, d);
 	create_file_given_parent_inode(parent_directory_inode, directory_name, 1);
 	for(i = 0; i < unsigned_char_ptr_list_size(&components);i++){
-		heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_get(&components, i));
+		heap_memory_pool_free(m, unsigned_char_ptr_list_get(&components, i));
 	}
 	unsigned_char_ptr_list_destroy(&components);
-	heap_memory_pool_free(m->heap_pool, directory_name);
+	heap_memory_pool_free(m, directory_name);
 }

@@ -25,30 +25,13 @@
 #ifndef IO_H_
 #include "io.h"
 #endif
-#ifndef struct_c_lexer_token_ptr_list_H_DEFINED_
-#include "../generated/struct_c_lexer_token_ptr_list.h"
-#endif
-#ifndef struct_l2_lexer_token_ptr_list_H_DEFINED_
-#include "../generated/struct_l2_lexer_token_ptr_list.h"
-#endif
-#ifndef unsigned_char_list_H_DEFINED_
-#include "../generated/unsigned_char_list.h"
-#endif
-#ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
-#include "../generated/struct_c_lexer_token_memory_pool.h"
-#endif
-#ifndef struct_l2_lexer_token_memory_pool_H_DEFINED_
-#include "../generated/struct_l2_lexer_token_memory_pool.h"
-#endif
-#ifndef TYPES_LEXER_struct_c_lexer_state_H_
-#include "../generated/struct_c_lexer_state.h"
-#endif
-#ifndef TYPES_LEXER_struct_l2_lexer_state_H_
-#include "../generated/struct_l2_lexer_state.h"
+#ifndef generated_DIR_lexer_generated_includes_DOT_h
+#include "../generated/lexer_generated_includes.h"
 #endif
 #ifndef REGEX_ENGINE_H_
 #include "regex_engine.h"
 #endif
+
 
 
 int lex_c(struct c_lexer_state *);
@@ -60,5 +43,11 @@ void create_l2_lexer_state(struct l2_lexer_state * state, struct unsigned_char_l
 const char ** get_c_token_type_names(void);
 const char ** get_l2_token_type_names(void);
 unsigned int count_newlines_in_comment(struct c_lexer_token *);
+
+void l2_token_matcher_create(struct memory_pool_collection * m);
+void c_token_matcher_create(struct memory_pool_collection * m);
+void l2_token_matcher_destroy(struct memory_pool_collection * m);
+void c_token_matcher_destroy(struct memory_pool_collection * m);
+
 
 #endif

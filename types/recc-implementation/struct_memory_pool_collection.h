@@ -18,11 +18,13 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
+#define NUM_HEAP_POOLS 20
+
 struct memory_pool_collection{
 	struct regex_compiler_state ** l2_token_regexes;
-	struct regex_matcher_state l2_token_matcher;
+	struct regex_matcher_state * l2_token_matcher;
 	struct regex_compiler_state ** c_token_regexes;
-	struct regex_matcher_state c_token_matcher;
+	struct regex_matcher_state * c_token_matcher;
 	struct struct_regex_computation_node_memory_pool * struct_regex_computation_node_pool;
 	struct struct_regex_parser_node_memory_pool * struct_regex_parser_node_pool;
 	struct struct_l2_lexer_token_memory_pool * struct_l2_lexer_token_pool;
@@ -33,4 +35,9 @@ struct memory_pool_collection{
 	struct struct_l2_item_memory_pool * struct_l2_item_pool;
 	struct struct_linker_symbol_memory_pool * struct_linker_symbol_pool;
 	struct heap_memory_pool * heap_pool; /*  Used for pooling memory objects of arbitrary size */
+
+	struct void_ptr_to_unsigned_int_map contiguous_heap_bock_entries; /*  Stores pointers that can be used to deduce which pool similar pointers came from*/
+	struct void_ptr_memory_pool * heap_pools[NUM_HEAP_POOLS];
+	struct void_ptr_memory_pool * void_ptr_pool; /*  Not used currently, but required due to various code generation things...*/
+
 };

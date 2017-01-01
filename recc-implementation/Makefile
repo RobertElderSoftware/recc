@@ -15,10 +15,6 @@ else
 include recc-implementation/Phase2-Makefile
 include recc-implementation/Phase1-Makefile
 
-RECC_IMPLEMENTATION_OBJECTS=recc-implementation/type_engine.o recc-implementation/regex_engine.o recc-implementation/compiler_interface_common.o recc-implementation/compiler_interface_c_compiler_targets.o recc-implementation/compiler_interface_header_targets.o recc-implementation/compiler_interface_phase_3.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o recc-implementation/heap_memory_pool.o $(CROSS_BUILD_PREFIX)recc-implementation/filesystem_compiler.o recc-implementation/libbootstrap.o recc-implementation/l2_parser.o recc-implementation/replace_tool.o recc-implementation/binary_exponential_buffer.o $(COMPARISON_FUNCTION_OBJECTS)
-
-recc-implementation/librecc.a: $(RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
-	@ar -rcs recc-implementation/librecc.a $(RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
 
 $(CROSS_BUILD_PREFIX)recc-implementation/recc.o: $(CROSS_BUILD_PREFIX)recc-implementation/recc.c
 	@$(HOSTCC) -c $(CROSS_BUILD_PREFIX)recc-implementation/recc.c -o $(CROSS_BUILD_PREFIX)recc-implementation/recc.o $(CUSTOM_C89_FLAGS)
@@ -89,12 +85,6 @@ recc-implementation/memory_pool_collection.c: recc-implementation/memory_pool_co
 recc-implementation/memory_pool_collection.o: recc-implementation/memory_pool_collection.c recc-implementation/memory_pool_collection.h
 	@$(HOSTCC) -c recc-implementation/memory_pool_collection.c -o recc-implementation/memory_pool_collection.o $(CUSTOM_C89_FLAGS)
 
-recc-implementation/heap_memory_pool.h:
-	@touch recc-implementation/heap_memory_pool.h
-
-recc-implementation/heap_memory_pool.o: recc-implementation/heap_memory_pool.c recc-implementation/heap_memory_pool.h
-	@$(HOSTCC) -c recc-implementation/heap_memory_pool.c -o recc-implementation/heap_memory_pool.o $(CUSTOM_C89_FLAGS)
-
 recc-implementation/filesystem_compiler.h: libc/filesystem.h
 	@touch recc-implementation/filesystem_compiler.h
 
@@ -105,7 +95,7 @@ recc-implementation/l2_parser.o: recc-implementation/l2_parser.h recc-implementa
 	@$(HOSTCC) -c recc-implementation/l2_parser.c -o recc-implementation/l2_parser.o $(CUSTOM_C89_FLAGS)
 
 clean-recc-implementation: clean-phase-1 clean-phase-2
-	@rm -f recc-implementation/librecc.a recc-implementation/filesystem_impl.l2 
+	@rm -f recc-implementation/filesystem_impl.l2 
 
 endif
 endif

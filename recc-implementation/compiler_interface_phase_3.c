@@ -44,6 +44,19 @@ struct build_state * create_build_state(void){
 	struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_map_create(&state->relationships, struct_struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_key_value_pair_compare);
 	state->memory_pool_collection = (struct memory_pool_collection*)malloc(sizeof(struct memory_pool_collection));
 	memory_pool_collection_create(state->memory_pool_collection);
+
+	struct_c_lexer_token_memory_pool_create(state->memory_pool_collection);
+	struct_regex_computation_node_memory_pool_create(state->memory_pool_collection);
+	struct_regex_parser_node_memory_pool_create(state->memory_pool_collection);
+	struct_parser_node_memory_pool_create(state->memory_pool_collection);
+	struct_l2_parser_node_memory_pool_create(state->memory_pool_collection);
+	struct_l2_lexer_token_memory_pool_create(state->memory_pool_collection);
+	struct_type_description_memory_pool_create(state->memory_pool_collection);
+	struct_l2_item_memory_pool_create(state->memory_pool_collection);
+	struct_linker_symbol_memory_pool_create(state->memory_pool_collection);
+	heap_memory_pool_create(state->memory_pool_collection);
+	l2_token_matcher_create(state->memory_pool_collection);
+	c_token_matcher_create(state->memory_pool_collection);
 	return state;
 }
 
@@ -73,7 +86,25 @@ void destroy_build_state(struct build_state * state){
 	unsigned_char_ptr_to_struct_entity_ptr_map_destroy(&state->targets);
 	struct_entity_relationship_list_destroy(&relationship_keys);
 	struct_entity_relationship_to_struct_struct_entity_ptr_list_ptr_map_destroy(&state->relationships);
+	heap_memory_pool_destroy(state->memory_pool_collection);
+
+	struct_c_lexer_token_memory_pool_destroy(state->memory_pool_collection);
+	struct_parser_node_memory_pool_destroy(state->memory_pool_collection);
+	struct_l2_parser_node_memory_pool_destroy(state->memory_pool_collection);
+	struct_l2_lexer_token_memory_pool_destroy(state->memory_pool_collection);
+	struct_type_description_memory_pool_destroy(state->memory_pool_collection);
+	struct_linker_symbol_memory_pool_destroy(state->memory_pool_collection);
+	struct_l2_item_memory_pool_destroy(state->memory_pool_collection);
+
+	l2_token_matcher_destroy(state->memory_pool_collection);
+	c_token_matcher_destroy(state->memory_pool_collection);
+
+	struct_regex_parser_node_memory_pool_destroy(state->memory_pool_collection);
+	struct_regex_computation_node_memory_pool_destroy(state->memory_pool_collection);
+
 	memory_pool_collection_destroy(state->memory_pool_collection);
+
+
 	free(state->memory_pool_collection);
 	free(state);
 }

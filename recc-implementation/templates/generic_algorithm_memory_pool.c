@@ -82,7 +82,12 @@ void * T0_IDENTIFIER_get_object_pointer(void ** block_pointers, unsigned int ind
 	return &(((char *)(block_pointers[block_index]))[object_size * ((index + T0_IDENTIFIER_objects_in_first_block) - (1 << (block_index + T0_IDENTIFIER_objects_in_first_block_log_2)))]);
 }
 
-void T0_IDENTIFIER_memory_pool_create(struct T0_IDENTIFIER_memory_pool * p){
+void T0_IDENTIFIER_memory_pool_create(struct memory_pool_collection * m){
+	m->T0_IDENTIFIER_pool = T0_IDENTIFIER_memory_pool_create_internal();
+}
+
+struct T0_IDENTIFIER_memory_pool * T0_IDENTIFIER_memory_pool_create_internal(void){
+	struct T0_IDENTIFIER_memory_pool * p = (struct T0_IDENTIFIER_memory_pool*)malloc(sizeof(struct T0_IDENTIFIER_memory_pool));
 	void_ptr_list_create(&p->block_pointers);
 	p->objects_allocated = 0;
 	p->next_preallocation = 0;
@@ -91,11 +96,18 @@ void T0_IDENTIFIER_memory_pool_create(struct T0_IDENTIFIER_memory_pool * p){
 	p->objects_to_preallocate = T0_IDENTIFIER_objects_in_first_block;
 	p->object_size = sizeof(T0_LITERAL);
 	p->pooling_active = T0_IDENTIFIER_pooling_active;
+	return p;
 }
 
-void T0_IDENTIFIER_memory_pool_destroy(struct T0_IDENTIFIER_memory_pool * p){
+void T0_IDENTIFIER_memory_pool_destroy(struct memory_pool_collection * m){
+	assert(m->T0_IDENTIFIER_pool);
+	T0_IDENTIFIER_memory_pool_destroy_internal(m->T0_IDENTIFIER_pool);
+}
+
+void T0_IDENTIFIER_memory_pool_destroy_internal(struct T0_IDENTIFIER_memory_pool * p){
 	unsigned int i;
-	unsigned int size = void_ptr_list_size(&p->block_pointers);
+	unsigned int size;
+	size = void_ptr_list_size(&p->block_pointers);
 	assert((!p->objects_allocated) && "There still objects allocated in this memory pool!");
 	free((void*)p->freed_pointers);
 	for(i = 0; i < size; i++){
@@ -109,14 +121,25 @@ void T0_IDENTIFIER_memory_pool_destroy(struct T0_IDENTIFIER_memory_pool * p){
 	p->objects_to_preallocate = T0_IDENTIFIER_objects_in_first_block;
 	p->object_size = 0;
 	p->pooling_active = T0_IDENTIFIER_pooling_active;
+	free(p);
 }
 
-T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc(struct T0_IDENTIFIER_memory_pool * p){
+T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc(struct memory_pool_collection * m){
+	assert(m->T0_IDENTIFIER_pool);
+	return T0_IDENTIFIER_memory_pool_malloc_internal(m->T0_IDENTIFIER_pool);
+}
+
+T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_internal(struct T0_IDENTIFIER_memory_pool * p){
 	void * abc;
-	return T0_IDENTIFIER_memory_pool_malloc_tracking(p, &abc);
+	return T0_IDENTIFIER_memory_pool_malloc_tracking_internal(p, &abc);
 }
 
-T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking(struct T0_IDENTIFIER_memory_pool * p, void ** new_region_last_item){
+T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking(struct memory_pool_collection * m, void ** new_region_last_item){
+	assert(m->T0_IDENTIFIER_pool);
+	return T0_IDENTIFIER_memory_pool_malloc_tracking_internal(m->T0_IDENTIFIER_pool, new_region_last_item);
+}
+
+T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking_internal(struct T0_IDENTIFIER_memory_pool * p, void ** new_region_last_item){
 	if(T0_IDENTIFIER_pooling_active){
 		/*  If there was a recently freed object give back that one */
 		if(p->num_freed_pointers){
@@ -147,7 +170,13 @@ T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking(struct T0_IDENTIFIER_memo
 	}
 }
 
-void T0_IDENTIFIER_memory_pool_free(struct T0_IDENTIFIER_memory_pool * p, T0_LITERAL * ptr){
+void T0_IDENTIFIER_memory_pool_free(struct memory_pool_collection * m, T0_LITERAL * ptr){
+	assert(m->T0_IDENTIFIER_pool);
+	T0_IDENTIFIER_memory_pool_free_internal(m->T0_IDENTIFIER_pool, ptr);
+}
+
+void T0_IDENTIFIER_memory_pool_free_internal(struct T0_IDENTIFIER_memory_pool * p, T0_LITERAL * ptr){
+	assert(p);
 	if(T0_IDENTIFIER_pooling_active){
 		if(ptr){
 			assert(p->objects_allocated);

@@ -424,7 +424,7 @@ struct type_description * create_type_description_from_type_name(struct memory_p
 	struct type_description * rtn;
 	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
 	struct scope_level * scope = get_parser_scope_level(state->type_engine);
-	rtn = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
+	rtn = struct_type_description_memory_pool_malloc(m);
 	assert(n->type == TYPE_NAME);
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
 	if(n->first_child->next && n->first_child->next->type == ABSTRACT_DECLARATOR){
@@ -559,8 +559,8 @@ unsigned int type_description_cmp(struct memory_pool_collection * m, struct type
 
 										struct type_description * param_type_a;
 										struct type_description * param_type_b;
-										param_type_a = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
-										param_type_b = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
+										param_type_a = struct_type_description_memory_pool_malloc(m);
+										param_type_b = struct_type_description_memory_pool_malloc(m);
 										param_type_a->specifiers = declaration_set_a->normalized_specifiers;
 										param_type_b->specifiers = declaration_set_b->normalized_specifiers;
 										assert(struct_normalized_declarator_ptr_list_size(declaration_set_a->normalized_declarators) <= 1);
@@ -578,8 +578,8 @@ unsigned int type_description_cmp(struct memory_pool_collection * m, struct type
 										rtn = type_description_cmp(m, param_type_a, param_type_b);
 										destroy_normalized_declaration_element_list(m, create_normalized_declaration_element_list(declaration_set_a));
 										destroy_normalized_declaration_element_list(m, create_normalized_declaration_element_list(declaration_set_b));
-										struct_type_description_memory_pool_free(m->struct_type_description_pool, param_type_a);
-										struct_type_description_memory_pool_free(m->struct_type_description_pool, param_type_b);
+										struct_type_description_memory_pool_free(m, param_type_a);
+										struct_type_description_memory_pool_free(m, param_type_b);
 										arg_index++;
 										if(rtn){
 											return rtn;
@@ -632,11 +632,11 @@ unsigned int get_enum_value(struct memory_pool_collection * m, struct normalized
 	while(n->type == ENUMERATOR){
 		unsigned char * cmp = copy_string(n->first_child->c_lexer_token->first_byte, n->first_child->c_lexer_token->last_byte, m);
 		if(!strcmp((const char *)cmp, (const char *)label)){
-			heap_memory_pool_free(m->heap_pool, label);
-			heap_memory_pool_free(m->heap_pool, cmp);
+			heap_memory_pool_free(m, label);
+			heap_memory_pool_free(m, cmp);
 			return rtn;
 		}
-		heap_memory_pool_free(m->heap_pool, cmp);
+		heap_memory_pool_free(m, cmp);
 		n = n->next->first_child;
 		if(n->next)
 			n = n->next;
@@ -969,7 +969,7 @@ void undo_namespace_modification(struct memory_pool_collection * m, struct names
 			assert(0 && "Shouldn't happen.");
 		}
 	}
-	heap_memory_pool_free(m->heap_pool, modification->identifier_str);
+	heap_memory_pool_free(m, modification->identifier_str);
 	free(modification);
 }
 
@@ -1304,7 +1304,7 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 		struct constant_description * new_description = (struct constant_description *)0;
 		if(previous_description){
 			previous_description->num_references = previous_description->num_references + 1;
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, constant_string_representation);
+			heap_memory_pool_free(state->memory_pool_collection, constant_string_representation);
 			return;
 		}/* else, constant does not already exist so create it */
 		new_description = (struct constant_description *)malloc(sizeof(struct constant_description));
@@ -1376,7 +1376,7 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 			unsigned_char_ptr_to_struct_constant_description_ptr_map_remove(&state->constant_map, constant_string_representation);
 			destroy_constant_description(state->memory_pool_collection, previous_description);
 		}
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, constant_string_representation); /* The second copy we used to search with */
+		heap_memory_pool_free(state->memory_pool_collection, constant_string_representation); /* The second copy we used to search with */
 	}else{
 		assert(0 && "Unknown option.");
 	}
@@ -1385,14 +1385,14 @@ void manage_constant(struct parser_state * state, struct parser_node * n, enum a
 void destroy_constant_description(struct memory_pool_collection * m, struct constant_description * description){
 	destroy_type_description(m, description->type_description);
 	free(description->native_data);
-	heap_memory_pool_free(m->heap_pool, description->str);
+	heap_memory_pool_free(m, description->str);
 	free(description);
 }
 
 void * push_operation(struct parser_state * state, enum parser_operation_type t, void * data){
 	struct parser_operation new_operation;
 	new_operation.type = t;
-	new_operation.data = t == ADVANCE_PARSER_POSITION ? struct_parser_node_memory_pool_malloc(state->memory_pool_collection->struct_parser_node_pool) : data;
+	new_operation.data = t == ADVANCE_PARSER_POSITION ? struct_parser_node_memory_pool_malloc(state->memory_pool_collection) : data;
 	struct_parser_operation_list_add_end(&state->operation_stack, new_operation);
 	switch(t){
 		case ADVANCE_TOKEN_POSITION:{
@@ -1457,7 +1457,7 @@ void pop_operation(struct parser_state * state){
 			stack_operation("'\n");
 			break;
 		}case ADVANCE_PARSER_POSITION:{
-			struct_parser_node_memory_pool_free(state->memory_pool_collection->struct_parser_node_pool, (struct parser_node*)poped_operation.data);
+			struct_parser_node_memory_pool_free(state->memory_pool_collection, (struct parser_node*)poped_operation.data);
 			break;
 		}case PROCESS_CONSTANT:{
 			manage_constant(state, (struct parser_node *)poped_operation.data, REMOVE);
@@ -2744,14 +2744,14 @@ struct parser_node * type_specifier(struct parser_state * state, struct aggregat
 		}
 		if(obj && count_specifiers(type_description, TYPEDEF)){
 			destroy_type_description(state->memory_pool_collection, type_description);
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
+			heap_memory_pool_free(state->memory_pool_collection, ident);
 			return create_parser_node(state, (struct parser_node *)0, n1, (struct c_lexer_token*)0, TYPE_SPECIFIER);
 		}else{
 			if(type_description){
 				destroy_type_description(state->memory_pool_collection, type_description);
 			}
 			backtrack(state, checkpoint);
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
+			heap_memory_pool_free(state->memory_pool_collection, ident);
 			parser_progress("Identifier not typedefed type.  Putting back tokens.\n");
 			return (struct parser_node *)0;
 		}
@@ -4932,7 +4932,7 @@ enum normalized_specifier_type get_normalized_specifier_type(enum c_token_type t
 struct type_description * create_empty_type_description(struct memory_pool_collection * m){
 	struct type_description * new_type;
 	struct struct_normalized_specifier_ptr_list * specifiers = (struct struct_normalized_specifier_ptr_list *)malloc(sizeof(struct struct_normalized_specifier_ptr_list));
-	new_type = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
+	new_type = struct_type_description_memory_pool_malloc(m);
 	struct_normalized_specifier_ptr_list_create(specifiers);
 	new_type->specifiers = specifiers;
 	new_type->declarator = (struct normalized_declarator *)0;
@@ -5025,9 +5025,9 @@ struct type_description * ensure_unsigned(struct memory_pool_collection * m, str
 
 struct type_description * add_specifier(struct memory_pool_collection * m, struct type_description * description, enum c_token_type t){
 	unsigned char * string = get_specifier_string(t);
-	struct c_lexer_token * new_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
-	struct parser_node * terminal = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-	struct parser_node * specifier = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
+	struct c_lexer_token * new_token = struct_c_lexer_token_memory_pool_malloc(m);
+	struct parser_node * terminal = struct_parser_node_memory_pool_malloc(m);
+	struct parser_node * specifier = struct_parser_node_memory_pool_malloc(m);
 	struct normalized_specifier * normalized_specifier = (struct normalized_specifier *)malloc(sizeof(struct normalized_specifier));
 
 	new_token->first_byte = string;

@@ -22,6 +22,12 @@
 #ifndef TYPES_REGEX_ENGINE_struct_regex_matcher_state_H_
 #include "../generated/struct_regex_matcher_state.h"
 #endif
+#ifndef generated_DIR_struct_regex_parser_node_memory_pool_DOT_h
+#include "../generated/struct_regex_parser_node_memory_pool.h"
+#endif
+#ifndef generated_DIR_struct_regex_computation_node_memory_pool_DOT_h
+#include "../generated/struct_regex_computation_node_memory_pool.h"
+#endif
 #ifndef MEMORY_POOL_COLLECTION_H_
 #include "memory_pool_collection.h"
 #endif

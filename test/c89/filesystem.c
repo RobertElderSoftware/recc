@@ -68,6 +68,19 @@ int main(void){
 	unsigned_char_list_create(&buffered_symbol_table);
 	unsigned_char_list_create(&preprocssed_characters);
 	memory_pool_collection_create(&memory_pool_collection);
+
+	heap_memory_pool_create(&memory_pool_collection);
+	struct_regex_computation_node_memory_pool_create(&memory_pool_collection);
+	struct_regex_parser_node_memory_pool_create(&memory_pool_collection);
+	struct_c_lexer_token_memory_pool_create(&memory_pool_collection);
+	struct_parser_node_memory_pool_create(&memory_pool_collection);
+	struct_l2_parser_node_memory_pool_create(&memory_pool_collection);
+	struct_l2_lexer_token_memory_pool_create(&memory_pool_collection);
+	struct_type_description_memory_pool_create(&memory_pool_collection);
+	struct_l2_item_memory_pool_create(&memory_pool_collection);
+	struct_linker_symbol_memory_pool_create(&memory_pool_collection);
+	l2_token_matcher_create(&memory_pool_collection);
+	c_token_matcher_create(&memory_pool_collection);
 	unsigned_char_list_create(&generated_code);
 	preprocessor_state = create_preprocessor_state(&memory_pool_collection);
 
@@ -140,6 +153,24 @@ int main(void){
 	destroy_preprocessor_state(preprocessor_state);
 	unsigned_char_list_destroy(&preprocssed_characters);
 	destroy_c_lexer_state(&c_lexer_state);
+	heap_memory_pool_destroy(&memory_pool_collection);
+
+	struct_c_lexer_token_memory_pool_destroy(&memory_pool_collection);
+	struct_parser_node_memory_pool_destroy(&memory_pool_collection);
+	struct_l2_parser_node_memory_pool_destroy(&memory_pool_collection);
+	struct_l2_lexer_token_memory_pool_destroy(&memory_pool_collection);
+	struct_type_description_memory_pool_destroy(&memory_pool_collection);
+	struct_linker_symbol_memory_pool_destroy(&memory_pool_collection);
+	struct_l2_item_memory_pool_destroy(&memory_pool_collection);
+
+	l2_token_matcher_destroy(&memory_pool_collection);
+	c_token_matcher_destroy(&memory_pool_collection);
+
+	struct_regex_parser_node_memory_pool_destroy(&memory_pool_collection);
+	struct_regex_computation_node_memory_pool_destroy(&memory_pool_collection);
+
 	memory_pool_collection_destroy(&memory_pool_collection);
+
+
 	return 0;
 }

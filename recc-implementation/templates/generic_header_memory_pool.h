@@ -19,6 +19,9 @@
 #ifndef ASSERT_H_DEFINED__
 #include <assert.h>
 #endif
+#ifndef MEMORY_POOL_COLLECTION_H_
+#include "../recc-implementation/memory_pool_collection.h"
+#endif
 #ifndef void_ptr_list__H__DEFINED__
 #include "void_ptr_list.h"
 #endif
@@ -30,8 +33,14 @@
 #endif
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-void T0_IDENTIFIER_memory_pool_create(struct T0_IDENTIFIER_memory_pool *);
-void T0_IDENTIFIER_memory_pool_destroy(struct T0_IDENTIFIER_memory_pool *);
-T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc(struct T0_IDENTIFIER_memory_pool *);
-T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking(struct T0_IDENTIFIER_memory_pool *, void **);
-void T0_IDENTIFIER_memory_pool_free(struct T0_IDENTIFIER_memory_pool *, T0_LITERAL *);
+void T0_IDENTIFIER_memory_pool_create(struct memory_pool_collection *);
+void T0_IDENTIFIER_memory_pool_destroy(struct memory_pool_collection *);
+T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc(struct memory_pool_collection *);
+T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking(struct memory_pool_collection *, void **);
+void T0_IDENTIFIER_memory_pool_free(struct memory_pool_collection *, T0_LITERAL *);
+
+struct T0_IDENTIFIER_memory_pool * T0_IDENTIFIER_memory_pool_create_internal(void);
+void T0_IDENTIFIER_memory_pool_destroy_internal(struct T0_IDENTIFIER_memory_pool *);
+T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_internal(struct T0_IDENTIFIER_memory_pool *);
+T0_LITERAL * T0_IDENTIFIER_memory_pool_malloc_tracking_internal(struct T0_IDENTIFIER_memory_pool *, void **);
+void T0_IDENTIFIER_memory_pool_free_internal(struct T0_IDENTIFIER_memory_pool *, T0_LITERAL *);

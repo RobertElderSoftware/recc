@@ -680,7 +680,7 @@ struct l2_parser_node * l2_accept(enum l2_token_type t, struct l2_parser_state *
 void * push_l2_operation(struct l2_parser_state * parser_state, enum l2_parser_operation_type t, void * data){
 	struct l2_parser_operation new_operation;
 	new_operation.type = t;
-	new_operation.data = t == L2_ADVANCE_PARSER_POSITION ? struct_l2_parser_node_memory_pool_malloc(parser_state->memory_pool_collection->struct_l2_parser_node_pool) : data;
+	new_operation.data = t == L2_ADVANCE_PARSER_POSITION ? struct_l2_parser_node_memory_pool_malloc(parser_state->memory_pool_collection) : data;
 	struct_l2_parser_operation_list_add_end(&parser_state->operation_stack, new_operation);
 	switch(t){
 		case L2_ADVANCE_TOKEN_POSITION:{
@@ -712,7 +712,7 @@ void pop_l2_operation(struct l2_parser_state * parser_state){
 			parser_state->tokens_position = parser_state->tokens_position - 1;
 			break;
 		}case L2_ADVANCE_PARSER_POSITION:{
-			struct_l2_parser_node_memory_pool_free(parser_state->memory_pool_collection->struct_l2_parser_node_pool, (struct l2_parser_node*)poped_operation.data);
+			struct_l2_parser_node_memory_pool_free(parser_state->memory_pool_collection, (struct l2_parser_node*)poped_operation.data);
 			break;
 		}case L2_INCREMENT_NEWLINE_COUNT:{
 			parser_state->line_number = parser_state->line_number - 1;

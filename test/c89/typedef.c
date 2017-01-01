@@ -298,18 +298,18 @@ void f1(void){
 
 	foo_array_arr[0][0] = 'a';
 	foo_array_arr[0][1] = 'b';
-	foo_array_arr[1][0] = 'c';
-	foo_array_arr[1][1] = 'd';
-	foo_array_arr[2][0] = 'e';
-	foo_array_arr[2][1] = 'f';
+	foo_array_arr[0][2] = 'c';
+	foo_array_arr[1][0] = 'd';
+	foo_array_arr[1][1] = 'e';
+	foo_array_arr[1][2] = 'f';
 
 
 	putchar(foo_array_arr[0][0]);
 	putchar(foo_array_arr[0][1]);
+	putchar(foo_array_arr[0][2]);
 	putchar(foo_array_arr[1][0]);
 	putchar(foo_array_arr[1][1]);
-	putchar(foo_array_arr[2][0]);
-	putchar(foo_array_arr[2][1]);
+	putchar(foo_array_arr[1][2]);
 	foo_array[0] = 'c';
 	foo_array[1] = 'd';
 	foo_array[2] = 'e';

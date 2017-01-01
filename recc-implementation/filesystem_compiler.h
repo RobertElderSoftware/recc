@@ -34,9 +34,37 @@
 #ifndef IO_H_
 #include "../recc-implementation/io.h"
 #endif
+#ifndef LEXER_H_
+#include "lexer.h"
+#endif
 #ifndef unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare_H_DEFINED_
 #include "../generated/struct_unsigned_char_ptr_to_unsigned_char_ptr_key_value_pair_compare.h"
 #endif
+#ifndef generated_DIR_struct_type_description_memory_pool_DOT_h
+#include "../generated/struct_type_description_memory_pool.h"
+#endif
+#ifndef generated_DIR_struct_linker_symbol_memory_pool_DOT_h
+#include "../generated/struct_linker_symbol_memory_pool.h"
+#endif
+#ifndef generated_DIR_struct_c_lexer_token_memory_pool_DOT_h
+#include "../generated/struct_c_lexer_token_memory_pool.h"
+#endif
+#ifndef generated_DIR_struct_parser_node_memory_pool_DOT_h
+#include "../generated/struct_parser_node_memory_pool.h"
+#endif
+#ifndef generated_DIR_struct_l2_parser_node_memory_pool_DOT_h
+#include "../generated/struct_l2_parser_node_memory_pool.h"
+#endif
+#ifndef generated_DIR_struct_l2_lexer_token_memory_pool_DOT_h
+#include "../generated/struct_l2_lexer_token_memory_pool.h"
+#endif
+#ifndef generated_DIR_struct_l2_item_memory_pool_DOT_h
+#include "../generated/struct_l2_item_memory_pool.h"
+#endif
+#ifndef generated_DIR_struct_c_lexer_token_memory_pool_DOT_h
+#include "../generated/struct_c_lexer_token_memory_pool.h"
+#endif
+
 
 void output_filesystem_impl(unsigned char *);
 void create_directories(struct unsigned_char_ptr_list *, struct memory_pool_collection *);

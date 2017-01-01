@@ -37,7 +37,6 @@
 #include <stdlib.h>
 #endif
 
-
 struct directory_entry{
 	unsigned int inode;
 	unsigned char file_name[TIMES_4];

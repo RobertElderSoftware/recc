@@ -261,7 +261,7 @@ void set_symbol_l2_item_pointer(struct linker_state * state, struct linker_file 
 			assert(0 && "Trying to set offset of unknown symbol.");
 		}
 	}
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
+	heap_memory_pool_free(state->memory_pool_collection, identifier_str);
 }
 
 void verify_symbol_declaration(struct linker_state * state, struct linker_file * linker_file, struct l2_lexer_token * token){
@@ -273,7 +273,7 @@ void verify_symbol_declaration(struct linker_state * state, struct linker_file *
 		printf("Undeclared identifier %s on line %d in file %s\n", identifier_str, linker_file->current_line, linker_file->source_file);
 		assert(0 && "Found symbol without forward declaration.");
 	}
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
+	heap_memory_pool_free(state->memory_pool_collection, identifier_str);
 }
 
 void add_internal_linker_symbol(struct linker_state * state, struct linker_file * linker_file, struct l2_lexer_token * token, unsigned int is_required, unsigned int is_implemented){
@@ -285,10 +285,10 @@ void add_internal_linker_symbol(struct linker_state * state, struct linker_file 
 		existing_symbol->is_implemented = existing_symbol->is_implemented ? existing_symbol->is_implemented : is_implemented;
 		existing_symbol->is_required = existing_symbol->is_required ? existing_symbol->is_required : is_required;
 		existing_symbol->is_external = 0;
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
+		heap_memory_pool_free(state->memory_pool_collection, identifier_str);
 		return;
 	}
-	new_symbol = struct_linker_symbol_memory_pool_malloc(state->memory_pool_collection->struct_linker_symbol_pool);
+	new_symbol = struct_linker_symbol_memory_pool_malloc(state->memory_pool_collection);
 	new_symbol->is_implemented = is_implemented;
 	new_symbol->is_required = is_required;
 	new_symbol->is_external = 0;
@@ -314,10 +314,10 @@ void add_external_linker_symbol(struct linker_state * state, struct linker_file 
 		existing_symbol->is_required = existing_symbol->is_required ? existing_symbol->is_required : is_required;
 		existing_symbol->is_external = 1;
 		existing_symbol->parent_linker_file = is_implemented ? linker_file : existing_symbol->parent_linker_file;
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier_str);
+		heap_memory_pool_free(state->memory_pool_collection, identifier_str);
 		return;
 	}
-	new_symbol = struct_linker_symbol_memory_pool_malloc(state->memory_pool_collection->struct_linker_symbol_pool);
+	new_symbol = struct_linker_symbol_memory_pool_malloc(state->memory_pool_collection);
 	new_symbol->is_implemented = is_implemented;
 	new_symbol->is_required = is_required;
 	new_symbol->is_external = 1;
@@ -413,7 +413,7 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 	switch(n->first_child->type){
 		case L2_INSTRUCTION_STATEMENT:{
 			struct l2_parser_node * op_code = n->first_child->first_child;
-			struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection->struct_l2_item_pool);
+			struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection);
 			new_instruction->op_type = op_code->l2_lexer_token->type;
 			switch(op_code->l2_lexer_token->type){
 				/*  Uses case statement fallthrough: */
@@ -435,7 +435,7 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 						unsigned char * ident = copy_string(branch_distance->first_child->l2_lexer_token->first_byte, branch_distance->first_child->l2_lexer_token->last_byte, state->memory_pool_collection);
 						verify_symbol_declaration(state, linker_file, branch_distance->first_child->l2_lexer_token);
 						new_instruction->referenced_linker_symbol = get_absolute_symbol(state, ident, linker_file);
-						heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
+						heap_memory_pool_free(state->memory_pool_collection, ident);
 					}else if(branch_distance->first_child->l2_lexer_token->type == L2_MINUS_CHAR){
 						/*  Next one should be the decimal number */
 						assert(branch_distance->first_child->next->l2_lexer_token->type == L2_CONSTANT_DECIMAL);
@@ -465,12 +465,12 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 		}case L2_LABEL_STATEMENT:{
 			struct l2_parser_node * terminal = n->first_child->first_child;
 			struct l2_lexer_token * identifier = terminal->l2_lexer_token;
-			struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection->struct_l2_item_pool);
+			struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection);
 			new_instruction->op_type = terminal->next->l2_lexer_token->type;
 			if(terminal->next->type == L2_TERMINAL && terminal->next->l2_lexer_token->type == L2_COLON_CHAR){
 				unsigned char * ident = copy_string(identifier->first_byte, identifier->last_byte, state->memory_pool_collection);
 				new_instruction->referenced_linker_symbol = get_absolute_symbol(state, ident, linker_file);
-				heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
+				heap_memory_pool_free(state->memory_pool_collection, ident);
 				set_symbol_l2_item_pointer(state, linker_file, identifier, new_instruction, struct_l2_item_ptr_list_size(&linker_file->l2_items));
 			}else{
 				assert(0 && "Expected colon.");
@@ -482,7 +482,7 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 			switch(directive->type){
 				case L2_DEFINE_WORD_DIRECTIVE: {
 				}case L2_SKIP_WORDS_DIRECTIVE: {
-					struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection->struct_l2_item_pool);
+					struct l2_item * new_instruction = struct_l2_item_memory_pool_malloc(state->memory_pool_collection);
 					struct l2_lexer_token * value = directive->first_child->next->l2_lexer_token;
 					new_instruction->op_type = directive->first_child->l2_lexer_token->type;
 					if(value->type == L2_CONSTANT_HEX){
@@ -492,7 +492,7 @@ void process_statement(struct l2_parser_node * n, struct linker_state * state, s
 					}else if(value->type == L2_IDENTIFIER){
 						unsigned char * ident = copy_string(value->first_byte, value->last_byte, state->memory_pool_collection);
 						new_instruction->referenced_linker_symbol = get_absolute_symbol(state, ident, linker_file);
-						heap_memory_pool_free(state->memory_pool_collection->heap_pool, ident);
+						heap_memory_pool_free(state->memory_pool_collection, ident);
 						verify_symbol_declaration(state, linker_file, value);
 					}else{
 						assert(0 && "Unknown value type.");
@@ -887,11 +887,11 @@ void free_symbol_map(struct linker_state * state, struct unsigned_char_ptr_to_st
 	unsigned int size = unsigned_char_ptr_list_size(&keys);
 	unsigned int i;
 	for(i = 0; i < size; i++){
-		struct_linker_symbol_memory_pool_free(state->memory_pool_collection->struct_linker_symbol_pool, unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(map, unsigned_char_ptr_list_get(&keys, i)));
+		struct_linker_symbol_memory_pool_free(state->memory_pool_collection, unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(map, unsigned_char_ptr_list_get(&keys, i)));
 	}
 	/*  Need to do this twice because we're deleting the data under the keys of the map */
 	for(i = 0; i < size; i++){
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, unsigned_char_ptr_list_get(&keys, i));
+		heap_memory_pool_free(state->memory_pool_collection, unsigned_char_ptr_list_get(&keys, i));
 	}
 	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_destroy(map);
 	unsigned_char_ptr_list_destroy(&keys);
@@ -929,8 +929,8 @@ void linker_file_destroy(struct linker_state * state, struct linker_file * file)
 	unsigned int num_items = struct_l2_item_ptr_list_size(&file->l2_items);
 	for(j = 0; j < num_symbols; j++){
 		struct linker_object * obj = struct_linker_object_ptr_list_get(&file->object_declarations, j);
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, obj->start_label);
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, obj->end_label);
+		heap_memory_pool_free(state->memory_pool_collection, obj->start_label);
+		heap_memory_pool_free(state->memory_pool_collection, obj->end_label);
 		free(obj);
 	}
 	struct_linker_object_ptr_list_destroy(&file->object_declarations);
@@ -938,7 +938,7 @@ void linker_file_destroy(struct linker_state * state, struct linker_file * file)
 	free_symbol_map(state, &file->internal_symbols);
 
 	for(j = 0; j < num_items; j++){
-		struct_l2_item_memory_pool_free(state->memory_pool_collection->struct_l2_item_pool, struct_l2_item_ptr_list_get(&file->l2_items, j));
+		struct_l2_item_memory_pool_free(state->memory_pool_collection, struct_l2_item_ptr_list_get(&file->l2_items, j));
 	}
 	struct_l2_item_ptr_list_destroy(&file->l2_items);
 
@@ -993,7 +993,7 @@ void set_all_post_linking_offsets(struct linker_state * state){
 
 struct l2_lexer_token * make_hex_number_token(struct linker_state *, unsigned int);
 struct l2_lexer_token * make_hex_number_token(struct linker_state * state, unsigned int value){
-	struct l2_lexer_token * tok = struct_l2_lexer_token_memory_pool_malloc(state->memory_pool_collection->struct_l2_lexer_token_pool);
+	struct l2_lexer_token * tok = struct_l2_lexer_token_memory_pool_malloc(state->memory_pool_collection);
 	unsigned char * str = create_formatted_string(state->memory_pool_collection, 20, "0x%X", value);
 	unsigned char * start = str;
 	unsigned char * end = (unsigned char *)0;
@@ -1034,7 +1034,7 @@ void add_items_of_type(struct linker_state * state, enum l2_token_type type, str
 	alignment_words_needed = (current_offset % words_in_page == 0) ? 0 : (words_in_page - (current_offset % words_in_page));
 	printf("Needed to add 0x%X to page align region.\n", alignment_words_needed);
 
-	sw_padding = struct_l2_item_memory_pool_malloc(state->memory_pool_collection->struct_l2_item_pool);
+	sw_padding = struct_l2_item_memory_pool_malloc(state->memory_pool_collection);
 	sw_padding->op_type = L2_SW;
 	sw_padding->number_value_is_negative = 0;
 	sw_padding->number_value = alignment_words_needed;

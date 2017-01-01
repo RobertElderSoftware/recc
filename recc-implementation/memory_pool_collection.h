@@ -16,36 +16,6 @@
     under the License.
 */
 
-#ifndef struct_regex_computation_node_memory_pool_H_DEFINED_
-#include "../generated/struct_regex_computation_node_memory_pool.h"
-#endif
-#ifndef struct_regex_parser_node_memory_pool_H_DEFINED_
-#include "../generated/struct_regex_parser_node_memory_pool.h"
-#endif
-#ifndef struct_parser_node_memory_pool_H_DEFINED_
-#include "../generated/struct_parser_node_memory_pool.h"
-#endif
-#ifndef struct_l2_parser_node_memory_pool_H_DEFINED_
-#include "../generated/struct_l2_parser_node_memory_pool.h"
-#endif
-#ifndef struct_c_lexer_token_memory_pool_H_DEFINED_
-#include "../generated/struct_c_lexer_token_memory_pool.h"
-#endif
-#ifndef struct_l2_lexer_token_memory_pool_H_DEFINED_
-#include "../generated/struct_l2_lexer_token_memory_pool.h"
-#endif
-#ifndef struct_type_description_memory_pool_H_DEFINED_
-#include "../generated/struct_type_description_memory_pool.h"
-#endif
-#ifndef struct_l2_item_memory_pool_H_DEFINED_
-#include "../generated/struct_l2_item_memory_pool.h"
-#endif
-#ifndef struct_linker_symbol_memory_pool_H_DEFINED_
-#include "../generated/struct_linker_symbol_memory_pool.h"
-#endif
-#ifndef HEAP_MEMORY_POOL_H_
-#include "heap_memory_pool.h"
-#endif
 #ifndef TYPES_struct_memory_pool_collection_H_
 #include "../generated/struct_memory_pool_collection.h"
 #endif
@@ -58,6 +28,21 @@
 #ifndef REGEX_ENGINE_H_
 #include "regex_engine.h"
 #endif
+#ifndef void_ptr_memory_pool_H_DEFINED_
+#include "../generated/void_ptr_memory_pool.h"
+#endif
+#ifndef void_ptr_to_unsigned_int_key_value_pair_compare_H_DEFINED_
+#include "../generated/struct_void_ptr_to_unsigned_int_key_value_pair_compare.h"
+#endif
+#ifndef generated_DIR_void_ptr_to_unsigned_int_map_DOT_h
+#include "../generated/void_ptr_to_unsigned_int_map.h"
+#endif
+
+
+void heap_memory_pool_create(struct memory_pool_collection *);
+void heap_memory_pool_destroy(struct memory_pool_collection *);
+void * heap_memory_pool_malloc(struct memory_pool_collection *, unsigned int);
+void heap_memory_pool_free(struct memory_pool_collection *, void *);
 
 void memory_pool_collection_create(struct memory_pool_collection *);
 void memory_pool_collection_destroy(struct memory_pool_collection *);

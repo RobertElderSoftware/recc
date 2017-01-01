@@ -40,9 +40,6 @@
 #ifndef MEMORY_POOL_COLLECTION_H_
 #include "memory_pool_collection.h"
 #endif
-#ifndef HEAP_MEMORY_POOL_H_
-#include "heap_memory_pool.h"
-#endif
 #ifndef TYPES_BUILTIN_struct_printing_state_H_
 #include "../generated/struct_printing_state.h"
 #endif

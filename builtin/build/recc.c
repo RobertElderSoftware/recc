@@ -14,7 +14,7 @@
     under the License.
 */
 
-#include "../recc-implementation/compiler_interface_phase_3.h"
+#include "../../recc-implementation/compiler_interface_phase_3.h"
 
 void register_builtin_objects(struct build_state *);
 

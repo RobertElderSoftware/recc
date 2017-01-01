@@ -170,7 +170,7 @@ struct compile_time_constant * evaluate_constant_literal(struct code_gen_state *
 	str = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte, state->memory_pool_collection);
 	constant_description = find_constant(state->parser_state, str);
 	assert(constant_description);
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, str);
+	heap_memory_pool_free(state->memory_pool_collection, str);
 	rtn->constant_description = constant_description;
 	return rtn;
 }
@@ -194,7 +194,7 @@ struct compile_time_constant * evaluate_constant_identifier(struct code_gen_stat
 		printf("Attempting to determine compile-time constant value of non enum identifier '%s'.\n", identifier);
 		assert(0 && "Attempting to determine compile-time constant value of non enum identifier.");
 	}
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier);
+	heap_memory_pool_free(state->memory_pool_collection, identifier);
 	return rtn;
 }
 
@@ -826,7 +826,7 @@ unsigned int struct_type_size(struct code_gen_state * state, struct type_descrip
 		printf("Unknown structure: %s in file %s.\n", tag_identifier, state->parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier in struct_type_size.");
 	}
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, tag_identifier);
+	heap_memory_pool_free(state->memory_pool_collection, tag_identifier);
 
 	children = unsigned_char_ptr_to_struct_namespace_object_ptr_map_values(obj->children);
 	num_children = struct_namespace_object_ptr_list_size(&children);
@@ -936,7 +936,7 @@ struct type_traversal * construct_type_traversal(struct code_gen_state * state, 
         
 				destroy_type_description(state->memory_pool_collection, member_description);
 			}
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, tag_identifier);
+			heap_memory_pool_free(state->memory_pool_collection, tag_identifier);
 			struct_namespace_object_ptr_list_destroy(&children);
 			break;
 		}case TYPE_CLASS_UNION:{
@@ -970,7 +970,7 @@ void process_global_type(struct code_gen_state * state, struct struct_compile_ti
 			unsigned char * string_literal_identifier_str = create_formatted_string(m, 20, "_%usl", c->constant_description->id);
 			assert(!bytes_buffered); /*  Complicated alignment case with char before pointer in struct */
 			buffered_printf(state->buffered_output, "DW %s;\n", string_literal_identifier_str);
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, string_literal_identifier_str);
+			heap_memory_pool_free(state->memory_pool_collection, string_literal_identifier_str);
 		}else{
 			unsigned int constant_value = evaluate_compile_time_constant(state, c);
 			switch(element_size){
@@ -1181,7 +1181,7 @@ unsigned int get_local_offset_h1(struct code_gen_state * state, struct namespace
 		identifier = copy_string(token->first_byte, token->last_byte, state->memory_pool_collection);
 		a = get_namespace_object_size(state, obj, force_arity_1);
 		buffered_printf(state->buffered_output, ";Add offset of %d due to local %s\n", a, identifier);
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier);
+		heap_memory_pool_free(state->memory_pool_collection, identifier);
 		return a + get_local_offset_h1(state, obj->next, 0);
 	}else{
 		return 0;
@@ -1284,7 +1284,7 @@ void load_identifier(struct code_gen_state * state, unsigned char * identifier, 
 				buffered_puts(state->buffered_output,"sto SP r1;  store address.\n"); 
 				push_type(state, type_description, context);
 				require_external_symbol(m, &state->symbols, name);
-				heap_memory_pool_free(m->heap_pool, name);
+				heap_memory_pool_free(m, name);
 			}
 			break;
 		}case PARAMETER:{
@@ -1360,7 +1360,7 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * state)
 			buffered_printf(state->buffered_output,"ll r1 0x%X;\n", ((unsigned char *)description->native_data)[0]);
 			buffered_puts(state->buffered_output,"sto SP r1;\n");
 			push_type(state, copy_type_description(m, description->type_description), p);
-			heap_memory_pool_free(m->heap_pool, constant);
+			heap_memory_pool_free(m, constant);
 		}else if(is_terminal_c_token_type(first_child(p), CONSTANT_DECIMAL) || is_terminal_c_token_type(first_child(p), CONSTANT_HEX)){
 			unsigned char * constant = copy_string(first_child(p)->c_lexer_token->first_byte, first_child(p)->c_lexer_token->last_byte, m);
 			struct constant_description * description = find_constant(parser_state, constant);
@@ -1383,11 +1383,11 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * state)
 
 			buffered_puts(state->buffered_output,"sto SP r1;\n");
 			push_type(state, copy_type_description(m, description->type_description), p);
-			heap_memory_pool_free(m->heap_pool, constant);
+			heap_memory_pool_free(m, constant);
 		}else if(is_terminal_c_token_type(first_child(p), IDENTIFIER)){
 			unsigned char * identifier = copy_string(first_child(p)->c_lexer_token->first_byte, first_child(p)->c_lexer_token->last_byte, m);
 			load_identifier(state, identifier, p);
-			heap_memory_pool_free(m->heap_pool, identifier);
+			heap_memory_pool_free(m, identifier);
 		}else if(is_terminal_c_token_type(first_child(p), STRING_LITERAL)){
 			unsigned char * constant = copy_string(first_child(p)->c_lexer_token->first_byte, first_child(p)->c_lexer_token->last_byte, m);
 			struct constant_description * description = find_constant(parser_state, constant);
@@ -1399,8 +1399,8 @@ void g_primary_expression(struct parser_node * p, struct code_gen_state * state)
 			buffered_puts(state->buffered_output,"sto SP r1;\n");
 			push_type(state, copy_type_description(m, description->type_description), p);
 			require_internal_symbol(m, &state->symbols, string_literal_identifier_str);
-			heap_memory_pool_free(m->heap_pool, string_literal_identifier_str);
-			heap_memory_pool_free(m->heap_pool, constant);
+			heap_memory_pool_free(m, string_literal_identifier_str);
+			heap_memory_pool_free(m, constant);
 		}else{
 			assert(0 && "Unknown terminal in primary expression\n");
 		}
@@ -1484,7 +1484,7 @@ void compare_function_argument_type(struct code_gen_state * state, struct parser
 	top_type = pop_type_without_type_check(state, context);
 	assert(parameter_declaration);
 	declaration_set = create_normalized_declaration_set_from_parser_node(state->memory_pool_collection, parameter_declaration, (struct normalized_declaration_set *)0);
-	tmp_param_type = struct_type_description_memory_pool_malloc(state->memory_pool_collection->struct_type_description_pool);
+	tmp_param_type = struct_type_description_memory_pool_malloc(state->memory_pool_collection);
 	tmp_param_type->specifiers = declaration_set->normalized_specifiers;
 
 	if(struct_normalized_declarator_ptr_list_size(declaration_set->normalized_declarators) == 1){
@@ -1500,7 +1500,7 @@ void compare_function_argument_type(struct code_gen_state * state, struct parser
 	param_type->context = top_type->context;
 	param_type->source_element = top_type->source_element;
 
-	struct_type_description_memory_pool_free(state->memory_pool_collection->struct_type_description_pool, tmp_param_type);
+	struct_type_description_memory_pool_free(state->memory_pool_collection, tmp_param_type);
 	destroy_normalized_declaration_element_list(state->memory_pool_collection, create_normalized_declaration_element_list(declaration_set));
 
 	convert_to_untypedefed_type_description(state->memory_pool_collection, top_type);
@@ -1748,7 +1748,7 @@ void do_struct_dereference_operator(struct code_gen_state * state, unsigned char
 			member_found = 1;
 			bytes_member = size;
 			abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, member_description->declarator);
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, member_name);
+			heap_memory_pool_free(state->memory_pool_collection, member_name);
 			break;
 		}else{
 			if(!member_found){
@@ -1756,7 +1756,7 @@ void do_struct_dereference_operator(struct code_gen_state * state, unsigned char
 			}
 			destroy_type_description(state->memory_pool_collection, member_description);
 		}
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, member_name);
+		heap_memory_pool_free(state->memory_pool_collection, member_name);
 		current_struct_object = current_struct_object->next;
 	}
 	struct_namespace_object_ptr_list_destroy(&children);
@@ -1792,7 +1792,7 @@ void do_struct_dereference_operator(struct code_gen_state * state, unsigned char
 	}
 
 	destroy_parser_node_tree_and_c_lexer_tokens(state->memory_pool_collection, abstract_declarator);
-	heap_memory_pool_free(state->memory_pool_collection->heap_pool, struct_tag_identifier);
+	heap_memory_pool_free(state->memory_pool_collection, struct_tag_identifier);
 	destroy_type_description(state->memory_pool_collection, t);
 }
 
@@ -1887,7 +1887,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * s
 			unsigned char * identifier = copy_string(second_child(p)->c_lexer_token->first_byte, second_child(p)->c_lexer_token->last_byte, state->memory_pool_collection);
 			do_struct_dereference_operator(state, identifier, second_child(p), 0);
 			g_postfix_expression_rest(third_child(p), state);
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier);
+			heap_memory_pool_free(state->memory_pool_collection, identifier);
 		}else if(
 			is_terminal_c_token_type(first_child(p), PTR_OP) &&
 			is_terminal_c_token_type(second_child(p), IDENTIFIER)
@@ -1895,7 +1895,7 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * s
 			unsigned char * identifier = copy_string(second_child(p)->c_lexer_token->first_byte, second_child(p)->c_lexer_token->last_byte, state->memory_pool_collection);
 			do_struct_dereference_operator(state, identifier, second_child(p), 1);
 			g_postfix_expression_rest(third_child(p), state);
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier);
+			heap_memory_pool_free(state->memory_pool_collection, identifier);
 		}else{
 			assert(0 &&"Expected () in postfix expression rest.\n");
 		}
@@ -2741,8 +2741,8 @@ void g_rest_of_logical_and(struct parser_node * possible_non_empty_rest, struct 
 		implement_internal_symbol(m, &state->symbols, dontshort_str);
 		require_internal_symbol(m, &state->symbols, afterand_str);
 		implement_internal_symbol(m, &state->symbols, afterand_str);
-		heap_memory_pool_free(m->heap_pool, dontshort_str);
-		heap_memory_pool_free(m->heap_pool, afterand_str);
+		heap_memory_pool_free(m, dontshort_str);
+		heap_memory_pool_free(m, afterand_str);
 	}
 }
 
@@ -2806,8 +2806,8 @@ void g_rest_of_logical_or(struct parser_node * possible_non_empty_rest, struct c
 		implement_internal_symbol(m, &state->symbols, dontshort_str);
 		require_internal_symbol(m, &state->symbols, afteror_str);
 		implement_internal_symbol(m, &state->symbols, afteror_str);
-		heap_memory_pool_free(m->heap_pool, dontshort_str);
-		heap_memory_pool_free(m->heap_pool, afteror_str);
+		heap_memory_pool_free(m, dontshort_str);
+		heap_memory_pool_free(m, afteror_str);
 	}
 }
 
@@ -2853,8 +2853,8 @@ void g_conditional_expression(struct parser_node * p, struct code_gen_state * st
 			implement_internal_symbol(m, &state->symbols, false_condition_str);
 			require_internal_symbol(m, &state->symbols, after_condition_str);
 			implement_internal_symbol(m, &state->symbols, after_condition_str);
-			heap_memory_pool_free(m->heap_pool, after_condition_str);
-			heap_memory_pool_free(m->heap_pool, false_condition_str);
+			heap_memory_pool_free(m, after_condition_str);
+			heap_memory_pool_free(m, false_condition_str);
 			if(!type_description_cmp(m, t1, t2)){
 				push_type(state, t1, p);
         			destroy_type_description(m, t2);
@@ -3625,7 +3625,7 @@ void g_direct_declarator(struct parser_node * p, struct code_gen_state * state){
 		){
 			unsigned char * identifier = copy_string(first_child(p)->c_lexer_token->first_byte, first_child(p)->c_lexer_token->last_byte, state->memory_pool_collection);
 			load_identifier(state, identifier, p);
-			heap_memory_pool_free(state->memory_pool_collection->heap_pool, identifier);
+			heap_memory_pool_free(state->memory_pool_collection, identifier);
 			g_direct_declarator_rest(second_child(p), state);
 		}
 	}else{
@@ -3945,7 +3945,7 @@ void g_init_declarator(struct parser_node * specifiers, struct parser_node * p, 
 
 	destroy_parser_node_tree_and_c_lexer_tokens(m, abstract_declarator);
 	destroy_type_description(m, type_description);
-	heap_memory_pool_free(m->heap_pool, identifier_str);
+	heap_memory_pool_free(m, identifier_str);
 }
 
 void g_struct_declarator(struct parser_node * p, struct code_gen_state * state){
@@ -4261,7 +4261,7 @@ void g_labeled_statement(struct parser_node * p, struct code_gen_state * state){
 			case_str = create_formatted_string(m, 20, "_%d_%dsc", frame->condition_index, switch_index);
 			buffered_printf(state->buffered_output,"%s:\n", case_str);
 			implement_internal_symbol(m, &state->symbols, case_str);
-			heap_memory_pool_free(m->heap_pool, case_str);
+			heap_memory_pool_free(m, case_str);
 			g_statement(fourth_child(p), state, (unsigned char *)0, (unsigned char *)0);
 		}else{
 			assert(0 &&"Expected case and colon.\n");
@@ -4276,7 +4276,7 @@ void g_labeled_statement(struct parser_node * p, struct code_gen_state * state){
 			buffered_printf(state->buffered_output,"%s:\n", default_str);
 			implement_internal_symbol(m, &state->symbols, default_str);
 			g_statement(third_child(p), state, (unsigned char *)0, (unsigned char *)0);
-			heap_memory_pool_free(m->heap_pool, default_str);
+			heap_memory_pool_free(m, default_str);
 		}else if(
 			is_terminal_c_token_type(first_child(p),DEFAULT) &&
 			is_terminal_c_token_type(second_child(p),COLON_CHAR)
@@ -4288,7 +4288,7 @@ void g_labeled_statement(struct parser_node * p, struct code_gen_state * state){
 			default_str = create_formatted_string(m, 20, "_%dsd", frame->condition_index);
 			buffered_printf(state->buffered_output,"%s:\n", default_str);
 			implement_internal_symbol(m, &state->symbols, default_str);
-			heap_memory_pool_free(m->heap_pool, default_str);
+			heap_memory_pool_free(m, default_str);
 			g_statement(third_child(p), state, (unsigned char *)0, (unsigned char *)0);
 		}else{
 			assert(0 &&"Expected identifier and colon.\n");
@@ -4389,8 +4389,8 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 			implement_internal_symbol(m, &state->symbols, false_condition_str);
 			require_internal_symbol(m, &state->symbols, after_condition_str);
 			implement_internal_symbol(m, &state->symbols, after_condition_str);
-			heap_memory_pool_free(m->heap_pool, after_condition_str);
-			heap_memory_pool_free(m->heap_pool, false_condition_str);
+			heap_memory_pool_free(m, after_condition_str);
+			heap_memory_pool_free(m, false_condition_str);
 		}else{
 			assert(0 &&"Expected case and colon.\n");
 		}
@@ -4418,7 +4418,7 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 			buffered_printf(state->buffered_output,"%s:\n", after_condition_str);
 			require_internal_symbol(m, &state->symbols, after_condition_str);
 			implement_internal_symbol(m, &state->symbols, after_condition_str);
-			heap_memory_pool_free(m->heap_pool, after_condition_str);
+			heap_memory_pool_free(m, after_condition_str);
 		}else if(
 			is_terminal_c_token_type(first_child(p),SWITCH) &&
 			is_terminal_c_token_type(second_child(p),OPEN_PAREN_CHAR) &&
@@ -4450,7 +4450,7 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 				buffered_printf(state->buffered_output,"ll r2 0x%X;\n", value);
 				buffered_printf(state->buffered_output,"beq r1 r2 %s;\n", case_str);
 				require_internal_symbol(m, &state->symbols, case_str);
-				heap_memory_pool_free(m->heap_pool, case_str);
+				heap_memory_pool_free(m, case_str);
 			}
 
 			if(frame->has_default){
@@ -4458,7 +4458,7 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 				buffered_puts(state->buffered_output,"loa PC PC;\n");
 				buffered_printf(state->buffered_output,"DW %s;\n", default_str);
 				require_internal_symbol(m, &state->symbols, default_str);
-				heap_memory_pool_free(m->heap_pool, default_str);
+				heap_memory_pool_free(m, default_str);
 			}else{
 				/*  There is no case in this switch, jump directly to the end */
 				buffered_puts(state->buffered_output,"loa PC PC;\n");
@@ -4481,9 +4481,9 @@ void g_selection_statement(struct parser_node * p, struct code_gen_state * state
 			require_internal_symbol(m, &state->symbols, after_condition_str);
 			implement_internal_symbol(m, &state->symbols, after_condition_str);
 			if(uses_compound_statement){
-				heap_memory_pool_free(m->heap_pool, after_condition_str);
+				heap_memory_pool_free(m, after_condition_str);
 			}else{
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->end_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected if or switch.\n");
@@ -4543,13 +4543,13 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			implement_internal_symbol(m, &state->symbols, evaluatewhile_str);
 			implement_internal_symbol(m, &state->symbols, startwhile_str);
 			implement_internal_symbol(m, &state->symbols, endwhile_str);
-			heap_memory_pool_free(m->heap_pool, startwhile_str);
+			heap_memory_pool_free(m, startwhile_str);
 			if(uses_compound_statement){
-				heap_memory_pool_free(m->heap_pool, evaluatewhile_str);
-				heap_memory_pool_free(m->heap_pool, endwhile_str);
+				heap_memory_pool_free(m, evaluatewhile_str);
+				heap_memory_pool_free(m, endwhile_str);
 			}else{
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->end_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected do while.\n");
@@ -4604,13 +4604,13 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			implement_internal_symbol(m, &state->symbols, startfor_str);
 			implement_internal_symbol(m, &state->symbols, endfor_str);
 			implement_internal_symbol(m, &state->symbols, evaluatefor_str);
-			heap_memory_pool_free(m->heap_pool, startfor_str);
+			heap_memory_pool_free(m, startfor_str);
 			if(uses_compound_statement){
-				heap_memory_pool_free(m->heap_pool, evaluatefor_str);
-				heap_memory_pool_free(m->heap_pool, endfor_str);
+				heap_memory_pool_free(m, evaluatefor_str);
+				heap_memory_pool_free(m, endfor_str);
 			}else{
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->end_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected for thingy.\n");
@@ -4658,11 +4658,11 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			implement_internal_symbol(m, &state->symbols, startfor_str);
 			implement_internal_symbol(m, &state->symbols, endfor_str);
 			if(uses_compound_statement){
-				heap_memory_pool_free(m->heap_pool, startfor_str);
-				heap_memory_pool_free(m->heap_pool, endfor_str);
+				heap_memory_pool_free(m, startfor_str);
+				heap_memory_pool_free(m, endfor_str);
 			}else{
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->end_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected for thingy.\n");
@@ -4706,11 +4706,11 @@ void g_iteration_statement(struct parser_node * p, struct code_gen_state * state
 			implement_internal_symbol(m, &state->symbols, startwhile_str);
 			implement_internal_symbol(m, &state->symbols, endwhile_str);
 			if(uses_compound_statement){
-				heap_memory_pool_free(m->heap_pool, startwhile_str);
-				heap_memory_pool_free(m->heap_pool, endwhile_str);
+				heap_memory_pool_free(m, startwhile_str);
+				heap_memory_pool_free(m, endwhile_str);
 			}else{
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
-				heap_memory_pool_free(m->heap_pool, unsigned_char_ptr_list_pop_end(&scope->end_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->evaluate_labels));
+				heap_memory_pool_free(m, unsigned_char_ptr_list_pop_end(&scope->end_labels));
 			}
 		}else{
 			assert(0 &&"Expected while thingy.\n");
@@ -4888,7 +4888,7 @@ void g_translation_unit(struct parser_node * p, struct code_gen_state * state){
 }
 
 struct linker_symbol * make_linker_symbol(struct memory_pool_collection * m, unsigned int is_impl, unsigned int is_req, unsigned int is_ext){
-	struct linker_symbol * new_symbol = struct_linker_symbol_memory_pool_malloc(m->struct_linker_symbol_pool);
+	struct linker_symbol * new_symbol = struct_linker_symbol_memory_pool_malloc(m);
 	new_symbol->is_implemented = is_impl;
 	new_symbol->is_required = is_req;
 	new_symbol->is_external = is_ext;
@@ -4971,11 +4971,11 @@ int destroy_code_gen_state(struct code_gen_state * state){
 	unsigned int size = unsigned_char_ptr_list_size(&keys);
 	unsigned int i;
 	for(i = 0; i < size; i++){
-		struct_linker_symbol_memory_pool_free(state->memory_pool_collection->struct_linker_symbol_pool, unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&state->symbols, unsigned_char_ptr_list_get(&keys, i)));
+		struct_linker_symbol_memory_pool_free(state->memory_pool_collection, unsigned_char_ptr_to_struct_linker_symbol_ptr_map_get(&state->symbols, unsigned_char_ptr_list_get(&keys, i)));
 	}
 	/*  Need to do this twice because we're deleting the data under the keys of the map */
 	for(i = 0; i < size; i++){
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, unsigned_char_ptr_list_get(&keys, i));
+		heap_memory_pool_free(state->memory_pool_collection, unsigned_char_ptr_list_get(&keys, i));
 	}
 	unsigned_char_ptr_to_struct_linker_symbol_ptr_map_destroy(&state->symbols);
 	struct_type_description_ptr_list_destroy(&state->type_stack);
@@ -5010,8 +5010,8 @@ int destroy_code_gen_state(struct code_gen_state * state){
 
 	for(i = 0; i < struct_linker_object_ptr_list_size(&state->object_declarations); i++){
 		struct linker_object * obj = struct_linker_object_ptr_list_get(&state->object_declarations, i);
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, obj->start_label);
-		heap_memory_pool_free(state->memory_pool_collection->heap_pool, obj->end_label);
+		heap_memory_pool_free(state->memory_pool_collection, obj->start_label);
+		heap_memory_pool_free(state->memory_pool_collection, obj->end_label);
 		free(obj);
 	}
 	struct_linker_object_ptr_list_destroy(&state->object_declarations);

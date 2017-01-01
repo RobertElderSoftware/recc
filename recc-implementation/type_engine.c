@@ -56,11 +56,11 @@ static const char * g_close_square_bracket_string = "]";
 struct parser_node * destroy_parser_node_tree_and_c_lexer_tokens(struct memory_pool_collection * m, struct parser_node * n){
 	if(n){
 		if(n->c_lexer_token){
-			struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
+			struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
 		}
 		destroy_parser_node_tree_and_c_lexer_tokens(m, n->first_child);
 		destroy_parser_node_tree_and_c_lexer_tokens(m, n->next);
-		struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+		struct_parser_node_memory_pool_free(m, n);
 	}
 	return (struct parser_node *)0;
 }
@@ -68,12 +68,12 @@ struct parser_node * destroy_parser_node_tree_and_c_lexer_tokens(struct memory_p
 struct parser_node * copy_parser_node_children_only(struct memory_pool_collection * m, struct parser_node * n){
 	/*  Create a copy of only the children of n.  Often, we don't want to copy the node's sibilings */
 	if(n){
-		struct parser_node * new_node = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
+		struct parser_node * new_node = struct_parser_node_memory_pool_malloc(m);
 		new_node->type = n->type;
 		new_node->first_child = copy_parser_node_tree_and_c_lexer_tokens(m, n->first_child);
 		new_node->next = (struct parser_node *)0;
 		if(n->c_lexer_token){
-			new_node->c_lexer_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
+			new_node->c_lexer_token = struct_c_lexer_token_memory_pool_malloc(m);
 			new_node->c_lexer_token->type = n->c_lexer_token->type;
 			new_node->c_lexer_token->first_byte = n->c_lexer_token->first_byte;
 			new_node->c_lexer_token->last_byte = n->c_lexer_token->last_byte;
@@ -105,18 +105,18 @@ struct parser_node * copy_parser_node_tree_and_c_lexer_tokens(struct memory_pool
 	/*  Create a copy of every node we can reach from n */
 	if(n){
 		struct parser_node * node_to_copy = n;
-		struct parser_node * top_node = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
+		struct parser_node * top_node = struct_parser_node_memory_pool_malloc(m);
 		struct parser_node * current_dest_node = top_node;
 		while(node_to_copy){
 			current_dest_node->type = node_to_copy->type;
 			if(node_to_copy->next){
-				current_dest_node->next = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
+				current_dest_node->next = struct_parser_node_memory_pool_malloc(m);
 			}else{
 				current_dest_node->next = (struct parser_node *)0;
 			}
 			current_dest_node->first_child = copy_parser_node_tree_and_c_lexer_tokens(m, node_to_copy->first_child);
 			if(node_to_copy->c_lexer_token){
-				current_dest_node->c_lexer_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
+				current_dest_node->c_lexer_token = struct_c_lexer_token_memory_pool_malloc(m);
 				current_dest_node->c_lexer_token->type = node_to_copy->c_lexer_token->type;
 				current_dest_node->c_lexer_token->first_byte = node_to_copy->c_lexer_token->first_byte;
 				current_dest_node->c_lexer_token->last_byte = node_to_copy->c_lexer_token->last_byte;
@@ -145,7 +145,7 @@ struct parser_node * convert_abstract_declarator_to_pointer_type(struct memory_p
 				return n;
 			}else{
 				/*  This node does not need to exist if it does not have a child */
-				struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+				struct_parser_node_memory_pool_free(m, n);
 				return (struct parser_node *)0;
 			}
 		}case ABSTRACT_DECLARATOR:{
@@ -158,7 +158,7 @@ struct parser_node * convert_abstract_declarator_to_pointer_type(struct memory_p
 			if(n->first_child){
 				return n;
 			}else{
-				struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+				struct_parser_node_memory_pool_free(m, n);
 				return (struct parser_node *)0;
 			}
 		}case POINTER:{
@@ -184,24 +184,24 @@ struct parser_node * convert_abstract_declarator_to_pointer_type(struct memory_p
 							if(n->next->next->next->first_child->type == EPSILON){
 								/* There is nothing left */
 								destroy_parser_node_tree_and_c_lexer_tokens(m, n->next->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next);
+								struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n);
 								return (struct parser_node *)0;
 							}else{
 								/*  The first_child of the _rest becomes the first_child of the parent */
 								struct parser_node * rtn = n->next->next->next->first_child;
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next);
+								struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n);
 								return rtn;
 							}
 						}
@@ -235,7 +235,7 @@ struct parser_node * convert_abstract_declarator_to_array_type(struct memory_poo
 				return n;
 			}else{
 				/*  This node does not need to exist if it does not have a child */
-				struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+				struct_parser_node_memory_pool_free(m, n);
 				return (struct parser_node *)0;
 			}
 		}case ABSTRACT_DECLARATOR:{
@@ -248,7 +248,7 @@ struct parser_node * convert_abstract_declarator_to_array_type(struct memory_poo
 			if(n->first_child){
 				return n;
 			}else{
-				struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+				struct_parser_node_memory_pool_free(m, n);
 				return (struct parser_node *)0;
 			}
 		}case POINTER:{
@@ -270,24 +270,24 @@ struct parser_node * convert_abstract_declarator_to_array_type(struct memory_poo
 							if(n->next->next->next->first_child->type == EPSILON){
 								/* There is nothing left */
 								destroy_parser_node_tree_and_c_lexer_tokens(m, n->next->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next);
+								struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n);
 								return (struct parser_node *)0;
 							}else{
 								/*  The first_child of the _rest becomes the first_child of the parent */
 								struct parser_node * rtn = n->next->next->next->first_child;
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next);
+								struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n);
 								return rtn;
 							}
 						}
@@ -300,38 +300,38 @@ struct parser_node * convert_abstract_declarator_to_array_type(struct memory_poo
 						if(n->next->next->first_child->type == EPSILON){
 							/*  This also destroys the _rest and epsilon */
 							destroy_parser_node_tree_and_c_lexer_tokens(m, n->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+							struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n);
 							return (struct parser_node *)0;
 						}else{
 							struct parser_node * rtn = n->next->next->first_child;
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+							struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next->next);
+							struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next);
+							struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n);
 							return rtn;
 						}
 					}else if(n->next->type == CONSTANT_EXPRESSION){
 						if(n->next->next->next->first_child->type == EPSILON){
 							/*  This also destroys the _rest and epsilon */
 							destroy_parser_node_tree_and_c_lexer_tokens(m, n->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+							struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n);
 							return (struct parser_node *)0;
 						}else{
 							struct parser_node * rtn = n->next->next->next->first_child;
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
+							struct_c_lexer_token_memory_pool_free(m, n->next->next->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next->next->next);
+							struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next->next);
 							/* Destroy the constant expression */
 							destroy_parser_node_tree_and_c_lexer_tokens(m, n->next->first_child);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+							struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next);
+							struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n);
 							return rtn;
 						}
 					}else{
@@ -363,7 +363,7 @@ struct parser_node * convert_abstract_declarator_to_function_type(struct memory_
 				return n;
 			}else{
 				/*  This node does not need to exist if it does not have a child */
-				struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+				struct_parser_node_memory_pool_free(m, n);
 				return (struct parser_node *)0;
 			}
 		}case ABSTRACT_DECLARATOR:{
@@ -376,7 +376,7 @@ struct parser_node * convert_abstract_declarator_to_function_type(struct memory_
 			if(n->first_child){
 				return n;
 			}else{
-				struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+				struct_parser_node_memory_pool_free(m, n);
 				return (struct parser_node *)0;
 			}
 		}case POINTER:{
@@ -398,24 +398,24 @@ struct parser_node * convert_abstract_declarator_to_function_type(struct memory_
 							if(n->next->next->next->first_child->type == EPSILON){
 								/* There is nothing left */
 								destroy_parser_node_tree_and_c_lexer_tokens(m, n->next->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next);
+								struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n);
 								return (struct parser_node *)0;
 							}else{
 								/*  The first_child of the _rest becomes the first_child of the parent */
 								struct parser_node * rtn = n->next->next->next->first_child;
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-								struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-								struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next->next);
+								struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n->next);
+								struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+								struct_parser_node_memory_pool_free(m, n);
 								return rtn;
 							}
 						}
@@ -423,35 +423,35 @@ struct parser_node * convert_abstract_declarator_to_function_type(struct memory_
 						if(n->next->next->first_child->type == EPSILON){
 							/*  This also destroys the _rest and epsilon */
 							destroy_parser_node_tree_and_c_lexer_tokens(m, n->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+							struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n);
 							return (struct parser_node *)0;
 						}else{
 							struct parser_node * rtn = n->next->next->first_child;
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+							struct_parser_node_memory_pool_free(m, n->next->next);
+							struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next);
+							struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n);
 							return rtn;
 						}
 					}else if(n->next->type == PARAMETER_TYPE_LIST){
 						if(n->next->next->next->first_child->type == EPSILON){
 							/*  This also destroys the _rest and epsilon */
 							destroy_parser_node_tree_and_c_lexer_tokens(m, n->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+							struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n);
 							return (struct parser_node *)0;
 						}else{
 							struct parser_node * rtn = n->next->next->next->first_child;
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-							struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-							struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+							struct_c_lexer_token_memory_pool_free(m, n->next->next->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next->next->next);
+							struct_c_lexer_token_memory_pool_free(m, n->next->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next->next);
+							struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n->next);
+							struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+							struct_parser_node_memory_pool_free(m, n);
 							return rtn;
 						}
 					}else{
@@ -499,13 +499,13 @@ struct parser_node * convert_abstract_declarator_to_address_type_h(struct memory
 				return n;
 			}else{
 				struct parser_node * pointer = create_pointer_node(m);
-				struct parser_node * abstract_declarator = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
+				struct parser_node * abstract_declarator = struct_parser_node_memory_pool_malloc(m);
 				struct parser_node * current_first_child = n->first_child;
-				struct parser_node * open_paren = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-				struct parser_node * close_paren = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-				struct parser_node * direct_abstract_declarator_rest = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-				struct c_lexer_token * open_paren_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
-				struct c_lexer_token * close_paren_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
+				struct parser_node * open_paren = struct_parser_node_memory_pool_malloc(m);
+				struct parser_node * close_paren = struct_parser_node_memory_pool_malloc(m);
+				struct parser_node * direct_abstract_declarator_rest = struct_parser_node_memory_pool_malloc(m);
+				struct c_lexer_token * open_paren_token = struct_c_lexer_token_memory_pool_malloc(m);
+				struct c_lexer_token * close_paren_token = struct_c_lexer_token_memory_pool_malloc(m);
 				n->first_child = open_paren;
 				/* Set up the '(' token */
 				open_paren_token->type = OPEN_PAREN_CHAR;
@@ -547,7 +547,7 @@ struct parser_node * convert_abstract_declarator_to_address_type_h(struct memory
 struct parser_node * convert_abstract_declarator_to_address_type(struct memory_pool_collection * m, struct parser_node * n){
 	assert(!n || n->type == ABSTRACT_DECLARATOR);
 	if(!n){
-		struct parser_node * abstract_declarator = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
+		struct parser_node * abstract_declarator = struct_parser_node_memory_pool_malloc(m);
 		abstract_declarator->first_child = create_pointer_node(m);
 		abstract_declarator->c_lexer_token = (struct c_lexer_token *)0;
 		abstract_declarator->next = (struct parser_node *)0;
@@ -559,9 +559,9 @@ struct parser_node * convert_abstract_declarator_to_address_type(struct memory_p
 }
 
 struct parser_node * create_pointer_node(struct memory_pool_collection * m){
-	struct c_lexer_token * ptr_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
-	struct parser_node * terminal = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-	struct parser_node * pointer = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
+	struct c_lexer_token * ptr_token = struct_c_lexer_token_memory_pool_malloc(m);
+	struct parser_node * terminal = struct_parser_node_memory_pool_malloc(m);
+	struct parser_node * pointer = struct_parser_node_memory_pool_malloc(m);
 	ptr_token->type = MULTIPLY_CHAR;
 	ptr_token->first_byte = (unsigned char *)g_ptr_string;
 	ptr_token->last_byte = (unsigned char *)(g_ptr_string + (strlen(g_ptr_string) -1));
@@ -1073,8 +1073,8 @@ struct parser_node * add_outer_direct_abstract_declarator_to_inner_as_rest(struc
 	/*  Must be called initially with outer_direct_abstract_declarator and inner_direct_abstract_declarator as DIRECT_ABSTRACT_DECLARATORS,
         inner_direct_abstract_declarator can be _rest on recursion */
 	if(inner_direct_abstract_declarator->first_child->type == EPSILON){
-		struct_parser_node_memory_pool_free(m->struct_parser_node_pool, inner_direct_abstract_declarator->first_child);
-		struct_parser_node_memory_pool_free(m->struct_parser_node_pool, inner_direct_abstract_declarator);
+		struct_parser_node_memory_pool_free(m, inner_direct_abstract_declarator->first_child);
+		struct_parser_node_memory_pool_free(m, inner_direct_abstract_declarator);
 		outer_direct_abstract_declarator->type = DIRECT_ABSTRACT_DECLARATOR_REST;
 		return outer_direct_abstract_declarator;
 	}else{
@@ -1157,12 +1157,12 @@ struct parser_node * insert_abstract_declarator(struct memory_pool_collection * 
 		/*  Check if we need to add ( ) around any pointers */
 		if(inner_pointer && (new_direct_abstract_declarator && new_direct_abstract_declarator->first_child->next->type != ABSTRACT_DECLARATOR)){
 			/*  create a new direct abstract declarator, put the pointer in it, then push the new_direct_abstract_declarator into a _rest  */
-			struct parser_node * artificial_direct_abstract_declarator = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-			struct parser_node * inserted_open_paren = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-			struct parser_node * inserted_close_paren = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-			struct c_lexer_token * open_paren_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
-			struct c_lexer_token * close_paren_token = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
-			struct parser_node * abstract_declarator_to_insert = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
+			struct parser_node * artificial_direct_abstract_declarator = struct_parser_node_memory_pool_malloc(m);
+			struct parser_node * inserted_open_paren = struct_parser_node_memory_pool_malloc(m);
+			struct parser_node * inserted_close_paren = struct_parser_node_memory_pool_malloc(m);
+			struct c_lexer_token * open_paren_token = struct_c_lexer_token_memory_pool_malloc(m);
+			struct c_lexer_token * close_paren_token = struct_c_lexer_token_memory_pool_malloc(m);
+			struct parser_node * abstract_declarator_to_insert = struct_parser_node_memory_pool_malloc(m);
 			struct parser_node * surrounded_pointer = unmerged_inner_pointer ? unmerged_inner_pointer : new_pointer;
 
 			if(!unmerged_inner_pointer){ /* We only put the new_pointer in the () if there is no unmerged inner pointer */
@@ -1281,7 +1281,7 @@ void convert_to_untypedefed_type_description(struct memory_pool_collection * m, 
 					assert(0 && "Unable to resolve typedef.");
 				}
 				destroy_type_description(m, typedefed_type);
-				heap_memory_pool_free(m->heap_pool, ident);
+				heap_memory_pool_free(m, ident);
 			}
 		}/* else, no typedefs to resolve */
 	}
@@ -1346,7 +1346,7 @@ void destroy_type_description(struct memory_pool_collection * m, struct type_des
 		destroy_parser_node_tree_and_c_lexer_tokens(m, description->declarator->declarator);
 		free(description->declarator);
 	}
-	struct_type_description_memory_pool_free(m->struct_type_description_pool, description);
+	struct_type_description_memory_pool_free(m, description);
 }
 
 unsigned int count_specifiers(struct type_description * description, enum c_token_type t){
@@ -1532,7 +1532,7 @@ struct parser_node * convert_declarator_to_abstract_declarator_h(struct memory_p
 			}else{
 				/*  This node does not need to exist if it does not have a child */
 				struct parser_node * rtn = n->next;
-				struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+				struct_parser_node_memory_pool_free(m, n);
 				return rtn;
 			}
 		}case DECLARATOR:{
@@ -1544,7 +1544,7 @@ struct parser_node * convert_declarator_to_abstract_declarator_h(struct memory_p
 			}else{
 				/*  This node does not need to exist if it does not have a child */
 				struct parser_node * rtn = n->next;
-				struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+				struct_parser_node_memory_pool_free(m, n);
 				return rtn;
 			}
 		}case POINTER:{
@@ -1574,16 +1574,16 @@ struct parser_node * convert_declarator_to_abstract_declarator_h(struct memory_p
 					if(n->next->first_child->type == EPSILON){
 						/*  There is a _rest that just has an epsilon node.  Delete them. */
 						destroy_parser_node_tree_and_c_lexer_tokens(m, n->next);
-						struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-						struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+						struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+						struct_parser_node_memory_pool_free(m, n);
 						return (struct parser_node *)0;
 					}else{
 						/*  The first child is no longer the identifier, it is the expansion of the _rest */
 						struct parser_node * rtn = convert_declarator_to_abstract_declarator_h(m, n->next->first_child);
-						struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->next->c_lexer_token);
-						struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n->next);
-						struct_c_lexer_token_memory_pool_free(m->struct_c_lexer_token_pool, n->c_lexer_token);
-						struct_parser_node_memory_pool_free(m->struct_parser_node_pool, n);
+						struct_c_lexer_token_memory_pool_free(m, n->next->c_lexer_token);
+						struct_parser_node_memory_pool_free(m, n->next);
+						struct_c_lexer_token_memory_pool_free(m, n->c_lexer_token);
+						struct_parser_node_memory_pool_free(m, n);
 						return rtn;
 					}
 				}case OPEN_PAREN_CHAR:{
@@ -1831,7 +1831,7 @@ struct type_description * create_type_description_from_normalized_declarator_and
 	struct type_description * new_description;
 	unsigned int num_specifiers = struct_normalized_specifier_ptr_list_size(specifiers);
 	unsigned int i;
-	new_description = struct_type_description_memory_pool_malloc(m->struct_type_description_pool);
+	new_description = struct_type_description_memory_pool_malloc(m);
 	normalized_declarator_copy->declarator = create_abstract_declarator_from_normalized_declarator(m, normalized_declarator);
 	normalized_declarator_copy->type = NORMALIZED_ABSTRACT_DECLARATOR;
 	new_description->declarator = normalized_declarator_copy;
@@ -1948,14 +1948,14 @@ int normalized_specifier_ptr_cmp(struct normalized_specifier * a, struct normali
 
 struct normalized_declarator * make_array_brackets(struct memory_pool_collection * m){
 	struct normalized_declarator * normalized_declarator = (struct normalized_declarator *)malloc(sizeof(struct normalized_declarator));
-	struct parser_node * abstract_declarator = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-	struct parser_node * direct_abstract_declarator = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-	struct parser_node * direct_abstract_declarator_rest = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-	struct parser_node * epsilon = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-	struct parser_node * terminal_1 = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-	struct parser_node * terminal_2 = struct_parser_node_memory_pool_malloc(m->struct_parser_node_pool);
-	struct c_lexer_token * open = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
-	struct c_lexer_token * close = struct_c_lexer_token_memory_pool_malloc(m->struct_c_lexer_token_pool);
+	struct parser_node * abstract_declarator = struct_parser_node_memory_pool_malloc(m);
+	struct parser_node * direct_abstract_declarator = struct_parser_node_memory_pool_malloc(m);
+	struct parser_node * direct_abstract_declarator_rest = struct_parser_node_memory_pool_malloc(m);
+	struct parser_node * epsilon = struct_parser_node_memory_pool_malloc(m);
+	struct parser_node * terminal_1 = struct_parser_node_memory_pool_malloc(m);
+	struct parser_node * terminal_2 = struct_parser_node_memory_pool_malloc(m);
+	struct c_lexer_token * open = struct_c_lexer_token_memory_pool_malloc(m);
+	struct c_lexer_token * close = struct_c_lexer_token_memory_pool_malloc(m);
 
 	normalized_declarator->type = NORMALIZED_ABSTRACT_DECLARATOR;
 	normalized_declarator->declarator = abstract_declarator;

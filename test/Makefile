@@ -33,12 +33,12 @@ test/regex_engine_stress_test.o: test/regex_engine_stress_test.c
 test/parser_stress_test.o: test/parser_stress_test.c
 	@$(HOSTCC) -c test/parser_stress_test.c -o test/parser_stress_test.o $(CUSTOM_C89_FLAGS)
 
-regex-engine-stress-test: recc-implementation/librecc.a test/regex_engine_stress_test.o
-	@$(HOSTCC) -o test/regex_engine_stress_test test/regex_engine_stress_test.o recc-implementation/librecc.a $(CUSTOM_C89_FLAGS)
+regex-engine-stress-test: $(REGEX_ENGINE_RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS) test/regex_engine_stress_test.o
+	@$(HOSTCC) -o test/regex_engine_stress_test test/regex_engine_stress_test.o $(REGEX_ENGINE_RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS) $(CUSTOM_C89_FLAGS)
 	@$(VALGRIND) ./test/regex_engine_stress_test
 
-parser-test: recc-implementation/librecc.a test/parser_stress_test.o
-	@$(HOSTCC) -o test/parser_stress_test test/parser_stress_test.o recc-implementation/librecc.a $(CUSTOM_C89_FLAGS)
+parser-test: $(PARSER_RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS) test/parser_stress_test.o
+	@$(HOSTCC) -o test/parser_stress_test test/parser_stress_test.o $(PARSER_RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS) $(CUSTOM_C89_FLAGS)
 	@$(VALGRIND) ./test/parser_stress_test
 
 #  Can change based on make file variable values
@@ -78,7 +78,7 @@ $(JS_OUTPUT): js-output
 
 js-output: run-build-tests test/tests_to_run
 #  The use of this data dir will make the browser tests blocking if there is already a chrome window open.
-	@chromium-browser "http://localhost/emulators/javascript/" --load-extension=emulators/javascript/chrome/chrome-plugin/ --user-data-dir="emulators/javascript/chrome/data-dir" > /dev/null 2>&1
+	@chromium-browser "http://127.0.0.1/emulators/javascript/" --load-extension=emulators/javascript/chrome/chrome-plugin/ --user-data-dir="emulators/javascript/chrome/data-dir" > /dev/null 2>&1
 
 $(ALL_EXECUTABLES): $(TESTING_EXTRAS_OBJECTS) $(COMPILER_OBJECTS)
 
