@@ -22,7 +22,11 @@
 #define DECIMAL "([0-9])"
 #define EXPONENT "([Ee][\\+\\-]?" DECIMAL "+)"
 #define C_FLOAT "([fFlL])"
-#define C_INTEGER "([uUlL]*)"
+#define UNSIGNED_SUFFIX "([uU])"
+#define LONG_SUFFIX "([lL])"
+#define LONG_LONG_SUFFIX "(ll|LL)"
+#define EITHER_LONG_SUFFIX "(" LONG_LONG_SUFFIX "|" LONG_SUFFIX ")"
+#define INTEGER_SUFFIX "((" UNSIGNED_SUFFIX "" EITHER_LONG_SUFFIX "?)|(" EITHER_LONG_SUFFIX "" UNSIGNED_SUFFIX "?))?"
 #define CHARACTER "([^']+|\\\\')"
 #define STR_CHARACTER "([^\"\\\\]|\\\\.)"
 #define STRING "\"(" STR_CHARACTER ")*\""
@@ -67,11 +71,12 @@ static const char * c_token_type_names[NUM_C_TOKEN_TYPES] = {
 	"VOLATILE",
 	"WHILE",
 	"IDENTIFIER",
-	"CONSTANT_HEX",
+	"CONSTANT_HEXADECIMAL",
+	"CONSTANT_OCTAL",
+	"CONSTANT_DECIMAL",
 	"CONSTANT_EXPONENT",
 	"CONSTANT_FLOAT_SMALL",
 	"CONSTANT_FLOAT_LARGE",
-	"CONSTANT_DECIMAL",
 	"CONSTANT_CHARACTER",
 	"STRING_LITERAL",
 	"ELLIPSIS",
@@ -285,7 +290,7 @@ void create_l2_lexer_state(struct l2_lexer_state * state, struct unsigned_char_l
 	state->c.buffer_size = size;
 }
 
-int lex_asm(struct l2_lexer_state * state){
+int lex_l2(struct l2_lexer_state * state){
 	struct memory_pool_collection * m = state->c.memory_pool_collection;
 	state->c.position = 0;
 	state->c.current_line = 0;
@@ -438,11 +443,12 @@ void c_token_matcher_create(struct memory_pool_collection * m){
 	add_c_token_regex(m, m->c_token_regexes, "volatile" NON_IDENTIFIER_CHAR,    VOLATILE, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, "while" NON_IDENTIFIER_CHAR,       WHILE, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, "[a-zA-Z_][a-zA-Z_0-9]*",          IDENTIFIER, &num_regexes);
-	add_c_token_regex(m, m->c_token_regexes, "0[xX][a-fA-F0-9]+" C_INTEGER,     CONSTANT_HEX, &num_regexes);
+	add_c_token_regex(m, m->c_token_regexes, "0[xX][a-fA-F0-9]+" INTEGER_SUFFIX,CONSTANT_HEXADECIMAL, &num_regexes);
+	add_c_token_regex(m, m->c_token_regexes, "0[0-7]*" INTEGER_SUFFIX,          CONSTANT_OCTAL, &num_regexes);
+	add_c_token_regex(m, m->c_token_regexes, "[1-9][0-9]*" INTEGER_SUFFIX,      CONSTANT_DECIMAL, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, DECIMAL "+" EXPONENT C_FLOAT "?",  CONSTANT_EXPONENT, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, SMALL_FLOAT,                       CONSTANT_FLOAT_SMALL, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, LARGE_FLOAT,                       CONSTANT_FLOAT_LARGE, &num_regexes);
-	add_c_token_regex(m, m->c_token_regexes, "[0-9]+" C_INTEGER,                CONSTANT_DECIMAL, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, "'" CHARACTER "'",                 CONSTANT_CHARACTER, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, CRAZY_STRING,                      STRING_LITERAL, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, "\\.\\.\\.",                       ELLIPSIS, &num_regexes);

@@ -35,7 +35,7 @@
 
 
 int lex_c(struct c_lexer_state *);
-int lex_asm(struct l2_lexer_state *);
+int lex_l2(struct l2_lexer_state *);
 void create_c_lexer_state(struct c_lexer_state *, struct unsigned_char_list *, struct memory_pool_collection *, unsigned char *, unsigned char *, unsigned int);
 void destroy_c_lexer_state(struct c_lexer_state *);
 void destroy_l2_lexer_state(struct l2_lexer_state *);

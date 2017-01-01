@@ -1357,7 +1357,7 @@ int do_link(struct memory_pool_collection * memory_pool_collection, struct unsig
 		add_file_to_buffer(file_input, (char*)source_file);
 
 		create_l2_lexer_state(l2_lexer_state, &state.l2_lexer_output, state.memory_pool_collection, unsigned_char_ptr_list_get(state.in_files, i), unsigned_char_list_data(file_input), unsigned_char_list_size(file_input));
-		lex_asm(l2_lexer_state);
+		lex_l2(l2_lexer_state);
 		create_l2_parser_state(l2_parser_state, memory_pool_collection, l2_lexer_state, &tmp, unsigned_char_list_data(file_input));
 		parse_l2(l2_parser_state);
 		printf("Linker parsed input file %d '%s'.\n", i, (char *)unsigned_char_ptr_list_get(state.in_files, i));

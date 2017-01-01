@@ -73,9 +73,9 @@ endif
 endif
 
 
-REGEX_ENGINE_RECC_IMPLEMENTATION_OBJECTS=recc-implementation/io.o recc-implementation/type_engine.o recc-implementation/lexer.o recc-implementation/regex_engine.o recc-implementation/memory_pool_collection.o recc-implementation/binary_exponential_buffer.o
-PARSER_RECC_IMPLEMENTATION_OBJECTS=recc-implementation/type_engine.o recc-implementation/regex_engine.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/io.o recc-implementation/memory_pool_collection.o recc-implementation/binary_exponential_buffer.o
-ALL_RECC_IMPLEMENTATION_OBJECTS=recc-implementation/type_engine.o recc-implementation/regex_engine.o recc-implementation/compiler_interface_common.o recc-implementation/compiler_interface_c_compiler_targets.o recc-implementation/compiler_interface_header_targets.o recc-implementation/compiler_interface_phase_3.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o $(CROSS_BUILD_PREFIX)recc-implementation/filesystem_compiler.o recc-implementation/libbootstrap.o recc-implementation/l2_parser.o recc-implementation/replace_tool.o recc-implementation/binary_exponential_buffer.o
+REGEX_ENGINE_RECC_IMPLEMENTATION_OBJECTS=recc-implementation/io.o recc-implementation/lexer.o recc-implementation/regex_engine.o recc-implementation/memory_pool_collection.o recc-implementation/binary_exponential_buffer.o
+PARSER_RECC_IMPLEMENTATION_OBJECTS=recc-implementation/asm_functions.o recc-implementation/asm.o recc-implementation/regex_engine.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/io.o recc-implementation/memory_pool_collection.o recc-implementation/binary_exponential_buffer.o
+ALL_RECC_IMPLEMENTATION_OBJECTS=recc-implementation/asm.o recc-implementation/regex_engine.o recc-implementation/compiler_interface_common.o recc-implementation/compiler_interface_c_compiler_targets.o recc-implementation/compiler_interface_header_targets.o recc-implementation/compiler_interface_phase_3.o recc-implementation/lexer.o recc-implementation/parser.o recc-implementation/code_generator.o recc-implementation/linker.o recc-implementation/io.o recc-implementation/l0_generator.o recc-implementation/preprocessor.o recc-implementation/memory_pool_collection.o $(CROSS_BUILD_PREFIX)recc-implementation/filesystem_compiler.o recc-implementation/libbootstrap.o recc-implementation/l2_parser.o recc-implementation/replace_tool.o recc-implementation/binary_exponential_buffer.o
 
 ifeq ("$(wildcard recc-implementation/bootstrap_phase_2)","")
 include recc-implementation/Makefile
@@ -103,7 +103,7 @@ help:
 
 test: run-tests
 
-COMPILER_OBJECTS=libc/filesystem.o $(CROSS_BUILD_PREFIX)test/recc.o $(CROSS_BUILD_PREFIX)recc-implementation/phase2_recc.o $(CROSS_BUILD_PREFIX)libc/recc.o $(CROSS_BUILD_PREFIX)kernel/recc.o $(CROSS_BUILD_PREFIX)builtin/build/recc.o $(CROSS_BUILD_PREFIX)recc-implementation/recc.o $(ALL_RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
+COMPILER_OBJECTS=libc/filesystem.o $(CROSS_BUILD_PREFIX)test/recc.o $(CROSS_BUILD_PREFIX)recc-implementation/phase2_data_structures.o recc-implementation/phase2_asm_data_structures.o $(CROSS_BUILD_PREFIX)libc/recc.o $(CROSS_BUILD_PREFIX)kernel/recc.o $(CROSS_BUILD_PREFIX)builtin/build/recc.o $(CROSS_BUILD_PREFIX)recc-implementation/recc.o $(ALL_RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS)
 
 include builtin/Makefile
 include recc-implementation/library-data-structures

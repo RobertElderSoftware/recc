@@ -19,16 +19,21 @@
 unsigned int c89_vsnprintf(char * buf, size_t n, const char * fmt, va_list va){
 	unsigned int i = 0;
 	struct printing_state ps;
+	unsigned int zero_pads = 0;
+	unsigned int zero_padding_start = 0;
 	ps.buffer = buf;
 	ps.chars_required = 0;
 	ps.buffer_size = (unsigned int)n;
 	while(fmt[i]){
 		char c = fmt[i];
 		if(c == '%'){
-			/*  For now, just consume the format numbers to get to the format specifier */
+			/*  Consume the format numbers to get to get the number of spaces to left pad. */
 			while(fmt[i+1] >= '0' && fmt[i+1] <= '9'){
+				zero_pads = (zero_pads * 10) + ((unsigned int)fmt[i+1] - (unsigned int)'0');
 				i++;
 			}
+
+			zero_padding_start = ps.chars_required;
 
 			switch(fmt[i+1]){
 				case 'c':{
@@ -64,6 +69,11 @@ unsigned int c89_vsnprintf(char * buf, size_t n, const char * fmt, va_list va){
 					print_buff_add(&ps, (char)fmt[i+1]);
 				}
 			}
+
+			if(zero_pads){
+				print_buff_left_zero_pad(&ps, zero_padding_start, zero_pads);
+			}
+			zero_pads = 0; /*  Reset zero padding thing */
 			i++;
 		}else{
 			print_buff_add(&ps, c);

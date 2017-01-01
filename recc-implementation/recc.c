@@ -52,7 +52,7 @@ void register_compiler_objects(struct build_state * state){
 	register_ri_object(state, "recc-implementation/lexer", 0);
 	register_ri_object(state, "recc-implementation/memory_pool_collection", 0);
 	register_ri_object(state, "recc-implementation/regex_engine", 0);
-	register_ri_object(state, "recc-implementation/type_engine", 0);
+	register_ri_object(state, "recc-implementation/asm", 0);
 	register_ri_object(state, "recc-implementation/replace_tool", 0);
 	register_ri_object(state, "recc-implementation/binary_exponential_buffer", 0);
 	register_entity(state, "recc-implementation/libdata-structures.l2", ENTITY_TYPE_L2_FILE);

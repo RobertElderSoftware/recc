@@ -32,6 +32,22 @@ See LICENSE.txt
 
 You can also find the source code available in a number of other licenses:  http://recc.robertelder.org/other-licenses/
 
+# RECC ANSI C Style Guide
+
+This style guide is a work in progress statement of the aspirations of code style in the project.  It is likely that some of these rules are violated in this code base, although the long term goal will be to impose full compliance.  Overall, most of the code already conforms to most of these rules.
+
+-  No Global Variables.  Exceptions are made only for cases where global state is a functional requirement.  For example, an OS Kernel's state, or the global state variables of a random number generator.
+-  The only fundamental data types to be used are char and int.  short, float and double are never to be used.  long types are only used when necessary in as they appear with the sizeof(...) operator.  unsigned types are preferred to signed types, although interaction with the standard library, and the existence of ptrdiff\_t makes complete avoidance of signed types impossible.
+-  typedef is never to be used.  Exceptions are made for typedefed'd types that are impossible to avoid, such as those founds in limits.h or the FILE pointer found in the standard library.
+-  Function pointers are never used.
+-  Variadic functions are used as little as possible.  Exceptions are made for cases where the alternative is extremly verbose.
+-  If statements, for loops case statements etc. always use enclosing '{' '}' braces on their statements.
+-  The C preprocessor should be used as little as possible.  Only simple object macros, and include statements are used.  Function macros are never to be used, with some exceptions such as 'va\_start' which is defined by the standard library.
+-  Architecture dependent code should not be wrapped in #ifdef ARCH1 .... #endif preprocessor statements.  Instead, this complexity should be pushed out into the build system or whatever meta-programming environment is used to set up the project before compillation state.  For example, a configure script can create Makefile variables which set paths to point to architecture-specific directories of code.
+-  Even though this project is written in ANSI c89, it should be written in a forward-compatible subset of ANSI C that should compile as valid C++ code with absolutely no errors and as few warnings as possible, according to the newest C++ standard (assuming that standards after c++14 don't start getting absolutely crazy).
+-  Scoped structures or enums are never used.
+-  Static variables are never used.
+
 # Developer Set Up
 
 It is expected that you'll be developing on linux.  No other platform is currently supported.

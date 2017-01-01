@@ -20,8 +20,7 @@
 /*GETS_REPLACED_WITH_INCLUDES*/
 
 struct parser_state{
-	struct struct_normalized_declaration_element_ptr_to_unsigned_int_map declaration_element_ids;
-	struct type_engine_state * type_engine;
+	struct asm_state * syntax_model;
 	struct memory_pool_collection * memory_pool_collection;
 	struct c_lexer_state * c_lexer_state;
 	struct parser_node * top_node;

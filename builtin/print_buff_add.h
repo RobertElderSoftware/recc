@@ -19,4 +19,5 @@
 #include "../generated/struct_printing_state.h"
 
 void print_buff_add(struct printing_state *, char);
+void print_buff_left_zero_pad(struct printing_state *, unsigned int, unsigned int);
 #endif

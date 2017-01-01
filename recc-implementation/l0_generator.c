@@ -545,7 +545,7 @@ struct l0_generator_state * l0_generator_state_create(struct memory_pool_collect
 	add_file_to_buffer(&file_input, (char *)in_file);
 
 	create_l2_lexer_state(&l0_generator_state->l2_lexer_state, &lexer_output, m, in_file, (unsigned char *)unsigned_char_list_data(&file_input), unsigned_char_list_size(&file_input));
-	lex_asm(&l0_generator_state->l2_lexer_state);
+	lex_l2(&l0_generator_state->l2_lexer_state);
 	create_l2_parser_state(&l0_generator_state->l2_parser_state, m, &l0_generator_state->l2_lexer_state, &parser_output, (unsigned char *)unsigned_char_list_data(&file_input));
 	parse_l2(&l0_generator_state->l2_parser_state);
 

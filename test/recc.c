@@ -445,7 +445,7 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/io.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/regex_engine.l2");
-	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/type_engine.l2");
+	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/asm.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "libc/libc.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "recc-implementation/filesystem_impl.l2");
 	register_dependency(state, "test/c89/filesystem.l1", "builtin/l2/memory_mapped_registers.l2");
@@ -462,7 +462,7 @@ void register_test_objects(struct build_state * state){
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/lexer.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/io.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/regex_engine.l2");
-	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/type_engine.l2");
+	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/asm.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "libc/libc.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "recc-implementation/filesystem_impl.l2");
 	register_dependency(state, "test/c89/regex_engine_unit_tests.l1", "builtin/l2/memory_mapped_registers.l2");

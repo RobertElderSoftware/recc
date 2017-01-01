@@ -19,7 +19,7 @@
 
 struct parser_checkpoint{
 	unsigned int parser_operation_checkpoint;
-	unsigned int type_engine_checkpoint;
+	unsigned int asm_checkpoint;
 };
 
 

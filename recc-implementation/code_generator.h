@@ -98,7 +98,6 @@ unsigned int get_parameter_offset(struct code_gen_state *, struct namespace_obje
 unsigned int get_local_offset_h1(struct code_gen_state *, struct namespace_object *, unsigned int);
 unsigned int get_local_offset(struct code_gen_state *, struct namespace_object *);
 unsigned int get_namespace_object_size(struct code_gen_state *, struct namespace_object *, unsigned int);
-unsigned int get_normalized_declaration_element_size(struct code_gen_state *, struct normalized_declaration_element *, unsigned int, struct scope_level *);
 struct type_description * consume_scalar_type(struct code_gen_state *, struct parser_node *);
 struct type_description * usual_arithmetic_conversion(struct code_gen_state *, struct parser_node *);
 struct type_description * perform_pointer_conversion(struct code_gen_state *, struct parser_node *);

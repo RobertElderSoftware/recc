@@ -16,13 +16,13 @@
 
 #include "compiler_interface_phase_2.h"
 
-void new_register_data_structures_objects(struct build_state *);
+void register_data_structures_objects(struct build_state *);
 
 int main(void){
 	struct build_state * state;
 	state = create_build_state();
 
-	new_register_data_structures_objects(state);
+	register_data_structures_objects(state);
 	construct_generated_c_entities(state);
 
         destroy_build_state(state);

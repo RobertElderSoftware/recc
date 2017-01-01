@@ -24,7 +24,7 @@ void register_builtin_objects(struct build_state *);
 void register_compiler_objects(struct build_state *);
 void register_kernel_objects(struct build_state *);
 void register_test_objects(struct build_state *);
-void new_register_data_structures_objects(struct build_state *);
+void register_data_structures_objects(struct build_state *);
 
 int main(void){
 	struct build_state * state = create_build_state();
@@ -33,7 +33,7 @@ int main(void){
 	register_compiler_objects(state);
 	register_kernel_objects(state);
 	register_test_objects(state);
-	new_register_data_structures_objects(state);
+	register_data_structures_objects(state);
 	construct_generated_c_entities(state);
 	/* Tests */
 	GETS_REPLACED_WITH_BUILD_TARGETS

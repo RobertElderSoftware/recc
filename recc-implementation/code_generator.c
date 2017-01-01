@@ -144,7 +144,6 @@ struct compile_time_constant * evaluate_constant_sizeof_type_name(struct code_ge
 	size = type_size(state, sized_type, MINIMAL_RVALUE, 0, state->current_scope);
 	rtn = (struct compile_time_constant *)malloc(sizeof(struct compile_time_constant));
 	struct_compile_time_constant_ptr_list_add_end(&state->created_compile_time_constants, rtn);
-	rtn->element = (struct normalized_declaration_element *)0;
 	rtn->constant_description = (struct constant_description*)malloc(sizeof(struct constant_description));
 	struct_constant_description_ptr_list_add_end(&state->created_constant_descriptions, rtn->constant_description);
 	rtn->constant_description->native_data = (unsigned int *)malloc(sizeof(unsigned int));
@@ -166,7 +165,6 @@ struct compile_time_constant * evaluate_constant_literal(struct code_gen_state *
 	rtn = (struct compile_time_constant *)malloc(sizeof(struct compile_time_constant));
 	struct_compile_time_constant_ptr_list_add_end(&state->created_compile_time_constants, rtn);
 	rtn->constant_description = (struct constant_description *)0;
-	rtn->element = (struct normalized_declaration_element *)0;
 	str = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte, state->memory_pool_collection);
 	constant_description = find_constant(state->parser_state, str);
 	assert(constant_description);
@@ -179,21 +177,12 @@ struct compile_time_constant * evaluate_constant_identifier(struct code_gen_stat
 	struct compile_time_constant * rtn;
 	unsigned char * identifier = copy_string(n->c_lexer_token->first_byte, n->c_lexer_token->last_byte, state->memory_pool_collection);
 	struct namespace_object * obj;
-	struct normalized_declaration_element * element;
 	rtn = (struct compile_time_constant *)malloc(sizeof(struct compile_time_constant));
 	struct_compile_time_constant_ptr_list_add_end(&state->created_compile_time_constants, rtn);
 	rtn->constant_description = (struct constant_description *)0;
-	rtn->element = (struct normalized_declaration_element *)0;
 
 	obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, state->current_scope, 0, state->memory_pool_collection);
 	assert(obj);
-	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
-	if(element->normalized_declarator && element->normalized_declarator->type == NORMALIZED_ENUMERATOR){
-		rtn->element = element;
-	}else{
-		printf("Attempting to determine compile-time constant value of non enum identifier '%s'.\n", identifier);
-		assert(0 && "Attempting to determine compile-time constant value of non enum identifier.");
-	}
 	heap_memory_pool_free(state->memory_pool_collection, identifier);
 	return rtn;
 }
@@ -816,7 +805,6 @@ unsigned int struct_type_size(struct code_gen_state * state, struct type_descrip
 	unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte, state->memory_pool_collection) : make_up_identifier(state->parser_state, t->source_element, state->memory_pool_collection);
 	unsigned int num_children;
 	struct namespace_object * obj;
-	struct normalized_declaration_element * element;
 	unsigned int i;
 	unsigned int total_size = 0;
 	struct struct_namespace_object_ptr_list children;
@@ -837,9 +825,6 @@ unsigned int struct_type_size(struct code_gen_state * state, struct type_descrip
 			struct namespace_object * child_obj = struct_namespace_object_ptr_list_get(&children, i);
 			unsigned int size;
 			struct type_description * member_description;
-			assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
-			element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
-			member_description = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, element->normalized_declaration_set->set, child_obj->scope_level, LVALUE);
 			size = type_size(state, member_description, tsc, 0, obj->scope_level);
 			total_size += size;
 			destroy_type_description(state->memory_pool_collection, member_description);
@@ -881,7 +866,6 @@ struct type_traversal * construct_type_traversal(struct code_gen_state * state, 
 		case TYPE_CLASS_POINTER:{
 			break;
 		}case TYPE_CLASS_ARRAY:{
-			struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, t->declarator);
 			struct parser_node * constant_expression = get_constant_expression_from_abstract_declarator(abstract_declarator);
 			struct type_description * arr_type = create_dereferenced_array_type_description_from_type_description(state->memory_pool_collection, t);
 			struct type_traversal * element_traversal = construct_type_traversal(state, arr_type, source_scope_level, arrays_as_pointers);
@@ -908,7 +892,6 @@ struct type_traversal * construct_type_traversal(struct code_gen_state * state, 
 			unsigned char * tag_identifier = token ? copy_string(token->first_byte, token->last_byte, state->memory_pool_collection) : make_up_identifier(state->parser_state, t->source_element, state->memory_pool_collection);
 			unsigned int num_children;
 			struct namespace_object * obj;
-			struct normalized_declaration_element * element;
 			unsigned int i;
 			struct struct_namespace_object_ptr_list children;
 			obj = get_namespace_object_from_closest_namespace(tag_identifier, TAG_NAMESPACE, source_scope_level, 1, state->memory_pool_collection);
@@ -927,9 +910,6 @@ struct type_traversal * construct_type_traversal(struct code_gen_state * state, 
 				struct namespace_object * child_obj = struct_namespace_object_ptr_list_get(&children, i);
 				struct type_description * member_description;
 				struct type_traversal * member_traversal;
-				assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
-				element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
-				member_description = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, element->normalized_declaration_set->set, source_scope_level, LVALUE);
         
 				member_traversal = construct_type_traversal(state, member_description, source_scope_level, 0);
 				struct_type_traversal_ptr_list_add_end(&traversal->children, member_traversal);
@@ -1058,7 +1038,6 @@ unsigned int type_size(struct code_gen_state * state, struct type_description * 
 	}
 
 	if(c == TYPE_CLASS_ARRAY){
-		struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, t->declarator);
 		struct parser_node * constant_expression = get_constant_expression_from_abstract_declarator(abstract_declarator);
 		if(constant_expression){
 			unsigned int size;
@@ -1103,28 +1082,12 @@ unsigned int type_size(struct code_gen_state * state, struct type_description * 
 	}
 }
 
-unsigned int get_normalized_declaration_element_size(struct code_gen_state * state, struct normalized_declaration_element * element, unsigned int force_arity_1, struct scope_level * source_scope_level){
-	unsigned int rtn;
-	struct type_description * type_description = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, element->normalized_declaration_set->set, source_scope_level, WORD_ALIGNED_RVALUE);
-	convert_to_untypedefed_type_description(state->memory_pool_collection, type_description);
-	rtn = type_size(state, type_description, type_description->value_type, force_arity_1, source_scope_level);
-	destroy_type_description(state->memory_pool_collection, type_description);
-	return rtn;
-}
-
 unsigned int get_namespace_object_size(struct code_gen_state * state, struct namespace_object * obj, unsigned int force_arity_1){
-	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
-	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements - 1);
-	return get_normalized_declaration_element_size(state, element, force_arity_1, obj->scope_level);
 }
 
 unsigned int get_parameter_offset(struct code_gen_state * state, struct namespace_object * obj){
 	if(obj){
-		unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
-		struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements - 1);
 		unsigned int rtn;
-		struct type_description * type_description = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, (struct parser_node *)0, obj->scope_level, LVALUE);
-		struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, element->normalized_declarator);
 		convert_to_untypedefed_type_description(state->memory_pool_collection, type_description);
 
 		if(is_array(state->memory_pool_collection, abstract_declarator)){
@@ -1175,8 +1138,6 @@ unsigned int get_local_offset_h1(struct code_gen_state * state, struct namespace
 	/* Add up the sizes of all initialized locals that occur after the referenced symbol */
 	if(obj && !obj->first_load){
 		unsigned int a;
-		struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, 0);
-		struct c_lexer_token * token = get_identifier_token_from_normalized_declarator(element->normalized_declarator);
 		unsigned char * identifier;
 		identifier = copy_string(token->first_byte, token->last_byte, state->memory_pool_collection);
 		a = get_namespace_object_size(state, obj, force_arity_1);
@@ -1249,23 +1210,18 @@ void load_identifier(struct code_gen_state * state, unsigned char * identifier, 
 	struct parser_node * abstract_declarator;
 	struct type_description * type_description;
 	unsigned int num_elements;
-	struct normalized_declaration_element * element;
 	struct memory_pool_collection * m = state->memory_pool_collection;
 	obj = get_namespace_object_from_closest_namespace(identifier, IDENTIFIER_NAMESPACE, state->current_scope, 0, m);
 	if(!obj){
 		printf("Unknown identifier: %s in file %s.\n", identifier, parser_state->c_lexer_state->c.filename);
 		assert(obj && "Unknown identifier.");
 	}
-	num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
-	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements - 1);
 	buffered_printf(state->buffered_output,"; Loading identifier %s ", identifier);
 	buffered_printf(state->buffered_output,"from location %d\n", obj->object_location);
 
-	type_description = create_type_description_from_normalized_declaration_element(m, element, context, obj->scope_level, LVALUE);
 	convert_to_untypedefed_type_description(m, type_description);
 	assert(type_description->value_type == LVALUE);
 
-	abstract_declarator = create_abstract_declarator_from_normalized_declarator(m, type_description->declarator);
 	switch(obj->object_location){
 		case GLOBAL:{
 			if(is_function(m, abstract_declarator)){
@@ -1436,7 +1392,6 @@ void do_character_rvalue_conversion(struct code_gen_state * state, const char * 
 }
 
 unsigned int decay_to_pointer_if_array(struct code_gen_state * state, struct type_description ** t){
-	struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, (*t)->declarator);
 	unsigned int its_an_array = (unsigned int)is_array(state->memory_pool_collection, abstract_declarator);
 	destroy_parser_node_tree_and_c_lexer_tokens(state->memory_pool_collection, abstract_declarator);
 	if(its_an_array){
@@ -1475,7 +1430,6 @@ struct type_description * ensure_top_type_is_r_value(struct code_gen_state * sta
 }
 
 void compare_function_argument_type(struct code_gen_state * state, struct parser_node * parameter_declaration, unsigned int param_index, struct parser_node * context){
-	struct normalized_declaration_set * declaration_set;
 	struct type_description * tmp_param_type;
 	struct type_description * param_type;
 	struct type_description * top_type;
@@ -1483,25 +1437,18 @@ void compare_function_argument_type(struct code_gen_state * state, struct parser
 	enum type_class type_class_observed;
 	top_type = pop_type_without_type_check(state, context);
 	assert(parameter_declaration);
-	declaration_set = create_normalized_declaration_set_from_parser_node(state->memory_pool_collection, parameter_declaration, (struct normalized_declaration_set *)0);
 	tmp_param_type = struct_type_description_memory_pool_malloc(state->memory_pool_collection);
-	tmp_param_type->specifiers = declaration_set->normalized_specifiers;
 
-	if(struct_normalized_declarator_ptr_list_size(declaration_set->normalized_declarators) == 1){
-		tmp_param_type->declarator = struct_normalized_declarator_ptr_list_get(declaration_set->normalized_declarators, 0);
-	}else if(struct_normalized_declarator_ptr_list_size(declaration_set->normalized_declarators) == 0){
-		tmp_param_type->declarator = (struct normalized_declarator *)0;
 	}else{
 		assert(0 && "Not possible");
 	}
 	param_type = copy_type_description(state->memory_pool_collection, tmp_param_type);
 	param_type->value_type = top_type->value_type;
-	param_type->source_scope_level = state->parser_state->type_engine->top_scope;
+	param_type->source_scope_level = state->parser_state->asm->top_scope;
 	param_type->context = top_type->context;
 	param_type->source_element = top_type->source_element;
 
 	struct_type_description_memory_pool_free(state->memory_pool_collection, tmp_param_type);
-	destroy_normalized_declaration_element_list(state->memory_pool_collection, create_normalized_declaration_element_list(declaration_set));
 
 	convert_to_untypedefed_type_description(state->memory_pool_collection, top_type);
 	convert_to_untypedefed_type_description(state->memory_pool_collection, param_type);
@@ -1616,7 +1563,6 @@ void function_call(struct parser_node * argument_expression_list, struct parser_
         struct type_description * fcn_type = create_dereferenced_pointer_type_description_from_type_description(state->memory_pool_collection, fcn_ptr_type);
 	struct type_description * return_type_description = get_current_function_return_type_description(state->memory_pool_collection, fcn_type);
 	struct type_description * word_type = add_specifier(state->memory_pool_collection, add_specifier(state->memory_pool_collection, create_empty_type_description(state->memory_pool_collection), UNSIGNED), INT);
-	struct parser_node * abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, fcn_type->declarator);
 	struct parser_node * parameter_type_list = get_parameter_type_list_from_abstract_declarator(abstract_declarator);
 	assert(parameter_type_list);
 	word_type->source_scope_level = state->current_scope;
@@ -1684,7 +1630,6 @@ void do_struct_dereference_operator(struct code_gen_state * state, unsigned char
 	unsigned char * struct_tag_identifier;
 	unsigned int num_children;
 	struct namespace_object * obj;
-	struct normalized_declaration_element * element;
 	unsigned int i;
 	unsigned int bytes_before = 0;
 	unsigned int bytes_total = 0;
@@ -1730,10 +1675,6 @@ void do_struct_dereference_operator(struct code_gen_state * state, unsigned char
 		struct c_lexer_token * member_identifier_token;
 		unsigned char * member_name;
 		assert(current_struct_object);
-		assert(struct_normalized_declaration_element_ptr_list_size(&child_obj->elements));
-		element = struct_normalized_declaration_element_ptr_list_get(&child_obj->elements, 0);
-		member_identifier_token = get_identifier_token_from_normalized_declarator(element->normalized_declarator);
-		member_description = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, context, obj->scope_level, LVALUE);
 		member_name = copy_string(member_identifier_token->first_byte, member_identifier_token->last_byte, state->memory_pool_collection);
 		size = type_size(state, member_description, WORD_ALIGNED_RVALUE, 0, obj->scope_level);
 		bytes_total += size;
@@ -1747,7 +1688,6 @@ void do_struct_dereference_operator(struct code_gen_state * state, unsigned char
 			push_type(state, member_description, context);
 			member_found = 1;
 			bytes_member = size;
-			abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, member_description->declarator);
 			heap_memory_pool_free(state->memory_pool_collection, member_name);
 			break;
 		}else{
@@ -1823,7 +1763,6 @@ void g_postfix_expression_rest(struct parser_node * p, struct code_gen_state * s
 
 			element_size = type_size(state, dereferenced_array_type, MINIMAL_RVALUE, 0, dereferenced_array_type->source_scope_level);
 			/*  Determine if the result will be an array (multi-dimensional array case) */
-			abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, array_type->declarator);
 			/*  If it is not an array it should be a pointer */
 			its_an_array = (unsigned int)is_array(state->memory_pool_collection, abstract_declarator);
 			destroy_parser_node_tree_and_c_lexer_tokens(state->memory_pool_collection, abstract_declarator);
@@ -1997,7 +1936,6 @@ void g_unary_operator(struct parser_node * p, struct code_gen_state * state){
 				dereferenced_type->value_type = LVALUE;
 			}
 
-			abstract_declarator = create_abstract_declarator_from_normalized_declarator(state->memory_pool_collection, dereferenced_type->declarator);
 
 			destroy_type_description(state->memory_pool_collection, found_type);
 			push_type(state, dereferenced_type, p);
@@ -3053,17 +2991,17 @@ struct namespace_object * get_current_function(struct code_gen_state * state){
 
 void update_scope_for_current_parser_node(struct code_gen_state * state, struct parser_node * n){
 	/*  If there is a scope level associated with this parser node... */
-	if(struct_parser_node_ptr_to_struct_scope_level_id_map_exists(&state->parser_state->type_engine->parser_node_scope_associations, n)){
-		struct scope_level_id scope_id = struct_parser_node_ptr_to_struct_scope_level_id_map_get(&state->parser_state->type_engine->parser_node_scope_associations, n);
-		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->type_engine->scope_levels, scope_id.id);
+	if(struct_parser_node_ptr_to_struct_scope_level_id_map_exists(&state->parser_state->asm->parser_node_scope_associations, n)){
+		struct scope_level_id scope_id = struct_parser_node_ptr_to_struct_scope_level_id_map_get(&state->parser_state->asm->parser_node_scope_associations, n);
+		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->asm->scope_levels, scope_id.id);
 	}
 }
 
 void exit_scope_for_current_parser_node(struct code_gen_state * state, struct parser_node * n){
-	if(struct_parser_node_ptr_to_struct_scope_level_id_map_exists(&state->parser_state->type_engine->parser_node_scope_associations, n)){
-		struct scope_level_id scope_id = struct_parser_node_ptr_to_struct_scope_level_id_map_get(&state->parser_state->type_engine->parser_node_scope_associations, n);
+	if(struct_parser_node_ptr_to_struct_scope_level_id_map_exists(&state->parser_state->asm->parser_node_scope_associations, n)){
+		struct scope_level_id scope_id = struct_parser_node_ptr_to_struct_scope_level_id_map_get(&state->parser_state->asm->parser_node_scope_associations, n);
 		clear_locals_from_scope(state, state->current_scope);
-		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->type_engine->scope_levels, scope_id.id)->parent_scope;
+		state->current_scope = struct_scope_level_ptr_list_get(&state->parser_state->asm->scope_levels, scope_id.id)->parent_scope;
 	}
 }
 
@@ -3082,9 +3020,6 @@ void clear_locals_from_scope(struct code_gen_state * state, struct scope_level *
 
 void create_default_return_value(struct code_gen_state * state, struct parser_node * possible_function, struct parser_node * context){
 	struct namespace_object * fun = get_current_function(state);
-	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&fun->elements);
-	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&fun->elements, num_elements - 1);
-	struct type_description * t = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, context, state->current_scope, WORD_ALIGNED_RVALUE);
 	struct type_description * return_type_description = get_current_function_return_type_description(state->memory_pool_collection, t);
 	unsigned int rtn_val_size;
 	unsigned int num_words;
@@ -3104,9 +3039,6 @@ void create_default_return_value(struct code_gen_state * state, struct parser_no
 
 void return_from_function(struct code_gen_state * state, struct parser_node * context){
 	struct namespace_object * fun = get_current_function(state);
-	unsigned int num_elements = struct_normalized_declaration_element_ptr_list_size(&fun->elements);
-	struct normalized_declaration_element * element = struct_normalized_declaration_element_ptr_list_get(&fun->elements, num_elements - 1);
-	struct type_description * t = create_type_description_from_normalized_declaration_element(state->memory_pool_collection, element, context, state->current_scope, WORD_ALIGNED_RVALUE);
 	struct type_description * return_type_description = get_current_function_return_type_description(state->memory_pool_collection, t);
 	unsigned int rtn_val_size;
 	destroy_type_description(state->memory_pool_collection, ensure_top_type_is_r_value(state, context));
@@ -3851,20 +3783,15 @@ void g_init_declarator(struct parser_node * specifiers, struct parser_node * p, 
 	unsigned char * identifier_str = copy_string(identifier->c_lexer_token->first_byte, identifier->c_lexer_token->last_byte, m);
 	struct namespace_object * obj;
 	unsigned int num_elements;
-	struct normalized_declaration_element * element;
 	struct type_description * type_description;
 	unsigned int is_global;
 	unsigned int is_extern;
 	unsigned int is_typedef;
 	struct parser_node * abstract_declarator;
 	obj = get_namespace_object_from_closest_namespace(identifier_str, IDENTIFIER_NAMESPACE, state->current_scope, 0, m);
-	num_elements = struct_normalized_declaration_element_ptr_list_size(&obj->elements);
-	element = struct_normalized_declaration_element_ptr_list_get(&obj->elements, num_elements -1);
-	type_description = create_type_description_from_normalized_declaration_element(m, element, p, obj->scope_level, LVALUE);
 	convert_to_untypedefed_type_description(m, type_description);
-	is_global = obj->scope_level == state->parser_state->type_engine->top_scope;
+	is_global = obj->scope_level == state->parser_state->asm->top_scope;
 
-	abstract_declarator = create_abstract_declarator_from_normalized_declarator(m, element->normalized_declarator);
 
 	is_extern = do_specifiers_contain_extern(specifiers, EXTERN);
 	/*  TODO:  Typedefed declarations should never generate code, but right now they
@@ -4949,7 +4876,7 @@ int generate_code(struct code_gen_state * state){
 }
 
 void create_code_gen_state(struct code_gen_state * state, struct parser_state * parser_state, struct unsigned_char_list * buffered_output, struct unsigned_char_list * buffered_symbol_table){
-	state->current_scope = parser_state->type_engine->top_scope;
+	state->current_scope = parser_state->asm->top_scope;
 	state->memory_pool_collection = parser_state->memory_pool_collection; 
 	state->buffered_output = buffered_output; 
 	state->buffered_symbol_table = buffered_symbol_table; 
@@ -5048,9 +4975,9 @@ unsigned int do_code_generation(struct memory_pool_collection * memory_pool_coll
 	if(rtn){
 		printf("Lexical analysis failed during code generation of %s\n", in_file);
 	}else{
-		struct type_engine_state type_engine;
-		create_type_engine_state(&type_engine, memory_pool_collection);
-		create_parser_state(&parser_state, memory_pool_collection, &c_lexer_state, &generated_code, unsigned_char_list_data(&preprocessed_input), &type_engine);
+		struct asm_state asm;
+		create_asm_state(&asm, memory_pool_collection);
+		create_parser_state(&parser_state, memory_pool_collection, &c_lexer_state, &generated_code, unsigned_char_list_data(&preprocessed_input), &asm);
 		if(parse(&parser_state) || (struct_parser_error_list_size(&parser_state.parser_errors) != 0)){
 			unsigned int i;
 			unsigned int num_errors = struct_parser_error_list_size(&parser_state.parser_errors);
@@ -5120,7 +5047,7 @@ unsigned int do_code_generation(struct memory_pool_collection * memory_pool_coll
 			destroy_code_gen_state(&state);
 		}
 		destroy_parser_state(&parser_state);
-		destroy_type_engine_state(&type_engine);
+		destroy_asm_state(&asm);
 	}
 	destroy_c_lexer_state(&c_lexer_state);
 	unsigned_char_list_destroy(&buffered_symbol_table);

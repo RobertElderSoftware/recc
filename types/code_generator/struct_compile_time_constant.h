@@ -21,5 +21,4 @@
 
 struct compile_time_constant{
 	struct constant_description * constant_description; /* For everything else */
-	struct normalized_declaration_element * element;    /*  For enum types */
 };

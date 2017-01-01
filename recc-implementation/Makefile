@@ -31,8 +31,11 @@ recc-implementation/lexer.h: recc-implementation/io.h
 recc-implementation/regex_engine.o: recc-implementation/regex_engine.h recc-implementation/regex_engine.c
 	@$(HOSTCC) -c recc-implementation/regex_engine.c -o recc-implementation/regex_engine.o $(CUSTOM_C89_FLAGS)
 
-recc-implementation/type_engine.o: recc-implementation/type_engine.h recc-implementation/type_engine.c
-	@$(HOSTCC) -c recc-implementation/type_engine.c -o recc-implementation/type_engine.o $(CUSTOM_C89_FLAGS)
+recc-implementation/asm.o: recc-implementation/asm.h recc-implementation/asm.c
+	@$(HOSTCC) -c recc-implementation/asm.c -o recc-implementation/asm.o $(CUSTOM_C89_FLAGS)
+
+recc-implementation/asm_functions.o: recc-implementation/asm_functions.h recc-implementation/asm_functions.c
+	@$(HOSTCC) -c recc-implementation/asm_functions.c -o recc-implementation/asm_functions.o $(CUSTOM_C89_FLAGS)
 
 recc-implementation/lexer.o: recc-implementation/lexer.h recc-implementation/lexer.c
 	@$(HOSTCC) -c recc-implementation/lexer.c -o recc-implementation/lexer.o $(CUSTOM_C89_FLAGS)
