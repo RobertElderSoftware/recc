@@ -15,8 +15,8 @@
 1.  INTRODUCTION
 
   1.1  This document is a guide to assembly language programming for the 'One
-  Page CPU'.  The One Page CPU is a specification for a very simple CPU that
-  was designed with the primary goal of being easy to emulate in software,
+  Page CPU'.  The One Page CPU is a specification for a very simple 32-bit CPU
+  that was designed with the primary goal of being easy to emulate in software,
   while still providing a practical environment for programs running on it.
   The CPU uses 32-bit addresses and registers.  It supports context switching,
   timer interrupts, I/O interrupts and 14 different machine instructions.
