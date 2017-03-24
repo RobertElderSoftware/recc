@@ -39,9 +39,9 @@ void undo_asm_operation(struct asm_state *, enum asm_operation_type);
 void backtrack_asm(struct asm_state *, unsigned int);
 unsigned int asm_checkpoint(struct asm_state *);
 
+void syntax_model_print_char(struct unsigned_char_list *, unsigned char);
+void free_string_package_pointers(struct asm_state *);
 struct parser_node * associate_parser_node_with_scope_level(struct asm_state *, struct scope_level *, struct parser_node *);
-struct scope_guid_id increment_scope_depth(struct asm_state *, enum scope_level_type);
-void decrement_scope_depth(struct asm_state *);
 void manage_new_scope(struct asm_state *, struct scope_level *, unsigned int, enum add_or_remove, enum scope_level_type);
 struct scope_level * get_parser_scope_level_h(struct scope_level *, unsigned int);
 struct scope_level * get_parser_scope_level(struct asm_state *);
@@ -65,7 +65,7 @@ unsigned int add_struct_or_union_definition(struct asm_state *, struct identifie
 unsigned int add_enum_definition(struct asm_state *, struct identifier_declaration_namespace *, struct unscoped_tag_specifier_id, struct scope_level *);
 unsigned int consume_next_anonymous_tag_id_in_current_parser_scope(struct asm_state *);
 unsigned int add_named_tag_declaration(struct asm_state *, struct identifier_id , struct unscoped_tag_specifier_id, struct scope_level *);
-struct scope_level * get_scope_of_closest_tag_declaration(struct asm_state *, struct scope_level *, struct unscoped_tag_specifier_id);
+
 
 struct aggregate_type_specifier_id aggregate_type_specifier_from_simple_type_specifier_id(struct asm_state *, struct simple_type_specifier_id);
 struct aggregate_type_specifier_id aggregate_type_specifier_from_typename_specifier_id(struct asm_state *, unsigned int);
@@ -120,50 +120,28 @@ enum asm_simple_storage_class_specifier_kind c_token_type_to_simple_storage_clas
 
 void print_asm_state(struct asm_state *, struct unsigned_char_list *);
 
-void print_terminal_specifier_or_qualifier_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct specifier_or_qualifier_list_item_id);
-void print_terminal_specifier_or_qualifier_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct specifier_or_qualifier_id);
-void print_terminal_any_statement_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct any_statement_list_item_id);
-void print_terminal_any_statement_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct any_statement_id);
-void print_terminal_struct_or_union_member_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct struct_or_union_member_list_item_id);
-void print_terminal_struct_or_union_member_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct struct_or_union_member_id);
-void print_terminal_enum_member_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct enum_member_list_item_id);
-void print_terminal_enum_member_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct enum_member_id);
-void print_terminal_layout_flag_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct layout_flag_list_item_id);
-void print_terminal_layout_flag_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct layout_flag_id);
-void print_terminal_initializer_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct initializer_list_item_id);
-void print_terminal_initializer_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct initializer_id);
-void print_terminal_expression_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct expression_list_item_id);
-void print_terminal_expression_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct expression_id);
-void print_terminal_declarator_part_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct declarator_part_list_item_id);
-void print_terminal_declarator_part_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct declarator_part_id);
-void print_terminal_function_part_k_and_r_c_parameter_list_id(struct asm_state *, struct unsigned_char_list *, struct parameter_list_id);
-void print_terminal_array_part_flexible_expression_id(struct asm_state *, struct unsigned_char_list *, struct expression_id);
-void print_terminal_general_type_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct general_type_list_item_id);
-void print_terminal_general_type_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct general_type_id);
-void print_terminal_postfix_expression_part_list_item_list_start_prev_id(struct asm_state *, struct unsigned_char_list *, struct postfix_expression_part_list_item_id);
-void print_terminal_postfix_expression_part_list_item_list_start_item_id(struct asm_state *, struct unsigned_char_list *, struct postfix_expression_part_id);
-void print_terminal_postfix_expression_part_inc_id(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_postfix_expression_part_dec_id(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_bitfield_no_bitfield_expression_id(struct asm_state *, struct unsigned_char_list *, struct expression_id);
-void print_terminal_jump_statement_return_no_expression_id(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_jump_statement_break_id(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_jump_statement_continue_id(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_if_statement_just_if_s2(struct asm_state *, struct unsigned_char_list *, struct any_statement_id);
-void print_terminal_labeled_statement_goto_label_expression_id(struct asm_state *, struct unsigned_char_list *, struct expression_id);
-void print_terminal_labeled_statement_default_label_expression_id(struct asm_state *, struct unsigned_char_list *, struct expression_id);
-void print_terminal_cast_expression_no_cast_id1(struct asm_state *, struct unsigned_char_list *, struct general_type_id);
-void print_terminal_byte_package_byte_data(struct asm_state *, struct unsigned_char_list *, unsigned char);
-void print_terminal_hword_package_hword_data0(struct asm_state *, struct unsigned_char_list *, unsigned char);
-void print_terminal_hword_package_hword_data1(struct asm_state *, struct unsigned_char_list *, unsigned char);
-void print_terminal_word_package_word_data(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_dword_package_dword_data0(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_dword_package_dword_data1(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_string_package_string_length(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_string_package_string_data(struct asm_state *, struct unsigned_char_list *, unsigned char *);
-void print_terminal_identifier_identifier_identifier(struct asm_state *, struct unsigned_char_list *, struct c_lexer_token *);
-void print_terminal_scope_guid_block_scope_id(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_scope_guid_file_scope_id(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_scope_guid_function_scope_id(struct asm_state *, struct unsigned_char_list *, unsigned int);
-void print_terminal_cast_expression_no_cast_id2(struct asm_state *, struct unsigned_char_list *, struct general_type_id);
+void print_terminal_struct_or_union_member_list_item_list_start_prev_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct struct_or_union_member_list_item_id);
+void print_terminal_struct_or_union_member_list_item_list_start_item_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct struct_or_union_member_id);
+void print_terminal_enum_member_list_item_list_start_prev_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct enum_member_list_item_id);
+void print_terminal_enum_member_list_item_list_start_item_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct enum_member_id);
+void print_terminal_initializer_list_item_list_start_prev_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct initializer_list_item_id);
+void print_terminal_initializer_list_item_list_start_item_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct initializer_id);
+void print_terminal_general_type_list_item_list_start_prev_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct general_type_list_item_id);
+void print_terminal_general_type_list_item_list_start_item_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct general_type_id);
+void print_terminal_postfix_expression_part_list_item_list_start_prev_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct postfix_expression_part_list_item_id);
+void print_terminal_postfix_expression_part_list_item_list_start_item_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct postfix_expression_part_id);
+void print_terminal_bitfield_no_bitfield_expression_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct expression_id);
+void print_terminal_jump_statement_return_no_expression_id(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned int);
+void print_terminal_jump_statement_break_id(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned int);
+void print_terminal_jump_statement_continue_id(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned int);
+void print_terminal_if_statement_just_if_s2(struct asm_state *, unsigned int, struct unsigned_char_list *, struct any_statement_id);
+void print_terminal_labeled_statement_goto_label_expression_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct expression_id);
+void print_terminal_labeled_statement_default_label_expression_id(struct asm_state *, unsigned int, struct unsigned_char_list *, struct expression_id);
+void print_terminal_byte_package_byte_data(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned char);
+void print_terminal_hword_package_hword_data0(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned char);
+void print_terminal_hword_package_hword_data1(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned char);
+void print_terminal_string_package_string_length(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned int);
+void print_terminal_string_package_string_data(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned char *);
+void print_terminal_named_tag_predeclaration_named_tag_type(struct asm_state *, unsigned int, struct unsigned_char_list *, enum asm_unscoped_tag_specifier_kind);
 
 #endif

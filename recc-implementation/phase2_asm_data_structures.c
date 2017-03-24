@@ -24,7 +24,6 @@ void register_asm_data_structures_objects(struct build_state * state, struct boo
 	make_map(state, b, make_beb_list(2, "struct specifier_or_qualifier_details", "struct specifier_or_qualifier_id"), make_beb_list(2, "generated/struct_specifier_or_qualifier_details.h", "generated/struct_specifier_or_qualifier_id.h"), "recc-implementation/templates/asm/struct_specifier_or_qualifier_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct specifier_or_qualifier_list_item_details", "struct specifier_or_qualifier_list_item_id"), make_beb_list(2, "generated/struct_specifier_or_qualifier_list_item_details.h", "generated/struct_specifier_or_qualifier_list_item_id.h"), "recc-implementation/templates/asm/struct_specifier_or_qualifier_list_item_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct parameter_list_details", "struct parameter_list_id"), make_beb_list(2, "generated/struct_parameter_list_details.h", "generated/struct_parameter_list_id.h"), "recc-implementation/templates/asm/struct_parameter_list_details_compare.c");
-	make_map(state, b, make_beb_list(2, "struct initializer_details", "struct initializer_id"), make_beb_list(2, "generated/struct_initializer_details.h", "generated/struct_initializer_id.h"), "recc-implementation/templates/asm/struct_initializer_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct declarator_part_details", "struct declarator_part_id"), make_beb_list(2, "generated/struct_declarator_part_details.h", "generated/struct_declarator_part_id.h"), "recc-implementation/templates/asm/struct_declarator_part_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct any_statement_list_item_details", "struct any_statement_list_item_id"), make_beb_list(2, "generated/struct_any_statement_list_item_details.h", "generated/struct_any_statement_list_item_id.h"), "recc-implementation/templates/asm/struct_any_statement_list_item_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct anonymous_tag_definition_details", "struct anonymous_tag_definition_id"), make_beb_list(2, "generated/struct_anonymous_tag_definition_details.h", "generated/struct_anonymous_tag_definition_id.h"), "recc-implementation/templates/asm/struct_anonymous_tag_definition_details_compare.c");
@@ -35,16 +34,14 @@ void register_asm_data_structures_objects(struct build_state * state, struct boo
 	make_map(state, b, make_beb_list(2, "struct enum_member_list_item_details", "struct enum_member_list_item_id"), make_beb_list(2, "generated/struct_enum_member_list_item_details.h", "generated/struct_enum_member_list_item_id.h"), "recc-implementation/templates/asm/struct_enum_member_list_item_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct enum_member_details", "struct enum_member_id"), make_beb_list(2, "generated/struct_enum_member_details.h", "generated/struct_enum_member_id.h"), "recc-implementation/templates/asm/struct_enum_member_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct struct_or_union_member_details", "struct struct_or_union_member_id"), make_beb_list(2, "generated/struct_struct_or_union_member_details.h", "generated/struct_struct_or_union_member_id.h"), "recc-implementation/templates/asm/struct_struct_or_union_member_details_compare.c");
-	make_map(state, b, make_beb_list(2, "struct layout_flag_list_item_details", "struct layout_flag_list_item_id"), make_beb_list(2, "generated/struct_layout_flag_list_item_details.h", "generated/struct_layout_flag_list_item_id.h"), "recc-implementation/templates/asm/struct_layout_flag_list_item_details_compare.c");
-	make_map(state, b, make_beb_list(2, "struct layout_flag_details", "struct layout_flag_id"), make_beb_list(2, "generated/struct_layout_flag_details.h", "generated/struct_layout_flag_id.h"), "recc-implementation/templates/asm/struct_layout_flag_details_compare.c");
+	make_map(state, b, make_beb_list(2, "struct initializer_details", "struct initializer_id"), make_beb_list(2, "generated/struct_initializer_details.h", "generated/struct_initializer_id.h"), "recc-implementation/templates/asm/struct_initializer_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct initializer_list_item_details", "struct initializer_list_item_id"), make_beb_list(2, "generated/struct_initializer_list_item_details.h", "generated/struct_initializer_list_item_id.h"), "recc-implementation/templates/asm/struct_initializer_list_item_details_compare.c");
-	make_map(state, b, make_beb_list(2, "struct expression_list_item_details", "struct expression_list_item_id"), make_beb_list(2, "generated/struct_expression_list_item_details.h", "generated/struct_expression_list_item_id.h"), "recc-implementation/templates/asm/struct_expression_list_item_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct declarator_part_list_item_details", "struct declarator_part_list_item_id"), make_beb_list(2, "generated/struct_declarator_part_list_item_details.h", "generated/struct_declarator_part_list_item_id.h"), "recc-implementation/templates/asm/struct_declarator_part_list_item_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct pointer_part_details", "struct pointer_part_id"), make_beb_list(2, "generated/struct_pointer_part_details.h", "generated/struct_pointer_part_id.h"), "recc-implementation/templates/asm/struct_pointer_part_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct function_part_details", "struct function_part_id"), make_beb_list(2, "generated/struct_function_part_details.h", "generated/struct_function_part_id.h"), "recc-implementation/templates/asm/struct_function_part_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct array_part_details", "struct array_part_id"), make_beb_list(2, "generated/struct_array_part_details.h", "generated/struct_array_part_id.h"), "recc-implementation/templates/asm/struct_array_part_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct general_type_details", "struct general_type_id"), make_beb_list(2, "generated/struct_general_type_details.h", "generated/struct_general_type_id.h"), "recc-implementation/templates/asm/struct_general_type_details_compare.c");
-	make_map(state, b, make_beb_list(2, "struct typedef_entry_details", "struct typedef_entry_id"), make_beb_list(2, "generated/struct_typedef_entry_details.h", "generated/struct_typedef_entry_id.h"), "recc-implementation/templates/asm/struct_typedef_entry_details_compare.c");
+	make_map(state, b, make_beb_list(2, "struct identifier_namespace_entry_details", "struct identifier_namespace_entry_id"), make_beb_list(2, "generated/struct_identifier_namespace_entry_details.h", "generated/struct_identifier_namespace_entry_id.h"), "recc-implementation/templates/asm/struct_identifier_namespace_entry_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct general_type_list_item_details", "struct general_type_list_item_id"), make_beb_list(2, "generated/struct_general_type_list_item_details.h", "generated/struct_general_type_list_item_id.h"), "recc-implementation/templates/asm/struct_general_type_list_item_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct postfix_expression_part_list_item_details", "struct postfix_expression_part_list_item_id"), make_beb_list(2, "generated/struct_postfix_expression_part_list_item_details.h", "generated/struct_postfix_expression_part_list_item_id.h"), "recc-implementation/templates/asm/struct_postfix_expression_part_list_item_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct postfix_expression_part_details", "struct postfix_expression_part_id"), make_beb_list(2, "generated/struct_postfix_expression_part_details.h", "generated/struct_postfix_expression_part_id.h"), "recc-implementation/templates/asm/struct_postfix_expression_part_details_compare.c");
@@ -85,7 +82,7 @@ void register_asm_data_structures_objects(struct build_state * state, struct boo
 	make_map(state, b, make_beb_list(2, "struct string_package_details", "struct string_package_id"), make_beb_list(2, "generated/struct_string_package_details.h", "generated/struct_string_package_id.h"), "recc-implementation/templates/asm/struct_string_package_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct identifier_details", "struct identifier_id"), make_beb_list(2, "generated/struct_identifier_details.h", "generated/struct_identifier_id.h"), "recc-implementation/templates/asm/struct_identifier_details_compare.c");
 	make_map(state, b, make_beb_list(2, "struct scope_guid_details", "struct scope_guid_id"), make_beb_list(2, "generated/struct_scope_guid_details.h", "generated/struct_scope_guid_id.h"), "recc-implementation/templates/asm/struct_scope_guid_details_compare.c");
-	make_map(state, b, make_beb_list(2, "struct anonymous_instance_details", "struct anonymous_instance_id"), make_beb_list(2, "generated/struct_anonymous_instance_details.h", "generated/struct_anonymous_instance_id.h"), "recc-implementation/templates/asm/struct_anonymous_instance_details_compare.c");
+	make_map(state, b, make_beb_list(2, "struct anonymous_entry_details", "struct anonymous_entry_id"), make_beb_list(2, "generated/struct_anonymous_entry_details.h", "generated/struct_anonymous_entry_id.h"), "recc-implementation/templates/asm/struct_anonymous_entry_details_compare.c");
 }
 
 void register_asm_details_and_ids(struct build_state * state){
@@ -162,16 +159,6 @@ void register_asm_details_and_ids(struct build_state * state){
 		"generated/struct_general_type_list_item_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/enum_asm_initializer_kind.h", "generated/enum_asm_initializer_kind.h",
-		"stop"
-	);
-	register_generated_type(state, "types/asm/struct_initializer_id.h", "generated/struct_initializer_id.h",
-		"stop"
-	);
-	register_generated_type(state, "types/asm/struct_initializer_details.h", "generated/struct_initializer_details.h",
-		"generated/enum_asm_initializer_kind.h",
-		"stop"
-	);
 	register_generated_type(state, "types/asm/enum_asm_declarator_part_kind.h", "generated/enum_asm_declarator_part_kind.h",
 		"stop"
 	);
@@ -204,7 +191,7 @@ void register_asm_details_and_ids(struct build_state * state){
 		"generated/enum_asm_anonymous_tag_definition_kind.h",
 		"generated/struct_tag_definition_id.h",
 		"generated/struct_scope_guid_id.h",
-		"generated/struct_anonymous_instance_id.h",
+		"generated/struct_anonymous_entry_id.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_named_tag_predeclaration_kind.h", "generated/enum_asm_named_tag_predeclaration_kind.h",
@@ -217,6 +204,7 @@ void register_asm_details_and_ids(struct build_state * state){
 		"generated/enum_asm_named_tag_predeclaration_kind.h",
 		"generated/struct_scope_guid_id.h",
 		"generated/struct_identifier_id.h",
+		"generated/enum_asm_unscoped_tag_specifier_kind.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_named_tag_definition_kind.h", "generated/enum_asm_named_tag_definition_kind.h",
@@ -287,30 +275,17 @@ void register_asm_details_and_ids(struct build_state * state){
 	register_generated_type(state, "types/asm/struct_struct_or_union_member_details.h", "generated/struct_struct_or_union_member_details.h",
 		"generated/enum_asm_struct_or_union_member_kind.h",
 		"generated/struct_general_type_id.h",
-		"generated/struct_layout_flag_list_item_id.h",
 		"generated/struct_identifier_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/enum_asm_layout_flag_list_item_kind.h", "generated/enum_asm_layout_flag_list_item_kind.h",
+	register_generated_type(state, "types/asm/enum_asm_initializer_kind.h", "generated/enum_asm_initializer_kind.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/struct_layout_flag_list_item_id.h", "generated/struct_layout_flag_list_item_id.h",
+	register_generated_type(state, "types/asm/struct_initializer_id.h", "generated/struct_initializer_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/struct_layout_flag_list_item_details.h", "generated/struct_layout_flag_list_item_details.h",
-		"generated/enum_asm_layout_flag_list_item_kind.h",
-		"generated/struct_layout_flag_list_item_id.h",
-		"generated/struct_layout_flag_id.h",
-		"stop"
-	);
-	register_generated_type(state, "types/asm/enum_asm_layout_flag_kind.h", "generated/enum_asm_layout_flag_kind.h",
-		"stop"
-	);
-	register_generated_type(state, "types/asm/struct_layout_flag_id.h", "generated/struct_layout_flag_id.h",
-		"stop"
-	);
-	register_generated_type(state, "types/asm/struct_layout_flag_details.h", "generated/struct_layout_flag_details.h",
-		"generated/enum_asm_layout_flag_kind.h",
+	register_generated_type(state, "types/asm/struct_initializer_details.h", "generated/struct_initializer_details.h",
+		"generated/enum_asm_initializer_kind.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_initializer_list_item_kind.h", "generated/enum_asm_initializer_list_item_kind.h",
@@ -323,18 +298,6 @@ void register_asm_details_and_ids(struct build_state * state){
 		"generated/enum_asm_initializer_list_item_kind.h",
 		"generated/struct_initializer_list_item_id.h",
 		"generated/struct_initializer_id.h",
-		"stop"
-	);
-	register_generated_type(state, "types/asm/enum_asm_expression_list_item_kind.h", "generated/enum_asm_expression_list_item_kind.h",
-		"stop"
-	);
-	register_generated_type(state, "types/asm/struct_expression_list_item_id.h", "generated/struct_expression_list_item_id.h",
-		"stop"
-	);
-	register_generated_type(state, "types/asm/struct_expression_list_item_details.h", "generated/struct_expression_list_item_details.h",
-		"generated/enum_asm_expression_list_item_kind.h",
-		"generated/struct_expression_list_item_id.h",
-		"generated/struct_expression_id.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_declarator_part_list_item_kind.h", "generated/enum_asm_declarator_part_list_item_kind.h",
@@ -395,14 +358,14 @@ void register_asm_details_and_ids(struct build_state * state){
 		"generated/struct_bitfield_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/enum_asm_typedef_entry_kind.h", "generated/enum_asm_typedef_entry_kind.h",
+	register_generated_type(state, "types/asm/enum_asm_identifier_namespace_entry_kind.h", "generated/enum_asm_identifier_namespace_entry_kind.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/struct_typedef_entry_id.h", "generated/struct_typedef_entry_id.h",
+	register_generated_type(state, "types/asm/struct_identifier_namespace_entry_id.h", "generated/struct_identifier_namespace_entry_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/struct_typedef_entry_details.h", "generated/struct_typedef_entry_details.h",
-		"generated/enum_asm_typedef_entry_kind.h",
+	register_generated_type(state, "types/asm/struct_identifier_namespace_entry_details.h", "generated/struct_identifier_namespace_entry_details.h",
+		"generated/enum_asm_identifier_namespace_entry_kind.h",
 		"generated/struct_identifier_id.h",
 		"generated/struct_scope_guid_id.h",
 		"generated/struct_general_type_id.h",
@@ -536,7 +499,7 @@ void register_asm_details_and_ids(struct build_state * state){
 	register_generated_type(state, "types/asm/struct_switch_statement_details.h", "generated/struct_switch_statement_details.h",
 		"generated/enum_asm_switch_statement_kind.h",
 		"generated/struct_expression_id.h",
-		"generated/struct_any_statement_id.h",
+		"generated/struct_scoped_statement_id.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_if_statement_kind.h", "generated/enum_asm_if_statement_kind.h",
@@ -547,7 +510,7 @@ void register_asm_details_and_ids(struct build_state * state){
 	);
 	register_generated_type(state, "types/asm/struct_if_statement_details.h", "generated/struct_if_statement_details.h",
 		"generated/enum_asm_if_statement_kind.h",
-		"generated/struct_any_statement_id.h",
+		"generated/struct_scoped_statement_id.h",
 		"generated/struct_expression_id.h",
 		"stop"
 	);
@@ -560,7 +523,7 @@ void register_asm_details_and_ids(struct build_state * state){
 	register_generated_type(state, "types/asm/struct_while_statement_details.h", "generated/struct_while_statement_details.h",
 		"generated/enum_asm_while_statement_kind.h",
 		"generated/struct_expression_id.h",
-		"generated/struct_any_statement_id.h",
+		"generated/struct_scoped_statement_id.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_for_statement_kind.h", "generated/enum_asm_for_statement_kind.h",
@@ -571,7 +534,8 @@ void register_asm_details_and_ids(struct build_state * state){
 	);
 	register_generated_type(state, "types/asm/struct_for_statement_details.h", "generated/struct_for_statement_details.h",
 		"generated/enum_asm_for_statement_kind.h",
-		"generated/struct_expression_list_item_id.h",
+		"generated/struct_any_statement_id.h",
+		"generated/struct_scoped_statement_id.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_code_statement_kind.h", "generated/enum_asm_code_statement_kind.h",
@@ -592,8 +556,7 @@ void register_asm_details_and_ids(struct build_state * state){
 	);
 	register_generated_type(state, "types/asm/struct_labeled_statement_details.h", "generated/struct_labeled_statement_details.h",
 		"generated/enum_asm_labeled_statement_kind.h",
-		"generated/struct_any_statement_id.h",
-		"generated/struct_expression_id.h",
+		"generated/struct_scoped_statement_id.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_postfix_expression_kind.h", "generated/enum_asm_postfix_expression_kind.h",
@@ -660,6 +623,7 @@ void register_asm_details_and_ids(struct build_state * state){
 		"generated/enum_asm_function_definition_kind.h",
 		"generated/struct_general_type_id.h",
 		"generated/struct_any_statement_list_item_id.h",
+		"generated/struct_scoped_statement_id.h",
 		"generated/struct_identifier_id.h",
 		"stop"
 	);
@@ -840,16 +804,17 @@ void register_asm_details_and_ids(struct build_state * state){
 	);
 	register_generated_type(state, "types/asm/struct_scope_guid_details.h", "generated/struct_scope_guid_details.h",
 		"generated/enum_asm_scope_guid_kind.h",
+		"generated/struct_scope_guid_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/enum_asm_anonymous_instance_kind.h", "generated/enum_asm_anonymous_instance_kind.h",
+	register_generated_type(state, "types/asm/enum_asm_anonymous_entry_kind.h", "generated/enum_asm_anonymous_entry_kind.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/struct_anonymous_instance_id.h", "generated/struct_anonymous_instance_id.h",
+	register_generated_type(state, "types/asm/struct_anonymous_entry_id.h", "generated/struct_anonymous_entry_id.h",
 		"stop"
 	);
-	register_generated_type(state, "types/asm/struct_anonymous_instance_details.h", "generated/struct_anonymous_instance_details.h",
-		"generated/enum_asm_anonymous_instance_kind.h",
+	register_generated_type(state, "types/asm/struct_anonymous_entry_details.h", "generated/struct_anonymous_entry_details.h",
+		"generated/enum_asm_anonymous_entry_kind.h",
 		"stop"
 	);
 }
@@ -938,18 +903,6 @@ void register_asm_generated_aggregate_includes(struct build_state * state){
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
 		"generated/enum_asm_parameter_list_kind.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_struct_initializer_details_to_struct_initializer_id_key_value_pair_compare.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_initializer_details_to_struct_initializer_id_map.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/enum_asm_initializer_kind.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
@@ -1073,27 +1026,15 @@ void register_asm_generated_aggregate_includes(struct build_state * state){
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_key_value_pair_compare.h"
+		"generated/struct_struct_initializer_details_to_struct_initializer_id_key_value_pair_compare.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_map.h"
+		"generated/struct_initializer_details_to_struct_initializer_id_map.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/enum_asm_layout_flag_list_item_kind.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_struct_layout_flag_details_to_struct_layout_flag_id_key_value_pair_compare.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_layout_flag_details_to_struct_layout_flag_id_map.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/enum_asm_layout_flag_kind.h"
+		"generated/enum_asm_initializer_kind.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
@@ -1106,18 +1047,6 @@ void register_asm_generated_aggregate_includes(struct build_state * state){
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
 		"generated/enum_asm_initializer_list_item_kind.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_struct_expression_list_item_details_to_struct_expression_list_item_id_key_value_pair_compare.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_expression_list_item_details_to_struct_expression_list_item_id_map.h"
-	);
-
-	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/enum_asm_expression_list_item_kind.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
@@ -1181,15 +1110,15 @@ void register_asm_generated_aggregate_includes(struct build_state * state){
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_struct_typedef_entry_details_to_struct_typedef_entry_id_key_value_pair_compare.h"
+		"generated/struct_struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_key_value_pair_compare.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_typedef_entry_details_to_struct_typedef_entry_id_map.h"
+		"generated/struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/enum_asm_typedef_entry_kind.h"
+		"generated/enum_asm_identifier_namespace_entry_kind.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
@@ -1673,15 +1602,15 @@ void register_asm_generated_aggregate_includes(struct build_state * state){
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_struct_anonymous_instance_details_to_struct_anonymous_instance_id_key_value_pair_compare.h"
+		"generated/struct_struct_anonymous_entry_details_to_struct_anonymous_entry_id_key_value_pair_compare.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/struct_anonymous_instance_details_to_struct_anonymous_instance_id_map.h"
+		"generated/struct_anonymous_entry_details_to_struct_anonymous_entry_id_map.h"
 	);
 
 	register_inclusion(state, "generated/asm_generated_includes.h",
-		"generated/enum_asm_anonymous_instance_kind.h"
+		"generated/enum_asm_anonymous_entry_kind.h"
 	);
 
 }
@@ -1704,8 +1633,6 @@ void register_asm_state_includes(struct build_state * state){
 		"generated/struct_struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map.h",
 		"generated/struct_struct_parameter_list_details_list.h",
 		"generated/struct_struct_parameter_list_details_to_struct_parameter_list_id_map.h",
-		"generated/struct_struct_initializer_details_list.h",
-		"generated/struct_struct_initializer_details_to_struct_initializer_id_map.h",
 		"generated/struct_struct_declarator_part_details_list.h",
 		"generated/struct_struct_declarator_part_details_to_struct_declarator_part_id_map.h",
 		"generated/struct_struct_any_statement_list_item_details_list.h",
@@ -1726,14 +1653,10 @@ void register_asm_state_includes(struct build_state * state){
 		"generated/struct_struct_enum_member_details_to_struct_enum_member_id_map.h",
 		"generated/struct_struct_struct_or_union_member_details_list.h",
 		"generated/struct_struct_struct_or_union_member_details_to_struct_struct_or_union_member_id_map.h",
-		"generated/struct_struct_layout_flag_list_item_details_list.h",
-		"generated/struct_struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_map.h",
-		"generated/struct_struct_layout_flag_details_list.h",
-		"generated/struct_struct_layout_flag_details_to_struct_layout_flag_id_map.h",
+		"generated/struct_struct_initializer_details_list.h",
+		"generated/struct_struct_initializer_details_to_struct_initializer_id_map.h",
 		"generated/struct_struct_initializer_list_item_details_list.h",
 		"generated/struct_struct_initializer_list_item_details_to_struct_initializer_list_item_id_map.h",
-		"generated/struct_struct_expression_list_item_details_list.h",
-		"generated/struct_struct_expression_list_item_details_to_struct_expression_list_item_id_map.h",
 		"generated/struct_struct_declarator_part_list_item_details_list.h",
 		"generated/struct_struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map.h",
 		"generated/struct_struct_pointer_part_details_list.h",
@@ -1744,8 +1667,8 @@ void register_asm_state_includes(struct build_state * state){
 		"generated/struct_struct_array_part_details_to_struct_array_part_id_map.h",
 		"generated/struct_struct_general_type_details_list.h",
 		"generated/struct_struct_general_type_details_to_struct_general_type_id_map.h",
-		"generated/struct_struct_typedef_entry_details_list.h",
-		"generated/struct_struct_typedef_entry_details_to_struct_typedef_entry_id_map.h",
+		"generated/struct_struct_identifier_namespace_entry_details_list.h",
+		"generated/struct_struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map.h",
 		"generated/struct_struct_general_type_list_item_details_list.h",
 		"generated/struct_struct_general_type_list_item_details_to_struct_general_type_list_item_id_map.h",
 		"generated/struct_struct_postfix_expression_part_list_item_details_list.h",
@@ -1826,8 +1749,8 @@ void register_asm_state_includes(struct build_state * state){
 		"generated/struct_struct_identifier_details_to_struct_identifier_id_map.h",
 		"generated/struct_struct_scope_guid_details_list.h",
 		"generated/struct_struct_scope_guid_details_to_struct_scope_guid_id_map.h",
-		"generated/struct_struct_anonymous_instance_details_list.h",
-		"generated/struct_struct_anonymous_instance_details_to_struct_anonymous_instance_id_map.h",
+		"generated/struct_struct_anonymous_entry_details_list.h",
+		"generated/struct_struct_anonymous_entry_details_to_struct_anonymous_entry_id_map.h",
 		"stop"
 
 	);

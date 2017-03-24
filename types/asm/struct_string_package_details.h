@@ -20,6 +20,7 @@
 
 struct string_package_details{
 	enum asm_string_package_kind type;
-	unsigned int length;
-	unsigned char * data;
+	unsigned int byte_length;
+	unsigned int word_length;
+	unsigned int * data;
 };

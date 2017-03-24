@@ -20,7 +20,7 @@
 
 struct if_statement_details{
 	enum asm_if_statement_kind type;
-	struct any_statement_id s1;
+	struct scoped_statement_id s1;
 	struct expression_id e1;
-	struct any_statement_id s2;
+	struct scoped_statement_id s2;
 };

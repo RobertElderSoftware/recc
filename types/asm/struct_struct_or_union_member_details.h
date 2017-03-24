@@ -21,6 +21,5 @@
 struct struct_or_union_member_details{
 	enum asm_struct_or_union_member_kind type;
 	struct general_type_id general_type_id;
-	struct layout_flag_list_item_id layout_flag_list_item_id;
 	struct identifier_id identifier_id;
 };

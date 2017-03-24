@@ -22,5 +22,5 @@ struct anonymous_tag_definition_details{
 	enum asm_anonymous_tag_definition_kind type;
 	struct tag_definition_id tag_definition_id;
 	struct scope_guid_id scope_guid_id;
-	struct anonymous_instance_id anonymous_instance_id;
+	struct anonymous_entry_id anonymous_entry_id;
 };

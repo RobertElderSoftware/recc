@@ -48,6 +48,7 @@ void register_data_structures_objects(struct build_state * state){
 	make_list(state, b, make_beb_list(1, "char"), make_beb_list(0));
 	make_list(state, b, make_beb_list(1, "char *"), make_beb_list(0));
 	make_list(state, b, make_beb_list(1, "unsigned char"), make_beb_list(0));
+	make_list(state, b, make_beb_list(1, "struct scope_guid_id"), make_beb_list(1, "generated/struct_scope_guid_id.h"));
 	make_list(state, b, make_beb_list(1, "struct parser_error"), make_beb_list(1, "generated/struct_parser_error.h"));
 	make_list(state, b, make_beb_list(1, "struct c_lexer_token"), make_beb_list(1, "generated/struct_c_lexer_token.h"));
 	make_list(state, b, make_beb_list(1, "struct c_lexer_token *"), make_beb_list(1, "generated/struct_c_lexer_token.h"));
@@ -252,6 +253,7 @@ void register_data_structures_objects(struct build_state * state){
 		"generated/struct_asm_state.h",
 		"generated/struct_struct_parser_operation_list.h",
 		"generated/struct_unsigned_char_ptr_to_struct_constant_description_ptr_map.h",
+		"generated/struct_struct_scope_guid_id_list.h",
 		"generated/struct_struct_parser_error_list.h",
 		"stop"
 	);
@@ -432,6 +434,7 @@ void register_data_structures_objects(struct build_state * state){
 		"generated/enum_scope_type.h",
 		"generated/struct_current_function_change.h",
 		"generated/unsigned_int_list.h",
+		"generated/struct_scope_guid_id_list.h",
 		"generated/struct_parser_error_list.h",
 		"generated/char_ptr_list.h",
 		"generated/struct_parser_operation_list.h",

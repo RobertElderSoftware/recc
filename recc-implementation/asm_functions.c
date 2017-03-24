@@ -24,27 +24,24 @@ struct simple_storage_class_specifier_id make_simple_storage_class_specifier(str
 struct specifier_or_qualifier_id make_specifier_or_qualifier(struct asm_state *,enum asm_specifier_or_qualifier_kind,unsigned int);
 struct specifier_or_qualifier_list_item_id make_specifier_or_qualifier_list_item(struct asm_state *,enum asm_specifier_or_qualifier_list_item_kind,struct specifier_or_qualifier_list_item_id,struct specifier_or_qualifier_id);
 struct parameter_list_id make_parameter_list(struct asm_state *,enum asm_parameter_list_kind,struct general_type_list_item_id);
-struct initializer_id make_initializer(struct asm_state *,enum asm_initializer_kind,unsigned int);
 struct declarator_part_id make_declarator_part(struct asm_state *,enum asm_declarator_part_kind,unsigned int);
 struct any_statement_list_item_id make_any_statement_list_item(struct asm_state *,enum asm_any_statement_list_item_kind,struct any_statement_list_item_id,struct any_statement_id);
-struct anonymous_tag_definition_id make_anonymous_tag_definition(struct asm_state *,enum asm_anonymous_tag_definition_kind,struct tag_definition_id,struct scope_guid_id,struct anonymous_instance_id);
-struct named_tag_predeclaration_id make_named_tag_predeclaration(struct asm_state *,enum asm_named_tag_predeclaration_kind,struct scope_guid_id,struct identifier_id);
+struct anonymous_tag_definition_id make_anonymous_tag_definition(struct asm_state *,enum asm_anonymous_tag_definition_kind,struct tag_definition_id,struct scope_guid_id,struct anonymous_entry_id);
+struct named_tag_predeclaration_id make_named_tag_predeclaration(struct asm_state *,enum asm_named_tag_predeclaration_kind,struct scope_guid_id,struct identifier_id,enum asm_unscoped_tag_specifier_kind);
 struct named_tag_definition_id make_named_tag_definition(struct asm_state *,enum asm_named_tag_definition_kind,struct tag_definition_id,struct scope_guid_id,struct identifier_id);
 struct tag_definition_id make_tag_definition(struct asm_state *,enum asm_tag_definition_kind,unsigned int);
 struct struct_or_union_member_list_item_id make_struct_or_union_member_list_item(struct asm_state *,enum asm_struct_or_union_member_list_item_kind,struct struct_or_union_member_list_item_id,struct struct_or_union_member_id);
 struct enum_member_list_item_id make_enum_member_list_item(struct asm_state *,enum asm_enum_member_list_item_kind,struct enum_member_list_item_id,struct enum_member_id);
 struct enum_member_id make_enum_member(struct asm_state *,enum asm_enum_member_kind,struct identifier_id,struct expression_id);
-struct struct_or_union_member_id make_struct_or_union_member(struct asm_state *,enum asm_struct_or_union_member_kind,struct general_type_id,struct layout_flag_list_item_id,struct identifier_id);
-struct layout_flag_list_item_id make_layout_flag_list_item(struct asm_state *,enum asm_layout_flag_list_item_kind,struct layout_flag_list_item_id,struct layout_flag_id);
-struct layout_flag_id make_layout_flag(struct asm_state *,enum asm_layout_flag_kind);
+struct struct_or_union_member_id make_struct_or_union_member(struct asm_state *,enum asm_struct_or_union_member_kind,struct general_type_id,struct identifier_id);
+struct initializer_id make_initializer(struct asm_state *,enum asm_initializer_kind,unsigned int);
 struct initializer_list_item_id make_initializer_list_item(struct asm_state *,enum asm_initializer_list_item_kind,struct initializer_list_item_id,struct initializer_id);
-struct expression_list_item_id make_expression_list_item(struct asm_state *,enum asm_expression_list_item_kind,struct expression_list_item_id,struct expression_id);
 struct declarator_part_list_item_id make_declarator_part_list_item(struct asm_state *,enum asm_declarator_part_list_item_kind,struct declarator_part_list_item_id,struct declarator_part_id);
 struct pointer_part_id make_pointer_part(struct asm_state *,enum asm_pointer_part_kind,struct specifier_or_qualifier_list_item_id);
 struct function_part_id make_function_part(struct asm_state *,enum asm_function_part_kind,struct parameter_list_id);
 struct array_part_id make_array_part(struct asm_state *,enum asm_array_part_kind,struct expression_id);
 struct general_type_id make_general_type(struct asm_state *,enum asm_general_type_kind,struct specifier_or_qualifier_list_item_id,struct declarator_part_list_item_id,struct bitfield_id);
-struct typedef_entry_id make_typedef_entry(struct asm_state *,enum asm_typedef_entry_kind,struct identifier_id,struct scope_guid_id,struct general_type_id);
+struct identifier_namespace_entry_id make_identifier_namespace_entry(struct asm_state *,enum asm_identifier_namespace_entry_kind,struct identifier_id,struct scope_guid_id,struct general_type_id);
 struct general_type_list_item_id make_general_type_list_item(struct asm_state *,enum asm_general_type_list_item_kind,struct general_type_list_item_id,struct general_type_id);
 struct postfix_expression_part_list_item_id make_postfix_expression_part_list_item(struct asm_state *,enum asm_postfix_expression_part_list_item_kind,struct postfix_expression_part_list_item_id,struct postfix_expression_part_id);
 struct postfix_expression_part_id make_postfix_expression_part(struct asm_state *,enum asm_postfix_expression_part_kind,unsigned int);
@@ -56,18 +53,18 @@ struct unscoped_struct_specifier_id make_unscoped_struct_specifier(struct asm_st
 struct unscoped_enum_specifier_id make_unscoped_enum_specifier(struct asm_state *,enum asm_unscoped_enum_specifier_kind,unsigned int);
 struct bitfield_id make_bitfield(struct asm_state *,enum asm_bitfield_kind,struct expression_id);
 struct jump_statement_id make_jump_statement(struct asm_state *,enum asm_jump_statement_kind,unsigned int);
-struct switch_statement_id make_switch_statement(struct asm_state *,enum asm_switch_statement_kind,struct expression_id,struct any_statement_id);
-struct if_statement_id make_if_statement(struct asm_state *,enum asm_if_statement_kind,struct any_statement_id,struct expression_id,struct any_statement_id);
-struct while_statement_id make_while_statement(struct asm_state *,enum asm_while_statement_kind,struct expression_id,struct any_statement_id);
-struct for_statement_id make_for_statement(struct asm_state *,enum asm_for_statement_kind,struct expression_list_item_id,struct expression_list_item_id,struct expression_list_item_id);
+struct switch_statement_id make_switch_statement(struct asm_state *,enum asm_switch_statement_kind,struct expression_id,struct scoped_statement_id);
+struct if_statement_id make_if_statement(struct asm_state *,enum asm_if_statement_kind,struct scoped_statement_id,struct expression_id,struct scoped_statement_id);
+struct while_statement_id make_while_statement(struct asm_state *,enum asm_while_statement_kind,struct expression_id,struct scoped_statement_id);
+struct for_statement_id make_for_statement(struct asm_state *,enum asm_for_statement_kind,struct any_statement_id,struct any_statement_id,struct any_statement_id,struct scoped_statement_id);
 struct code_statement_id make_code_statement(struct asm_state *,enum asm_code_statement_kind,unsigned int);
-struct labeled_statement_id make_labeled_statement(struct asm_state *,enum asm_labeled_statement_kind,struct any_statement_id,struct expression_id);
+struct labeled_statement_id make_labeled_statement(struct asm_state *,enum asm_labeled_statement_kind,struct scoped_statement_id,unsigned int);
 struct postfix_expression_id make_postfix_expression(struct asm_state *,enum asm_postfix_expression_kind,struct primary_expression_id,struct postfix_expression_part_list_item_id);
 struct primary_expression_id make_primary_expression(struct asm_state *,enum asm_primary_expression_kind,unsigned int);
 struct any_statement_id make_any_statement(struct asm_state *,enum asm_any_statement_kind,unsigned int);
 struct scoped_statement_id make_scoped_statement(struct asm_state *,enum asm_scoped_statement_kind,struct any_statement_list_item_id,struct scope_guid_id);
 struct declaration_statement_id make_declaration_statement(struct asm_state *,enum asm_declaration_statement_kind,unsigned int);
-struct function_definition_id make_function_definition(struct asm_state *,enum asm_function_definition_kind,struct general_type_id,struct any_statement_list_item_id,struct any_statement_list_item_id,struct identifier_id);
+struct function_definition_id make_function_definition(struct asm_state *,enum asm_function_definition_kind,struct general_type_id,struct any_statement_list_item_id,struct any_statement_list_item_id,struct scoped_statement_id,struct identifier_id);
 struct simple_declaration_id make_simple_declaration(struct asm_state *,enum asm_simple_declaration_kind,struct general_type_id,struct identifier_id,struct initializer_id);
 struct expression_id make_expression(struct asm_state *,enum asm_expression_kind,unsigned int);
 struct cast_expression_id make_cast_expression(struct asm_state *,enum asm_cast_expression_kind,unsigned int,struct general_type_id);
@@ -82,10 +79,10 @@ struct hword_package_id make_hword_package(struct asm_state *,enum asm_hword_pac
 struct word_package_id make_word_package(struct asm_state *,enum asm_word_package_kind,unsigned int);
 struct qword_package_id make_qword_package(struct asm_state *,enum asm_qword_package_kind,unsigned int,unsigned int,unsigned int,unsigned int);
 struct dword_package_id make_dword_package(struct asm_state *,enum asm_dword_package_kind,unsigned int,unsigned int);
-struct string_package_id make_string_package(struct asm_state *,enum asm_string_package_kind,unsigned int,unsigned char *);
+struct string_package_id make_string_package(struct asm_state *,enum asm_string_package_kind,unsigned int,unsigned int,unsigned int *);
 struct identifier_id make_identifier(struct asm_state *,enum asm_identifier_kind,struct c_lexer_token *);
-struct scope_guid_id make_scope_guid(struct asm_state *,enum asm_scope_guid_kind,unsigned int);
-struct anonymous_instance_id make_anonymous_instance(struct asm_state *,enum asm_anonymous_instance_kind);
+struct scope_guid_id make_scope_guid(struct asm_state *,enum asm_scope_guid_kind,struct scope_guid_id,unsigned int);
+struct anonymous_entry_id make_anonymous_entry(struct asm_state *,enum asm_anonymous_entry_kind,unsigned int);
 unsigned int undo_basic_asm_operation(struct asm_state * state, enum asm_operation_type o){
 	switch(o){
 		case ASM_OP_ADD_AGGREGATE_TYPE_SPECIFIER:{
@@ -115,10 +112,6 @@ unsigned int undo_basic_asm_operation(struct asm_state * state, enum asm_operati
 		}case ASM_OP_ADD_PARAMETER_LIST:{
 			struct parameter_list_details d = struct_parameter_list_details_list_pop_end(&state->parameter_lists);
 			struct_parameter_list_details_to_struct_parameter_list_id_map_remove(&state->parameter_lists_map, d);
-			return 0;
-		}case ASM_OP_ADD_INITIALIZER:{
-			struct initializer_details d = struct_initializer_details_list_pop_end(&state->initializers);
-			struct_initializer_details_to_struct_initializer_id_map_remove(&state->initializers_map, d);
 			return 0;
 		}case ASM_OP_ADD_DECLARATOR_PART:{
 			struct declarator_part_details d = struct_declarator_part_details_list_pop_end(&state->declarator_parts);
@@ -160,21 +153,13 @@ unsigned int undo_basic_asm_operation(struct asm_state * state, enum asm_operati
 			struct struct_or_union_member_details d = struct_struct_or_union_member_details_list_pop_end(&state->struct_or_union_members);
 			struct_struct_or_union_member_details_to_struct_struct_or_union_member_id_map_remove(&state->struct_or_union_members_map, d);
 			return 0;
-		}case ASM_OP_ADD_LAYOUT_FLAG_LIST_ITEM:{
-			struct layout_flag_list_item_details d = struct_layout_flag_list_item_details_list_pop_end(&state->layout_flag_list_items);
-			struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_map_remove(&state->layout_flag_list_items_map, d);
-			return 0;
-		}case ASM_OP_ADD_LAYOUT_FLAG:{
-			struct layout_flag_details d = struct_layout_flag_details_list_pop_end(&state->layout_flags);
-			struct_layout_flag_details_to_struct_layout_flag_id_map_remove(&state->layout_flags_map, d);
+		}case ASM_OP_ADD_INITIALIZER:{
+			struct initializer_details d = struct_initializer_details_list_pop_end(&state->initializers);
+			struct_initializer_details_to_struct_initializer_id_map_remove(&state->initializers_map, d);
 			return 0;
 		}case ASM_OP_ADD_INITIALIZER_LIST_ITEM:{
 			struct initializer_list_item_details d = struct_initializer_list_item_details_list_pop_end(&state->initializer_list_items);
 			struct_initializer_list_item_details_to_struct_initializer_list_item_id_map_remove(&state->initializer_list_items_map, d);
-			return 0;
-		}case ASM_OP_ADD_EXPRESSION_LIST_ITEM:{
-			struct expression_list_item_details d = struct_expression_list_item_details_list_pop_end(&state->expression_list_items);
-			struct_expression_list_item_details_to_struct_expression_list_item_id_map_remove(&state->expression_list_items_map, d);
 			return 0;
 		}case ASM_OP_ADD_DECLARATOR_PART_LIST_ITEM:{
 			struct declarator_part_list_item_details d = struct_declarator_part_list_item_details_list_pop_end(&state->declarator_part_list_items);
@@ -196,9 +181,9 @@ unsigned int undo_basic_asm_operation(struct asm_state * state, enum asm_operati
 			struct general_type_details d = struct_general_type_details_list_pop_end(&state->general_types);
 			struct_general_type_details_to_struct_general_type_id_map_remove(&state->general_types_map, d);
 			return 0;
-		}case ASM_OP_ADD_TYPEDEF_ENTRY:{
-			struct typedef_entry_details d = struct_typedef_entry_details_list_pop_end(&state->typedef_entrys);
-			struct_typedef_entry_details_to_struct_typedef_entry_id_map_remove(&state->typedef_entrys_map, d);
+		}case ASM_OP_ADD_IDENTIFIER_NAMESPACE_ENTRY:{
+			struct identifier_namespace_entry_details d = struct_identifier_namespace_entry_details_list_pop_end(&state->identifier_namespace_entrys);
+			struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map_remove(&state->identifier_namespace_entrys_map, d);
 			return 0;
 		}case ASM_OP_ADD_GENERAL_TYPE_LIST_ITEM:{
 			struct general_type_list_item_details d = struct_general_type_list_item_details_list_pop_end(&state->general_type_list_items);
@@ -349,8 +334,6 @@ unsigned int undo_basic_asm_operation(struct asm_state * state, enum asm_operati
 			struct_dword_package_details_to_struct_dword_package_id_map_remove(&state->dword_packages_map, d);
 			return 0;
 		}case ASM_OP_ADD_STRING_PACKAGE:{
-			struct string_package_details d = struct_string_package_details_list_pop_end(&state->string_packages);
-			struct_string_package_details_to_struct_string_package_id_map_remove(&state->string_packages_map, d);
 			return 0;
 		}case ASM_OP_ADD_IDENTIFIER:{
 			struct identifier_details d = struct_identifier_details_list_pop_end(&state->identifiers);
@@ -359,11 +342,12 @@ unsigned int undo_basic_asm_operation(struct asm_state * state, enum asm_operati
 		}case ASM_OP_ADD_SCOPE_GUID:{
 			struct scope_guid_details d = struct_scope_guid_details_list_pop_end(&state->scope_guids);
 			struct_scope_guid_details_to_struct_scope_guid_id_map_remove(&state->scope_guids_map, d);
-			state->last_scope_guid--;
+			state->next_scope_guid--;
 			return 0;
-		}case ASM_OP_ADD_ANONYMOUS_INSTANCE:{
-			struct anonymous_instance_details d = struct_anonymous_instance_details_list_pop_end(&state->anonymous_instances);
-			struct_anonymous_instance_details_to_struct_anonymous_instance_id_map_remove(&state->anonymous_instances_map, d);
+		}case ASM_OP_ADD_ANONYMOUS_ENTRY:{
+			struct anonymous_entry_details d = struct_anonymous_entry_details_list_pop_end(&state->anonymous_entrys);
+			struct_anonymous_entry_details_to_struct_anonymous_entry_id_map_remove(&state->anonymous_entrys_map, d);
+			state->next_anonymous_entry--;
 			return 0;
 		}default:{
 			return 1;
@@ -374,6 +358,8 @@ unsigned int undo_basic_asm_operation(struct asm_state * state, enum asm_operati
 
 void create_asm_state(struct asm_state * state, struct memory_pool_collection * m){
 	(void)m;
+	state->next_scope_guid = 0;
+	state->next_anonymous_entry = 0;
 	enum_asm_operation_type_list_create(&state->reversible_operations);
 	struct_aggregate_type_specifier_details_list_create(&state->aggregate_type_specifiers);
 	struct_aggregate_type_specifier_details_to_struct_aggregate_type_specifier_id_map_create(&state->aggregate_type_specifiers_map, struct_struct_aggregate_type_specifier_details_to_struct_aggregate_type_specifier_id_key_value_pair_compare);
@@ -389,8 +375,6 @@ void create_asm_state(struct asm_state * state, struct memory_pool_collection * 
 	struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_create(&state->specifier_or_qualifier_list_items_map, struct_struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_key_value_pair_compare);
 	struct_parameter_list_details_list_create(&state->parameter_lists);
 	struct_parameter_list_details_to_struct_parameter_list_id_map_create(&state->parameter_lists_map, struct_struct_parameter_list_details_to_struct_parameter_list_id_key_value_pair_compare);
-	struct_initializer_details_list_create(&state->initializers);
-	struct_initializer_details_to_struct_initializer_id_map_create(&state->initializers_map, struct_struct_initializer_details_to_struct_initializer_id_key_value_pair_compare);
 	struct_declarator_part_details_list_create(&state->declarator_parts);
 	struct_declarator_part_details_to_struct_declarator_part_id_map_create(&state->declarator_parts_map, struct_struct_declarator_part_details_to_struct_declarator_part_id_key_value_pair_compare);
 	struct_any_statement_list_item_details_list_create(&state->any_statement_list_items);
@@ -411,14 +395,10 @@ void create_asm_state(struct asm_state * state, struct memory_pool_collection * 
 	struct_enum_member_details_to_struct_enum_member_id_map_create(&state->enum_members_map, struct_struct_enum_member_details_to_struct_enum_member_id_key_value_pair_compare);
 	struct_struct_or_union_member_details_list_create(&state->struct_or_union_members);
 	struct_struct_or_union_member_details_to_struct_struct_or_union_member_id_map_create(&state->struct_or_union_members_map, struct_struct_struct_or_union_member_details_to_struct_struct_or_union_member_id_key_value_pair_compare);
-	struct_layout_flag_list_item_details_list_create(&state->layout_flag_list_items);
-	struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_map_create(&state->layout_flag_list_items_map, struct_struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_key_value_pair_compare);
-	struct_layout_flag_details_list_create(&state->layout_flags);
-	struct_layout_flag_details_to_struct_layout_flag_id_map_create(&state->layout_flags_map, struct_struct_layout_flag_details_to_struct_layout_flag_id_key_value_pair_compare);
+	struct_initializer_details_list_create(&state->initializers);
+	struct_initializer_details_to_struct_initializer_id_map_create(&state->initializers_map, struct_struct_initializer_details_to_struct_initializer_id_key_value_pair_compare);
 	struct_initializer_list_item_details_list_create(&state->initializer_list_items);
 	struct_initializer_list_item_details_to_struct_initializer_list_item_id_map_create(&state->initializer_list_items_map, struct_struct_initializer_list_item_details_to_struct_initializer_list_item_id_key_value_pair_compare);
-	struct_expression_list_item_details_list_create(&state->expression_list_items);
-	struct_expression_list_item_details_to_struct_expression_list_item_id_map_create(&state->expression_list_items_map, struct_struct_expression_list_item_details_to_struct_expression_list_item_id_key_value_pair_compare);
 	struct_declarator_part_list_item_details_list_create(&state->declarator_part_list_items);
 	struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_create(&state->declarator_part_list_items_map, struct_struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_key_value_pair_compare);
 	struct_pointer_part_details_list_create(&state->pointer_parts);
@@ -429,8 +409,8 @@ void create_asm_state(struct asm_state * state, struct memory_pool_collection * 
 	struct_array_part_details_to_struct_array_part_id_map_create(&state->array_parts_map, struct_struct_array_part_details_to_struct_array_part_id_key_value_pair_compare);
 	struct_general_type_details_list_create(&state->general_types);
 	struct_general_type_details_to_struct_general_type_id_map_create(&state->general_types_map, struct_struct_general_type_details_to_struct_general_type_id_key_value_pair_compare);
-	struct_typedef_entry_details_list_create(&state->typedef_entrys);
-	struct_typedef_entry_details_to_struct_typedef_entry_id_map_create(&state->typedef_entrys_map, struct_struct_typedef_entry_details_to_struct_typedef_entry_id_key_value_pair_compare);
+	struct_identifier_namespace_entry_details_list_create(&state->identifier_namespace_entrys);
+	struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map_create(&state->identifier_namespace_entrys_map, struct_struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_key_value_pair_compare);
 	struct_general_type_list_item_details_list_create(&state->general_type_list_items);
 	struct_general_type_list_item_details_to_struct_general_type_list_item_id_map_create(&state->general_type_list_items_map, struct_struct_general_type_list_item_details_to_struct_general_type_list_item_id_key_value_pair_compare);
 	struct_postfix_expression_part_list_item_details_list_create(&state->postfix_expression_part_list_items);
@@ -511,12 +491,13 @@ void create_asm_state(struct asm_state * state, struct memory_pool_collection * 
 	struct_identifier_details_to_struct_identifier_id_map_create(&state->identifiers_map, struct_struct_identifier_details_to_struct_identifier_id_key_value_pair_compare);
 	struct_scope_guid_details_list_create(&state->scope_guids);
 	struct_scope_guid_details_to_struct_scope_guid_id_map_create(&state->scope_guids_map, struct_struct_scope_guid_details_to_struct_scope_guid_id_key_value_pair_compare);
-	struct_anonymous_instance_details_list_create(&state->anonymous_instances);
-	struct_anonymous_instance_details_to_struct_anonymous_instance_id_map_create(&state->anonymous_instances_map, struct_struct_anonymous_instance_details_to_struct_anonymous_instance_id_key_value_pair_compare);
+	struct_anonymous_entry_details_list_create(&state->anonymous_entrys);
+	struct_anonymous_entry_details_to_struct_anonymous_entry_id_map_create(&state->anonymous_entrys_map, struct_struct_anonymous_entry_details_to_struct_anonymous_entry_id_key_value_pair_compare);
 }
 
 void destroy_asm_state(struct asm_state * state){
 	enum_asm_operation_type_list_destroy(&state->reversible_operations);
+	free_string_package_pointers(state);
 	struct_aggregate_type_specifier_details_list_destroy(&state->aggregate_type_specifiers);
 	struct_aggregate_type_specifier_details_to_struct_aggregate_type_specifier_id_map_destroy(&state->aggregate_type_specifiers_map);
 	struct_simple_type_specifier_details_list_destroy(&state->simple_type_specifiers);
@@ -531,8 +512,6 @@ void destroy_asm_state(struct asm_state * state){
 	struct_specifier_or_qualifier_list_item_details_to_struct_specifier_or_qualifier_list_item_id_map_destroy(&state->specifier_or_qualifier_list_items_map);
 	struct_parameter_list_details_list_destroy(&state->parameter_lists);
 	struct_parameter_list_details_to_struct_parameter_list_id_map_destroy(&state->parameter_lists_map);
-	struct_initializer_details_list_destroy(&state->initializers);
-	struct_initializer_details_to_struct_initializer_id_map_destroy(&state->initializers_map);
 	struct_declarator_part_details_list_destroy(&state->declarator_parts);
 	struct_declarator_part_details_to_struct_declarator_part_id_map_destroy(&state->declarator_parts_map);
 	struct_any_statement_list_item_details_list_destroy(&state->any_statement_list_items);
@@ -553,14 +532,10 @@ void destroy_asm_state(struct asm_state * state){
 	struct_enum_member_details_to_struct_enum_member_id_map_destroy(&state->enum_members_map);
 	struct_struct_or_union_member_details_list_destroy(&state->struct_or_union_members);
 	struct_struct_or_union_member_details_to_struct_struct_or_union_member_id_map_destroy(&state->struct_or_union_members_map);
-	struct_layout_flag_list_item_details_list_destroy(&state->layout_flag_list_items);
-	struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_map_destroy(&state->layout_flag_list_items_map);
-	struct_layout_flag_details_list_destroy(&state->layout_flags);
-	struct_layout_flag_details_to_struct_layout_flag_id_map_destroy(&state->layout_flags_map);
+	struct_initializer_details_list_destroy(&state->initializers);
+	struct_initializer_details_to_struct_initializer_id_map_destroy(&state->initializers_map);
 	struct_initializer_list_item_details_list_destroy(&state->initializer_list_items);
 	struct_initializer_list_item_details_to_struct_initializer_list_item_id_map_destroy(&state->initializer_list_items_map);
-	struct_expression_list_item_details_list_destroy(&state->expression_list_items);
-	struct_expression_list_item_details_to_struct_expression_list_item_id_map_destroy(&state->expression_list_items_map);
 	struct_declarator_part_list_item_details_list_destroy(&state->declarator_part_list_items);
 	struct_declarator_part_list_item_details_to_struct_declarator_part_list_item_id_map_destroy(&state->declarator_part_list_items_map);
 	struct_pointer_part_details_list_destroy(&state->pointer_parts);
@@ -571,8 +546,8 @@ void destroy_asm_state(struct asm_state * state){
 	struct_array_part_details_to_struct_array_part_id_map_destroy(&state->array_parts_map);
 	struct_general_type_details_list_destroy(&state->general_types);
 	struct_general_type_details_to_struct_general_type_id_map_destroy(&state->general_types_map);
-	struct_typedef_entry_details_list_destroy(&state->typedef_entrys);
-	struct_typedef_entry_details_to_struct_typedef_entry_id_map_destroy(&state->typedef_entrys_map);
+	struct_identifier_namespace_entry_details_list_destroy(&state->identifier_namespace_entrys);
+	struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map_destroy(&state->identifier_namespace_entrys_map);
 	struct_general_type_list_item_details_list_destroy(&state->general_type_list_items);
 	struct_general_type_list_item_details_to_struct_general_type_list_item_id_map_destroy(&state->general_type_list_items_map);
 	struct_postfix_expression_part_list_item_details_list_destroy(&state->postfix_expression_part_list_items);
@@ -653,8 +628,8 @@ void destroy_asm_state(struct asm_state * state){
 	struct_identifier_details_to_struct_identifier_id_map_destroy(&state->identifiers_map);
 	struct_scope_guid_details_list_destroy(&state->scope_guids);
 	struct_scope_guid_details_to_struct_scope_guid_id_map_destroy(&state->scope_guids_map);
-	struct_anonymous_instance_details_list_destroy(&state->anonymous_instances);
-	struct_anonymous_instance_details_to_struct_anonymous_instance_id_map_destroy(&state->anonymous_instances_map);
+	struct_anonymous_entry_details_list_destroy(&state->anonymous_entrys);
+	struct_anonymous_entry_details_to_struct_anonymous_entry_id_map_destroy(&state->anonymous_entrys_map);
 }
 
 struct aggregate_type_specifier_id make_aggregate_type_specifier_simple_type_specifier(struct asm_state * state, struct simple_type_specifier_id id){
@@ -849,28 +824,6 @@ struct parameter_list_id make_parameter_list(struct asm_state * state, enum asm_
 	}
 }
 
-struct initializer_id make_initializer_initializer_list(struct asm_state * state, struct initializer_list_item_id id){
-	return make_initializer(state, ASM_INITIALIZER_INITIALIZER_LIST, id.id);
-}
-struct initializer_id make_initializer_expression(struct asm_state * state, struct expression_id id){
-	return make_initializer(state, ASM_INITIALIZER_EXPRESSION, id.id);
-}
-struct initializer_id make_initializer(struct asm_state * state, enum asm_initializer_kind kind, unsigned int id){
-	struct initializer_details d;
-	d.type = kind;
-	d.id = id;
-	if(struct_initializer_details_to_struct_initializer_id_map_exists(&state->initializers_map, d)){
-		return struct_initializer_details_to_struct_initializer_id_map_get(&state->initializers_map, d);
-	}else{
-		struct initializer_id new_id;
-		new_id.id = struct_initializer_details_list_size(&state->initializers);
-		struct_initializer_details_to_struct_initializer_id_map_put(&state->initializers_map, d, new_id);
-		struct_initializer_details_list_add_end(&state->initializers, d);
-		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_INITIALIZER);
-		return new_id;
-	}
-}
-
 struct declarator_part_id make_declarator_part_function(struct asm_state * state, struct function_part_id id){
 	return make_declarator_part(state, ASM_DECLARATOR_PART_FUNCTION, id.id);
 }
@@ -923,15 +876,15 @@ struct any_statement_list_item_id make_any_statement_list_item(struct asm_state 
 	}
 }
 
-struct anonymous_tag_definition_id make_anonymous_tag_definition_anonymous(struct asm_state * state, struct tag_definition_id tag_definition_id, struct scope_guid_id scope_guid_id, struct anonymous_instance_id anonymous_instance_id){
-	return make_anonymous_tag_definition(state, ASM_ANONYMOUS_TAG_DEFINITION_ANONYMOUS, tag_definition_id, scope_guid_id, anonymous_instance_id);
+struct anonymous_tag_definition_id make_anonymous_tag_definition_anonymous(struct asm_state * state, struct tag_definition_id tag_definition_id, struct scope_guid_id scope_guid_id, struct anonymous_entry_id anonymous_entry_id){
+	return make_anonymous_tag_definition(state, ASM_ANONYMOUS_TAG_DEFINITION_ANONYMOUS, tag_definition_id, scope_guid_id, anonymous_entry_id);
 }
-struct anonymous_tag_definition_id make_anonymous_tag_definition(struct asm_state * state, enum asm_anonymous_tag_definition_kind kind, struct tag_definition_id tag_definition_id, struct scope_guid_id scope_guid_id, struct anonymous_instance_id anonymous_instance_id){
+struct anonymous_tag_definition_id make_anonymous_tag_definition(struct asm_state * state, enum asm_anonymous_tag_definition_kind kind, struct tag_definition_id tag_definition_id, struct scope_guid_id scope_guid_id, struct anonymous_entry_id anonymous_entry_id){
 	struct anonymous_tag_definition_details d;
 	d.type = kind;
 	d.tag_definition_id = tag_definition_id;
 	d.scope_guid_id = scope_guid_id;
-	d.anonymous_instance_id = anonymous_instance_id;
+	d.anonymous_entry_id = anonymous_entry_id;
 	if(struct_anonymous_tag_definition_details_to_struct_anonymous_tag_definition_id_map_exists(&state->anonymous_tag_definitions_map, d)){
 		return struct_anonymous_tag_definition_details_to_struct_anonymous_tag_definition_id_map_get(&state->anonymous_tag_definitions_map, d);
 	}else{
@@ -944,14 +897,15 @@ struct anonymous_tag_definition_id make_anonymous_tag_definition(struct asm_stat
 	}
 }
 
-struct named_tag_predeclaration_id make_named_tag_predeclaration_named(struct asm_state * state, struct scope_guid_id scope_guid_id, struct identifier_id identifier_id){
-	return make_named_tag_predeclaration(state, ASM_NAMED_TAG_PREDECLARATION_NAMED, scope_guid_id, identifier_id);
+struct named_tag_predeclaration_id make_named_tag_predeclaration_named(struct asm_state * state, struct scope_guid_id scope_guid_id, struct identifier_id identifier_id, enum asm_unscoped_tag_specifier_kind tag_type){
+	return make_named_tag_predeclaration(state, ASM_NAMED_TAG_PREDECLARATION_NAMED, scope_guid_id, identifier_id, tag_type);
 }
-struct named_tag_predeclaration_id make_named_tag_predeclaration(struct asm_state * state, enum asm_named_tag_predeclaration_kind kind, struct scope_guid_id scope_guid_id, struct identifier_id identifier_id){
+struct named_tag_predeclaration_id make_named_tag_predeclaration(struct asm_state * state, enum asm_named_tag_predeclaration_kind kind, struct scope_guid_id scope_guid_id, struct identifier_id identifier_id, enum asm_unscoped_tag_specifier_kind tag_type){
 	struct named_tag_predeclaration_details d;
 	d.type = kind;
 	d.scope_guid_id = scope_guid_id;
 	d.identifier_id = identifier_id;
+	d.tag_type = tag_type;
 	if(struct_named_tag_predeclaration_details_to_struct_named_tag_predeclaration_id_map_exists(&state->named_tag_predeclarations_map, d)){
 		return struct_named_tag_predeclaration_details_to_struct_named_tag_predeclaration_id_map_get(&state->named_tag_predeclarations_map, d);
 	}else{
@@ -1064,8 +1018,13 @@ struct enum_member_list_item_id make_enum_member_list_item(struct asm_state * st
 	}
 }
 
-struct enum_member_id make_enum_member_member(struct asm_state * state, struct identifier_id identifier_id, struct expression_id expression_id){
-	return make_enum_member(state, ASM_ENUM_MEMBER_MEMBER, identifier_id, expression_id);
+struct enum_member_id make_enum_member_has_expression(struct asm_state * state, struct identifier_id identifier_id, struct expression_id expression_id){
+	return make_enum_member(state, ASM_ENUM_MEMBER_HAS_EXPRESSION, identifier_id, expression_id);
+}
+struct enum_member_id make_enum_member_no_expression(struct asm_state * state, struct identifier_id identifier_id){
+	struct expression_id expression_id;
+	expression_id.id = 0;
+	return make_enum_member(state, ASM_ENUM_MEMBER_NO_EXPRESSION, identifier_id, expression_id);
 }
 struct enum_member_id make_enum_member(struct asm_state * state, enum asm_enum_member_kind kind, struct identifier_id identifier_id, struct expression_id expression_id){
 	struct enum_member_details d;
@@ -1084,14 +1043,23 @@ struct enum_member_id make_enum_member(struct asm_state * state, enum asm_enum_m
 	}
 }
 
-struct struct_or_union_member_id make_struct_or_union_member_member(struct asm_state * state, struct general_type_id general_type_id, struct layout_flag_list_item_id layout_flag_list_item_id, struct identifier_id identifier_id){
-	return make_struct_or_union_member(state, ASM_STRUCT_OR_UNION_MEMBER_MEMBER, general_type_id, layout_flag_list_item_id, identifier_id);
+struct struct_or_union_member_id make_struct_or_union_member_member(struct asm_state * state, struct general_type_id general_type_id, struct identifier_id identifier_id){
+	return make_struct_or_union_member(state, ASM_STRUCT_OR_UNION_MEMBER_MEMBER, general_type_id, identifier_id);
 }
-struct struct_or_union_member_id make_struct_or_union_member(struct asm_state * state, enum asm_struct_or_union_member_kind kind, struct general_type_id general_type_id, struct layout_flag_list_item_id layout_flag_list_item_id, struct identifier_id identifier_id){
+struct struct_or_union_member_id make_struct_or_union_member_padding(struct asm_state * state, struct general_type_id general_type_id){
+	struct identifier_id identifier_id;
+	identifier_id.id = 0;
+	return make_struct_or_union_member(state, ASM_STRUCT_OR_UNION_MEMBER_PADDING, general_type_id, identifier_id);
+}
+struct struct_or_union_member_id make_struct_or_union_member_c11_anonymous_member(struct asm_state * state, struct general_type_id general_type_id){
+	struct identifier_id identifier_id;
+	identifier_id.id = 0;
+	return make_struct_or_union_member(state, ASM_STRUCT_OR_UNION_MEMBER_C11_ANONYMOUS_MEMBER, general_type_id, identifier_id);
+}
+struct struct_or_union_member_id make_struct_or_union_member(struct asm_state * state, enum asm_struct_or_union_member_kind kind, struct general_type_id general_type_id, struct identifier_id identifier_id){
 	struct struct_or_union_member_details d;
 	d.type = kind;
 	d.general_type_id = general_type_id;
-	d.layout_flag_list_item_id = layout_flag_list_item_id;
 	d.identifier_id = identifier_id;
 	if(struct_struct_or_union_member_details_to_struct_struct_or_union_member_id_map_exists(&state->struct_or_union_members_map, d)){
 		return struct_struct_or_union_member_details_to_struct_struct_or_union_member_id_map_get(&state->struct_or_union_members_map, d);
@@ -1105,50 +1073,29 @@ struct struct_or_union_member_id make_struct_or_union_member(struct asm_state * 
 	}
 }
 
-struct layout_flag_list_item_id make_layout_flag_list_item_layout_flag(struct asm_state * state, struct layout_flag_list_item_id prev_id, struct layout_flag_id item_id){
-	return make_layout_flag_list_item(state, ASM_LAYOUT_FLAG_LIST_ITEM_LAYOUT_FLAG, prev_id, item_id);
+struct initializer_id make_initializer_initializer_list(struct asm_state * state, struct initializer_list_item_id id){
+	return make_initializer(state, ASM_INITIALIZER_INITIALIZER_LIST, id.id);
 }
-struct layout_flag_list_item_id make_layout_flag_list_item_list_start(struct asm_state * state){
-	struct layout_flag_list_item_id prev_id;
-	struct layout_flag_id item_id;
-	prev_id.id = 0;
-	item_id.id = 0;
-	return make_layout_flag_list_item(state, ASM_LAYOUT_FLAG_LIST_ITEM_LIST_START, prev_id, item_id);
+struct initializer_id make_initializer_no_initializer(struct asm_state * state){
+	unsigned int id;
+	id = 0;
+	return make_initializer(state, ASM_INITIALIZER_NO_INITIALIZER, id);
 }
-struct layout_flag_list_item_id make_layout_flag_list_item(struct asm_state * state, enum asm_layout_flag_list_item_kind kind, struct layout_flag_list_item_id prev_id, struct layout_flag_id item_id){
-	struct layout_flag_list_item_details d;
+struct initializer_id make_initializer_expression(struct asm_state * state, struct expression_id id){
+	return make_initializer(state, ASM_INITIALIZER_EXPRESSION, id.id);
+}
+struct initializer_id make_initializer(struct asm_state * state, enum asm_initializer_kind kind, unsigned int id){
+	struct initializer_details d;
 	d.type = kind;
-	d.prev_id = prev_id;
-	d.item_id = item_id;
-	if(struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_map_exists(&state->layout_flag_list_items_map, d)){
-		return struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_map_get(&state->layout_flag_list_items_map, d);
+	d.id = id;
+	if(struct_initializer_details_to_struct_initializer_id_map_exists(&state->initializers_map, d)){
+		return struct_initializer_details_to_struct_initializer_id_map_get(&state->initializers_map, d);
 	}else{
-		struct layout_flag_list_item_id new_id;
-		new_id.id = struct_layout_flag_list_item_details_list_size(&state->layout_flag_list_items);
-		struct_layout_flag_list_item_details_to_struct_layout_flag_list_item_id_map_put(&state->layout_flag_list_items_map, d, new_id);
-		struct_layout_flag_list_item_details_list_add_end(&state->layout_flag_list_items, d);
-		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_LAYOUT_FLAG_LIST_ITEM);
-		return new_id;
-	}
-}
-
-struct layout_flag_id make_layout_flag_struct(struct asm_state * state){
-	return make_layout_flag(state, ASM_LAYOUT_FLAG_STRUCT);
-}
-struct layout_flag_id make_layout_flag_union(struct asm_state * state){
-	return make_layout_flag(state, ASM_LAYOUT_FLAG_UNION);
-}
-struct layout_flag_id make_layout_flag(struct asm_state * state, enum asm_layout_flag_kind kind){
-	struct layout_flag_details d;
-	d.type = kind;
-	if(struct_layout_flag_details_to_struct_layout_flag_id_map_exists(&state->layout_flags_map, d)){
-		return struct_layout_flag_details_to_struct_layout_flag_id_map_get(&state->layout_flags_map, d);
-	}else{
-		struct layout_flag_id new_id;
-		new_id.id = struct_layout_flag_details_list_size(&state->layout_flags);
-		struct_layout_flag_details_to_struct_layout_flag_id_map_put(&state->layout_flags_map, d, new_id);
-		struct_layout_flag_details_list_add_end(&state->layout_flags, d);
-		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_LAYOUT_FLAG);
+		struct initializer_id new_id;
+		new_id.id = struct_initializer_details_list_size(&state->initializers);
+		struct_initializer_details_to_struct_initializer_id_map_put(&state->initializers_map, d, new_id);
+		struct_initializer_details_list_add_end(&state->initializers, d);
+		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_INITIALIZER);
 		return new_id;
 	}
 }
@@ -1176,33 +1123,6 @@ struct initializer_list_item_id make_initializer_list_item(struct asm_state * st
 		struct_initializer_list_item_details_to_struct_initializer_list_item_id_map_put(&state->initializer_list_items_map, d, new_id);
 		struct_initializer_list_item_details_list_add_end(&state->initializer_list_items, d);
 		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_INITIALIZER_LIST_ITEM);
-		return new_id;
-	}
-}
-
-struct expression_list_item_id make_expression_list_item_expression(struct asm_state * state, struct expression_list_item_id prev_id, struct expression_id item_id){
-	return make_expression_list_item(state, ASM_EXPRESSION_LIST_ITEM_EXPRESSION, prev_id, item_id);
-}
-struct expression_list_item_id make_expression_list_item_list_start(struct asm_state * state){
-	struct expression_list_item_id prev_id;
-	struct expression_id item_id;
-	prev_id.id = 0;
-	item_id.id = 0;
-	return make_expression_list_item(state, ASM_EXPRESSION_LIST_ITEM_LIST_START, prev_id, item_id);
-}
-struct expression_list_item_id make_expression_list_item(struct asm_state * state, enum asm_expression_list_item_kind kind, struct expression_list_item_id prev_id, struct expression_id item_id){
-	struct expression_list_item_details d;
-	d.type = kind;
-	d.prev_id = prev_id;
-	d.item_id = item_id;
-	if(struct_expression_list_item_details_to_struct_expression_list_item_id_map_exists(&state->expression_list_items_map, d)){
-		return struct_expression_list_item_details_to_struct_expression_list_item_id_map_get(&state->expression_list_items_map, d);
-	}else{
-		struct expression_list_item_id new_id;
-		new_id.id = struct_expression_list_item_details_list_size(&state->expression_list_items);
-		struct_expression_list_item_details_to_struct_expression_list_item_id_map_put(&state->expression_list_items_map, d, new_id);
-		struct_expression_list_item_details_list_add_end(&state->expression_list_items, d);
-		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_EXPRESSION_LIST_ITEM);
 		return new_id;
 	}
 }
@@ -1320,23 +1240,26 @@ struct general_type_id make_general_type(struct asm_state * state, enum asm_gene
 	}
 }
 
-struct typedef_entry_id make_typedef_entry_typedef(struct asm_state * state, struct identifier_id identifier_id, struct scope_guid_id scope_guid_id, struct general_type_id general_type_id){
-	return make_typedef_entry(state, ASM_TYPEDEF_ENTRY_TYPEDEF, identifier_id, scope_guid_id, general_type_id);
+struct identifier_namespace_entry_id make_identifier_namespace_entry_typedef(struct asm_state * state, struct identifier_id identifier_id, struct scope_guid_id scope_guid_id, struct general_type_id general_type_id){
+	return make_identifier_namespace_entry(state, ASM_IDENTIFIER_NAMESPACE_ENTRY_TYPEDEF, identifier_id, scope_guid_id, general_type_id);
 }
-struct typedef_entry_id make_typedef_entry(struct asm_state * state, enum asm_typedef_entry_kind kind, struct identifier_id identifier_id, struct scope_guid_id scope_guid_id, struct general_type_id general_type_id){
-	struct typedef_entry_details d;
+struct identifier_namespace_entry_id make_identifier_namespace_entry_declaration(struct asm_state * state, struct identifier_id identifier_id, struct scope_guid_id scope_guid_id, struct general_type_id general_type_id){
+	return make_identifier_namespace_entry(state, ASM_IDENTIFIER_NAMESPACE_ENTRY_DECLARATION, identifier_id, scope_guid_id, general_type_id);
+}
+struct identifier_namespace_entry_id make_identifier_namespace_entry(struct asm_state * state, enum asm_identifier_namespace_entry_kind kind, struct identifier_id identifier_id, struct scope_guid_id scope_guid_id, struct general_type_id general_type_id){
+	struct identifier_namespace_entry_details d;
 	d.type = kind;
 	d.identifier_id = identifier_id;
 	d.scope_guid_id = scope_guid_id;
 	d.general_type_id = general_type_id;
-	if(struct_typedef_entry_details_to_struct_typedef_entry_id_map_exists(&state->typedef_entrys_map, d)){
-		return struct_typedef_entry_details_to_struct_typedef_entry_id_map_get(&state->typedef_entrys_map, d);
+	if(struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map_exists(&state->identifier_namespace_entrys_map, d)){
+		return struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map_get(&state->identifier_namespace_entrys_map, d);
 	}else{
-		struct typedef_entry_id new_id;
-		new_id.id = struct_typedef_entry_details_list_size(&state->typedef_entrys);
-		struct_typedef_entry_details_to_struct_typedef_entry_id_map_put(&state->typedef_entrys_map, d, new_id);
-		struct_typedef_entry_details_list_add_end(&state->typedef_entrys, d);
-		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_TYPEDEF_ENTRY);
+		struct identifier_namespace_entry_id new_id;
+		new_id.id = struct_identifier_namespace_entry_details_list_size(&state->identifier_namespace_entrys);
+		struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map_put(&state->identifier_namespace_entrys_map, d, new_id);
+		struct_identifier_namespace_entry_details_list_add_end(&state->identifier_namespace_entrys, d);
+		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_IDENTIFIER_NAMESPACE_ENTRY);
 		return new_id;
 	}
 }
@@ -1404,7 +1327,7 @@ struct postfix_expression_part_id make_postfix_expression_part_struct_dot_derefe
 struct postfix_expression_part_id make_postfix_expression_part_struct_arrow_dereference(struct asm_state * state, struct identifier_id id){
 	return make_postfix_expression_part(state, ASM_POSTFIX_EXPRESSION_PART_STRUCT_ARROW_DEREFERENCE, id.id);
 }
-struct postfix_expression_part_id make_postfix_expression_part_function_dereference(struct asm_state * state, struct expression_list_item_id id){
+struct postfix_expression_part_id make_postfix_expression_part_function_dereference(struct asm_state * state, struct any_statement_list_item_id id){
 	return make_postfix_expression_part(state, ASM_POSTFIX_EXPRESSION_PART_FUNCTION_DEREFERENCE, id.id);
 }
 struct postfix_expression_part_id make_postfix_expression_part_inc(struct asm_state * state){
@@ -1433,14 +1356,14 @@ struct postfix_expression_part_id make_postfix_expression_part(struct asm_state 
 	}
 }
 
-struct unscoped_tag_specifier_id make_unscoped_tag_specifier_struct_specifier(struct asm_state * state, struct unscoped_struct_specifier_id id){
-	return make_unscoped_tag_specifier(state, ASM_UNSCOPED_TAG_SPECIFIER_STRUCT_SPECIFIER, id.id);
+struct unscoped_tag_specifier_id make_unscoped_tag_specifier_struct(struct asm_state * state, struct unscoped_struct_specifier_id id){
+	return make_unscoped_tag_specifier(state, ASM_UNSCOPED_TAG_SPECIFIER_STRUCT, id.id);
 }
-struct unscoped_tag_specifier_id make_unscoped_tag_specifier_union_specifier(struct asm_state * state, struct unscoped_union_specifier_id id){
-	return make_unscoped_tag_specifier(state, ASM_UNSCOPED_TAG_SPECIFIER_UNION_SPECIFIER, id.id);
+struct unscoped_tag_specifier_id make_unscoped_tag_specifier_union(struct asm_state * state, struct unscoped_union_specifier_id id){
+	return make_unscoped_tag_specifier(state, ASM_UNSCOPED_TAG_SPECIFIER_UNION, id.id);
 }
-struct unscoped_tag_specifier_id make_unscoped_tag_specifier_enum_specifier(struct asm_state * state, struct unscoped_enum_specifier_id id){
-	return make_unscoped_tag_specifier(state, ASM_UNSCOPED_TAG_SPECIFIER_ENUM_SPECIFIER, id.id);
+struct unscoped_tag_specifier_id make_unscoped_tag_specifier_enum(struct asm_state * state, struct unscoped_enum_specifier_id id){
+	return make_unscoped_tag_specifier(state, ASM_UNSCOPED_TAG_SPECIFIER_ENUM, id.id);
 }
 struct unscoped_tag_specifier_id make_unscoped_tag_specifier(struct asm_state * state, enum asm_unscoped_tag_specifier_kind kind, unsigned int id){
 	struct unscoped_tag_specifier_details d;
@@ -1498,11 +1421,11 @@ struct scoped_tag_specifier_id make_scoped_tag_specifier(struct asm_state * stat
 	}
 }
 
-struct unscoped_union_specifier_id make_unscoped_union_specifier_named_union(struct asm_state * state, struct identifier_id id){
-	return make_unscoped_union_specifier(state, ASM_UNSCOPED_UNION_SPECIFIER_NAMED_UNION, id.id);
+struct unscoped_union_specifier_id make_unscoped_union_specifier_named(struct asm_state * state, struct identifier_id id){
+	return make_unscoped_union_specifier(state, ASM_UNSCOPED_UNION_SPECIFIER_NAMED, id.id);
 }
-struct unscoped_union_specifier_id make_unscoped_union_specifier_anonymous_union(struct asm_state * state, struct anonymous_instance_id id){
-	return make_unscoped_union_specifier(state, ASM_UNSCOPED_UNION_SPECIFIER_ANONYMOUS_UNION, id.id);
+struct unscoped_union_specifier_id make_unscoped_union_specifier_anonymous(struct asm_state * state, struct anonymous_entry_id id){
+	return make_unscoped_union_specifier(state, ASM_UNSCOPED_UNION_SPECIFIER_ANONYMOUS, id.id);
 }
 struct unscoped_union_specifier_id make_unscoped_union_specifier(struct asm_state * state, enum asm_unscoped_union_specifier_kind kind, unsigned int id){
 	struct unscoped_union_specifier_details d;
@@ -1520,11 +1443,11 @@ struct unscoped_union_specifier_id make_unscoped_union_specifier(struct asm_stat
 	}
 }
 
-struct unscoped_struct_specifier_id make_unscoped_struct_specifier_named_struct(struct asm_state * state, struct identifier_id id){
-	return make_unscoped_struct_specifier(state, ASM_UNSCOPED_STRUCT_SPECIFIER_NAMED_STRUCT, id.id);
+struct unscoped_struct_specifier_id make_unscoped_struct_specifier_named(struct asm_state * state, struct identifier_id id){
+	return make_unscoped_struct_specifier(state, ASM_UNSCOPED_STRUCT_SPECIFIER_NAMED, id.id);
 }
-struct unscoped_struct_specifier_id make_unscoped_struct_specifier_anonymous_struct(struct asm_state * state, struct anonymous_instance_id id){
-	return make_unscoped_struct_specifier(state, ASM_UNSCOPED_STRUCT_SPECIFIER_ANONYMOUS_STRUCT, id.id);
+struct unscoped_struct_specifier_id make_unscoped_struct_specifier_anonymous(struct asm_state * state, struct anonymous_entry_id id){
+	return make_unscoped_struct_specifier(state, ASM_UNSCOPED_STRUCT_SPECIFIER_ANONYMOUS, id.id);
 }
 struct unscoped_struct_specifier_id make_unscoped_struct_specifier(struct asm_state * state, enum asm_unscoped_struct_specifier_kind kind, unsigned int id){
 	struct unscoped_struct_specifier_details d;
@@ -1542,11 +1465,11 @@ struct unscoped_struct_specifier_id make_unscoped_struct_specifier(struct asm_st
 	}
 }
 
-struct unscoped_enum_specifier_id make_unscoped_enum_specifier_named_enum(struct asm_state * state, struct identifier_id id){
-	return make_unscoped_enum_specifier(state, ASM_UNSCOPED_ENUM_SPECIFIER_NAMED_ENUM, id.id);
+struct unscoped_enum_specifier_id make_unscoped_enum_specifier_named(struct asm_state * state, struct identifier_id id){
+	return make_unscoped_enum_specifier(state, ASM_UNSCOPED_ENUM_SPECIFIER_NAMED, id.id);
 }
-struct unscoped_enum_specifier_id make_unscoped_enum_specifier_anonymous_enum(struct asm_state * state, struct anonymous_instance_id id){
-	return make_unscoped_enum_specifier(state, ASM_UNSCOPED_ENUM_SPECIFIER_ANONYMOUS_ENUM, id.id);
+struct unscoped_enum_specifier_id make_unscoped_enum_specifier_anonymous(struct asm_state * state, struct anonymous_entry_id id){
+	return make_unscoped_enum_specifier(state, ASM_UNSCOPED_ENUM_SPECIFIER_ANONYMOUS, id.id);
 }
 struct unscoped_enum_specifier_id make_unscoped_enum_specifier(struct asm_state * state, enum asm_unscoped_enum_specifier_kind kind, unsigned int id){
 	struct unscoped_enum_specifier_details d;
@@ -1625,10 +1548,10 @@ struct jump_statement_id make_jump_statement(struct asm_state * state, enum asm_
 	}
 }
 
-struct switch_statement_id make_switch_statement_switch(struct asm_state * state, struct expression_id e1, struct any_statement_id s1){
+struct switch_statement_id make_switch_statement_switch(struct asm_state * state, struct expression_id e1, struct scoped_statement_id s1){
 	return make_switch_statement(state, ASM_SWITCH_STATEMENT_SWITCH, e1, s1);
 }
-struct switch_statement_id make_switch_statement(struct asm_state * state, enum asm_switch_statement_kind kind, struct expression_id e1, struct any_statement_id s1){
+struct switch_statement_id make_switch_statement(struct asm_state * state, enum asm_switch_statement_kind kind, struct expression_id e1, struct scoped_statement_id s1){
 	struct switch_statement_details d;
 	d.type = kind;
 	d.e1 = e1;
@@ -1645,15 +1568,15 @@ struct switch_statement_id make_switch_statement(struct asm_state * state, enum 
 	}
 }
 
-struct if_statement_id make_if_statement_just_if(struct asm_state * state, struct any_statement_id s1, struct expression_id e1){
-	struct any_statement_id s2;
+struct if_statement_id make_if_statement_just_if(struct asm_state * state, struct scoped_statement_id s1, struct expression_id e1){
+	struct scoped_statement_id s2;
 	s2.id = 0;
 	return make_if_statement(state, ASM_IF_STATEMENT_JUST_IF, s1, e1, s2);
 }
-struct if_statement_id make_if_statement_if_else(struct asm_state * state, struct any_statement_id s1, struct expression_id e1, struct any_statement_id s2){
+struct if_statement_id make_if_statement_if_else(struct asm_state * state, struct scoped_statement_id s1, struct expression_id e1, struct scoped_statement_id s2){
 	return make_if_statement(state, ASM_IF_STATEMENT_IF_ELSE, s1, e1, s2);
 }
-struct if_statement_id make_if_statement(struct asm_state * state, enum asm_if_statement_kind kind, struct any_statement_id s1, struct expression_id e1, struct any_statement_id s2){
+struct if_statement_id make_if_statement(struct asm_state * state, enum asm_if_statement_kind kind, struct scoped_statement_id s1, struct expression_id e1, struct scoped_statement_id s2){
 	struct if_statement_details d;
 	d.type = kind;
 	d.s1 = s1;
@@ -1671,13 +1594,13 @@ struct if_statement_id make_if_statement(struct asm_state * state, enum asm_if_s
 	}
 }
 
-struct while_statement_id make_while_statement_do_while(struct asm_state * state, struct expression_id e1, struct any_statement_id s1){
+struct while_statement_id make_while_statement_do_while(struct asm_state * state, struct expression_id e1, struct scoped_statement_id s1){
 	return make_while_statement(state, ASM_WHILE_STATEMENT_DO_WHILE, e1, s1);
 }
-struct while_statement_id make_while_statement_while(struct asm_state * state, struct expression_id e1, struct any_statement_id s1){
+struct while_statement_id make_while_statement_while(struct asm_state * state, struct expression_id e1, struct scoped_statement_id s1){
 	return make_while_statement(state, ASM_WHILE_STATEMENT_WHILE, e1, s1);
 }
-struct while_statement_id make_while_statement(struct asm_state * state, enum asm_while_statement_kind kind, struct expression_id e1, struct any_statement_id s1){
+struct while_statement_id make_while_statement(struct asm_state * state, enum asm_while_statement_kind kind, struct expression_id e1, struct scoped_statement_id s1){
 	struct while_statement_details d;
 	d.type = kind;
 	d.e1 = e1;
@@ -1694,15 +1617,16 @@ struct while_statement_id make_while_statement(struct asm_state * state, enum as
 	}
 }
 
-struct for_statement_id make_for_statement_for(struct asm_state * state, struct expression_list_item_id e1, struct expression_list_item_id e2, struct expression_list_item_id e3){
-	return make_for_statement(state, ASM_FOR_STATEMENT_FOR, e1, e2, e3);
+struct for_statement_id make_for_statement_for(struct asm_state * state, struct any_statement_id e1, struct any_statement_id e2, struct any_statement_id e3, struct scoped_statement_id s1){
+	return make_for_statement(state, ASM_FOR_STATEMENT_FOR, e1, e2, e3, s1);
 }
-struct for_statement_id make_for_statement(struct asm_state * state, enum asm_for_statement_kind kind, struct expression_list_item_id e1, struct expression_list_item_id e2, struct expression_list_item_id e3){
+struct for_statement_id make_for_statement(struct asm_state * state, enum asm_for_statement_kind kind, struct any_statement_id e1, struct any_statement_id e2, struct any_statement_id e3, struct scoped_statement_id s1){
 	struct for_statement_details d;
 	d.type = kind;
 	d.e1 = e1;
 	d.e2 = e2;
 	d.e3 = e3;
+	d.s1 = s1;
 	if(struct_for_statement_details_to_struct_for_statement_id_map_exists(&state->for_statements_map, d)){
 		return struct_for_statement_details_to_struct_for_statement_id_map_get(&state->for_statements_map, d);
 	}else{
@@ -1721,7 +1645,7 @@ struct code_statement_id make_code_statement_labeled_statement(struct asm_state 
 struct code_statement_id make_code_statement_compound_statement(struct asm_state * state, struct any_statement_list_item_id id){
 	return make_code_statement(state, ASM_CODE_STATEMENT_COMPOUND_STATEMENT, id.id);
 }
-struct code_statement_id make_code_statement_expression_statement(struct asm_state * state, struct expression_list_item_id id){
+struct code_statement_id make_code_statement_expression_statement(struct asm_state * state, struct expression_id id){
 	return make_code_statement(state, ASM_CODE_STATEMENT_EXPRESSION_STATEMENT, id.id);
 }
 struct code_statement_id make_code_statement_for_statement(struct asm_state * state, struct for_statement_id id){
@@ -1755,24 +1679,22 @@ struct code_statement_id make_code_statement(struct asm_state * state, enum asm_
 	}
 }
 
-struct labeled_statement_id make_labeled_statement_goto_label(struct asm_state * state, struct any_statement_id any_statement_id){
-	struct expression_id expression_id;
-	expression_id.id = 0;
-	return make_labeled_statement(state, ASM_LABELED_STATEMENT_GOTO_LABEL, any_statement_id, expression_id);
+struct labeled_statement_id make_labeled_statement_goto_label(struct asm_state * state, struct scoped_statement_id scoped_statement_id, struct identifier_id id){
+	return make_labeled_statement(state, ASM_LABELED_STATEMENT_GOTO_LABEL, scoped_statement_id, id.id);
 }
-struct labeled_statement_id make_labeled_statement_case_label(struct asm_state * state, struct any_statement_id any_statement_id, struct expression_id expression_id){
-	return make_labeled_statement(state, ASM_LABELED_STATEMENT_CASE_LABEL, any_statement_id, expression_id);
+struct labeled_statement_id make_labeled_statement_case_label(struct asm_state * state, struct scoped_statement_id scoped_statement_id, struct expression_id id){
+	return make_labeled_statement(state, ASM_LABELED_STATEMENT_CASE_LABEL, scoped_statement_id, id.id);
 }
-struct labeled_statement_id make_labeled_statement_default_label(struct asm_state * state, struct any_statement_id any_statement_id){
-	struct expression_id expression_id;
-	expression_id.id = 0;
-	return make_labeled_statement(state, ASM_LABELED_STATEMENT_DEFAULT_LABEL, any_statement_id, expression_id);
+struct labeled_statement_id make_labeled_statement_default_label(struct asm_state * state, struct scoped_statement_id scoped_statement_id){
+	unsigned int id;
+	id = 0;
+	return make_labeled_statement(state, ASM_LABELED_STATEMENT_DEFAULT_LABEL, scoped_statement_id, id);
 }
-struct labeled_statement_id make_labeled_statement(struct asm_state * state, enum asm_labeled_statement_kind kind, struct any_statement_id any_statement_id, struct expression_id expression_id){
+struct labeled_statement_id make_labeled_statement(struct asm_state * state, enum asm_labeled_statement_kind kind, struct scoped_statement_id scoped_statement_id, unsigned int id){
 	struct labeled_statement_details d;
 	d.type = kind;
-	d.any_statement_id = any_statement_id;
-	d.expression_id = expression_id;
+	d.scoped_statement_id = scoped_statement_id;
+	d.id = id;
 	if(struct_labeled_statement_details_to_struct_labeled_statement_id_map_exists(&state->labeled_statements_map, d)){
 		return struct_labeled_statement_details_to_struct_labeled_statement_id_map_get(&state->labeled_statements_map, d);
 	}else{
@@ -1855,14 +1777,8 @@ struct any_statement_id make_any_statement(struct asm_state * state, enum asm_an
 	}
 }
 
-struct scoped_statement_id make_scoped_statement_function_scope(struct asm_state * state, struct any_statement_list_item_id any_statement_list_item_id, struct scope_guid_id scope_guid_id){
-	return make_scoped_statement(state, ASM_SCOPED_STATEMENT_FUNCTION_SCOPE, any_statement_list_item_id, scope_guid_id);
-}
-struct scoped_statement_id make_scoped_statement_block_scope(struct asm_state * state, struct any_statement_list_item_id any_statement_list_item_id, struct scope_guid_id scope_guid_id){
-	return make_scoped_statement(state, ASM_SCOPED_STATEMENT_BLOCK_SCOPE, any_statement_list_item_id, scope_guid_id);
-}
-struct scoped_statement_id make_scoped_statement_file_scope(struct asm_state * state, struct any_statement_list_item_id any_statement_list_item_id, struct scope_guid_id scope_guid_id){
-	return make_scoped_statement(state, ASM_SCOPED_STATEMENT_FILE_SCOPE, any_statement_list_item_id, scope_guid_id);
+struct scoped_statement_id make_scoped_statement_scoped_statement(struct asm_state * state, struct any_statement_list_item_id any_statement_list_item_id, struct scope_guid_id scope_guid_id){
+	return make_scoped_statement(state, ASM_SCOPED_STATEMENT_SCOPED_STATEMENT, any_statement_list_item_id, scope_guid_id);
 }
 struct scoped_statement_id make_scoped_statement(struct asm_state * state, enum asm_scoped_statement_kind kind, struct any_statement_list_item_id any_statement_list_item_id, struct scope_guid_id scope_guid_id){
 	struct scoped_statement_details d;
@@ -1903,16 +1819,14 @@ struct declaration_statement_id make_declaration_statement(struct asm_state * st
 	}
 }
 
-struct function_definition_id make_function_definition_prototyped(struct asm_state * state, struct general_type_id general_type_id, struct any_statement_list_item_id params, struct any_statement_list_item_id body, struct identifier_id identifier_id){
-	return make_function_definition(state, ASM_FUNCTION_DEFINITION_PROTOTYPED, general_type_id, params, body, identifier_id);
+struct function_definition_id make_function_definition_function_definition(struct asm_state * state, struct general_type_id general_type_id, struct any_statement_list_item_id k_and_r_declarations, struct any_statement_list_item_id params, struct scoped_statement_id body, struct identifier_id identifier_id){
+	return make_function_definition(state, ASM_FUNCTION_DEFINITION_FUNCTION_DEFINITION, general_type_id, k_and_r_declarations, params, body, identifier_id);
 }
-struct function_definition_id make_function_definition_k_and_r_c(struct asm_state * state, struct general_type_id general_type_id, struct any_statement_list_item_id params, struct any_statement_list_item_id body, struct identifier_id identifier_id){
-	return make_function_definition(state, ASM_FUNCTION_DEFINITION_K_AND_R_C, general_type_id, params, body, identifier_id);
-}
-struct function_definition_id make_function_definition(struct asm_state * state, enum asm_function_definition_kind kind, struct general_type_id general_type_id, struct any_statement_list_item_id params, struct any_statement_list_item_id body, struct identifier_id identifier_id){
+struct function_definition_id make_function_definition(struct asm_state * state, enum asm_function_definition_kind kind, struct general_type_id general_type_id, struct any_statement_list_item_id k_and_r_declarations, struct any_statement_list_item_id params, struct scoped_statement_id body, struct identifier_id identifier_id){
 	struct function_definition_details d;
 	d.type = kind;
 	d.general_type_id = general_type_id;
+	d.k_and_r_declarations = k_and_r_declarations;
 	d.params = params;
 	d.body = body;
 	d.identifier_id = identifier_id;
@@ -1949,6 +1863,11 @@ struct simple_declaration_id make_simple_declaration(struct asm_state * state, e
 	}
 }
 
+struct expression_id make_expression_nullary_expression(struct asm_state * state){
+	unsigned int id;
+	id = 0;
+	return make_expression(state, ASM_EXPRESSION_NULLARY_EXPRESSION, id);
+}
 struct expression_id make_expression_cast_expression(struct asm_state * state, struct cast_expression_id id){
 	return make_expression(state, ASM_EXPRESSION_CAST_EXPRESSION, id.id);
 }
@@ -2008,23 +1927,23 @@ struct unary_expression_id make_unary_expression_postfix_expression(struct asm_s
 struct unary_expression_id make_unary_expression_sizeof_type(struct asm_state * state, struct general_type_id id1){
 	return make_unary_expression(state, ASM_UNARY_EXPRESSION_SIZEOF_TYPE, id1.id);
 }
-struct unary_expression_id make_unary_expression_inc(struct asm_state * state, struct expression_id id1){
-	return make_unary_expression(state, ASM_UNARY_EXPRESSION_INC, id1.id);
+struct unary_expression_id make_unary_expression_increment(struct asm_state * state, struct expression_id id1){
+	return make_unary_expression(state, ASM_UNARY_EXPRESSION_INCREMENT, id1.id);
 }
-struct unary_expression_id make_unary_expression_dec(struct asm_state * state, struct expression_id id1){
-	return make_unary_expression(state, ASM_UNARY_EXPRESSION_DEC, id1.id);
+struct unary_expression_id make_unary_expression_decrement(struct asm_state * state, struct expression_id id1){
+	return make_unary_expression(state, ASM_UNARY_EXPRESSION_DECREMENT, id1.id);
 }
-struct unary_expression_id make_unary_expression_address(struct asm_state * state, struct expression_id id1){
-	return make_unary_expression(state, ASM_UNARY_EXPRESSION_ADDRESS, id1.id);
+struct unary_expression_id make_unary_expression_address_of(struct asm_state * state, struct expression_id id1){
+	return make_unary_expression(state, ASM_UNARY_EXPRESSION_ADDRESS_OF, id1.id);
 }
 struct unary_expression_id make_unary_expression_point_to(struct asm_state * state, struct expression_id id1){
 	return make_unary_expression(state, ASM_UNARY_EXPRESSION_POINT_TO, id1.id);
 }
-struct unary_expression_id make_unary_expression_positive(struct asm_state * state, struct expression_id id1){
-	return make_unary_expression(state, ASM_UNARY_EXPRESSION_POSITIVE, id1.id);
+struct unary_expression_id make_unary_expression_plus(struct asm_state * state, struct expression_id id1){
+	return make_unary_expression(state, ASM_UNARY_EXPRESSION_PLUS, id1.id);
 }
-struct unary_expression_id make_unary_expression_negative(struct asm_state * state, struct expression_id id1){
-	return make_unary_expression(state, ASM_UNARY_EXPRESSION_NEGATIVE, id1.id);
+struct unary_expression_id make_unary_expression_minus(struct asm_state * state, struct expression_id id1){
+	return make_unary_expression(state, ASM_UNARY_EXPRESSION_MINUS, id1.id);
 }
 struct unary_expression_id make_unary_expression_bitwise_not(struct asm_state * state, struct expression_id id1){
 	return make_unary_expression(state, ASM_UNARY_EXPRESSION_BITWISE_NOT, id1.id);
@@ -2048,6 +1967,9 @@ struct unary_expression_id make_unary_expression(struct asm_state * state, enum 
 	}
 }
 
+struct binary_expression_id make_binary_expression_comma(struct asm_state * state, struct expression_id e1, struct expression_id e2){
+	return make_binary_expression(state, ASM_BINARY_EXPRESSION_COMMA, e1, e2);
+}
 struct binary_expression_id make_binary_expression_plus(struct asm_state * state, struct expression_id e1, struct expression_id e2){
 	return make_binary_expression(state, ASM_BINARY_EXPRESSION_PLUS, e1, e2);
 }
@@ -2065,6 +1987,12 @@ struct binary_expression_id make_binary_expression_exclusive_or(struct asm_state
 }
 struct binary_expression_id make_binary_expression_modulus(struct asm_state * state, struct expression_id e1, struct expression_id e2){
 	return make_binary_expression(state, ASM_BINARY_EXPRESSION_MODULUS, e1, e2);
+}
+struct binary_expression_id make_binary_expression_right(struct asm_state * state, struct expression_id e1, struct expression_id e2){
+	return make_binary_expression(state, ASM_BINARY_EXPRESSION_RIGHT, e1, e2);
+}
+struct binary_expression_id make_binary_expression_left(struct asm_state * state, struct expression_id e1, struct expression_id e2){
+	return make_binary_expression(state, ASM_BINARY_EXPRESSION_LEFT, e1, e2);
 }
 struct binary_expression_id make_binary_expression_bitwise_or(struct asm_state * state, struct expression_id e1, struct expression_id e2){
 	return make_binary_expression(state, ASM_BINARY_EXPRESSION_BITWISE_OR, e1, e2);
@@ -2093,6 +2021,9 @@ struct binary_expression_id make_binary_expression_ge(struct asm_state * state, 
 struct binary_expression_id make_binary_expression_eq(struct asm_state * state, struct expression_id e1, struct expression_id e2){
 	return make_binary_expression(state, ASM_BINARY_EXPRESSION_EQ, e1, e2);
 }
+struct binary_expression_id make_binary_expression_ne(struct asm_state * state, struct expression_id e1, struct expression_id e2){
+	return make_binary_expression(state, ASM_BINARY_EXPRESSION_NE, e1, e2);
+}
 struct binary_expression_id make_binary_expression_assign(struct asm_state * state, struct expression_id e1, struct expression_id e2){
 	return make_binary_expression(state, ASM_BINARY_EXPRESSION_ASSIGN, e1, e2);
 }
@@ -2114,8 +2045,17 @@ struct binary_expression_id make_binary_expression_and_assign(struct asm_state *
 struct binary_expression_id make_binary_expression_or_assign(struct asm_state * state, struct expression_id e1, struct expression_id e2){
 	return make_binary_expression(state, ASM_BINARY_EXPRESSION_OR_ASSIGN, e1, e2);
 }
+struct binary_expression_id make_binary_expression_xor_assign(struct asm_state * state, struct expression_id e1, struct expression_id e2){
+	return make_binary_expression(state, ASM_BINARY_EXPRESSION_XOR_ASSIGN, e1, e2);
+}
 struct binary_expression_id make_binary_expression_mod_assign(struct asm_state * state, struct expression_id e1, struct expression_id e2){
 	return make_binary_expression(state, ASM_BINARY_EXPRESSION_MOD_ASSIGN, e1, e2);
+}
+struct binary_expression_id make_binary_expression_right_assign(struct asm_state * state, struct expression_id e1, struct expression_id e2){
+	return make_binary_expression(state, ASM_BINARY_EXPRESSION_RIGHT_ASSIGN, e1, e2);
+}
+struct binary_expression_id make_binary_expression_left_assign(struct asm_state * state, struct expression_id e1, struct expression_id e2){
+	return make_binary_expression(state, ASM_BINARY_EXPRESSION_LEFT_ASSIGN, e1, e2);
 }
 struct binary_expression_id make_binary_expression(struct asm_state * state, enum asm_binary_expression_kind kind, struct expression_id e1, struct expression_id e2){
 	struct binary_expression_details d;
@@ -2330,13 +2270,14 @@ struct dword_package_id make_dword_package(struct asm_state * state, enum asm_dw
 	}
 }
 
-struct string_package_id make_string_package_string(struct asm_state * state, unsigned int length, unsigned char * data){
-	return make_string_package(state, ASM_STRING_PACKAGE_STRING, length, data);
+struct string_package_id make_string_package_string(struct asm_state * state, unsigned int byte_length, unsigned int word_length, unsigned int * data){
+	return make_string_package(state, ASM_STRING_PACKAGE_STRING, byte_length, word_length, data);
 }
-struct string_package_id make_string_package(struct asm_state * state, enum asm_string_package_kind kind, unsigned int length, unsigned char * data){
+struct string_package_id make_string_package(struct asm_state * state, enum asm_string_package_kind kind, unsigned int byte_length, unsigned int word_length, unsigned int * data){
 	struct string_package_details d;
 	d.type = kind;
-	d.length = length;
+	d.byte_length = byte_length;
+	d.word_length = word_length;
 	d.data = data;
 	if(struct_string_package_details_to_struct_string_package_id_map_exists(&state->string_packages_map, d)){
 		return struct_string_package_details_to_struct_string_package_id_map_get(&state->string_packages_map, d);
@@ -2369,24 +2310,27 @@ struct identifier_id make_identifier(struct asm_state * state, enum asm_identifi
 	}
 }
 
-struct scope_guid_id make_scope_guid_block_scope(struct asm_state * state){
+struct scope_guid_id make_scope_guid_block_scope(struct asm_state * state, struct scope_guid_id parent){
 	unsigned int id;
-	id = state->last_scope_guid++;
-	return make_scope_guid(state, ASM_SCOPE_GUID_BLOCK_SCOPE, id);
+	id = state->next_scope_guid++;
+	return make_scope_guid(state, ASM_SCOPE_GUID_BLOCK_SCOPE, parent, id);
 }
 struct scope_guid_id make_scope_guid_file_scope(struct asm_state * state){
+	struct scope_guid_id parent;
 	unsigned int id;
-	id = state->last_scope_guid++;
-	return make_scope_guid(state, ASM_SCOPE_GUID_FILE_SCOPE, id);
+	parent.id = 0;
+	id = state->next_scope_guid++;
+	return make_scope_guid(state, ASM_SCOPE_GUID_FILE_SCOPE, parent, id);
 }
-struct scope_guid_id make_scope_guid_function_scope(struct asm_state * state){
+struct scope_guid_id make_scope_guid_function_scope(struct asm_state * state, struct scope_guid_id parent){
 	unsigned int id;
-	id = state->last_scope_guid++;
-	return make_scope_guid(state, ASM_SCOPE_GUID_FUNCTION_SCOPE, id);
+	id = state->next_scope_guid++;
+	return make_scope_guid(state, ASM_SCOPE_GUID_FUNCTION_SCOPE, parent, id);
 }
-struct scope_guid_id make_scope_guid(struct asm_state * state, enum asm_scope_guid_kind kind, unsigned int id){
+struct scope_guid_id make_scope_guid(struct asm_state * state, enum asm_scope_guid_kind kind, struct scope_guid_id parent, unsigned int id){
 	struct scope_guid_details d;
 	d.type = kind;
+	d.parent = parent;
 	d.id = id;
 	if(struct_scope_guid_details_to_struct_scope_guid_id_map_exists(&state->scope_guids_map, d)){
 		return struct_scope_guid_details_to_struct_scope_guid_id_map_get(&state->scope_guids_map, d);
@@ -2400,48 +2344,81 @@ struct scope_guid_id make_scope_guid(struct asm_state * state, enum asm_scope_gu
 	}
 }
 
-struct anonymous_instance_id make_anonymous_instance_anonymous_entry(struct asm_state * state){
-	return make_anonymous_instance(state, ASM_ANONYMOUS_INSTANCE_ANONYMOUS_ENTRY);
+struct anonymous_entry_id make_anonymous_entry_anonymous_entry(struct asm_state * state){
+	unsigned int id;
+	id = state->next_anonymous_entry++;
+	return make_anonymous_entry(state, ASM_ANONYMOUS_ENTRY_ANONYMOUS_ENTRY, id);
 }
-struct anonymous_instance_id make_anonymous_instance(struct asm_state * state, enum asm_anonymous_instance_kind kind){
-	struct anonymous_instance_details d;
+struct anonymous_entry_id make_anonymous_entry(struct asm_state * state, enum asm_anonymous_entry_kind kind, unsigned int id){
+	struct anonymous_entry_details d;
 	d.type = kind;
-	if(struct_anonymous_instance_details_to_struct_anonymous_instance_id_map_exists(&state->anonymous_instances_map, d)){
-		return struct_anonymous_instance_details_to_struct_anonymous_instance_id_map_get(&state->anonymous_instances_map, d);
+	d.id = id;
+	if(struct_anonymous_entry_details_to_struct_anonymous_entry_id_map_exists(&state->anonymous_entrys_map, d)){
+		return struct_anonymous_entry_details_to_struct_anonymous_entry_id_map_get(&state->anonymous_entrys_map, d);
 	}else{
-		struct anonymous_instance_id new_id;
-		new_id.id = struct_anonymous_instance_details_list_size(&state->anonymous_instances);
-		struct_anonymous_instance_details_to_struct_anonymous_instance_id_map_put(&state->anonymous_instances_map, d, new_id);
-		struct_anonymous_instance_details_list_add_end(&state->anonymous_instances, d);
-		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_ANONYMOUS_INSTANCE);
+		struct anonymous_entry_id new_id;
+		new_id.id = struct_anonymous_entry_details_list_size(&state->anonymous_entrys);
+		struct_anonymous_entry_details_to_struct_anonymous_entry_id_map_put(&state->anonymous_entrys_map, d, new_id);
+		struct_anonymous_entry_details_list_add_end(&state->anonymous_entrys, d);
+		enum_asm_operation_type_list_add_end(&state->reversible_operations, ASM_OP_ADD_ANONYMOUS_ENTRY);
 		return new_id;
 	}
 }
 
-void print_aggregate_type_specifier(struct asm_state * state, struct unsigned_char_list * out, struct aggregate_type_specifier_id id){
+void print_all_aggregate_type_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_aggregate_type_specifier_details_list_size(&state->aggregate_type_specifiers);
+	struct aggregate_type_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_aggregate_type_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_aggregate_type_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct aggregate_type_specifier_id id){
+	unsigned int spaces_printed;
 	struct aggregate_type_specifier_details details = struct_aggregate_type_specifier_details_list_get(&state->aggregate_type_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_AGGREGATE_TYPE_SPECIFIER_SIMPLE_TYPE_SPECIFIER:{
 			struct simple_type_specifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_simple_type_specifier(state, out, id_tmp);
+			print_simple_type_specifier(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_AGGREGATE_TYPE_SPECIFIER_TAG_SPECIFIER:{
 			struct scoped_tag_specifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_scoped_tag_specifier(state, out, id_tmp);
+			print_scoped_tag_specifier(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_AGGREGATE_TYPE_SPECIFIER_TYPENAME_SPECIFIER:{
 			struct scoped_typename_specifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_scoped_typename_specifier(state, out, id_tmp);
+			print_scoped_typename_specifier(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_simple_type_specifier(struct asm_state * state, struct unsigned_char_list * out, struct simple_type_specifier_id id){
+void print_all_simple_type_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_simple_type_specifier_details_list_size(&state->simple_type_specifiers);
+	struct simple_type_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_simple_type_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_simple_type_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct simple_type_specifier_id id){
+	unsigned int spaces_printed;
 	struct simple_type_specifier_details details = struct_simple_type_specifier_details_list_get(&state->simple_type_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SIMPLE_TYPE_SPECIFIER_VOID:{
 			buffered_printf(out, "void");
@@ -2501,8 +2478,23 @@ void print_simple_type_specifier(struct asm_state * state, struct unsigned_char_
 	}
 }
 
-void print_simple_type_qualifier(struct asm_state * state, struct unsigned_char_list * out, struct simple_type_qualifier_id id){
+void print_all_simple_type_qualifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_simple_type_qualifier_details_list_size(&state->simple_type_qualifiers);
+	struct simple_type_qualifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_simple_type_qualifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_simple_type_qualifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct simple_type_qualifier_id id){
+	unsigned int spaces_printed;
 	struct simple_type_qualifier_details details = struct_simple_type_qualifier_details_list_get(&state->simple_type_qualifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SIMPLE_TYPE_QUALIFIER_CONST:{
 			buffered_printf(out, "const");
@@ -2520,8 +2512,23 @@ void print_simple_type_qualifier(struct asm_state * state, struct unsigned_char_
 	}
 }
 
-void print_simple_storage_class_specifier(struct asm_state * state, struct unsigned_char_list * out, struct simple_storage_class_specifier_id id){
+void print_all_simple_storage_class_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_simple_storage_class_specifier_details_list_size(&state->simple_storage_class_specifiers);
+	struct simple_storage_class_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_simple_storage_class_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_simple_storage_class_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct simple_storage_class_specifier_id id){
+	unsigned int spaces_printed;
 	struct simple_storage_class_specifier_details details = struct_simple_storage_class_specifier_details_list_get(&state->simple_storage_class_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SIMPLE_STORAGE_CLASS_SPECIFIER_TYPEDEF:{
 			buffered_printf(out, "typedef");
@@ -2557,413 +2564,784 @@ void print_simple_storage_class_specifier(struct asm_state * state, struct unsig
 	}
 }
 
-void print_specifier_or_qualifier(struct asm_state * state, struct unsigned_char_list * out, struct specifier_or_qualifier_id id){
+void print_all_specifier_or_qualifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_specifier_or_qualifier_details_list_size(&state->specifier_or_qualifiers);
+	struct specifier_or_qualifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_specifier_or_qualifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_specifier_or_qualifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct specifier_or_qualifier_id id){
+	unsigned int spaces_printed;
 	struct specifier_or_qualifier_details details = struct_specifier_or_qualifier_details_list_get(&state->specifier_or_qualifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SPECIFIER_OR_QUALIFIER_SIMPLE_STORAGE_CLASS_SPECIFIER:{
 			struct simple_storage_class_specifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_simple_storage_class_specifier(state, out, id_tmp);
+			print_simple_storage_class_specifier(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_SPECIFIER_OR_QUALIFIER_SIMPLE_TYPE_QUALIFIER:{
 			struct simple_type_qualifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_simple_type_qualifier(state, out, id_tmp);
+			print_simple_type_qualifier(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_SPECIFIER_OR_QUALIFIER_AGGREGATE_TYPE_SPECIFIER:{
 			struct aggregate_type_specifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_aggregate_type_specifier(state, out, id_tmp);
+			print_aggregate_type_specifier(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_specifier_or_qualifier_list_item(struct asm_state * state, struct unsigned_char_list * out, struct specifier_or_qualifier_list_item_id id){
+void print_all_specifier_or_qualifier_list_items(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_specifier_or_qualifier_list_item_details_list_size(&state->specifier_or_qualifier_list_items);
+	struct specifier_or_qualifier_list_item_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_specifier_or_qualifier_list_item(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_specifier_or_qualifier_list_item(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct specifier_or_qualifier_list_item_id id){
+	unsigned int spaces_printed;
 	struct specifier_or_qualifier_list_item_details details = struct_specifier_or_qualifier_list_item_details_list_get(&state->specifier_or_qualifier_list_items, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SPECIFIER_OR_QUALIFIER_LIST_ITEM_SPECIFIER_OR_QUALIFIER:{
-			print_specifier_or_qualifier_list_item(state, out, details.prev_id);
+			print_specifier_or_qualifier_list_item(state, scope_depth, out, details.prev_id);
+			print_specifier_or_qualifier(state, scope_depth, out, details.item_id);
 			buffered_printf(out, " ");
-			print_specifier_or_qualifier(state, out, details.item_id);
 			break;
 		}case ASM_SPECIFIER_OR_QUALIFIER_LIST_ITEM_LIST_START:{
-			print_terminal_specifier_or_qualifier_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_specifier_or_qualifier_list_item_list_start_item_id(state, out, details.item_id);
 			break;
 		}
 	}
 }
 
-void print_parameter_list(struct asm_state * state, struct unsigned_char_list * out, struct parameter_list_id id){
+void print_all_parameter_lists(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_parameter_list_details_list_size(&state->parameter_lists);
+	struct parameter_list_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_parameter_list(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_parameter_list(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct parameter_list_id id){
+	unsigned int spaces_printed;
 	struct parameter_list_details details = struct_parameter_list_details_list_get(&state->parameter_lists, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_PARAMETER_LIST_VARIADIC:{
-			print_general_type_list_item(state, out, details.general_type_list_item_id);
+			print_general_type_list_item(state, scope_depth, out, details.general_type_list_item_id);
 			break;
 		}case ASM_PARAMETER_LIST_NON_VARIADIC:{
-			print_general_type_list_item(state, out, details.general_type_list_item_id);
+			print_general_type_list_item(state, scope_depth, out, details.general_type_list_item_id);
 			break;
 		}
 	}
 }
 
-void print_initializer(struct asm_state * state, struct unsigned_char_list * out, struct initializer_id id){
-	struct initializer_details details = struct_initializer_details_list_get(&state->initializers, id.id);
-	switch(details.type){
-		case ASM_INITIALIZER_INITIALIZER_LIST:{
-			struct initializer_list_item_id id_tmp;
-			id_tmp.id = details.id;
-			print_initializer_list_item(state, out, id_tmp);
-			break;
-		}case ASM_INITIALIZER_EXPRESSION:{
-			struct expression_id id_tmp;
-			id_tmp.id = details.id;
-			print_expression(state, out, id_tmp);
-			break;
-		}
+void print_all_declarator_parts(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_declarator_part_details_list_size(&state->declarator_parts);
+	struct declarator_part_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_declarator_part(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
 	}
 }
-
-void print_declarator_part(struct asm_state * state, struct unsigned_char_list * out, struct declarator_part_id id){
+void print_declarator_part(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct declarator_part_id id){
+	unsigned int spaces_printed;
 	struct declarator_part_details details = struct_declarator_part_details_list_get(&state->declarator_parts, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_DECLARATOR_PART_FUNCTION:{
 			struct function_part_id id_tmp;
 			id_tmp.id = details.id;
-			print_function_part(state, out, id_tmp);
+			print_function_part(state, scope_depth, out, id_tmp);
+			buffered_printf(out, ", ");
 			break;
 		}case ASM_DECLARATOR_PART_POINTER:{
 			struct pointer_part_id id_tmp;
 			id_tmp.id = details.id;
-			print_pointer_part(state, out, id_tmp);
+			print_pointer_part(state, scope_depth, out, id_tmp);
+			buffered_printf(out, ", ");
 			break;
 		}case ASM_DECLARATOR_PART_ARRAY:{
 			struct array_part_id id_tmp;
 			id_tmp.id = details.id;
-			print_array_part(state, out, id_tmp);
+			print_array_part(state, scope_depth, out, id_tmp);
+			buffered_printf(out, ", ");
 			break;
 		}
 	}
 }
 
-void print_any_statement_list_item(struct asm_state * state, struct unsigned_char_list * out, struct any_statement_list_item_id id){
+void print_all_any_statement_list_items(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_any_statement_list_item_details_list_size(&state->any_statement_list_items);
+	struct any_statement_list_item_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_any_statement_list_item(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_any_statement_list_item(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct any_statement_list_item_id id){
+	unsigned int spaces_printed;
 	struct any_statement_list_item_details details = struct_any_statement_list_item_details_list_get(&state->any_statement_list_items, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_ANY_STATEMENT_LIST_ITEM_ANY_STATEMENT:{
-			print_any_statement_list_item(state, out, details.prev_id);
-			print_any_statement(state, out, details.item_id);
+			print_any_statement_list_item(state, scope_depth, out, details.prev_id);
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			print_any_statement(state, scope_depth, out, details.item_id);
+			buffered_printf(out, ";\n");
 			break;
 		}case ASM_ANY_STATEMENT_LIST_ITEM_LIST_START:{
-			print_terminal_any_statement_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_any_statement_list_item_list_start_item_id(state, out, details.item_id);
 			break;
 		}
 	}
 }
 
-void print_anonymous_tag_definition(struct asm_state * state, struct unsigned_char_list * out, struct anonymous_tag_definition_id id){
+void print_all_anonymous_tag_definitions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_anonymous_tag_definition_details_list_size(&state->anonymous_tag_definitions);
+	struct anonymous_tag_definition_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_anonymous_tag_definition(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_anonymous_tag_definition(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct anonymous_tag_definition_id id){
+	unsigned int spaces_printed;
 	struct anonymous_tag_definition_details details = struct_anonymous_tag_definition_details_list_get(&state->anonymous_tag_definitions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_ANONYMOUS_TAG_DEFINITION_ANONYMOUS:{
-			print_tag_definition(state, out, details.tag_definition_id);
-			print_scope_guid(state, out, details.scope_guid_id);
-			print_anonymous_instance(state, out, details.anonymous_instance_id);
+			buffered_printf(out, "{\n     tag anonymous_entry_id=");
+			print_anonymous_entry(state, scope_depth, out, details.anonymous_entry_id);
+			buffered_printf(out, " ");
+			print_scope_guid(state, scope_depth, out, details.scope_guid_id);
+			buffered_printf(out, "\n");
+			print_tag_definition(state, scope_depth, out, details.tag_definition_id);
+			buffered_printf(out, "}");
 			break;
 		}
 	}
 }
 
-void print_named_tag_predeclaration(struct asm_state * state, struct unsigned_char_list * out, struct named_tag_predeclaration_id id){
+void print_all_named_tag_predeclarations(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_named_tag_predeclaration_details_list_size(&state->named_tag_predeclarations);
+	struct named_tag_predeclaration_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_named_tag_predeclaration(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_named_tag_predeclaration(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct named_tag_predeclaration_id id){
+	unsigned int spaces_printed;
 	struct named_tag_predeclaration_details details = struct_named_tag_predeclaration_details_list_get(&state->named_tag_predeclarations, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_NAMED_TAG_PREDECLARATION_NAMED:{
-			print_scope_guid(state, out, details.scope_guid_id);
-			print_identifier(state, out, details.identifier_id);
+			print_terminal_named_tag_predeclaration_named_tag_type(state, scope_depth, out, details.tag_type);
+			buffered_printf(out, " ");
+			print_scope_guid(state, scope_depth, out, details.scope_guid_id);
+			buffered_printf(out, " ");
+			print_identifier(state, scope_depth, out, details.identifier_id);
 			break;
 		}
 	}
 }
 
-void print_named_tag_definition(struct asm_state * state, struct unsigned_char_list * out, struct named_tag_definition_id id){
+void print_all_named_tag_definitions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_named_tag_definition_details_list_size(&state->named_tag_definitions);
+	struct named_tag_definition_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_named_tag_definition(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_named_tag_definition(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct named_tag_definition_id id){
+	unsigned int spaces_printed;
 	struct named_tag_definition_details details = struct_named_tag_definition_details_list_get(&state->named_tag_definitions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_NAMED_TAG_DEFINITION_NAMED:{
-			print_tag_definition(state, out, details.tag_definition_id);
-			print_scope_guid(state, out, details.scope_guid_id);
-			print_identifier(state, out, details.identifier_id);
+			buffered_printf(out, "{\n     tag ");
+			print_identifier(state, scope_depth, out, details.identifier_id);
+			buffered_printf(out, " ");
+			print_scope_guid(state, scope_depth, out, details.scope_guid_id);
+			buffered_printf(out, "\n");
+			print_tag_definition(state, scope_depth, out, details.tag_definition_id);
+			buffered_printf(out, "}");
 			break;
 		}
 	}
 }
 
-void print_tag_definition(struct asm_state * state, struct unsigned_char_list * out, struct tag_definition_id id){
+void print_all_tag_definitions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_tag_definition_details_list_size(&state->tag_definitions);
+	struct tag_definition_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_tag_definition(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_tag_definition(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct tag_definition_id id){
+	unsigned int spaces_printed;
 	struct tag_definition_details details = struct_tag_definition_details_list_get(&state->tag_definitions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_TAG_DEFINITION_ENUM:{
 			struct enum_member_list_item_id id_tmp;
 			id_tmp.id = details.id;
-			print_enum_member_list_item(state, out, id_tmp);
+			buffered_printf(out, "enum \n");
+			print_enum_member_list_item(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_TAG_DEFINITION_STRUCT:{
 			struct struct_or_union_member_list_item_id id_tmp;
 			id_tmp.id = details.id;
-			print_struct_or_union_member_list_item(state, out, id_tmp);
+			buffered_printf(out, "struct \n");
+			print_struct_or_union_member_list_item(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_TAG_DEFINITION_UNION:{
 			struct struct_or_union_member_list_item_id id_tmp;
 			id_tmp.id = details.id;
-			print_struct_or_union_member_list_item(state, out, id_tmp);
+			buffered_printf(out, "union \n");
+			print_struct_or_union_member_list_item(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_struct_or_union_member_list_item(struct asm_state * state, struct unsigned_char_list * out, struct struct_or_union_member_list_item_id id){
+void print_all_struct_or_union_member_list_items(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_struct_or_union_member_list_item_details_list_size(&state->struct_or_union_member_list_items);
+	struct struct_or_union_member_list_item_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_struct_or_union_member_list_item(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_struct_or_union_member_list_item(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct struct_or_union_member_list_item_id id){
+	unsigned int spaces_printed;
 	struct struct_or_union_member_list_item_details details = struct_struct_or_union_member_list_item_details_list_get(&state->struct_or_union_member_list_items, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_STRUCT_OR_UNION_MEMBER_LIST_ITEM_MEMBER:{
-			print_struct_or_union_member_list_item(state, out, details.prev_id);
-			print_struct_or_union_member(state, out, details.item_id);
+			print_struct_or_union_member_list_item(state, scope_depth, out, details.prev_id);
+			buffered_printf(out, "     ");
+			print_struct_or_union_member(state, scope_depth, out, details.item_id);
+			buffered_printf(out, "\n");
 			break;
 		}case ASM_STRUCT_OR_UNION_MEMBER_LIST_ITEM_LIST_START:{
-			print_terminal_struct_or_union_member_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_struct_or_union_member_list_item_list_start_item_id(state, out, details.item_id);
+			print_terminal_struct_or_union_member_list_item_list_start_prev_id(state, scope_depth, out, details.prev_id);
+			print_terminal_struct_or_union_member_list_item_list_start_item_id(state, scope_depth, out, details.item_id);
 			break;
 		}
 	}
 }
 
-void print_enum_member_list_item(struct asm_state * state, struct unsigned_char_list * out, struct enum_member_list_item_id id){
+void print_all_enum_member_list_items(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_enum_member_list_item_details_list_size(&state->enum_member_list_items);
+	struct enum_member_list_item_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_enum_member_list_item(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_enum_member_list_item(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct enum_member_list_item_id id){
+	unsigned int spaces_printed;
 	struct enum_member_list_item_details details = struct_enum_member_list_item_details_list_get(&state->enum_member_list_items, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_ENUM_MEMBER_LIST_ITEM_MEMBER:{
-			print_enum_member_list_item(state, out, details.prev_id);
-			print_enum_member(state, out, details.item_id);
+			print_enum_member_list_item(state, scope_depth, out, details.prev_id);
+			buffered_printf(out, "     ");
+			print_enum_member(state, scope_depth, out, details.item_id);
+			buffered_printf(out, "\n");
 			break;
 		}case ASM_ENUM_MEMBER_LIST_ITEM_LIST_START:{
-			print_terminal_enum_member_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_enum_member_list_item_list_start_item_id(state, out, details.item_id);
+			print_terminal_enum_member_list_item_list_start_prev_id(state, scope_depth, out, details.prev_id);
+			print_terminal_enum_member_list_item_list_start_item_id(state, scope_depth, out, details.item_id);
 			break;
 		}
 	}
 }
 
-void print_enum_member(struct asm_state * state, struct unsigned_char_list * out, struct enum_member_id id){
+void print_all_enum_members(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_enum_member_details_list_size(&state->enum_members);
+	struct enum_member_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_enum_member(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_enum_member(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct enum_member_id id){
+	unsigned int spaces_printed;
 	struct enum_member_details details = struct_enum_member_details_list_get(&state->enum_members, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_ENUM_MEMBER_MEMBER:{
-			print_identifier(state, out, details.identifier_id);
-			print_expression(state, out, details.expression_id);
+		case ASM_ENUM_MEMBER_HAS_EXPRESSION:{
+			print_identifier(state, scope_depth, out, details.identifier_id);
+			buffered_printf(out, " = ");
+			print_expression(state, scope_depth, out, details.expression_id);
+			break;
+		}case ASM_ENUM_MEMBER_NO_EXPRESSION:{
+			print_identifier(state, scope_depth, out, details.identifier_id);
 			break;
 		}
 	}
 }
 
-void print_struct_or_union_member(struct asm_state * state, struct unsigned_char_list * out, struct struct_or_union_member_id id){
+void print_all_struct_or_union_members(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_struct_or_union_member_details_list_size(&state->struct_or_union_members);
+	struct struct_or_union_member_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_struct_or_union_member(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_struct_or_union_member(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct struct_or_union_member_id id){
+	unsigned int spaces_printed;
 	struct struct_or_union_member_details details = struct_struct_or_union_member_details_list_get(&state->struct_or_union_members, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_STRUCT_OR_UNION_MEMBER_MEMBER:{
-			print_general_type(state, out, details.general_type_id);
-			print_layout_flag_list_item(state, out, details.layout_flag_list_item_id);
-			print_identifier(state, out, details.identifier_id);
+			print_identifier(state, scope_depth, out, details.identifier_id);
+			buffered_printf(out, " has type '");
+			print_general_type(state, scope_depth, out, details.general_type_id);
+			buffered_printf(out, "'");
+			break;
+		}case ASM_STRUCT_OR_UNION_MEMBER_PADDING:{
+			buffered_printf(out, "[padding] ");
+			print_general_type(state, scope_depth, out, details.general_type_id);
+			break;
+		}case ASM_STRUCT_OR_UNION_MEMBER_C11_ANONYMOUS_MEMBER:{
+			buffered_printf(out, "[c11 anonymous member] ");
+			print_general_type(state, scope_depth, out, details.general_type_id);
 			break;
 		}
 	}
 }
 
-void print_layout_flag_list_item(struct asm_state * state, struct unsigned_char_list * out, struct layout_flag_list_item_id id){
-	struct layout_flag_list_item_details details = struct_layout_flag_list_item_details_list_get(&state->layout_flag_list_items, id.id);
+void print_all_initializers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_initializer_details_list_size(&state->initializers);
+	struct initializer_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_initializer(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_initializer(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct initializer_id id){
+	unsigned int spaces_printed;
+	struct initializer_details details = struct_initializer_details_list_get(&state->initializers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_LAYOUT_FLAG_LIST_ITEM_LAYOUT_FLAG:{
-			print_layout_flag_list_item(state, out, details.prev_id);
-			print_layout_flag(state, out, details.item_id);
+		case ASM_INITIALIZER_INITIALIZER_LIST:{
+			struct initializer_list_item_id id_tmp;
+			id_tmp.id = details.id;
+			buffered_printf(out, " = ");
+			print_initializer_list_item(state, scope_depth, out, id_tmp);
 			break;
-		}case ASM_LAYOUT_FLAG_LIST_ITEM_LIST_START:{
-			print_terminal_layout_flag_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_layout_flag_list_item_list_start_item_id(state, out, details.item_id);
+		}case ASM_INITIALIZER_NO_INITIALIZER:{
 			break;
-		}
-	}
-}
-
-void print_layout_flag(struct asm_state * state, struct unsigned_char_list * out, struct layout_flag_id id){
-	struct layout_flag_details details = struct_layout_flag_details_list_get(&state->layout_flags, id.id);
-	switch(details.type){
-		case ASM_LAYOUT_FLAG_STRUCT:{
-			(void)state;
-			(void)out;
-			(void)details;
-			break;
-		}case ASM_LAYOUT_FLAG_UNION:{
-			(void)state;
-			(void)out;
-			(void)details;
+		}case ASM_INITIALIZER_EXPRESSION:{
+			struct expression_id id_tmp;
+			id_tmp.id = details.id;
+			buffered_printf(out, " = ");
+			print_expression(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_initializer_list_item(struct asm_state * state, struct unsigned_char_list * out, struct initializer_list_item_id id){
+void print_all_initializer_list_items(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_initializer_list_item_details_list_size(&state->initializer_list_items);
+	struct initializer_list_item_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_initializer_list_item(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_initializer_list_item(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct initializer_list_item_id id){
+	unsigned int spaces_printed;
 	struct initializer_list_item_details details = struct_initializer_list_item_details_list_get(&state->initializer_list_items, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_INITIALIZER_LIST_ITEM_INITIALIZER:{
-			print_initializer_list_item(state, out, details.prev_id);
-			print_initializer(state, out, details.item_id);
+			print_initializer_list_item(state, scope_depth, out, details.prev_id);
+			print_initializer(state, scope_depth, out, details.item_id);
 			break;
 		}case ASM_INITIALIZER_LIST_ITEM_LIST_START:{
-			print_terminal_initializer_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_initializer_list_item_list_start_item_id(state, out, details.item_id);
+			print_terminal_initializer_list_item_list_start_prev_id(state, scope_depth, out, details.prev_id);
+			print_terminal_initializer_list_item_list_start_item_id(state, scope_depth, out, details.item_id);
 			break;
 		}
 	}
 }
 
-void print_expression_list_item(struct asm_state * state, struct unsigned_char_list * out, struct expression_list_item_id id){
-	struct expression_list_item_details details = struct_expression_list_item_details_list_get(&state->expression_list_items, id.id);
-	switch(details.type){
-		case ASM_EXPRESSION_LIST_ITEM_EXPRESSION:{
-			print_expression_list_item(state, out, details.prev_id);
-			print_expression(state, out, details.item_id);
-			break;
-		}case ASM_EXPRESSION_LIST_ITEM_LIST_START:{
-			print_terminal_expression_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_expression_list_item_list_start_item_id(state, out, details.item_id);
-			break;
-		}
+void print_all_declarator_part_list_items(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_declarator_part_list_item_details_list_size(&state->declarator_part_list_items);
+	struct declarator_part_list_item_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_declarator_part_list_item(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
 	}
 }
-
-void print_declarator_part_list_item(struct asm_state * state, struct unsigned_char_list * out, struct declarator_part_list_item_id id){
+void print_declarator_part_list_item(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct declarator_part_list_item_id id){
+	unsigned int spaces_printed;
 	struct declarator_part_list_item_details details = struct_declarator_part_list_item_details_list_get(&state->declarator_part_list_items, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_DECLARATOR_PART_LIST_ITEM_DECLARATOR_PART:{
-			print_declarator_part_list_item(state, out, details.prev_id);
+			print_declarator_part_list_item(state, scope_depth, out, details.prev_id);
+			print_declarator_part(state, scope_depth, out, details.item_id);
 			buffered_printf(out, " ");
-			print_declarator_part(state, out, details.item_id);
 			break;
 		}case ASM_DECLARATOR_PART_LIST_ITEM_LIST_START:{
-			print_terminal_declarator_part_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_declarator_part_list_item_list_start_item_id(state, out, details.item_id);
 			break;
 		}
 	}
 }
 
-void print_pointer_part(struct asm_state * state, struct unsigned_char_list * out, struct pointer_part_id id){
+void print_all_pointer_parts(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_pointer_part_details_list_size(&state->pointer_parts);
+	struct pointer_part_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_pointer_part(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_pointer_part(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct pointer_part_id id){
+	unsigned int spaces_printed;
 	struct pointer_part_details details = struct_pointer_part_details_list_get(&state->pointer_parts, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_POINTER_PART_POINTER:{
 			buffered_printf(out, "*");
-			print_specifier_or_qualifier_list_item(state, out, details.specifier_or_qualifier_list_item_id);
+			print_specifier_or_qualifier_list_item(state, scope_depth, out, details.specifier_or_qualifier_list_item_id);
 			break;
 		}
 	}
 }
 
-void print_function_part(struct asm_state * state, struct unsigned_char_list * out, struct function_part_id id){
+void print_all_function_parts(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_function_part_details_list_size(&state->function_parts);
+	struct function_part_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_function_part(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_function_part(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct function_part_id id){
+	unsigned int spaces_printed;
 	struct function_part_details details = struct_function_part_details_list_get(&state->function_parts, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_FUNCTION_PART_PROTOTYPE:{
-			print_parameter_list(state, out, details.parameter_list_id);
+			buffered_printf(out, "(");
+			print_parameter_list(state, scope_depth, out, details.parameter_list_id);
+			buffered_printf(out, ")");
 			break;
 		}case ASM_FUNCTION_PART_K_AND_R_C:{
-			print_parameter_list(state, out, details.parameter_list_id);
+			buffered_printf(out, "(");
+			print_parameter_list(state, scope_depth, out, details.parameter_list_id);
+			buffered_printf(out, ")");
 			break;
 		}
 	}
 }
 
-void print_array_part(struct asm_state * state, struct unsigned_char_list * out, struct array_part_id id){
+void print_all_array_parts(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_array_part_details_list_size(&state->array_parts);
+	struct array_part_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_array_part(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_array_part(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct array_part_id id){
+	unsigned int spaces_printed;
 	struct array_part_details details = struct_array_part_details_list_get(&state->array_parts, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_ARRAY_PART_EXPRESSION:{
-			print_expression(state, out, details.expression_id);
+			buffered_printf(out, "[");
+			print_expression(state, scope_depth, out, details.expression_id);
+			buffered_printf(out, "]");
 			break;
 		}case ASM_ARRAY_PART_FLEXIBLE:{
-			print_terminal_array_part_flexible_expression_id(state, out, details.expression_id);
+			buffered_printf(out, "[]");
 			break;
 		}
 	}
 }
 
-void print_general_type(struct asm_state * state, struct unsigned_char_list * out, struct general_type_id id){
+void print_all_general_types(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_general_type_details_list_size(&state->general_types);
+	struct general_type_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_general_type(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_general_type(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct general_type_id id){
+	unsigned int spaces_printed;
 	struct general_type_details details = struct_general_type_details_list_get(&state->general_types, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_GENERAL_TYPE_GENERAL_TYPE:{
-			print_specifier_or_qualifier_list_item(state, out, details.specifier_or_qualifier_list_item_id);
-			print_declarator_part_list_item(state, out, details.declarator_part_list_item_id);
-			print_bitfield(state, out, details.bitfield_id);
+			print_specifier_or_qualifier_list_item(state, scope_depth, out, details.specifier_or_qualifier_list_item_id);
+			print_declarator_part_list_item(state, scope_depth, out, details.declarator_part_list_item_id);
+			print_bitfield(state, scope_depth, out, details.bitfield_id);
 			break;
 		}
 	}
 }
 
-void print_typedef_entry(struct asm_state * state, struct unsigned_char_list * out, struct typedef_entry_id id){
-	struct typedef_entry_details details = struct_typedef_entry_details_list_get(&state->typedef_entrys, id.id);
+void print_all_identifier_namespace_entrys(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_identifier_namespace_entry_details_list_size(&state->identifier_namespace_entrys);
+	struct identifier_namespace_entry_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_identifier_namespace_entry(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_identifier_namespace_entry(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct identifier_namespace_entry_id id){
+	unsigned int spaces_printed;
+	struct identifier_namespace_entry_details details = struct_identifier_namespace_entry_details_list_get(&state->identifier_namespace_entrys, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_TYPEDEF_ENTRY_TYPEDEF:{
-			print_identifier(state, out, details.identifier_id);
-			print_scope_guid(state, out, details.scope_guid_id);
-			print_general_type(state, out, details.general_type_id);
+		case ASM_IDENTIFIER_NAMESPACE_ENTRY_TYPEDEF:{
+			print_identifier(state, scope_depth, out, details.identifier_id);
+			buffered_printf(out, " a typedefed identifier with type '");
+			print_general_type(state, scope_depth, out, details.general_type_id);
+			buffered_printf(out, "' from scope ");
+			print_scope_guid(state, scope_depth, out, details.scope_guid_id);
+			break;
+		}case ASM_IDENTIFIER_NAMESPACE_ENTRY_DECLARATION:{
+			print_identifier(state, scope_depth, out, details.identifier_id);
+			buffered_printf(out, " a variable with type '");
+			print_general_type(state, scope_depth, out, details.general_type_id);
+			buffered_printf(out, "' from scope ");
+			print_scope_guid(state, scope_depth, out, details.scope_guid_id);
 			break;
 		}
 	}
 }
 
-void print_general_type_list_item(struct asm_state * state, struct unsigned_char_list * out, struct general_type_list_item_id id){
+void print_all_general_type_list_items(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_general_type_list_item_details_list_size(&state->general_type_list_items);
+	struct general_type_list_item_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_general_type_list_item(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_general_type_list_item(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct general_type_list_item_id id){
+	unsigned int spaces_printed;
 	struct general_type_list_item_details details = struct_general_type_list_item_details_list_get(&state->general_type_list_items, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_GENERAL_TYPE_LIST_ITEM_GENERAL_TYPE:{
-			print_general_type_list_item(state, out, details.prev_id);
-			print_general_type(state, out, details.item_id);
+			print_general_type_list_item(state, scope_depth, out, details.prev_id);
+			print_general_type(state, scope_depth, out, details.item_id);
 			break;
 		}case ASM_GENERAL_TYPE_LIST_ITEM_LIST_START:{
-			print_terminal_general_type_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_general_type_list_item_list_start_item_id(state, out, details.item_id);
+			print_terminal_general_type_list_item_list_start_prev_id(state, scope_depth, out, details.prev_id);
+			print_terminal_general_type_list_item_list_start_item_id(state, scope_depth, out, details.item_id);
 			break;
 		}
 	}
 }
 
-void print_postfix_expression_part_list_item(struct asm_state * state, struct unsigned_char_list * out, struct postfix_expression_part_list_item_id id){
+void print_all_postfix_expression_part_list_items(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_postfix_expression_part_list_item_details_list_size(&state->postfix_expression_part_list_items);
+	struct postfix_expression_part_list_item_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_postfix_expression_part_list_item(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_postfix_expression_part_list_item(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct postfix_expression_part_list_item_id id){
+	unsigned int spaces_printed;
 	struct postfix_expression_part_list_item_details details = struct_postfix_expression_part_list_item_details_list_get(&state->postfix_expression_part_list_items, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_POSTFIX_EXPRESSION_PART_LIST_ITEM_POSTFIX_EXPRESSION_PART:{
-			print_postfix_expression_part_list_item(state, out, details.prev_id);
-			print_postfix_expression_part(state, out, details.item_id);
+			print_postfix_expression_part_list_item(state, scope_depth, out, details.prev_id);
+			print_postfix_expression_part(state, scope_depth, out, details.item_id);
 			break;
 		}case ASM_POSTFIX_EXPRESSION_PART_LIST_ITEM_LIST_START:{
-			print_terminal_postfix_expression_part_list_item_list_start_prev_id(state, out, details.prev_id);
-			print_terminal_postfix_expression_part_list_item_list_start_item_id(state, out, details.item_id);
+			print_terminal_postfix_expression_part_list_item_list_start_prev_id(state, scope_depth, out, details.prev_id);
+			print_terminal_postfix_expression_part_list_item_list_start_item_id(state, scope_depth, out, details.item_id);
 			break;
 		}
 	}
 }
 
-void print_postfix_expression_part(struct asm_state * state, struct unsigned_char_list * out, struct postfix_expression_part_id id){
+void print_all_postfix_expression_parts(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_postfix_expression_part_details_list_size(&state->postfix_expression_parts);
+	struct postfix_expression_part_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_postfix_expression_part(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_postfix_expression_part(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct postfix_expression_part_id id){
+	unsigned int spaces_printed;
 	struct postfix_expression_part_details details = struct_postfix_expression_part_details_list_get(&state->postfix_expression_parts, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_POSTFIX_EXPRESSION_PART_ARRAY_DEREFERENCE:{
 			struct expression_id id_tmp;
 			id_tmp.id = details.id;
-			print_expression(state, out, id_tmp);
+			buffered_printf(out, "[");
+			print_expression(state, scope_depth, out, id_tmp);
+			buffered_printf(out, "]");
 			break;
 		}case ASM_POSTFIX_EXPRESSION_PART_STRUCT_DOT_DEREFERENCE:{
 			struct identifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_identifier(state, out, id_tmp);
+			buffered_printf(out, ".");
+			print_identifier(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_POSTFIX_EXPRESSION_PART_STRUCT_ARROW_DEREFERENCE:{
 			struct identifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_identifier(state, out, id_tmp);
+			buffered_printf(out, "->");
+			print_identifier(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_POSTFIX_EXPRESSION_PART_FUNCTION_DEREFERENCE:{
-			struct expression_list_item_id id_tmp;
+			struct any_statement_list_item_id id_tmp;
 			id_tmp.id = details.id;
-			buffered_printf(out, "(");
-			print_expression_list_item(state, out, id_tmp);
+			buffered_printf(out, "(\n");
+			print_any_statement_list_item(state, scope_depth + 1, out, id_tmp);
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
 			buffered_printf(out, ")");
 			break;
 		}case ASM_POSTFIX_EXPRESSION_PART_INC:{
@@ -2976,665 +3354,1248 @@ void print_postfix_expression_part(struct asm_state * state, struct unsigned_cha
 	}
 }
 
-void print_unscoped_tag_specifier(struct asm_state * state, struct unsigned_char_list * out, struct unscoped_tag_specifier_id id){
+void print_all_unscoped_tag_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_unscoped_tag_specifier_details_list_size(&state->unscoped_tag_specifiers);
+	struct unscoped_tag_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_unscoped_tag_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_unscoped_tag_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct unscoped_tag_specifier_id id){
+	unsigned int spaces_printed;
 	struct unscoped_tag_specifier_details details = struct_unscoped_tag_specifier_details_list_get(&state->unscoped_tag_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_UNSCOPED_TAG_SPECIFIER_STRUCT_SPECIFIER:{
+		case ASM_UNSCOPED_TAG_SPECIFIER_STRUCT:{
 			struct unscoped_struct_specifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_unscoped_struct_specifier(state, out, id_tmp);
+			print_unscoped_struct_specifier(state, scope_depth, out, id_tmp);
 			break;
-		}case ASM_UNSCOPED_TAG_SPECIFIER_UNION_SPECIFIER:{
+		}case ASM_UNSCOPED_TAG_SPECIFIER_UNION:{
 			struct unscoped_union_specifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_unscoped_union_specifier(state, out, id_tmp);
+			print_unscoped_union_specifier(state, scope_depth, out, id_tmp);
 			break;
-		}case ASM_UNSCOPED_TAG_SPECIFIER_ENUM_SPECIFIER:{
+		}case ASM_UNSCOPED_TAG_SPECIFIER_ENUM:{
 			struct unscoped_enum_specifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_unscoped_enum_specifier(state, out, id_tmp);
+			print_unscoped_enum_specifier(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_scoped_typename_specifier(struct asm_state * state, struct unsigned_char_list * out, struct scoped_typename_specifier_id id){
+void print_all_scoped_typename_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_scoped_typename_specifier_details_list_size(&state->scoped_typename_specifiers);
+	struct scoped_typename_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_scoped_typename_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_scoped_typename_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct scoped_typename_specifier_id id){
+	unsigned int spaces_printed;
 	struct scoped_typename_specifier_details details = struct_scoped_typename_specifier_details_list_get(&state->scoped_typename_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SCOPED_TYPENAME_SPECIFIER_SCOPED_TYPENAME:{
-			print_scope_guid(state, out, details.scope_guid_id);
-			print_identifier(state, out, details.identifier_id);
+			buffered_printf(out, "(");
+			print_scope_guid(state, scope_depth, out, details.scope_guid_id);
+			buffered_printf(out, " ");
+			print_identifier(state, scope_depth, out, details.identifier_id);
+			buffered_printf(out, ")");
 			break;
 		}
 	}
 }
 
-void print_scoped_tag_specifier(struct asm_state * state, struct unsigned_char_list * out, struct scoped_tag_specifier_id id){
+void print_all_scoped_tag_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_scoped_tag_specifier_details_list_size(&state->scoped_tag_specifiers);
+	struct scoped_tag_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_scoped_tag_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_scoped_tag_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct scoped_tag_specifier_id id){
+	unsigned int spaces_printed;
 	struct scoped_tag_specifier_details details = struct_scoped_tag_specifier_details_list_get(&state->scoped_tag_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SCOPED_TAG_SPECIFIER_SCOPED_TAG_SPECIFIER:{
-			print_scope_guid(state, out, details.scope_guid_id);
-			print_unscoped_tag_specifier(state, out, details.unscoped_tag_specifier_id);
+			buffered_printf(out, "{");
+			print_scope_guid(state, scope_depth, out, details.scope_guid_id);
+			buffered_printf(out, " ");
+			print_unscoped_tag_specifier(state, scope_depth, out, details.unscoped_tag_specifier_id);
+			buffered_printf(out, "}");
 			break;
 		}
 	}
 }
 
-void print_unscoped_union_specifier(struct asm_state * state, struct unsigned_char_list * out, struct unscoped_union_specifier_id id){
+void print_all_unscoped_union_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_unscoped_union_specifier_details_list_size(&state->unscoped_union_specifiers);
+	struct unscoped_union_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_unscoped_union_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_unscoped_union_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct unscoped_union_specifier_id id){
+	unsigned int spaces_printed;
 	struct unscoped_union_specifier_details details = struct_unscoped_union_specifier_details_list_get(&state->unscoped_union_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_UNSCOPED_UNION_SPECIFIER_NAMED_UNION:{
+		case ASM_UNSCOPED_UNION_SPECIFIER_NAMED:{
 			struct identifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_identifier(state, out, id_tmp);
+			buffered_printf(out, "union ");
+			print_identifier(state, scope_depth, out, id_tmp);
 			break;
-		}case ASM_UNSCOPED_UNION_SPECIFIER_ANONYMOUS_UNION:{
-			struct anonymous_instance_id id_tmp;
+		}case ASM_UNSCOPED_UNION_SPECIFIER_ANONYMOUS:{
+			struct anonymous_entry_id id_tmp;
 			id_tmp.id = details.id;
-			print_anonymous_instance(state, out, id_tmp);
+			buffered_printf(out, "union (anonymous_entry=");
+			print_anonymous_entry(state, scope_depth, out, id_tmp);
+			buffered_printf(out, ")");
 			break;
 		}
 	}
 }
 
-void print_unscoped_struct_specifier(struct asm_state * state, struct unsigned_char_list * out, struct unscoped_struct_specifier_id id){
+void print_all_unscoped_struct_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_unscoped_struct_specifier_details_list_size(&state->unscoped_struct_specifiers);
+	struct unscoped_struct_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_unscoped_struct_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_unscoped_struct_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct unscoped_struct_specifier_id id){
+	unsigned int spaces_printed;
 	struct unscoped_struct_specifier_details details = struct_unscoped_struct_specifier_details_list_get(&state->unscoped_struct_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_UNSCOPED_STRUCT_SPECIFIER_NAMED_STRUCT:{
+		case ASM_UNSCOPED_STRUCT_SPECIFIER_NAMED:{
 			struct identifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_identifier(state, out, id_tmp);
+			buffered_printf(out, "struct ");
+			print_identifier(state, scope_depth, out, id_tmp);
 			break;
-		}case ASM_UNSCOPED_STRUCT_SPECIFIER_ANONYMOUS_STRUCT:{
-			struct anonymous_instance_id id_tmp;
+		}case ASM_UNSCOPED_STRUCT_SPECIFIER_ANONYMOUS:{
+			struct anonymous_entry_id id_tmp;
 			id_tmp.id = details.id;
-			print_anonymous_instance(state, out, id_tmp);
+			buffered_printf(out, "struct (anonymous_entry=");
+			print_anonymous_entry(state, scope_depth, out, id_tmp);
+			buffered_printf(out, ")");
 			break;
 		}
 	}
 }
 
-void print_unscoped_enum_specifier(struct asm_state * state, struct unsigned_char_list * out, struct unscoped_enum_specifier_id id){
+void print_all_unscoped_enum_specifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_unscoped_enum_specifier_details_list_size(&state->unscoped_enum_specifiers);
+	struct unscoped_enum_specifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_unscoped_enum_specifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_unscoped_enum_specifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct unscoped_enum_specifier_id id){
+	unsigned int spaces_printed;
 	struct unscoped_enum_specifier_details details = struct_unscoped_enum_specifier_details_list_get(&state->unscoped_enum_specifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_UNSCOPED_ENUM_SPECIFIER_NAMED_ENUM:{
+		case ASM_UNSCOPED_ENUM_SPECIFIER_NAMED:{
 			struct identifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_identifier(state, out, id_tmp);
+			buffered_printf(out, "struct ");
+			print_identifier(state, scope_depth, out, id_tmp);
 			break;
-		}case ASM_UNSCOPED_ENUM_SPECIFIER_ANONYMOUS_ENUM:{
-			struct anonymous_instance_id id_tmp;
+		}case ASM_UNSCOPED_ENUM_SPECIFIER_ANONYMOUS:{
+			struct anonymous_entry_id id_tmp;
 			id_tmp.id = details.id;
-			print_anonymous_instance(state, out, id_tmp);
+			buffered_printf(out, "enum (anonymous_entry=");
+			print_anonymous_entry(state, scope_depth, out, id_tmp);
+			buffered_printf(out, ")");
 			break;
 		}
 	}
 }
 
-void print_bitfield(struct asm_state * state, struct unsigned_char_list * out, struct bitfield_id id){
+void print_all_bitfields(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_bitfield_details_list_size(&state->bitfields);
+	struct bitfield_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_bitfield(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_bitfield(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct bitfield_id id){
+	unsigned int spaces_printed;
 	struct bitfield_details details = struct_bitfield_details_list_get(&state->bitfields, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_BITFIELD_NO_BITFIELD:{
-			print_terminal_bitfield_no_bitfield_expression_id(state, out, details.expression_id);
+			print_terminal_bitfield_no_bitfield_expression_id(state, scope_depth, out, details.expression_id);
 			break;
 		}case ASM_BITFIELD_CONSTANT_BITFIELD:{
-			print_expression(state, out, details.expression_id);
+			print_expression(state, scope_depth, out, details.expression_id);
 			break;
 		}
 	}
 }
 
-void print_jump_statement(struct asm_state * state, struct unsigned_char_list * out, struct jump_statement_id id){
+void print_all_jump_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_jump_statement_details_list_size(&state->jump_statements);
+	struct jump_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_jump_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_jump_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct jump_statement_id id){
+	unsigned int spaces_printed;
 	struct jump_statement_details details = struct_jump_statement_details_list_get(&state->jump_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_JUMP_STATEMENT_RETURN_EXPRESSION:{
 			struct expression_id id_tmp;
 			id_tmp.id = details.id;
-			print_expression(state, out, id_tmp);
+			print_expression(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_JUMP_STATEMENT_RETURN_NO_EXPRESSION:{
-			print_terminal_jump_statement_return_no_expression_id(state, out, details.id);
+			print_terminal_jump_statement_return_no_expression_id(state, scope_depth, out, details.id);
 			break;
 		}case ASM_JUMP_STATEMENT_BREAK:{
-			print_terminal_jump_statement_break_id(state, out, details.id);
+			print_terminal_jump_statement_break_id(state, scope_depth, out, details.id);
 			break;
 		}case ASM_JUMP_STATEMENT_CONTINUE:{
-			print_terminal_jump_statement_continue_id(state, out, details.id);
+			print_terminal_jump_statement_continue_id(state, scope_depth, out, details.id);
 			break;
 		}case ASM_JUMP_STATEMENT_GOTO:{
 			struct identifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_identifier(state, out, id_tmp);
+			print_identifier(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_switch_statement(struct asm_state * state, struct unsigned_char_list * out, struct switch_statement_id id){
+void print_all_switch_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_switch_statement_details_list_size(&state->switch_statements);
+	struct switch_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_switch_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_switch_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct switch_statement_id id){
+	unsigned int spaces_printed;
 	struct switch_statement_details details = struct_switch_statement_details_list_get(&state->switch_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SWITCH_STATEMENT_SWITCH:{
-			print_expression(state, out, details.e1);
-			print_any_statement(state, out, details.s1);
+			buffered_printf(out, "switch(\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, ";\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			buffered_printf(out, ")");
+			print_scoped_statement(state, scope_depth, out, details.s1);
 			break;
 		}
 	}
 }
 
-void print_if_statement(struct asm_state * state, struct unsigned_char_list * out, struct if_statement_id id){
+void print_all_if_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_if_statement_details_list_size(&state->if_statements);
+	struct if_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_if_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_if_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct if_statement_id id){
+	unsigned int spaces_printed;
 	struct if_statement_details details = struct_if_statement_details_list_get(&state->if_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_IF_STATEMENT_JUST_IF:{
-			print_any_statement(state, out, details.s1);
-			print_expression(state, out, details.e1);
-			print_terminal_if_statement_just_if_s2(state, out, details.s2);
+			buffered_printf(out, "if(\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, ";\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			buffered_printf(out, ")");
+			print_scoped_statement(state, scope_depth, out, details.s1);
 			break;
 		}case ASM_IF_STATEMENT_IF_ELSE:{
-			print_any_statement(state, out, details.s1);
-			print_expression(state, out, details.e1);
-			print_any_statement(state, out, details.s2);
+			buffered_printf(out, "if(\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, ";\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			buffered_printf(out, ")");
+			print_scoped_statement(state, scope_depth, out, details.s1);
+			buffered_printf(out, "else");
+			print_scoped_statement(state, scope_depth, out, details.s2);
 			break;
 		}
 	}
 }
 
-void print_while_statement(struct asm_state * state, struct unsigned_char_list * out, struct while_statement_id id){
+void print_all_while_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_while_statement_details_list_size(&state->while_statements);
+	struct while_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_while_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_while_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct while_statement_id id){
+	unsigned int spaces_printed;
 	struct while_statement_details details = struct_while_statement_details_list_get(&state->while_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_WHILE_STATEMENT_DO_WHILE:{
-			print_expression(state, out, details.e1);
-			print_any_statement(state, out, details.s1);
+			buffered_printf(out, "do");
+			print_scoped_statement(state, scope_depth, out, details.s1);
+			buffered_printf(out, "while(");
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, ")");
 			break;
 		}case ASM_WHILE_STATEMENT_WHILE:{
-			print_expression(state, out, details.e1);
-			print_any_statement(state, out, details.s1);
+			buffered_printf(out, "while(");
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, ")");
+			print_scoped_statement(state, scope_depth, out, details.s1);
 			break;
 		}
 	}
 }
 
-void print_for_statement(struct asm_state * state, struct unsigned_char_list * out, struct for_statement_id id){
+void print_all_for_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_for_statement_details_list_size(&state->for_statements);
+	struct for_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_for_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_for_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct for_statement_id id){
+	unsigned int spaces_printed;
 	struct for_statement_details details = struct_for_statement_details_list_get(&state->for_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_FOR_STATEMENT_FOR:{
-			print_expression_list_item(state, out, details.e1);
-			print_expression_list_item(state, out, details.e2);
-			print_expression_list_item(state, out, details.e3);
+			buffered_printf(out, "for(\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			print_any_statement(state, scope_depth, out, details.e1);
+			buffered_printf(out, ";\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			print_any_statement(state, scope_depth, out, details.e2);
+			buffered_printf(out, ";\n");
+			print_any_statement(state, scope_depth, out, details.e3);
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			buffered_printf(out, ")");
+			print_scoped_statement(state, scope_depth, out, details.s1);
 			break;
 		}
 	}
 }
 
-void print_code_statement(struct asm_state * state, struct unsigned_char_list * out, struct code_statement_id id){
+void print_all_code_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_code_statement_details_list_size(&state->code_statements);
+	struct code_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_code_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_code_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct code_statement_id id){
+	unsigned int spaces_printed;
 	struct code_statement_details details = struct_code_statement_details_list_get(&state->code_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_CODE_STATEMENT_LABELED_STATEMENT:{
 			struct labeled_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_labeled_statement(state, out, id_tmp);
+			print_labeled_statement(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_CODE_STATEMENT_COMPOUND_STATEMENT:{
 			struct any_statement_list_item_id id_tmp;
 			id_tmp.id = details.id;
-			print_any_statement_list_item(state, out, id_tmp);
+			print_any_statement_list_item(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_CODE_STATEMENT_EXPRESSION_STATEMENT:{
-			struct expression_list_item_id id_tmp;
+			struct expression_id id_tmp;
 			id_tmp.id = details.id;
-			print_expression_list_item(state, out, id_tmp);
+			print_expression(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_CODE_STATEMENT_FOR_STATEMENT:{
 			struct for_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_for_statement(state, out, id_tmp);
+			print_for_statement(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_CODE_STATEMENT_WHILE_STATEMENT:{
 			struct while_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_while_statement(state, out, id_tmp);
+			print_while_statement(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_CODE_STATEMENT_IF_STATEMENT:{
 			struct if_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_if_statement(state, out, id_tmp);
+			print_if_statement(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_CODE_STATEMENT_SWITCH_STATEMENT:{
 			struct switch_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_switch_statement(state, out, id_tmp);
+			print_switch_statement(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_CODE_STATEMENT_JUMP_STATEMENT:{
 			struct jump_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_jump_statement(state, out, id_tmp);
+			print_jump_statement(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_labeled_statement(struct asm_state * state, struct unsigned_char_list * out, struct labeled_statement_id id){
+void print_all_labeled_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_labeled_statement_details_list_size(&state->labeled_statements);
+	struct labeled_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_labeled_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_labeled_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct labeled_statement_id id){
+	unsigned int spaces_printed;
 	struct labeled_statement_details details = struct_labeled_statement_details_list_get(&state->labeled_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_LABELED_STATEMENT_GOTO_LABEL:{
-			print_any_statement(state, out, details.any_statement_id);
-			print_terminal_labeled_statement_goto_label_expression_id(state, out, details.expression_id);
+			struct identifier_id id_tmp;
+			id_tmp.id = details.id;
+			buffered_printf(out, "goto ");
+			print_identifier(state, scope_depth, out, id_tmp);
+			buffered_printf(out, " ");
 			break;
 		}case ASM_LABELED_STATEMENT_CASE_LABEL:{
-			print_any_statement(state, out, details.any_statement_id);
-			print_expression(state, out, details.expression_id);
+			struct expression_id id_tmp;
+			id_tmp.id = details.id;
+			buffered_printf(out, "case ");
+			print_expression(state, scope_depth, out, id_tmp);
+			buffered_printf(out, " ");
 			break;
 		}case ASM_LABELED_STATEMENT_DEFAULT_LABEL:{
-			print_any_statement(state, out, details.any_statement_id);
-			print_terminal_labeled_statement_default_label_expression_id(state, out, details.expression_id);
+			buffered_printf(out, "default ");
 			break;
 		}
 	}
 }
 
-void print_postfix_expression(struct asm_state * state, struct unsigned_char_list * out, struct postfix_expression_id id){
+void print_all_postfix_expressions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_postfix_expression_details_list_size(&state->postfix_expressions);
+	struct postfix_expression_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_postfix_expression(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_postfix_expression(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct postfix_expression_id id){
+	unsigned int spaces_printed;
 	struct postfix_expression_details details = struct_postfix_expression_details_list_get(&state->postfix_expressions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_POSTFIX_EXPRESSION_POSTFIX_EXPRESSION:{
-			print_primary_expression(state, out, details.primary_expression_id);
-			print_postfix_expression_part_list_item(state, out, details.postfix_expression_part_list_item_id);
+			print_primary_expression(state, scope_depth, out, details.primary_expression_id);
+			print_postfix_expression_part_list_item(state, scope_depth, out, details.postfix_expression_part_list_item_id);
 			break;
 		}
 	}
 }
 
-void print_primary_expression(struct asm_state * state, struct unsigned_char_list * out, struct primary_expression_id id){
+void print_all_primary_expressions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_primary_expression_details_list_size(&state->primary_expressions);
+	struct primary_expression_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_primary_expression(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_primary_expression(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct primary_expression_id id){
+	unsigned int spaces_printed;
 	struct primary_expression_details details = struct_primary_expression_details_list_get(&state->primary_expressions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_PRIMARY_EXPRESSION_CONSTANT_DESCRIPTION:{
 			struct constant_description_id id_tmp;
 			id_tmp.id = details.id;
-			print_constant_description(state, out, id_tmp);
+			print_constant_description(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_PRIMARY_EXPRESSION_IDENTIFIER:{
 			struct identifier_id id_tmp;
 			id_tmp.id = details.id;
-			print_identifier(state, out, id_tmp);
+			print_identifier(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_PRIMARY_EXPRESSION_EXPRESSION:{
 			struct expression_id id_tmp;
 			id_tmp.id = details.id;
-			print_expression(state, out, id_tmp);
+			print_expression(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_any_statement(struct asm_state * state, struct unsigned_char_list * out, struct any_statement_id id){
+void print_all_any_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_any_statement_details_list_size(&state->any_statements);
+	struct any_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_any_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_any_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct any_statement_id id){
+	unsigned int spaces_printed;
 	struct any_statement_details details = struct_any_statement_details_list_get(&state->any_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_ANY_STATEMENT_DECLARATION_STATEMENT:{
 			struct declaration_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_declaration_statement(state, out, id_tmp);
+			print_declaration_statement(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_ANY_STATEMENT_SCOPED_STATEMENT:{
 			struct scoped_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_scoped_statement(state, out, id_tmp);
+			print_scoped_statement(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_ANY_STATEMENT_CODE_STATEMENT:{
 			struct code_statement_id id_tmp;
 			id_tmp.id = details.id;
-			print_code_statement(state, out, id_tmp);
+			print_code_statement(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_scoped_statement(struct asm_state * state, struct unsigned_char_list * out, struct scoped_statement_id id){
+void print_all_scoped_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_scoped_statement_details_list_size(&state->scoped_statements);
+	struct scoped_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_scoped_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_scoped_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct scoped_statement_id id){
+	unsigned int spaces_printed;
 	struct scoped_statement_details details = struct_scoped_statement_details_list_get(&state->scoped_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_SCOPED_STATEMENT_FUNCTION_SCOPE:{
-			print_any_statement_list_item(state, out, details.any_statement_list_item_id);
-			print_scope_guid(state, out, details.scope_guid_id);
-			break;
-		}case ASM_SCOPED_STATEMENT_BLOCK_SCOPE:{
-			print_any_statement_list_item(state, out, details.any_statement_list_item_id);
-			print_scope_guid(state, out, details.scope_guid_id);
-			break;
-		}case ASM_SCOPED_STATEMENT_FILE_SCOPE:{
-			print_any_statement_list_item(state, out, details.any_statement_list_item_id);
-			print_scope_guid(state, out, details.scope_guid_id);
+		case ASM_SCOPED_STATEMENT_SCOPED_STATEMENT:{
+			buffered_printf(out, "{");
+			print_scope_guid(state, scope_depth + 1, out, details.scope_guid_id);
+			buffered_printf(out, "\n");
+			print_any_statement_list_item(state, scope_depth + 1, out, details.any_statement_list_item_id);
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			buffered_printf(out, "}");
 			break;
 		}
 	}
 }
 
-void print_declaration_statement(struct asm_state * state, struct unsigned_char_list * out, struct declaration_statement_id id){
+void print_all_declaration_statements(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_declaration_statement_details_list_size(&state->declaration_statements);
+	struct declaration_statement_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_declaration_statement(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_declaration_statement(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct declaration_statement_id id){
+	unsigned int spaces_printed;
 	struct declaration_statement_details details = struct_declaration_statement_details_list_get(&state->declaration_statements, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_DECLARATION_STATEMENT_SIMPLE_DECLARATION:{
 			struct simple_declaration_id id_tmp;
 			id_tmp.id = details.id;
-			print_simple_declaration(state, out, id_tmp);
+			print_simple_declaration(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_DECLARATION_STATEMENT_FUNCTION_DEFINITION:{
 			struct function_definition_id id_tmp;
 			id_tmp.id = details.id;
-			print_function_definition(state, out, id_tmp);
+			print_function_definition(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_function_definition(struct asm_state * state, struct unsigned_char_list * out, struct function_definition_id id){
+void print_all_function_definitions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_function_definition_details_list_size(&state->function_definitions);
+	struct function_definition_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_function_definition(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_function_definition(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct function_definition_id id){
+	unsigned int spaces_printed;
 	struct function_definition_details details = struct_function_definition_details_list_get(&state->function_definitions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_FUNCTION_DEFINITION_PROTOTYPED:{
-			print_general_type(state, out, details.general_type_id);
-			print_any_statement_list_item(state, out, details.params);
-			print_any_statement_list_item(state, out, details.body);
-			print_identifier(state, out, details.identifier_id);
-			break;
-		}case ASM_FUNCTION_DEFINITION_K_AND_R_C:{
-			print_general_type(state, out, details.general_type_id);
-			print_any_statement_list_item(state, out, details.params);
-			print_any_statement_list_item(state, out, details.body);
-			print_identifier(state, out, details.identifier_id);
+		case ASM_FUNCTION_DEFINITION_FUNCTION_DEFINITION:{
+			buffered_printf(out, "function ");
+			print_identifier(state, scope_depth, out, details.identifier_id);
+			buffered_printf(out, " => ");
+			print_general_type(state, scope_depth, out, details.general_type_id);
+			buffered_printf(out, "\n");
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			buffered_printf(out, "--K & R declarations--\n");
+			print_any_statement_list_item(state, scope_depth, out, details.k_and_r_declarations);
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			buffered_printf(out, "--Parameters--\n");
+			print_any_statement_list_item(state, scope_depth, out, details.params);
+			for(spaces_printed = 0; spaces_printed < scope_depth; spaces_printed++){
+				buffered_printf(out, "     ");
+			}
+			print_scoped_statement(state, scope_depth, out, details.body);
 			break;
 		}
 	}
 }
 
-void print_simple_declaration(struct asm_state * state, struct unsigned_char_list * out, struct simple_declaration_id id){
+void print_all_simple_declarations(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_simple_declaration_details_list_size(&state->simple_declarations);
+	struct simple_declaration_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_simple_declaration(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_simple_declaration(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct simple_declaration_id id){
+	unsigned int spaces_printed;
 	struct simple_declaration_details details = struct_simple_declaration_details_list_get(&state->simple_declarations, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SIMPLE_DECLARATION_SIMPLE_DECLARATION:{
-			print_general_type(state, out, details.general_type_id);
-			print_identifier(state, out, details.identifier_id);
-			print_initializer(state, out, details.initializer_id);
+			print_general_type(state, scope_depth, out, details.general_type_id);
+			print_identifier(state, scope_depth, out, details.identifier_id);
+			print_initializer(state, scope_depth, out, details.initializer_id);
 			break;
 		}
 	}
 }
 
-void print_expression(struct asm_state * state, struct unsigned_char_list * out, struct expression_id id){
+void print_all_expressions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_expression_details_list_size(&state->expressions);
+	struct expression_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_expression(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_expression(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct expression_id id){
+	unsigned int spaces_printed;
 	struct expression_details details = struct_expression_details_list_get(&state->expressions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_EXPRESSION_CAST_EXPRESSION:{
+		case ASM_EXPRESSION_NULLARY_EXPRESSION:{
+			break;
+		}case ASM_EXPRESSION_CAST_EXPRESSION:{
 			struct cast_expression_id id_tmp;
 			id_tmp.id = details.id;
-			print_cast_expression(state, out, id_tmp);
+			print_cast_expression(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_EXPRESSION_BINARY_EXPRESSION:{
 			struct binary_expression_id id_tmp;
 			id_tmp.id = details.id;
 			buffered_printf(out, "(");
-			print_binary_expression(state, out, id_tmp);
+			print_binary_expression(state, scope_depth, out, id_tmp);
 			buffered_printf(out, ")");
 			break;
 		}case ASM_EXPRESSION_TERNARY_EXPRESSION:{
 			struct ternary_expression_id id_tmp;
 			id_tmp.id = details.id;
 			buffered_printf(out, "(");
-			print_ternary_expression(state, out, id_tmp);
+			print_ternary_expression(state, scope_depth, out, id_tmp);
 			buffered_printf(out, ")");
 			break;
 		}
 	}
 }
 
-void print_cast_expression(struct asm_state * state, struct unsigned_char_list * out, struct cast_expression_id id){
+void print_all_cast_expressions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_cast_expression_details_list_size(&state->cast_expressions);
+	struct cast_expression_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_cast_expression(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_cast_expression(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct cast_expression_id id){
+	unsigned int spaces_printed;
 	struct cast_expression_details details = struct_cast_expression_details_list_get(&state->cast_expressions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_CAST_EXPRESSION_HAS_CAST:{
 			struct cast_expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_cast_expression(state, out, id1_tmp);
-			print_general_type(state, out, details.id2);
+			buffered_printf(out, "(");
+			print_general_type(state, scope_depth, out, details.id2);
+			buffered_printf(out, ")");
+			print_cast_expression(state, scope_depth, out, id1_tmp);
 			break;
 		}case ASM_CAST_EXPRESSION_NO_CAST:{
 			struct unary_expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_unary_expression(state, out, id1_tmp);
-			print_terminal_cast_expression_no_cast_id2(state, out, details.id2);
+			print_unary_expression(state, scope_depth, out, id1_tmp);
 			break;
 		}
 	}
 }
 
-void print_unary_expression(struct asm_state * state, struct unsigned_char_list * out, struct unary_expression_id id){
+void print_all_unary_expressions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_unary_expression_details_list_size(&state->unary_expressions);
+	struct unary_expression_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_unary_expression(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_unary_expression(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct unary_expression_id id){
+	unsigned int spaces_printed;
 	struct unary_expression_details details = struct_unary_expression_details_list_get(&state->unary_expressions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_UNARY_EXPRESSION_SIZEOF_EXPRESSION:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "sizeof(");
+			print_expression(state, scope_depth, out, id1_tmp);
+			buffered_printf(out, ")");
 			break;
 		}case ASM_UNARY_EXPRESSION_POSTFIX_EXPRESSION:{
 			struct postfix_expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_postfix_expression(state, out, id1_tmp);
+			print_postfix_expression(state, scope_depth, out, id1_tmp);
 			break;
 		}case ASM_UNARY_EXPRESSION_SIZEOF_TYPE:{
 			struct general_type_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_general_type(state, out, id1_tmp);
+			buffered_printf(out, "sizeof(");
+			print_general_type(state, scope_depth, out, id1_tmp);
+			buffered_printf(out, ")");
 			break;
-		}case ASM_UNARY_EXPRESSION_INC:{
+		}case ASM_UNARY_EXPRESSION_INCREMENT:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "++");
+			print_expression(state, scope_depth, out, id1_tmp);
 			break;
-		}case ASM_UNARY_EXPRESSION_DEC:{
+		}case ASM_UNARY_EXPRESSION_DECREMENT:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "--");
+			print_expression(state, scope_depth, out, id1_tmp);
 			break;
-		}case ASM_UNARY_EXPRESSION_ADDRESS:{
+		}case ASM_UNARY_EXPRESSION_ADDRESS_OF:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "&");
+			print_expression(state, scope_depth, out, id1_tmp);
 			break;
 		}case ASM_UNARY_EXPRESSION_POINT_TO:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "*");
+			print_expression(state, scope_depth, out, id1_tmp);
 			break;
-		}case ASM_UNARY_EXPRESSION_POSITIVE:{
+		}case ASM_UNARY_EXPRESSION_PLUS:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "+");
+			print_expression(state, scope_depth, out, id1_tmp);
 			break;
-		}case ASM_UNARY_EXPRESSION_NEGATIVE:{
+		}case ASM_UNARY_EXPRESSION_MINUS:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "-");
+			print_expression(state, scope_depth, out, id1_tmp);
 			break;
 		}case ASM_UNARY_EXPRESSION_BITWISE_NOT:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "~");
+			print_expression(state, scope_depth, out, id1_tmp);
 			break;
 		}case ASM_UNARY_EXPRESSION_LOGICAL_NOT:{
 			struct expression_id id1_tmp;
 			id1_tmp.id = details.id1;
-			print_expression(state, out, id1_tmp);
+			buffered_printf(out, "!");
+			print_expression(state, scope_depth, out, id1_tmp);
 			break;
 		}
 	}
 }
 
-void print_binary_expression(struct asm_state * state, struct unsigned_char_list * out, struct binary_expression_id id){
+void print_all_binary_expressions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_binary_expression_details_list_size(&state->binary_expressions);
+	struct binary_expression_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_binary_expression(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_binary_expression(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct binary_expression_id id){
+	unsigned int spaces_printed;
 	struct binary_expression_details details = struct_binary_expression_details_list_get(&state->binary_expressions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_BINARY_EXPRESSION_PLUS:{
-			print_expression(state, out, details.e1);
+		case ASM_BINARY_EXPRESSION_COMMA:{
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " , ");
+			print_expression(state, scope_depth, out, details.e2);
+			break;
+		}case ASM_BINARY_EXPRESSION_PLUS:{
+			print_expression(state, scope_depth, out, details.e1);
 			buffered_printf(out, " + ");
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_MINUS:{
-			print_expression(state, out, details.e1);
+			print_expression(state, scope_depth, out, details.e1);
 			buffered_printf(out, " - ");
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_DIVIDE:{
-			print_expression(state, out, details.e1);
+			print_expression(state, scope_depth, out, details.e1);
 			buffered_printf(out, " / ");
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_MULTIPLY:{
-			print_expression(state, out, details.e1);
+			print_expression(state, scope_depth, out, details.e1);
 			buffered_printf(out, " * ");
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_EXCLUSIVE_OR:{
-			print_expression(state, out, details.e1);
+			print_expression(state, scope_depth, out, details.e1);
 			buffered_printf(out, " ^ ");
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_MODULUS:{
-			print_expression(state, out, details.e1);
-			buffered_printf(out, " % ");
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " %% ");
+			print_expression(state, scope_depth, out, details.e2);
+			break;
+		}case ASM_BINARY_EXPRESSION_RIGHT:{
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " >> ");
+			print_expression(state, scope_depth, out, details.e2);
+			break;
+		}case ASM_BINARY_EXPRESSION_LEFT:{
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " << ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_BITWISE_OR:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " | ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_LOGICAL_OR:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " || ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_BITWISE_AND:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " & ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_LOGICAL_AND:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " && ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_LT:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " < ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_GT:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " > ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_LE:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " <= ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_GE:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " >= ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_EQ:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " == ");
+			print_expression(state, scope_depth, out, details.e2);
+			break;
+		}case ASM_BINARY_EXPRESSION_NE:{
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " != ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_ASSIGN:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " = ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_ADD_ASSIGN:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " += ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_SUB_ASSIGN:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " -= ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_DIV_ASSIGN:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " /= ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_MUL_ASSIGN:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " *= ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_AND_ASSIGN:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " &= ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_OR_ASSIGN:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " |= ");
+			print_expression(state, scope_depth, out, details.e2);
+			break;
+		}case ASM_BINARY_EXPRESSION_XOR_ASSIGN:{
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " ^= ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}case ASM_BINARY_EXPRESSION_MOD_ASSIGN:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " %%= ");
+			print_expression(state, scope_depth, out, details.e2);
+			break;
+		}case ASM_BINARY_EXPRESSION_RIGHT_ASSIGN:{
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " >>= ");
+			print_expression(state, scope_depth, out, details.e2);
+			break;
+		}case ASM_BINARY_EXPRESSION_LEFT_ASSIGN:{
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " <<= ");
+			print_expression(state, scope_depth, out, details.e2);
 			break;
 		}
 	}
 }
 
-void print_ternary_expression(struct asm_state * state, struct unsigned_char_list * out, struct ternary_expression_id id){
+void print_all_ternary_expressions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_ternary_expression_details_list_size(&state->ternary_expressions);
+	struct ternary_expression_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_ternary_expression(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_ternary_expression(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct ternary_expression_id id){
+	unsigned int spaces_printed;
 	struct ternary_expression_details details = struct_ternary_expression_details_list_get(&state->ternary_expressions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_TERNARY_EXPRESSION_TERNARY_OPERATOR:{
-			print_expression(state, out, details.e1);
-			print_expression(state, out, details.e2);
-			print_expression(state, out, details.e3);
+			print_expression(state, scope_depth, out, details.e1);
+			buffered_printf(out, " ? ");
+			print_expression(state, scope_depth, out, details.e2);
+			buffered_printf(out, " : ");
+			print_expression(state, scope_depth, out, details.e3);
 			break;
 		}
 	}
 }
 
-void print_constant_description(struct asm_state * state, struct unsigned_char_list * out, struct constant_description_id id){
+void print_all_constant_descriptions(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_constant_description_details_list_size(&state->constant_descriptions);
+	struct constant_description_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_constant_description(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_constant_description(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct constant_description_id id){
+	unsigned int spaces_printed;
 	struct constant_description_details details = struct_constant_description_details_list_get(&state->constant_descriptions, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_CONSTANT_DESCRIPTION_CONSTANT_DESCRIPTION:{
-			buffered_printf(out, "[ type='");
-			print_general_type(state, out, details.general_type_id);
-			buffered_printf(out, "', value=");
-			print_data_package(state, out, details.data_package_id);
-			buffered_printf(out, " ]");
+			buffered_printf(out, "{ type='");
+			print_general_type(state, scope_depth, out, details.general_type_id);
+			buffered_printf(out, "', ");
+			print_data_package(state, scope_depth, out, details.data_package_id);
+			buffered_printf(out, " }");
 			break;
 		}
 	}
 }
 
-void print_data_package(struct asm_state * state, struct unsigned_char_list * out, struct data_package_id id){
+void print_all_data_packages(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_data_package_details_list_size(&state->data_packages);
+	struct data_package_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_data_package(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_data_package(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct data_package_id id){
+	unsigned int spaces_printed;
 	struct data_package_details details = struct_data_package_details_list_get(&state->data_packages, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_DATA_PACKAGE_ERROR:{
 			struct error_node_id id_tmp;
 			id_tmp.id = details.id;
-			print_error_node(state, out, id_tmp);
+			buffered_printf(out, "error=");
+			print_error_node(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_DATA_PACKAGE_BYTE:{
 			struct byte_package_id id_tmp;
 			id_tmp.id = details.id;
-			print_byte_package(state, out, id_tmp);
+			buffered_printf(out, "value=");
+			print_byte_package(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_DATA_PACKAGE_HWORD:{
 			struct hword_package_id id_tmp;
 			id_tmp.id = details.id;
-			print_hword_package(state, out, id_tmp);
+			buffered_printf(out, "value=");
+			print_hword_package(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_DATA_PACKAGE_WORD:{
 			struct word_package_id id_tmp;
 			id_tmp.id = details.id;
-			print_word_package(state, out, id_tmp);
+			buffered_printf(out, "value=");
+			print_word_package(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_DATA_PACKAGE_DWORD:{
 			struct dword_package_id id_tmp;
 			id_tmp.id = details.id;
-			print_dword_package(state, out, id_tmp);
+			buffered_printf(out, "value=");
+			print_dword_package(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_DATA_PACKAGE_QWORD:{
 			struct qword_package_id id_tmp;
 			id_tmp.id = details.id;
-			print_qword_package(state, out, id_tmp);
+			buffered_printf(out, "value=");
+			print_qword_package(state, scope_depth, out, id_tmp);
 			break;
 		}case ASM_DATA_PACKAGE_STRING:{
 			struct string_package_id id_tmp;
 			id_tmp.id = details.id;
-			print_string_package(state, out, id_tmp);
+			print_string_package(state, scope_depth, out, id_tmp);
 			break;
 		}
 	}
 }
 
-void print_error_node(struct asm_state * state, struct unsigned_char_list * out, struct error_node_id id){
+void print_all_error_nodes(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_error_node_details_list_size(&state->error_nodes);
+	struct error_node_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_error_node(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_error_node(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct error_node_id id){
+	unsigned int spaces_printed;
 	struct error_node_details details = struct_error_node_details_list_get(&state->error_nodes, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_ERROR_NODE_ERROR:{
 			buffered_printf(out, "This node represents an error.");
@@ -3646,29 +4607,74 @@ void print_error_node(struct asm_state * state, struct unsigned_char_list * out,
 	}
 }
 
-void print_byte_package(struct asm_state * state, struct unsigned_char_list * out, struct byte_package_id id){
+void print_all_byte_packages(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_byte_package_details_list_size(&state->byte_packages);
+	struct byte_package_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_byte_package(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_byte_package(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct byte_package_id id){
+	unsigned int spaces_printed;
 	struct byte_package_details details = struct_byte_package_details_list_get(&state->byte_packages, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_BYTE_PACKAGE_BYTE:{
-			print_terminal_byte_package_byte_data(state, out, details.data);
+			print_terminal_byte_package_byte_data(state, scope_depth, out, details.data);
 			break;
 		}
 	}
 }
 
-void print_hword_package(struct asm_state * state, struct unsigned_char_list * out, struct hword_package_id id){
+void print_all_hword_packages(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_hword_package_details_list_size(&state->hword_packages);
+	struct hword_package_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_hword_package(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_hword_package(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct hword_package_id id){
+	unsigned int spaces_printed;
 	struct hword_package_details details = struct_hword_package_details_list_get(&state->hword_packages, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_HWORD_PACKAGE_HWORD:{
-			print_terminal_hword_package_hword_data0(state, out, details.data0);
-			print_terminal_hword_package_hword_data1(state, out, details.data1);
+			print_terminal_hword_package_hword_data0(state, scope_depth, out, details.data0);
+			print_terminal_hword_package_hword_data1(state, scope_depth, out, details.data1);
 			break;
 		}
 	}
 }
 
-void print_word_package(struct asm_state * state, struct unsigned_char_list * out, struct word_package_id id){
+void print_all_word_packages(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_word_package_details_list_size(&state->word_packages);
+	struct word_package_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_word_package(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_word_package(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct word_package_id id){
+	unsigned int spaces_printed;
 	struct word_package_details details = struct_word_package_details_list_get(&state->word_packages, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_WORD_PACKAGE_WORD:{
 			buffered_printf(out, "0x");
@@ -3678,8 +4684,23 @@ void print_word_package(struct asm_state * state, struct unsigned_char_list * ou
 	}
 }
 
-void print_qword_package(struct asm_state * state, struct unsigned_char_list * out, struct qword_package_id id){
+void print_all_qword_packages(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_qword_package_details_list_size(&state->qword_packages);
+	struct qword_package_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_qword_package(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_qword_package(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct qword_package_id id){
+	unsigned int spaces_printed;
 	struct qword_package_details details = struct_qword_package_details_list_get(&state->qword_packages, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_QWORD_PACKAGE_QWORD:{
 			buffered_printf(out, "0x");
@@ -3692,8 +4713,23 @@ void print_qword_package(struct asm_state * state, struct unsigned_char_list * o
 	}
 }
 
-void print_dword_package(struct asm_state * state, struct unsigned_char_list * out, struct dword_package_id id){
+void print_all_dword_packages(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_dword_package_details_list_size(&state->dword_packages);
+	struct dword_package_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_dword_package(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_dword_package(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct dword_package_id id){
+	unsigned int spaces_printed;
 	struct dword_package_details details = struct_dword_package_details_list_get(&state->dword_packages, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_DWORD_PACKAGE_DWORD:{
 			buffered_printf(out, "0x");
@@ -3704,19 +4740,58 @@ void print_dword_package(struct asm_state * state, struct unsigned_char_list * o
 	}
 }
 
-void print_string_package(struct asm_state * state, struct unsigned_char_list * out, struct string_package_id id){
+void print_all_string_packages(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_string_package_details_list_size(&state->string_packages);
+	struct string_package_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_string_package(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_string_package(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct string_package_id id){
+	unsigned int spaces_printed;
 	struct string_package_details details = struct_string_package_details_list_get(&state->string_packages, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_STRING_PACKAGE_STRING:{
-			print_terminal_string_package_string_length(state, out, details.length);
-			print_terminal_string_package_string_data(state, out, details.data);
+			buffered_printf(out, "bytes=");
+			buffered_printf(out, "%u", details.byte_length);
+			buffered_printf(out, " words=");
+			buffered_printf(out, "%u", details.word_length);
+			buffered_printf(out, " ");
+			for(i = 0; i < details.byte_length; i++){
+				syntax_model_print_char(out, ((unsigned char *)(&details.data[i / sizeof(unsigned int)]))[i % sizeof(unsigned int)]);
+				if(i != (details.byte_length -1)){
+					buffered_printf(out, ", ");
+				}
+			}
 			break;
 		}
 	}
 }
 
-void print_identifier(struct asm_state * state, struct unsigned_char_list * out, struct identifier_id id){
+void print_all_identifiers(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_identifier_details_list_size(&state->identifiers);
+	struct identifier_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_identifier(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_identifier(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct identifier_id id){
+	unsigned int spaces_printed;
 	struct identifier_details details = struct_identifier_details_list_get(&state->identifiers, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_IDENTIFIER_IDENTIFIER:{
 			add_string_to_buffer(out, details.identifier->first_byte, details.identifier->last_byte);
@@ -3725,29 +4800,63 @@ void print_identifier(struct asm_state * state, struct unsigned_char_list * out,
 	}
 }
 
-void print_scope_guid(struct asm_state * state, struct unsigned_char_list * out, struct scope_guid_id id){
+void print_all_scope_guids(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_scope_guid_details_list_size(&state->scope_guids);
+	struct scope_guid_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_scope_guid(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_scope_guid(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct scope_guid_id id){
+	unsigned int spaces_printed;
 	struct scope_guid_details details = struct_scope_guid_details_list_get(&state->scope_guids, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
 		case ASM_SCOPE_GUID_BLOCK_SCOPE:{
-			print_terminal_scope_guid_block_scope_id(state, out, details.id);
+			buffered_printf(out, "scope_guid=");
+			buffered_printf(out, "%u", details.id);
+			buffered_printf(out, ", type=BLOCK_SCOPE");
 			break;
 		}case ASM_SCOPE_GUID_FILE_SCOPE:{
-			print_terminal_scope_guid_file_scope_id(state, out, details.id);
+			buffered_printf(out, "scope_guid=");
+			buffered_printf(out, "%u", details.id);
+			buffered_printf(out, ", type=FILE_SCOPE");
 			break;
 		}case ASM_SCOPE_GUID_FUNCTION_SCOPE:{
-			print_terminal_scope_guid_function_scope_id(state, out, details.id);
+			buffered_printf(out, "scope_guid=");
+			buffered_printf(out, "%u", details.id);
+			buffered_printf(out, ", type=FUNCTION_SCOPE");
 			break;
 		}
 	}
 }
 
-void print_anonymous_instance(struct asm_state * state, struct unsigned_char_list * out, struct anonymous_instance_id id){
-	struct anonymous_instance_details details = struct_anonymous_instance_details_list_get(&state->anonymous_instances, id.id);
+void print_all_anonymous_entrys(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out){
+	unsigned int i;
+	unsigned int size = struct_anonymous_entry_details_list_size(&state->anonymous_entrys);
+	struct anonymous_entry_id id;
+	for(i = 0; i < size; i++){
+		id.id = i;
+		print_anonymous_entry(state, scope_depth, out, id);
+		buffered_printf(out, "\n");
+	}
+}
+void print_anonymous_entry(struct asm_state * state, unsigned int scope_depth, struct unsigned_char_list * out, struct anonymous_entry_id id){
+	unsigned int spaces_printed;
+	struct anonymous_entry_details details = struct_anonymous_entry_details_list_get(&state->anonymous_entrys, id.id);
+	unsigned int i;
+	(void)scope_depth;
+	(void)spaces_printed;
+	(void)i;
 	switch(details.type){
-		case ASM_ANONYMOUS_INSTANCE_ANONYMOUS_ENTRY:{
-			(void)state;
-			(void)out;
-			(void)details;
+		case ASM_ANONYMOUS_ENTRY_ANONYMOUS_ENTRY:{
+			buffered_printf(out, "%u", details.id);
 			break;
 		}
 	}

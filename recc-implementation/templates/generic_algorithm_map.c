@@ -79,7 +79,7 @@ T1_LITERAL * T0_IDENTIFIER_to_T1_IDENTIFIER_map_exists(struct T0_IDENTIFIER_to_T
 	if(found_index == -1){
 		return (T1_LITERAL *)0;
 	}else{
-		return &((struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs))[found_index -1].value;
+		return &((struct T0_IDENTIFIER_to_T1_IDENTIFIER_key_value_pair *)binary_exponential_buffer_data(&map->key_value_pairs))[found_index].value;
 	}
 }
 

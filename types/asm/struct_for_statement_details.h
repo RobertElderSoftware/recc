@@ -20,7 +20,8 @@
 
 struct for_statement_details{
 	enum asm_for_statement_kind type;
-	struct expression_list_item_id e1;
-	struct expression_list_item_id e2;
-	struct expression_list_item_id e3;
+	struct any_statement_id e1;
+	struct any_statement_id e2;
+	struct any_statement_id e3;
+	struct scoped_statement_id s1;
 };

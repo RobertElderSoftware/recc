@@ -21,14 +21,14 @@ int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
 	}else if(a->key.type < b->key.type){
 		return -1;
 	}else{
-		if(a->key.any_statement_id.id > b->key.any_statement_id.id){
+		if(a->key.scoped_statement_id.id > b->key.scoped_statement_id.id){
 			return 1;
-		}else if(a->key.any_statement_id.id < b->key.any_statement_id.id){
+		}else if(a->key.scoped_statement_id.id < b->key.scoped_statement_id.id){
 			return -1;
 		}else{
-			if(a->key.expression_id.id > b->key.expression_id.id){
+			if(a->key.id > b->key.id){
 				return 1;
-			}else if(a->key.expression_id.id < b->key.expression_id.id){
+			}else if(a->key.id < b->key.id){
 				return -1;
 			}else{
 				return 0;

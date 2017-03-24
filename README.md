@@ -19,7 +19,7 @@ Project home: http://recc.robertelder.org/
 
 # Warning
 
-If you want to use this project for something, your best bet is to file a bug asking how you could do it, instead of trying to figure out how to this software.  This way, I get feedback that someone actually wants to use it for something too.
+If you want to use this project for something, your best bet is to file a bug asking how you could do it, instead of trying to figure out how to use this software.  This way, I get feedback that someone actually wants to use it for something too.
 
 This project is unlikely to be interesting or usable by anyone who is not among the most hard-core programmers.  If you enjoy sitting at home, writing code on a Friday night then this project is for you!  Many aspects of the compiler are undocumented and I change them constantly.  This is often because I haven't yet figured out what the best approach is, and I want to avoid creating wasteful documentation that will be wrong shortly in the future.  As I become more confident about what the best approach is, I will add documentation explaining how it works.  If you want to know how something works, the best place to look is in the Makefiles to see how things are being built.
 

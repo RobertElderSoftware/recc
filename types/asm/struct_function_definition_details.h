@@ -21,7 +21,8 @@
 struct function_definition_details{
 	enum asm_function_definition_kind type;
 	struct general_type_id general_type_id;
+	struct any_statement_list_item_id k_and_r_declarations;
 	struct any_statement_list_item_id params;
-	struct any_statement_list_item_id body;
+	struct scoped_statement_id body;
 	struct identifier_id identifier_id;
 };

@@ -26,22 +26,28 @@ int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
 		}else if(a->key.general_type_id.id < b->key.general_type_id.id){
 			return -1;
 		}else{
-			if(a->key.params.id > b->key.params.id){
+			if(a->key.k_and_r_declarations.id > b->key.k_and_r_declarations.id){
 				return 1;
-			}else if(a->key.params.id < b->key.params.id){
+			}else if(a->key.k_and_r_declarations.id < b->key.k_and_r_declarations.id){
 				return -1;
 			}else{
-				if(a->key.body.id > b->key.body.id){
+				if(a->key.params.id > b->key.params.id){
 					return 1;
-				}else if(a->key.body.id < b->key.body.id){
+				}else if(a->key.params.id < b->key.params.id){
 					return -1;
 				}else{
-					if(a->key.identifier_id.id > b->key.identifier_id.id){
+					if(a->key.body.id > b->key.body.id){
 						return 1;
-					}else if(a->key.identifier_id.id < b->key.identifier_id.id){
+					}else if(a->key.body.id < b->key.body.id){
 						return -1;
 					}else{
-						return 0;
+						if(a->key.identifier_id.id > b->key.identifier_id.id){
+							return 1;
+						}else if(a->key.identifier_id.id < b->key.identifier_id.id){
+							return -1;
+						}else{
+							return 0;
+						}
 					}
 				}
 			}

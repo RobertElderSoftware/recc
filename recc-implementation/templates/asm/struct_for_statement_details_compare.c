@@ -36,7 +36,13 @@ int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
 				}else if(a->key.e3.id < b->key.e3.id){
 					return -1;
 				}else{
-					return 0;
+					if(a->key.s1.id > b->key.s1.id){
+						return 1;
+					}else if(a->key.s1.id < b->key.s1.id){
+						return -1;
+					}else{
+						return 0;
+					}
 				}
 			}
 		}

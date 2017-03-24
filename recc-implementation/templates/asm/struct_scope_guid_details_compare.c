@@ -21,12 +21,18 @@ int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
 	}else if(a->key.type < b->key.type){
 		return -1;
 	}else{
-		if(a->key.id > b->key.id){
+		if(a->key.parent.id > b->key.parent.id){
 			return 1;
-		}else if(a->key.id < b->key.id){
+		}else if(a->key.parent.id < b->key.parent.id){
 			return -1;
 		}else{
-			return 0;
+			if(a->key.id > b->key.id){
+				return 1;
+			}else if(a->key.id < b->key.id){
+				return -1;
+			}else{
+				return 0;
+			}
 		}
 	}
 }

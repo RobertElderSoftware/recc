@@ -16,11 +16,7 @@
     under the License.
 */
 
-/*GETS_REPLACED_WITH_INCLUDES*/
-
-struct identifier_namespace_entry_details{
-	enum asm_identifier_namespace_entry_kind type;
-	struct identifier_id identifier_id;
-	struct scope_guid_id scope_guid_id;
-	struct general_type_id general_type_id;
+enum asm_anonymous_entry_kind{
+	ASM_ANONYMOUS_ENTRY_ANONYMOUS_ENTRY
 };
+

@@ -18,9 +18,6 @@
 
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct identifier_namespace_entry_details{
-	enum asm_identifier_namespace_entry_kind type;
-	struct identifier_id identifier_id;
-	struct scope_guid_id scope_guid_id;
-	struct general_type_id general_type_id;
+struct declaration_entry_id{
+	unsigned int id;
 };

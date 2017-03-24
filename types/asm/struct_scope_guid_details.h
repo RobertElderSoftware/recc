@@ -20,5 +20,6 @@
 
 struct scope_guid_details{
 	enum asm_scope_guid_kind type;
+	struct scope_guid_id parent;
 	unsigned int id;
 };

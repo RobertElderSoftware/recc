@@ -22,4 +22,5 @@ struct named_tag_predeclaration_details{
 	enum asm_named_tag_predeclaration_kind type;
 	struct scope_guid_id scope_guid_id;
 	struct identifier_id identifier_id;
+	enum asm_unscoped_tag_specifier_kind tag_type;
 };

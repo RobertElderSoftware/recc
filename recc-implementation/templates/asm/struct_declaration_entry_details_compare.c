@@ -1,5 +1,3 @@
-
-
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -15,12 +13,26 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
-
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-struct identifier_namespace_entry_details{
-	enum asm_identifier_namespace_entry_kind type;
-	struct identifier_id identifier_id;
-	struct scope_guid_id scope_guid_id;
-	struct general_type_id general_type_id;
-};
+int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
+	if(a->key.type > b->key.type){
+		return 1;
+	}else if(a->key.type < b->key.type){
+		return -1;
+	}else{
+		if(a->key.identifier_id.id > b->key.identifier_id.id){
+			return 1;
+		}else if(a->key.identifier_id.id < b->key.identifier_id.id){
+			return -1;
+		}else{
+			if(a->key.scope_guid_id.id > b->key.scope_guid_id.id){
+				return 1;
+			}else if(a->key.scope_guid_id.id < b->key.scope_guid_id.id){
+				return -1;
+			}else{
+				return 0;
+			}
+		}
+	}
+}

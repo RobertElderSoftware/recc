@@ -26,18 +26,12 @@ int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
 		}else if(a->key.general_type_id.id < b->key.general_type_id.id){
 			return -1;
 		}else{
-			if(a->key.layout_flag_list_item_id.id > b->key.layout_flag_list_item_id.id){
+			if(a->key.identifier_id.id > b->key.identifier_id.id){
 				return 1;
-			}else if(a->key.layout_flag_list_item_id.id < b->key.layout_flag_list_item_id.id){
+			}else if(a->key.identifier_id.id < b->key.identifier_id.id){
 				return -1;
 			}else{
-				if(a->key.identifier_id.id > b->key.identifier_id.id){
-					return 1;
-				}else if(a->key.identifier_id.id < b->key.identifier_id.id){
-					return -1;
-				}else{
-					return 0;
-				}
+				return 0;
 			}
 		}
 	}

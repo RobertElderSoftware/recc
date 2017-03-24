@@ -29,8 +29,7 @@
 #define INTEGER_SUFFIX "((" UNSIGNED_SUFFIX "" EITHER_LONG_SUFFIX "?)|(" EITHER_LONG_SUFFIX "" UNSIGNED_SUFFIX "?))?"
 #define CHARACTER "([^']+|\\\\')"
 #define STR_CHARACTER "([^\"\\\\]|\\\\.)"
-#define STRING "\"(" STR_CHARACTER ")*\""
-#define CRAZY_STRING STRING "(((" C_NEWLINE "|" C_SPACE "|" C_COMMENT ")*)?" STRING ")*"
+#define STRING "(u8|u|U|L)?\"(" STR_CHARACTER ")*\""
 #define LARGE_FLOAT DECIMAL "+\\." DECIMAL "*" EXPONENT "?" C_FLOAT "?"
 #define SMALL_FLOAT "\\." DECIMAL "+" EXPONENT "?" C_FLOAT "?"
 
@@ -450,7 +449,7 @@ void c_token_matcher_create(struct memory_pool_collection * m){
 	add_c_token_regex(m, m->c_token_regexes, SMALL_FLOAT,                       CONSTANT_FLOAT_SMALL, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, LARGE_FLOAT,                       CONSTANT_FLOAT_LARGE, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, "'" CHARACTER "'",                 CONSTANT_CHARACTER, &num_regexes);
-	add_c_token_regex(m, m->c_token_regexes, CRAZY_STRING,                      STRING_LITERAL, &num_regexes);
+	add_c_token_regex(m, m->c_token_regexes, STRING,                            STRING_LITERAL, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, "\\.\\.\\.",                       ELLIPSIS, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, ">>=",                             RIGHT_ASSIGN, &num_regexes);
 	add_c_token_regex(m, m->c_token_regexes, "<<=",                             LEFT_ASSIGN, &num_regexes);

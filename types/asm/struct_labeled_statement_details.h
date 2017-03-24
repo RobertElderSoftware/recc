@@ -20,6 +20,6 @@
 
 struct labeled_statement_details{
 	enum asm_labeled_statement_kind type;
-	struct any_statement_id any_statement_id;
-	struct expression_id expression_id;
+	struct scoped_statement_id scoped_statement_id;
+	unsigned int id;
 };

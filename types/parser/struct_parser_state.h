@@ -28,9 +28,10 @@ struct parser_state{
 	struct struct_parser_operation_list operation_stack;
 	struct unsigned_char_ptr_to_struct_constant_description_ptr_map constant_map;
 	struct struct_parser_error_list parser_errors;
+	struct struct_scope_guid_id_list scope_guid_stack;
+	struct struct_scope_guid_id_list decremented_scope_guids;
 	unsigned char * buff;
 	unsigned int tokens_position;
 	unsigned int line_number;
-	unsigned int next_declaration_element_id;
 	unsigned int next_constant_description_id;
 };

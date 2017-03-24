@@ -26,9 +26,9 @@ int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
 		}else if(a->key.scope_guid_id.id < b->key.scope_guid_id.id){
 			return -1;
 		}else{
-			if(a->key.anonymous_instance_id.id > b->key.anonymous_instance_id.id){
+			if(a->key.anonymous_entry_id.id > b->key.anonymous_entry_id.id){
 				return 1;
-			}else if(a->key.anonymous_instance_id.id < b->key.anonymous_instance_id.id){
+			}else if(a->key.anonymous_entry_id.id < b->key.anonymous_entry_id.id){
 				return -1;
 			}else{
 				return 0;

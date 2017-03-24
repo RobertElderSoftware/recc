@@ -21,21 +21,27 @@ int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
 	}else if(a->key.type < b->key.type){
 		return -1;
 	}else{
-		if(a->key.length > b->key.length){
+		if(a->key.byte_length > b->key.byte_length){
 			return 1;
-		}else if(a->key.length < b->key.length){
+		}else if(a->key.byte_length < b->key.byte_length){
 			return -1;
 		}else{
-			unsigned int i;
-			for(i = 0; i < a->key.length; i++){
-				if(a->key.data[i] > b->key.data[i]){
-					return 1;
-				}else if(a->key.data[i] < b->key.data[i]){
-					return -1;
+			if(a->key.word_length > b->key.word_length){
+				return 1;
+			}else if(a->key.word_length < b->key.word_length){
+				return -1;
+			}else{
+				unsigned int i;
+				for(i = 0; i < a->key.word_length; i++){
+					if(a->key.data[i] > b->key.data[i]){
+						return 1;
+					}else if(a->key.data[i] < b->key.data[i]){
+						return -1;
+					}
 				}
+				/*  Everything was the same. */
+				return 0;
 			}
-			/*  Everything was the same. */
-			return 0;
 		}
         }
 }
