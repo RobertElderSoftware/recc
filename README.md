@@ -1,8 +1,16 @@
+# Has This Project Been Abandoned?
+
+Nope, I'm still working on it, but I regularly end up having to take a few months off every now and then to focus on making enough money to stay alive.  It'll probably be a few years yet before you hear of anyone doing anything useful with this project.  Also, most of the new development I'm doing is on the branch 'canto-iii' where there are currently substantial regressions to the unit tests which is why they have not been merged into the master branch.  This new work involves an almost complete re-write of the parser.  In addition, it will also likely require a lot of changes to the code generator too.  This paragraph was written on December 2, 2017 at 01:31:26 UTC+0.
+
 # Contributions
 
-DO NOT CREATE PULL REQUESTS FOR THIS PROJECT.  ANY PULL REQUESTS YOU CREATE WILL NOT BE MERGED IN.
+![Fire](http://recc.robertelder.org/fire.gif "Fire") DO NOT CREATE PULL REQUESTS FOR THIS PROJECT.  ![Fire](http://recc.robertelder.org/fire.gif "Fire")
+
+![Fire](http://recc.robertelder.org/fire.gif "Fire") ANY PULL REQUESTS YOU CREATE WILL NOT BE MERGED IN. ![Fire](http://recc.robertelder.org/fire.gif "Fire")
 
 Contributing to this project is not currently permitted.
+
+Having said this, don't let the warning above prevent you from filing issues if you find something broken or undesirable.
 
 # What Can This Project Do?
 
@@ -19,7 +27,7 @@ Project home: http://recc.robertelder.org/
 
 # Warning
 
-If you want to use this project for something, your best bet is to file a bug asking how you could do it, instead of trying to figure out how to this software.  This way, I get feedback that someone actually wants to use it for something too.
+If you want to use this project for something, your best bet is to file a bug asking how you could do it, instead of trying to figure out how to use this software.  This way, I get feedback that someone actually wants to use it for something too.
 
 This project is unlikely to be interesting or usable by anyone who is not among the most hard-core programmers.  If you enjoy sitting at home, writing code on a Friday night then this project is for you!  Many aspects of the compiler are undocumented and I change them constantly.  This is often because I haven't yet figured out what the best approach is, and I want to avoid creating wasteful documentation that will be wrong shortly in the future.  As I become more confident about what the best approach is, I will add documentation explaining how it works.  If you want to know how something works, the best place to look is in the Makefiles to see how things are being built.
 
