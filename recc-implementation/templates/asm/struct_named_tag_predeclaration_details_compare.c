@@ -31,7 +31,13 @@ int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
 			}else if(a->key.identifier_id.id < b->key.identifier_id.id){
 				return -1;
 			}else{
-				return 0;
+				if(a->key.order_id > b->key.order_id){
+					return 1;
+				}else if(a->key.order_id < b->key.order_id){
+					return -1;
+				}else{
+					return 0;
+				}
 			}
 		}
 	}

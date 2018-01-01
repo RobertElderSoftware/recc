@@ -23,4 +23,5 @@ struct named_tag_predeclaration_details{
 	struct scope_guid_id scope_guid_id;
 	struct identifier_id identifier_id;
 	enum asm_unscoped_tag_specifier_kind tag_type;
+	unsigned int order_id;
 };

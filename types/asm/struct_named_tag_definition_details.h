@@ -23,4 +23,5 @@ struct named_tag_definition_details{
 	struct tag_definition_id tag_definition_id;
 	struct scope_guid_id scope_guid_id;
 	struct identifier_id identifier_id;
+	unsigned int order_id;
 };

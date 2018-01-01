@@ -154,6 +154,11 @@ void register_data_structures_objects(struct build_state * state){
 	register_generated_type(state, "types/parser/struct_parser_checkpoint.h", "generated/struct_parser_checkpoint.h",
 		"stop"
 	);
+	register_generated_type(state, "types/parser/struct_function_definition_helper.h", "generated/struct_function_definition_helper.h",
+		"generated/struct_general_type_id.h",
+		"generated/struct_identifier_id.h",
+		"stop"
+	);
 	register_generated_type(state, "types/parser/enum_declaration_or_definition.h", "generated/enum_declaration_or_definition.h",
 		"stop"
 	);
@@ -433,6 +438,7 @@ void register_data_structures_objects(struct build_state * state){
 		"generated/enum_type_class.h",
 		"generated/enum_scope_type.h",
 		"generated/struct_current_function_change.h",
+		"generated/struct_function_definition_helper.h",
 		"generated/unsigned_int_list.h",
 		"generated/struct_scope_guid_id_list.h",
 		"generated/struct_parser_error_list.h",

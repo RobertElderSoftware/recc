@@ -25,20 +25,20 @@ void print_buff_add(struct printing_state * ps, char c){
 
 
 void print_buff_left_zero_pad(struct printing_state * ps, unsigned int start, unsigned int pads){
-	unsigned int chars_actually_printed = (ps->chars_required - start);
-	if(chars_actually_printed < pads){
-		unsigned int pads_needed = pads - chars_actually_printed;
-		if((ps->chars_required + pads_needed) <= ps->buffer_size){
-			/*  Copy from the end of of the buffer */
-			unsigned int i;
-			for(i = start; i < pads_needed; i++){
-				ps->buffer[ps->chars_required + i] = ps->buffer[i];
-			}
-			/*  Data is moved now, put in the zeros: */
-			for(i = start; i < pads_needed; i++){
-				ps->buffer[i] = '0';
-			}
-		}
-		ps->chars_required = ps->chars_required + pads_needed;
-	}
+        unsigned int chars_actually_printed = (ps->chars_required - start);
+        if(chars_actually_printed < pads){
+                unsigned int pads_needed = pads - chars_actually_printed;
+                if((ps->chars_required + pads_needed) <= ps->buffer_size){
+                        /*  Copy from the end of of the buffer back */
+                        unsigned int i;
+                        for(i = 0; i < chars_actually_printed; i++){
+                                ps->buffer[ps->chars_required -1 -i + pads_needed] = ps->buffer[ps->chars_required -1 -i];
+                        }
+                        /*  Data is moved now, put in the zeros: */
+                        for(i = 0; i < pads_needed; i++){
+                                ps->buffer[start + i] = '0';
+                        }
+                }
+                ps->chars_required = ps->chars_required + pads_needed;
+        }
 }

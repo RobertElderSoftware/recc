@@ -579,6 +579,7 @@ void register_asm_details_and_ids(struct build_state * state){
 	);
 	register_generated_type(state, "types/asm/struct_primary_expression_details.h", "generated/struct_primary_expression_details.h",
 		"generated/enum_asm_primary_expression_kind.h",
+		"generated/struct_scope_guid_id.h",
 		"stop"
 	);
 	register_generated_type(state, "types/asm/enum_asm_any_statement_kind.h", "generated/enum_asm_any_statement_kind.h",

@@ -27,6 +27,7 @@ unsigned int c89_vsnprintf(char * buf, size_t n, const char * fmt, va_list va){
 	while(fmt[i]){
 		char c = fmt[i];
 		if(c == '%'){
+			/*  TODO:  This currently ignores flags and always assumes left padding is zero padding. */
 			/*  Consume the format numbers to get to get the number of spaces to left pad. */
 			while(fmt[i+1] >= '0' && fmt[i+1] <= '9'){
 				zero_pads = (zero_pads * 10) + ((unsigned int)fmt[i+1] - (unsigned int)'0');

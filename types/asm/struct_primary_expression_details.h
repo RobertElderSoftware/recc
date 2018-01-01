@@ -21,4 +21,5 @@
 struct primary_expression_details{
 	enum asm_primary_expression_kind type;
 	unsigned int id;
+	struct scope_guid_id scope_guid_id;
 };

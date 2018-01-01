@@ -27,6 +27,73 @@ struct unscoped_struct_specifier_id get_aggregate_struct_specifier_id(struct asm
 struct unscoped_union_specifier_id get_aggregate_union_specifier_id(struct asm_state *, enum asm_unscoped_union_specifier_kind, unsigned int);
 struct unscoped_enum_specifier_id get_aggregate_enum_specifier_id(struct asm_state *, enum asm_unscoped_enum_specifier_kind, unsigned int);
 
+
+struct named_tag_definition_id make_named_tag_definition_named_with_default_order(struct asm_state * state, struct tag_definition_id tag_definition_id, struct scope_guid_id scope_guid_id, struct identifier_id identifier_id){
+	unsigned int order = 0;
+	struct named_tag_definition_details d;
+	d.type = ASM_NAMED_TAG_DEFINITION_NAMED;
+	d.tag_definition_id = tag_definition_id;
+	d.scope_guid_id = scope_guid_id;
+	d.identifier_id = identifier_id;
+	d.order_id = order;
+	while(struct_named_tag_definition_details_to_struct_named_tag_definition_id_map_exists(&state->named_tag_definitions_map, d)){
+	/*  The purpose of this function is to find a unique id for this identifier declaration. */
+		order++;
+		d.order_id = order;
+	}
+	return make_named_tag_definition_named(state, tag_definition_id, scope_guid_id, identifier_id, order);
+}
+
+
+struct named_tag_predeclaration_id make_named_tag_predeclaration_named_with_default_order(struct asm_state * state, struct scope_guid_id scope_guid_id, struct identifier_id identifier_id, enum asm_unscoped_tag_specifier_kind tag_type){
+	unsigned int order = 0;
+	struct named_tag_predeclaration_details d;
+	d.type = ASM_NAMED_TAG_PREDECLARATION_NAMED;
+	d.scope_guid_id = scope_guid_id;
+	d.identifier_id = identifier_id;
+	d.tag_type = tag_type;
+	d.order_id = order;
+	while(struct_named_tag_predeclaration_details_to_struct_named_tag_predeclaration_id_map_exists(&state->named_tag_predeclarations_map, d)){
+		order++;
+		d.order_id = order;
+	}
+
+	return make_named_tag_predeclaration_named(state, scope_guid_id, identifier_id, tag_type, order);
+}
+
+struct identifier_namespace_entry_id make_identifier_namespace_entry_typedef_with_default_order(struct asm_state * state, struct identifier_id identifier_id, struct scope_guid_id scope_guid_id, struct general_type_id general_type_id){
+	/*  The purpose of this function is to find a unique id for this identifier declaration. */
+	unsigned int order = 0;
+	struct identifier_namespace_entry_details d;
+	d.type = ASM_IDENTIFIER_NAMESPACE_ENTRY_TYPEDEF;
+	d.identifier_id = identifier_id;
+	d.scope_guid_id = scope_guid_id;
+	d.general_type_id = general_type_id;
+	d.order_id = order;
+	while(struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map_exists(&state->identifier_namespace_entrys_map, d)){
+		order++;
+		d.order_id = order;
+	}
+	return make_identifier_namespace_entry(state, ASM_IDENTIFIER_NAMESPACE_ENTRY_TYPEDEF, identifier_id, scope_guid_id, general_type_id, order);
+}
+
+struct identifier_namespace_entry_id make_identifier_namespace_entry_declaration_with_default_order(struct asm_state * state, struct identifier_id identifier_id, struct scope_guid_id scope_guid_id, struct general_type_id general_type_id){
+	/*  The purpose of this function is to find a unique id for this identifier declaration. */
+	unsigned int order = 0;
+	struct identifier_namespace_entry_details d;
+	d.type = ASM_IDENTIFIER_NAMESPACE_ENTRY_DECLARATION;
+	d.identifier_id = identifier_id;
+	d.scope_guid_id = scope_guid_id;
+	d.general_type_id = general_type_id;
+	d.order_id = order;
+	while(struct_identifier_namespace_entry_details_to_struct_identifier_namespace_entry_id_map_exists(&state->identifier_namespace_entrys_map, d)){
+		order++;
+		d.order_id = order;
+	}
+	return make_identifier_namespace_entry(state, ASM_IDENTIFIER_NAMESPACE_ENTRY_DECLARATION, identifier_id, scope_guid_id, general_type_id, order);
+}
+
+
 enum c_token_type simple_type_qualifier_kind_to_c_token_type(enum asm_simple_type_qualifier_kind kind){
 	switch(kind){
 		case ASM_SIMPLE_TYPE_QUALIFIER_CONST:{
@@ -149,7 +216,7 @@ void syntax_model_print_char(struct unsigned_char_list * out, unsigned char c){
 	if(c > 31 && c < 127){
 		buffered_printf(out, "'%c'", c);
 	}else{
-		buffered_printf(out, "'\\x%X'", c);
+		buffered_printf(out, "'\\x%02X'", c);
 	}
 }
 
@@ -362,6 +429,7 @@ void print_terminal_string_package_string_data(struct asm_state *state, unsigned
 	(void)a;
 	(void)scope_depth;
 }
+
 void print_terminal_named_tag_predeclaration_named_tag_type(struct asm_state *state, unsigned int scope_depth, struct unsigned_char_list * out, enum asm_unscoped_tag_specifier_kind a){
 	switch(a){
 		case ASM_UNSCOPED_TAG_SPECIFIER_STRUCT:{

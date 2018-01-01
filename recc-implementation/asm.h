@@ -143,5 +143,10 @@ void print_terminal_hword_package_hword_data1(struct asm_state *, unsigned int, 
 void print_terminal_string_package_string_length(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned int);
 void print_terminal_string_package_string_data(struct asm_state *, unsigned int, struct unsigned_char_list *, unsigned char *);
 void print_terminal_named_tag_predeclaration_named_tag_type(struct asm_state *, unsigned int, struct unsigned_char_list *, enum asm_unscoped_tag_specifier_kind);
+struct identifier_namespace_entry_id make_identifier_namespace_entry(struct asm_state *,enum asm_identifier_namespace_entry_kind,struct identifier_id,struct scope_guid_id,struct general_type_id,unsigned int);
+struct identifier_namespace_entry_id make_identifier_namespace_entry_typedef_with_default_order(struct asm_state *, struct identifier_id, struct scope_guid_id, struct general_type_id);
+struct identifier_namespace_entry_id make_identifier_namespace_entry_declaration_with_default_order(struct asm_state *, struct identifier_id, struct scope_guid_id, struct general_type_id);
+struct named_tag_predeclaration_id make_named_tag_predeclaration_named_with_default_order(struct asm_state *, struct scope_guid_id, struct identifier_id, enum asm_unscoped_tag_specifier_kind);
+struct named_tag_definition_id make_named_tag_definition_named_with_default_order(struct asm_state *, struct tag_definition_id, struct scope_guid_id, struct identifier_id);
 
 #endif

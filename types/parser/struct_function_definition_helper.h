@@ -1,3 +1,5 @@
+
+
 /*
     Copyright 2016 Robert Elder Software Inc.
     
@@ -13,26 +15,12 @@
     License for the specific language governing permissions and limitations 
     under the License.
 */
+
 /*GETS_REPLACED_WITH_INCLUDES*/
 
-int T0_IDENTIFIER_compare(T0_LITERAL * a, T0_LITERAL * b){
-	if(a->key.type > b->key.type){
-		return 1;
-	}else if(a->key.type < b->key.type){
-		return -1;
-	}else{
-		if(a->key.id > b->key.id){
-			return 1;
-		}else if(a->key.id < b->key.id){
-			return -1;
-		}else{
-			if(a->key.scope_guid_id.id > b->key.scope_guid_id.id){
-				return 1;
-			}else if(a->key.scope_guid_id.id < b->key.scope_guid_id.id){
-				return -1;
-			}else{
-				return 0;
-			}
-		}
-	}
-}
+/*  Used to make it easier to pass params when definition the function into the identifier namespace just after the opening '{'. */
+struct function_definition_helper{
+	struct general_type_id general_type_id;
+	struct identifier_id identifier_id;
+	unsigned int for_function_definition;
+};

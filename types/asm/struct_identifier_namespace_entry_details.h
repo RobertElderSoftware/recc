@@ -23,4 +23,5 @@ struct identifier_namespace_entry_details{
 	struct identifier_id identifier_id;
 	struct scope_guid_id scope_guid_id;
 	struct general_type_id general_type_id;
+	unsigned int order_id;
 };
