@@ -18,3 +18,4 @@
 /*.exec
 /regex_engine_stress_test
 /parser_stress_test
+/math_stress_test

@@ -28,6 +28,9 @@ recc-implementation/compiler_interface_c_compiler_targets.o: recc-implementation
 recc-implementation/lexer.h: recc-implementation/io.h
 	@touch recc-implementation/lexer.h
 
+recc-implementation/math.o: recc-implementation/math.h recc-implementation/math.c
+	@$(HOSTCC) -c recc-implementation/math.c -o recc-implementation/math.o $(CUSTOM_C89_FLAGS)
+
 recc-implementation/regex_engine.o: recc-implementation/regex_engine.h recc-implementation/regex_engine.c
 	@$(HOSTCC) -c recc-implementation/regex_engine.c -o recc-implementation/regex_engine.o $(CUSTOM_C89_FLAGS)
 

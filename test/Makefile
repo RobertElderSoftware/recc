@@ -27,11 +27,18 @@ error-on-valgrind-problems: test/scripts/throw-error-on-problems-in-valgrind-log
 error-on-test-failure-problems: test/scripts/throw-error-on-problems-in-test-failure-log.sh
 	./test/scripts/throw-error-on-problems-in-test-failure-log.sh
 
+test/math_stress_test.o: test/math_stress_test.c
+	@$(HOSTCC) -c test/math_stress_test.c -o test/math_stress_test.o $(CUSTOM_C89_FLAGS)
+
 test/regex_engine_stress_test.o: test/regex_engine_stress_test.c
 	@$(HOSTCC) -c test/regex_engine_stress_test.c -o test/regex_engine_stress_test.o $(CUSTOM_C89_FLAGS)
 
 test/parser_stress_test.o: test/parser_stress_test.c
 	@$(HOSTCC) -c test/parser_stress_test.c -o test/parser_stress_test.o $(CUSTOM_C89_FLAGS)
+
+math-test: $(MATH_RECC_IMPLEMENTATION_OBJECTS) test/math_stress_test.o
+	@$(HOSTCC) -o test/math_stress_test test/math_stress_test.o $(MATH_RECC_IMPLEMENTATION_OBJECTS) $(CUSTOM_C89_FLAGS)
+	@$(VALGRIND) ./test/math_stress_test
 
 regex-engine-stress-test: $(REGEX_ENGINE_RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS) test/regex_engine_stress_test.o
 	@$(HOSTCC) -o test/regex_engine_stress_test test/regex_engine_stress_test.o $(REGEX_ENGINE_RECC_IMPLEMENTATION_OBJECTS) $(DATA_STRUCTURES_OBJECT_FILES) $(BUILTIN_OBJECTS) $(CUSTOM_C89_FLAGS)
@@ -89,4 +96,4 @@ $(ALL_EXECUTABLES): $(TESTING_EXTRAS_OBJECTS) $(COMPILER_OBJECTS)
 	@diff $< $(word 2,$^) > $@ || (echo "\033[0;31mTest Failure for "$<" \033[0m"; echo "Test Failure for "$<"" >> logs/test-failures.log; cat $@ >> logs/test-failures.log)
 
 clean-tests: clean-test-extras
-	@rm -f test/build_tests test/custom_build_targets.c test/build_tests.c test/tests_to_run test/*.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS) test/parser_stress_test test/regex_engine_stress_test
+	@rm -f test/build_tests test/custom_build_targets.c test/build_tests.c test/tests_to_run test/*.o $(ALL_OBJECTS) $(RECC_PREPROCESSED) $(RECC_L2) $(RECC_L1) $(RECC_L0) $(ALL_EXECUTABLES) $(ALL_HOST_CC_OUTPUT) $(JS_OUTPUT) $(ALL_DIFFS) test/parser_stress_test test/regex_engine_stress_test test/math_stress_test

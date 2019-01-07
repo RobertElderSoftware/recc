@@ -1,4 +1,4 @@
-#   Copyright 2016 Robert Elder Software Inc.
+#   Copyright 2019 Robert Elder Software Inc.
 #   
 #   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in 
 #   compliance with the License.  You may obtain a copy of the License at
@@ -78,4 +78,4 @@
 |        Level 2 PT Entry: | High 22 bits of address of lvl 1 PT             | I---------  | W = Write       |
 |        Level 1 PT Entry: | High 22 bits of linear page address in memory   | I------RWX  | X = Execute     |
 +--------------------------+-------------------------------------------------+-------------+-----------------+
-The sha1sum of the lines above is 3b458c43daa718d2c8d4e6185afe03ddcdda0bfb
+The sha1sum of the lines above is ff700178d19e04219efdc080f5370686e507ee9b

@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Robert Elder Software Inc.
+    Copyright 2019 Robert Elder Software Inc.
     
     Licensed under the Apache License, Version 2.0 (the "License"); you may not 
     use this file except in compliance with the License.  You may obtain a copy 
@@ -1398,7 +1398,7 @@ void test_1(struct memory_pool_collection * m){
 	test_type_id("void main() { int a = 2; }", m, TEST_1_TRANSLATION_UNIT);
 	test_type_id("void main() { int arr[2][3] = {{1,2,3},{1,2,4}}; }", m, TEST_1_TRANSLATION_UNIT);
 
-	/* These cases are currently not supported and will result in parse errors: */  
+	/* TODO: These cases are currently not supported and will result in parse errors: */  
 	/* test_type_id("int f(());", m, TEST_1_TRANSLATION_UNIT); */
 	/* test_type_id("int f((((((((((((((((((((((((((((((((((()))))))))))))))))))))))))))))))))));", m, TEST_1_TRANSLATION_UNIT); */
 	test_type_id("int f(int ());", m, TEST_1_TRANSLATION_UNIT);
@@ -1423,11 +1423,11 @@ void test_1(struct memory_pool_collection * m){
 	test_type_id("struct foo{ union foo * i; }; int main(void){ return 0; }", m, TEST_1_TRANSLATION_UNIT);
 	test_type_id("struct foo{ struct boo * b; }; int main(void){ { struct boo{ int i; }; struct foo f1; (void)f1.b->i; } { struct boo{ int j; }; struct foo f2; (void)f2.b->j; } return 0; }", m, TEST_1_TRANSLATION_UNIT);
 	test_type_id("struct foo{ struct boo * b; }; int main(void){ { struct foo; struct boo{ int i; }; struct foo f1; (void)f1.b->i; } { struct foo; struct boo{ int j; }; struct foo f2; (void)f2.b->j; } return 0; }", m, TEST_1_TRANSLATION_UNIT);
-	/* This case is not currently supported due to requirements of c99 style mixture of declarations and statements. */
+	/* TODO: This case is not currently supported due to requirements of c99 style mixture of declarations and statements. */
 	/*test_type_id("int main(void){ struct foo; { struct foo f1; } struct foo{ int i; }; return 0; }", m, TEST_1_TRANSLATION_UNIT);*/
 	test_type_id("int main(void){ struct foo{ struct foo * f; }; struct foo f; (void)f; return 0; }", m, TEST_1_TRANSLATION_UNIT);
 	test_type_id("struct foo{ int i; }; int main(void){ struct foo; typedef struct foo str; str f; (void)f; return 0; }", m, TEST_1_TRANSLATION_UNIT);
-	/* This case is not currently supported due to requirements of c99 style mixture of declarations and statements. */
+	/* TODO: This case is not currently supported due to requirements of c99 style mixture of declarations and statements. */
 	/*test_type_id("struct foo{ int i; }; int main(void){ (struct foo*)0; typedef struct foo str; str f; (void)f; return 0; }", m, TEST_1_TRANSLATION_UNIT);*/
 	test_type_id("struct foo{ int i; }; int main(void){ typedef struct foo str; struct foo; str f; (void)f; return 0; }", m, TEST_1_TRANSLATION_UNIT);
 	test_type_id("struct foo{ int i; }; int main(void){ typedef struct foo abc; typedef struct foo def; abc g; def h; (void)g; (void)h; return 0; }", m, TEST_1_TRANSLATION_UNIT);
@@ -1497,6 +1497,14 @@ void test_1(struct memory_pool_collection * m){
 	test_type_id("typedef int node; static node one = 1; int main(void){ typedef struct foo {int i;} node; node n; n.i = one; return n.i; }", m, TEST_1_TRANSLATION_UNIT);
 	test_type_id("typedef int type1; typedef int type1; typedef type1 type2; typedef type2 type1; typedef double type1; int main(void){ return 0; }", m, TEST_1_TRANSLATION_UNIT);
 	test_type_id("struct foo {int i;}; typedef struct foo type1; int main(void){ struct foo {int j;}; typedef struct foo type2; typedef struct foo type3; typedef type3 type2; typedef type1 type2; return 0; }", m, TEST_1_TRANSLATION_UNIT);
+	/*  Prove the typenames apply immediately after declarator ends: */
+	test_type_id("typedef int type1, type2(type1);", m, TEST_1_TRANSLATION_UNIT);
+	/*  What is typename gets used as an identifier later?: */
+	/*  TODO:  These tests currently fail because of issues with confusing identifiers for declarators with typedefed specifiers.
+		I will probably work on this once I implement better error recovery.  */
+	/*test_type_id("typedef int type1; int main(void) { int type1 = 100; }", m, TEST_1_TRANSLATION_UNIT);*/
+	/*  Verify that the last 'type1' is a primary expression and not a type cast: */
+	/*test_type_id("typedef int type1; int main(void) { int type1 = 100, i = (type1) + 1; }", m, TEST_1_TRANSLATION_UNIT);*/
 
 
 	/* C11 struct/union */
